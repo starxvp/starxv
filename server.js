@@ -1,0 +1,851 @@
+'use strict';
+
+require('dotenv').config();
+const { Resend } = require('resend');
+
+const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');const nodemailer=require('nodemailer');
+const app=express(),PORT=Number(process.env.PORT||3000);
+const DATA_DIR=path.join(__dirname,'data');
+const LEGACY_DATA=path.join(DATA_DIR,'store.json');
+const SQLITE_FILE=path.join(DATA_DIR,'starxv.sqlite');
+app.disable('x-powered-by');
+if(process.env.NODE_ENV==='production')app.set('trust proxy',1);
+
+// --- STARXV security hardening -------------------------------------------------
+// Security headers chosen to work with the current single-file storefront (which
+// still contains inline CSS/JS). A stricter CSP can be added after those assets
+// are moved to separate files.
+app.use((req,res,next)=>{
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.setHeader('X-Frame-Options','DENY');
+  res.setHeader('Referrer-Policy','strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=(self), payment=(self)');
+  res.setHeader('Cross-Origin-Opener-Policy','same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy','same-origin');
+  if(process.env.NODE_ENV==='production')res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
+  next();
+});
+
+const rateBuckets=new Map();
+function clientKey(req){return String(req.ip||req.socket?.remoteAddress||'unknown')}
+function rateLimit(name,max,windowMs){
+  return (req,res,next)=>{
+    const now=Date.now(),key=name+'|'+clientKey(req);
+    let b=rateBuckets.get(key);
+    if(!b||b.resetAt<=now)b={count:0,resetAt:now+windowMs};
+    b.count++;rateBuckets.set(key,b);
+    const remaining=Math.max(0,max-b.count);
+    res.setHeader('X-RateLimit-Limit',String(max));
+    res.setHeader('X-RateLimit-Remaining',String(remaining));
+    if(b.count>max){
+      const retry=Math.max(1,Math.ceil((b.resetAt-now)/1000));
+      res.setHeader('Retry-After',String(retry));
+      return res.status(429).json({error:'Za dużo prób. Spróbuj ponownie za chwilę.'});
+    }
+    next();
+  };
+}
+setInterval(()=>{const now=Date.now();for(const [k,b] of rateBuckets)if(b.resetAt<=now)rateBuckets.delete(k)},10*60*1000).unref?.();
+
+// --- STARXV SQLite persistence -------------------------------------------------
+// Node 22+ ships node:sqlite, so there is no extra npm package to install.
+// Existing data/store.json is imported automatically the first time SQLite starts.
+fs.mkdirSync(DATA_DIR,{recursive:true});
+let sqlite;
+try{
+  const {DatabaseSync}=require('node:sqlite');
+  sqlite=new DatabaseSync(SQLITE_FILE);
+}catch(err){
+  throw new Error('STARXV wymaga Node.js 22 lub nowszego (node:sqlite). Zaktualizuj Node.js i uruchom ponownie npm start. '+err.message);
+}
+sqlite.exec(`
+  PRAGMA journal_mode=WAL;
+  PRAGMA foreign_keys=ON;
+  CREATE TABLE IF NOT EXISTS app_state (
+    id INTEGER PRIMARY KEY CHECK(id=1),
+    json TEXT NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+  CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+`);
+const sqliteGetState=sqlite.prepare('SELECT json FROM app_state WHERE id=1');
+const sqlitePutState=sqlite.prepare(`INSERT INTO app_state(id,json,updated_at) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at`);
+const sqliteGetSession=sqlite.prepare('SELECT token,user_id AS userId,expires_at AS expires FROM sessions WHERE token=?');
+const sqliteInsertSession=sqlite.prepare('INSERT OR REPLACE INTO sessions(token,user_id,expires_at,created_at) VALUES(?,?,?,?)');
+const sqliteDeleteSession=sqlite.prepare('DELETE FROM sessions WHERE token=?');
+const sqliteDeleteUserSessions=sqlite.prepare('DELETE FROM sessions WHERE user_id=?');
+const sqliteDeleteOtherUserSessions=sqlite.prepare('DELETE FROM sessions WHERE user_id=? AND token<>?');
+const sqliteDeleteExpiredSessions=sqlite.prepare('DELETE FROM sessions WHERE expires_at<?');
+
+function defaultState(){return {users:[],pending:[]}}
+function importLegacyStoreOnce(){
+  if(sqliteGetState.get())return;
+  let initial=defaultState();
+  try{
+    if(fs.existsSync(LEGACY_DATA))initial=JSON.parse(fs.readFileSync(LEGACY_DATA,'utf8'));
+  }catch(e){console.warn('Nie udało się odczytać starego store.json:',e.message)}
+  sqlitePutState.run(JSON.stringify(initial),Date.now());
+  if(fs.existsSync(LEGACY_DATA))console.log('STARXV: zaimportowano data/store.json do SQLite.');
+}
+importLegacyStoreOnce();
+function load(){
+  try{const row=sqliteGetState.get();return row?JSON.parse(row.json):defaultState()}
+  catch(e){console.error('SQLite load error:',e);return defaultState()}
+}
+function save(db){sqlitePutState.run(JSON.stringify(db),Date.now())}
+function cleanupExpiredSessions(){try{sqliteDeleteExpiredSessions.run(Date.now())}catch(e){console.error('Session cleanup error:',e)}}
+cleanupExpiredSessions();
+setInterval(cleanupExpiredSessions,60*60*1000).unref?.();
+
+let stripeClient=null;
+function getStripe(){
+  const key=String(process.env.STRIPE_SECRET_KEY||'').trim();
+  if(!key)return null;
+  if(!stripeClient){
+    try{stripeClient=require('stripe')(key)}catch(e){
+      console.error('Stripe package error:',e.message);
+      return null;
+    }
+  }
+  return stripeClient;
+}
+
+// Stripe requires the untouched/raw request body for webhook signature verification.
+// Keep this route BEFORE express.json().
+app.post('/api/stripe/webhook',express.raw({type:'application/json'}),handleStripeWebhook);
+app.use(express.json({limit:'5mb'}));
+
+// Browser CSRF protection: unsafe API calls must come from this site. Requests
+// without Origin (server-to-server tools) are still allowed; Stripe has its own
+// signed webhook route above this middleware.
+app.use('/api',(req,res,next)=>{
+  if(!['POST','PUT','PATCH','DELETE'].includes(req.method))return next();
+  const origin=String(req.headers.origin||'').trim();
+  if(!origin)return next();
+  try{
+    const originUrl=new URL(origin);
+    const host=String(req.headers.host||'');
+    const publicUrl=String(process.env.PUBLIC_URL||'').trim();
+    const allowed=new Set();
+    if(host)allowed.add(host.toLowerCase());
+    if(publicUrl){try{allowed.add(new URL(publicUrl).host.toLowerCase())}catch{}}
+    if(!allowed.has(originUrl.host.toLowerCase()))return res.status(403).json({error:'Żądanie zostało zablokowane ze względów bezpieczeństwa.'});
+  }catch{return res.status(403).json({error:'Nieprawidłowe źródło żądania.'})}
+  next();
+});
+
+app.use('/api/auth',(req,res,next)=>{res.setHeader('Cache-Control','no-store');next()});
+app.use('/api/account',(req,res,next)=>{res.setHeader('Cache-Control','no-store');next()});
+app.use('/api/admin',(req,res,next)=>{res.setHeader('Cache-Control','no-store');next()});
+app.use('/api/auth/login',rateLimit('login',10,15*60*1000));
+app.use('/api/auth/register',rateLimit('register',6,15*60*1000));
+app.use('/api/auth/verify',rateLimit('verify',15,15*60*1000));
+app.use('/api/auth/forgot-password',rateLimit('forgot',6,15*60*1000));
+app.use('/api/auth/reset-password',rateLimit('reset',10,15*60*1000));
+app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000));
+app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
+app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
+app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
+function cleanEmail(v){return String(v||'').trim().toLowerCase()}function publicUser(u){return {id:u.id,firstName:u.firstName,lastName:u.lastName,email:u.email,createdAt:u.createdAt,avatarData:u.avatarData||''}}
+function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(password,salt,64).toString('hex');return `${salt}:${hash}`}
+function checkPassword(password,stored){try{const [salt,hex]=stored.split(':');const a=Buffer.from(hex,'hex'),b=crypto.scryptSync(password,salt,64);return a.length===b.length&&crypto.timingSafeEqual(a,b)}catch{return false}}
+function codeHash(email,code){return crypto.createHash('sha256').update(email+'|'+code).digest('hex')}
+function cookie(req,name){const m=String(req.headers.cookie||'').split(';').map(x=>x.trim().split('='));const p=m.find(x=>x[0]===name);return p?decodeURIComponent(p.slice(1).join('=')):''}
+function sessionKey(token){return crypto.createHash('sha256').update(String(token||'')).digest('hex')}
+function deleteSessionToken(token){if(!token)return;sqliteDeleteSession.run(sessionKey(token));sqliteDeleteSession.run(token)}
+function setSession(res,userId){const token=crypto.randomBytes(32).toString('hex'),now=Date.now(),expires=now+1000*60*60*24*14;sqliteInsertSession.run(sessionKey(token),userId,expires,now);res.setHeader('Cache-Control','no-store');res.setHeader('Set-Cookie',`starxv_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=1209600${process.env.NODE_ENV==='production'?'; Secure':''}`)}
+function auth(req,res,next){const t=cookie(req,'starxv_session');if(!t)return res.status(401).json({error:'Musisz się zalogować.'});const key=sessionKey(t);let s=sqliteGetSession.get(key);if(!s){const legacy=sqliteGetSession.get(t);if(legacy){sqliteDeleteSession.run(t);sqliteInsertSession.run(key,legacy.userId,legacy.expires,Date.now());s=sqliteGetSession.get(key)}}if(!s||s.expires<Date.now()){deleteSessionToken(t);return res.status(401).json({error:'Musisz się zalogować.'})}const db=load(),u=db.users.find(x=>x.id===s.userId);if(!u){deleteSessionToken(t);return res.status(401).json({error:'Sesja wygasła.'})}res.setHeader('Cache-Control','no-store');req.user=u;req.db=db;req.sessionToken=t;req.sessionKey=key;next()}
+function validEmail(v){return v.length<=320&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)}
+function validPassword(v){return v.length>=8&&v.length<=256}
+function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
+async function sendCode(email, code) {
+  const apiKey = process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.log(`[STARXV DEV] Kod dla ${email}: ${code}`);
+    return { dev: true };
+  }
+
+  const resend = new Resend(apiKey);
+
+  const { data, error } = await resend.emails.send({
+    from: process.env.MAIL_FROM || 'STARXV <no-reply@starxv.pl>',
+    to: email,
+    subject: 'STARXV — kod weryfikacyjny',
+    text: `Twój kod weryfikacyjny STARXV: ${code}
+
+Kod wygasa po 10 minutach.
+Jeśli to nie Ty, zignoruj tę wiadomość.`,
+
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px;">
+        <h1 style="font-size:28px;margin:0 0 28px;">STARXV</h1>
+
+        <p>Twój kod weryfikacyjny:</p>
+
+        <div style="font-size:36px;font-weight:800;letter-spacing:8px;margin:24px 0;">
+          ${code}
+        </div>
+
+        <p style="color:#666;">Kod wygasa po 10 minutach.</p>
+
+        <p style="color:#888;font-size:12px;margin-top:30px;">
+          Jeśli to nie Ty próbowałeś utworzyć konto STARXV,
+          możesz zignorować tę wiadomość.
+        </p>
+      </div>
+    `
+  });
+
+  if (error) {
+    console.error('Resend error:', error);
+    throw new Error('Nie udało się wysłać wiadomości.');
+  }
+
+  console.log(`Kod STARXV został wysłany na ${email}. ID: ${data?.id}`);
+  return { dev: false };
+}
+
+async function sendPasswordResetCode(email, code) {
+  const apiKey=process.env.RESEND_API_KEY;
+  if(!apiKey){console.log(`[STARXV DEV] Kod resetu hasła dla ${email}: ${code}`);return {dev:true};}
+  const resend=new Resend(apiKey);
+  const {data,error}=await resend.emails.send({
+    from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to:email,
+    subject:'STARXV — reset hasła',
+    text:`Kod do resetu hasła STARXV: ${code}\n\nKod wygasa po 10 minutach.\nJeśli to nie Ty, zignoruj tę wiadomość.`,
+    html:`<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px"><h1 style="font-size:28px;margin:0 0 28px">STARXV</h1><p>Otrzymaliśmy prośbę o zmianę hasła.</p><p>Twój kod:</p><div style="font-size:36px;font-weight:800;letter-spacing:8px;margin:24px 0">${code}</div><p style="color:#666">Kod wygasa po 10 minutach.</p><p style="color:#888;font-size:12px;margin-top:30px">Jeśli to nie Ty poprosiłeś o reset hasła, zignoruj tę wiadomość.</p></div>`
+  });
+  if(error){console.error('Resend reset error:',error);throw new Error('Nie udało się wysłać wiadomości.');}
+  console.log(`Kod resetu STARXV wysłany na ${email}. ID: ${data?.id}`);return {dev:false};
+}
+function invalidateUserSessions(userId){sqliteDeleteUserSessions.run(userId)}
+
+function invalidateOtherUserSessions(userId,keepToken){sqliteDeleteOtherUserSessions.run(userId,sessionKey(keepToken))}
+async function sendEmailChangeCode(email,code){
+  const apiKey=process.env.RESEND_API_KEY;
+  if(!apiKey){console.log(`[STARXV DEV] Kod zmiany e-maila dla ${email}: ${code}`);return {dev:true};}
+  const resend=new Resend(apiKey);
+  const {data,error}=await resend.emails.send({
+    from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to:email,
+    subject:'STARXV — potwierdź nowy adres e-mail',
+    text:`Kod do potwierdzenia nowego adresu e-mail STARXV: ${code}
+
+Kod wygasa po 10 minutach.
+Jeśli to nie Ty, zignoruj tę wiadomość.`,
+    html:`<div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;padding:32px"><h1 style="font-size:28px;margin:0 0 28px">STARXV</h1><p>Potwierdź nowy adres e-mail dla swojego konta.</p><p>Twój kod:</p><div style="font-size:36px;font-weight:800;letter-spacing:8px;margin:24px 0">${code}</div><p style="color:#666">Kod wygasa po 10 minutach.</p><p style="color:#888;font-size:12px;margin-top:30px">Jeśli to nie Ty zmieniasz adres e-mail, zignoruj tę wiadomość.</p></div>`
+  });
+  if(error){console.error('Resend email change error:',error);throw new Error('Nie udało się wysłać wiadomości.');}
+  console.log(`Kod zmiany e-maila STARXV wysłany na ${email}. ID: ${data?.id}`);return {dev:false};
+}
+app.post('/api/auth/forgot-password',async(req,res)=>{try{
+  const email=cleanEmail(req.body?.email),now=Date.now(),db=load();
+  db.passwordResets=(db.passwordResets||[]).filter(x=>x.expiresAt>now);
+  const generic={ok:true,message:'Jeśli konto z tym adresem istnieje, wysłaliśmy kod resetu hasła.',expiresIn:600};
+  const user=db.users.find(u=>u.email===email);
+  if(!user){save(db);return res.json(generic)}
+  const previous=db.passwordResets.find(x=>x.email===email);
+  if(previous&&now-Number(previous.createdAt||0)<60000){save(db);return res.json(generic)}
+  db.passwordResets=db.passwordResets.filter(x=>x.email!==email);
+  const code=String(crypto.randomInt(100000,1000000));
+  db.passwordResets.push({email,userId:user.id,codeHash:codeHash(email,code),expiresAt:now+10*60*1000,attempts:0,createdAt:now});
+  save(db);await sendPasswordResetCode(email,code);return res.json(generic);
+}catch(e){console.error(e);return res.status(500).json({error:'Nie udało się rozpocząć resetu hasła. Spróbuj ponownie.'})}});
+app.post('/api/auth/reset-password',(req,res)=>{
+  const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,''),password=String(req.body?.password||'');
+  if(code.length!==6||!validPassword(password))return res.status(400).json({error:'Wpisz poprawny kod i nowe hasło 8–256 znaków.'});
+  const db=load(),now=Date.now();db.passwordResets=(db.passwordResets||[]).filter(x=>x.expiresAt>now);
+  const reset=db.passwordResets.find(x=>x.email===email),user=db.users.find(u=>u.email===email);
+  if(!reset||!user||reset.userId!==user.id)return res.status(400).json({error:'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.'});
+  if(reset.attempts>=5){db.passwordResets=db.passwordResets.filter(x=>x.email!==email);save(db);return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'})}
+  if(reset.codeHash!==codeHash(email,code)){reset.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}
+  user.passwordHash=hashPassword(password);db.passwordResets=db.passwordResets.filter(x=>x.email!==email);save(db);invalidateUserSessions(user.id);
+  res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true});
+});
+app.post('/api/auth/register',async(req,res)=>{try{let {firstName,lastName,email,password}=req.body||{};firstName=cleanName(firstName);lastName=cleanName(lastName);email=cleanEmail(email);password=String(password||'');if(!firstName||!lastName||!validEmail(email)||!validPassword(password))return res.status(400).json({error:'Sprawdź dane. Hasło musi mieć 8–256 znaków.'});const db=load();if(db.users.some(u=>u.email===email))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});const now=Date.now();db.pending=(db.pending||[]).filter(p=>p.expiresAt>now&&p.email!==email);const code=String(crypto.randomInt(100000,1000000));db.pending.push({email,firstName,lastName,passwordHash:hashPassword(password),codeHash:codeHash(email,code),expiresAt:now+10*60*1000,attempts:0,createdAt:now});save(db);const sent=await sendCode(email,code);res.json({ok:true,expiresIn:600,developmentCode:sent.dev?code:undefined})}catch(e){console.error(e);res.status(500).json({error:'Nie udało się wysłać kodu. Spróbuj ponownie.'})}});
+app.post('/api/auth/verify',(req,res)=>{const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,'');const db=load(),now=Date.now(),p=db.pending.find(x=>x.email===email);if(!p||p.expiresAt<now)return res.status(400).json({error:'Kod wygasł. Wróć do rejestracji i wyślij nowy.'});if(p.attempts>=5)return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});if(p.codeHash!==codeHash(email,code)){p.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}if(db.users.some(u=>u.email===email))return res.status(409).json({error:'To konto już istnieje.'});const u={id:crypto.randomUUID(),firstName:p.firstName,lastName:p.lastName,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',favorites:[],addresses:[],defaultAddressId:''};db.users.push(u);db.pending=db.pending.filter(x=>x.email!==email);save(db);setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/login',(req,res)=>{const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');if(!validEmail(email)||password.length>256)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});const db=load(),u=db.users.find(x=>x.email===email);if(!u||!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/logout',(req,res)=>{const t=cookie(req,'starxv_session');if(t)deleteSessionToken(t);res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true})});
+app.get('/api/auth/me',auth,(req,res)=>res.json({user:publicUser(req.user)}));
+
+
+// --- STARXV account security: change password + verified e-mail change ---
+app.post('/api/account/change-password',auth,(req,res)=>{
+  const currentPassword=String(req.body?.currentPassword||''),newPassword=String(req.body?.newPassword||'');
+  if(!currentPassword||currentPassword.length>256||!validPassword(newPassword))return res.status(400).json({error:'Wpisz obecne hasło i nowe hasło 8–256 znaków.'});
+  if(!checkPassword(currentPassword,req.user.passwordHash))return res.status(401).json({error:'Obecne hasło jest nieprawidłowe.'});
+  if(checkPassword(newPassword,req.user.passwordHash))return res.status(400).json({error:'Nowe hasło musi być inne niż obecne.'});
+  req.user.passwordHash=hashPassword(newPassword);
+  req.db.passwordResets=(req.db.passwordResets||[]).filter(x=>x.userId!==req.user.id&&cleanEmail(x.email)!==cleanEmail(req.user.email));
+  save(req.db);
+  invalidateOtherUserSessions(req.user.id,req.sessionToken);
+  res.json({ok:true,message:'Hasło zostało zmienione.'});
+});
+
+app.post('/api/account/change-email/start',auth,async(req,res)=>{try{
+  const newEmail=cleanEmail(req.body?.newEmail),currentPassword=String(req.body?.currentPassword||''),now=Date.now();
+  if(!validEmail(newEmail))return res.status(400).json({error:'Wpisz poprawny nowy adres e-mail.'});
+  if(!currentPassword||currentPassword.length>256||!checkPassword(currentPassword,req.user.passwordHash))return res.status(401).json({error:'Obecne hasło jest nieprawidłowe.'});
+  if(newEmail===cleanEmail(req.user.email))return res.status(400).json({error:'To jest już adres e-mail tego konta.'});
+  if(req.db.users.some(u=>u.id!==req.user.id&&cleanEmail(u.email)===newEmail))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});
+  req.db.emailChanges=(req.db.emailChanges||[]).filter(x=>x.expiresAt>now);
+  const previous=req.db.emailChanges.find(x=>x.userId===req.user.id);
+  if(previous&&now-Number(previous.createdAt||0)<60000)return res.status(429).json({error:'Poczekaj chwilę przed wysłaniem kolejnego kodu.'});
+  req.db.emailChanges=req.db.emailChanges.filter(x=>x.userId!==req.user.id);
+  const code=String(crypto.randomInt(100000,1000000));
+  req.db.emailChanges.push({userId:req.user.id,oldEmail:cleanEmail(req.user.email),newEmail,codeHash:codeHash(newEmail,code),expiresAt:now+10*60*1000,attempts:0,createdAt:now});
+  save(req.db);
+  await sendEmailChangeCode(newEmail,code);
+  res.json({ok:true,expiresIn:600,newEmail});
+}catch(e){console.error(e);res.status(500).json({error:'Nie udało się wysłać kodu. Spróbuj ponownie.'})}});
+
+app.post('/api/account/change-email/confirm',auth,(req,res)=>{
+  const newEmail=cleanEmail(req.body?.newEmail),code=String(req.body?.code||'').replace(/\D/g,''),now=Date.now();
+  if(code.length!==6||!validEmail(newEmail))return res.status(400).json({error:'Wpisz poprawny adres e-mail i 6-cyfrowy kod.'});
+  req.db.emailChanges=(req.db.emailChanges||[]).filter(x=>x.expiresAt>now);
+  const change=req.db.emailChanges.find(x=>x.userId===req.user.id);
+  if(!change||change.newEmail!==newEmail||change.oldEmail!==cleanEmail(req.user.email))return res.status(400).json({error:'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.'});
+  if(change.attempts>=5){req.db.emailChanges=req.db.emailChanges.filter(x=>x.userId!==req.user.id);save(req.db);return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'})}
+  if(change.codeHash!==codeHash(newEmail,code)){change.attempts++;save(req.db);return res.status(400).json({error:'Nieprawidłowy kod.'})}
+  if(req.db.users.some(u=>u.id!==req.user.id&&cleanEmail(u.email)===newEmail))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});
+  const oldEmail=cleanEmail(req.user.email);
+  req.user.email=newEmail;
+  req.db.emailChanges=req.db.emailChanges.filter(x=>x.userId!==req.user.id);
+  req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==newEmail);
+  req.db.passwordResets=(req.db.passwordResets||[]).filter(x=>x.userId!==req.user.id&&cleanEmail(x.email)!==oldEmail&&cleanEmail(x.email)!==newEmail);
+  save(req.db);
+  invalidateOtherUserSessions(req.user.id,req.sessionToken);
+  res.json({ok:true,user:publicUser(req.user)});
+});
+
+// Permanently delete the currently logged-in STARXV account.
+// Existing paid/order records are kept as standalone store records, but the account itself
+// (profile, saved addresses, favorites, avatar and password hash) is removed.
+app.delete('/api/account',auth,(req,res)=>{
+  const password=String(req.body?.password||'');
+  if(!password)return res.status(400).json({error:'Wpisz hasło, aby usunąć konto.'});
+  if(!checkPassword(password,req.user.passwordHash))return res.status(401).json({error:'Nieprawidłowe hasło.'});
+
+  const userId=req.user.id;
+  const email=req.user.email;
+  ensureStore(req.db);
+
+  // Unpaid draft orders can be discarded; completed/paid records stay in the shop records.
+  req.db.orders=(req.db.orders||[]).filter(o=>!(o.userId===userId && String(o.paymentStatus||'pending')!=='paid'));
+  req.db.users=(req.db.users||[]).filter(u=>u.id!==userId);
+  req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==cleanEmail(email));
+  save(req.db);
+
+  invalidateUserSessions(userId);
+  res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);
+  res.json({ok:true});
+});
+
+// Account preferences stored on the backend (favorites + saved addresses).
+function accountPreferences(u){
+  return {
+    favorites:Array.isArray(u.favorites)?u.favorites:[],
+    addresses:Array.isArray(u.addresses)?u.addresses:[],
+    defaultAddressId:String(u.defaultAddressId||'')
+  };
+}
+function cleanFavorites(value){
+  if(!Array.isArray(value)) return [];
+  return [...new Set(value.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,200);
+}
+function cleanAddresses(value){
+  if(!Array.isArray(value)) return [];
+  return value.slice(0,20).map(a=>({
+    id:String(a?.id||crypto.randomUUID()).slice(0,120),
+    firstName:String(a?.firstName||'').trim().slice(0,80),
+    lastName:String(a?.lastName||'').trim().slice(0,80),
+    email:cleanEmail(a?.email).slice(0,160),
+    phone:String(a?.phone||'').trim().slice(0,40),
+    street:String(a?.street||'').trim().slice(0,160),
+    postal:String(a?.postal||'').trim().slice(0,20),
+    city:String(a?.city||'').trim().slice(0,100)
+  }));
+}
+app.get('/api/account/preferences',auth,(req,res)=>{
+  res.json({ok:true,preferences:accountPreferences(req.user)});
+});
+app.put('/api/account/preferences',auth,(req,res)=>{
+  const i=req.db.users.findIndex(x=>x.id===req.user.id);
+  if(i<0)return res.status(401).json({error:'Sesja wygasła.'});
+  const current=req.db.users[i];
+  const body=req.body||{};
+  if(Object.prototype.hasOwnProperty.call(body,'favorites')) current.favorites=cleanFavorites(body.favorites);
+  if(Object.prototype.hasOwnProperty.call(body,'addresses')) current.addresses=cleanAddresses(body.addresses);
+  if(Object.prototype.hasOwnProperty.call(body,'defaultAddressId')) current.defaultAddressId=String(body.defaultAddressId||'').slice(0,120);
+  const ids=new Set((current.addresses||[]).map(a=>a.id));
+  if(current.defaultAddressId&&!ids.has(current.defaultAddressId)) current.defaultAddressId='';
+  save(req.db);
+  res.json({ok:true,preferences:accountPreferences(current)});
+});
+
+
+// --- STARXV backend catalog, inventory and orders ---
+const DEFAULT_CATALOG={
+  'black-hoodie-graffiti':{name:'Hoodie x Graffiti - Fantastic Style',price:129,fit:'RELAXED FIT',category:'hoodies',image:'',colors:{black:{label:'Czarny',sizes:{S:8,M:12,L:6,XL:4}},pink:{label:'Różowy',sizes:{S:5,M:7,L:3,XL:2}},blue:{label:'Jasny niebieski',sizes:{S:4,M:6,L:5,XL:3}}}},
+  'oversized-white-shirt':{name:'T-Shirt Different Reality.',price:99,fit:'OVERSIZED FIT',category:'tshirts',image:'',colors:{white:{label:'Biały',sizes:{S:8,M:12,L:8,XL:5}},blue:{label:'Jasny niebieski',sizes:{S:6,M:8,L:6,XL:4}},purple:{label:'Fioletowy',sizes:{S:5,M:7,L:5,XL:3}}}}
+};
+function ensureStore(db){
+  // Seed the starter catalog only once. Do not recreate products that an admin deliberately deleted.
+  if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
+  if(!Array.isArray(db.orders))db.orders=[];
+  return db;
+}
+function publicCatalog(db){ensureStore(db);return db.catalog}
+function safeOrderAddress(a){return {id:String(a?.id||'').slice(0,120),firstName:String(a?.firstName||'').trim().slice(0,80),lastName:String(a?.lastName||'').trim().slice(0,80),email:cleanEmail(a?.email).slice(0,160),phone:String(a?.phone||'').trim().slice(0,40),street:String(a?.street||'').trim().slice(0,160),postal:String(a?.postal||'').trim().slice(0,20),city:String(a?.city||'').trim().slice(0,100)} }
+function normalizeOrderItems(db,items){
+  ensureStore(db);if(!Array.isArray(items)||!items.length)throw new Error('Koszyk jest pusty.');if(items.length>30)throw new Error('Za dużo pozycji w koszyku.');
+  return items.map(raw=>{const id=String(raw?.id||''),color=String(raw?.color||''),size=String(raw?.size||'').toUpperCase(),qty=Math.max(1,Math.min(20,Number(raw?.qty||1)|0));const product=db.catalog[id],variant=product?.colors?.[color],stock=Number(variant?.sizes?.[size]);if(!product||!variant||!Number.isFinite(stock))throw new Error('Nieprawidłowy wariant produktu.');if(qty>stock)throw new Error(`Brak wystarczającego stanu: ${product.name} ${variant.label} / ${size}. Dostępne: ${stock} szt.`);return {id,name:product.name,fit:product.fit,color,colorLabel:variant.label,size,qty,price:Number(product.price),stockLimit:stock,image:String(raw?.image||'').slice(0,5_500_000)}})
+}
+function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,trackingUpdatedAt:Number(o.trackingUpdatedAt||0)}}
+function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
+function reserveStockForOrder(db,order){
+  if(order.stockCommitted||order.stockReserved)return;
+  for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error(`Brak wystarczającego stanu: ${x.name} ${x.colorLabel||x.color} / ${x.size}.`)}
+  for(const x of order.items){db.catalog[x.id].colors[x.color].sizes[x.size]-=Number(x.qty)}
+  order.stockReserved=true;order.stockReservedAt=Date.now();
+}
+function releaseStockReservation(db,order){
+  if(!order.stockReserved||order.stockCommitted)return;
+  for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(slot&&Object.prototype.hasOwnProperty.call(slot,x.size))slot[x.size]=Number(slot[x.size]||0)+Number(x.qty)}
+  order.stockReserved=false;order.stockReservedReleasedAt=Date.now();
+}
+app.get('/api/store/catalog',(req,res)=>{const db=load();ensureStore(db);save(db);res.json({ok:true,catalog:publicCatalog(db)})});
+app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id).map(orderForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
+app.post('/api/orders/:id/cancel',auth,(req,res)=>{
+  ensureStore(req.db);
+  const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  if(order.paymentStatus==='cancelled')return res.json({ok:true,order:orderForUser(order)});
+  if(order.paymentStatus==='paid')return res.status(409).json({error:'Opłaconego zamówienia nie można anulować automatycznie. Skontaktuj się z obsługą STARXV.'});
+  releaseStockReservation(req.db,order);
+  order.paymentStatus='cancelled';
+  order.cancelledAt=Date.now();
+  order.updatedAt=Date.now();
+  save(req.db);
+  res.json({ok:true,order:orderForUser(order)});
+});
+app.post('/api/orders/prepare',auth,(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').toUpperCase();const discount=promoCode==='STARXV10'?Math.round(subtotal*.10*100)/100:0;const total=Math.max(0,Math.round((subtotal-discount)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery:req.body?.delivery||null,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount}:null,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false};req.db.orders.push(order);save(req.db);res.json({ok:true,order:orderForUser(order)})}catch(e){res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+// This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
+function markOrderPaid(db,order){
+  if(order.paymentStatus==='paid')return;
+  if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
+  else decrementStockForOrder(db,order);
+  order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now()
+}
+
+
+function stripeBaseUrl(req){
+  const configured=String(process.env.PUBLIC_URL||'').trim().replace(/\/$/,'');
+  return configured||`${req.protocol}://${req.get('host')}`;
+}
+function stripeMethods(preference){
+  const p=String(preference||'auto');
+  if(p==='blik')return ['blik'];
+  if(p==='p24')return ['p24'];
+  if(p==='card')return ['card'];
+  if(p==='wallet')return ['card']; // Apple Pay / Google Pay are exposed through eligible card wallets.
+  if(p==='link')return ['card','link'];
+  return null;
+}
+async function sendPaidOrderEmail(db,order){
+  try{
+    const key=String(process.env.RESEND_API_KEY||'').trim();
+    if(!key)return;
+    const u=(db.users||[]).find(x=>x.id===order.userId);
+    const to=cleanEmail(order.address?.email||u?.email);
+    if(!to)return;
+    const resend=new Resend(key);
+    const itemLines=(order.items||[]).map(x=>`${x.name} — ${x.colorLabel||x.color} / ${x.size} × ${x.qty}`).join('\n');
+    const total=Number(order.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const {error}=await resend.emails.send({
+      from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,
+      subject:`STARXV — potwierdzenie zamówienia #${order.orderNo}`,
+      text:`Dziękujemy za zamówienie #${order.orderNo}.\n\nPłatność została potwierdzona.\n\n${itemLines}\n\nRazem: ${total} PLN\n\nStatus zamówienia możesz sprawdzić w profilu STARXV.`,
+      html:`<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px"><h1 style="font-size:28px;margin:0 0 26px">STARXV</h1><p>Płatność za zamówienie <b>#${order.orderNo}</b> została potwierdzona.</p><div style="margin:24px 0;padding:18px;border:1px solid #ddd">${(order.items||[]).map(x=>`<div style="margin:8px 0"><b>${String(x.name||'STARXV').replace(/[<>&]/g,'')}</b><br><span style="color:#666">${String(x.colorLabel||x.color||'').replace(/[<>&]/g,'')} / ${String(x.size||'').replace(/[<>&]/g,'')} × ${Number(x.qty||1)}</span></div>`).join('')}<hr style="border:0;border-top:1px solid #ddd;margin:18px 0"><b>Razem: ${total} PLN</b></div><p style="color:#666">Aktualny status realizacji znajdziesz w sekcji „Moje zamówienia” na swoim koncie.</p></div>`
+    });
+    if(error)console.error('Resend order confirmation error:',error);
+  }catch(e){console.error('Order confirmation email error:',e.message)}
+}
+
+app.get('/api/payments/config',(req,res)=>{
+  res.json({ok:true,stripeConfigured:Boolean(process.env.STRIPE_SECRET_KEY&&process.env.STRIPE_WEBHOOK_SECRET),currency:'pln'});
+});
+
+app.post('/api/create-checkout-session',auth,async(req,res)=>{
+  try{
+    const stripe=getStripe();
+    if(!stripe)return res.status(503).json({error:'Stripe nie jest jeszcze skonfigurowany na serwerze.'});
+    ensureStore(req.db);
+    const orderId=String(req.body?.orderId||'');
+    const order=req.db.orders.find(o=>o.id===orderId&&o.userId===req.user.id);
+    if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+    if(order.paymentStatus==='paid')return res.status(409).json({error:'To zamówienie jest już opłacone.'});
+    if(order.paymentStatus==='cancelled')return res.status(409).json({error:'To zamówienie zostało anulowane.'});
+    if(!Number.isFinite(Number(order.total))||Number(order.total)<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
+
+    // Reserve stock for this checkout so two customers cannot pay for the same last item.
+    if(order.paymentStatus==='failed')order.paymentStatus='pending';
+    reserveStockForOrder(req.db,order);
+    save(req.db);
+
+    const base=stripeBaseUrl(req);
+    const methods=stripeMethods(order.paymentPreference);
+    const params={
+      mode:'payment',
+      success_url:`${base}/?payment=success&order=${encodeURIComponent(order.id)}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:`${base}/?payment=cancelled&order=${encodeURIComponent(order.id)}`,
+      customer_email:cleanEmail(order.address?.email||req.user.email)||undefined,
+      line_items:[{
+        quantity:1,
+        price_data:{
+          currency:'pln',
+          unit_amount:Math.round(Number(order.total)*100),
+          product_data:{name:`STARXV — zamówienie #${order.orderNo}`,description:`${(order.items||[]).length} ${(order.items||[]).length===1?'produkt':'produkty'} • płatność za całe zamówienie`}
+        }
+      }],
+      metadata:{orderId:order.id,orderNo:String(order.orderNo),userId:String(order.userId),paymentPreference:String(order.paymentPreference||'auto')},
+      payment_intent_data:{metadata:{orderId:order.id,orderNo:String(order.orderNo),userId:String(order.userId)}},
+      locale:'pl',
+      expires_at:Math.floor(Date.now()/1000)+30*60
+    };
+    if(methods)params.payment_method_types=methods;else params.automatic_payment_methods={enabled:true};
+    let session;
+    try{
+      session=await stripe.checkout.sessions.create(params,{idempotencyKey:`starxv-${order.id}-${Math.floor(Date.now()/60000)}`});
+    }catch(e){
+      releaseStockReservation(req.db,order);save(req.db);throw e;
+    }
+    order.stripeSessionId=session.id;
+    order.stripeSessionCreatedAt=Date.now();
+    order.updatedAt=Date.now();
+    save(req.db);
+    res.json({ok:true,url:session.url,sessionId:session.id,orderId:order.id});
+  }catch(e){
+    console.error('Stripe Checkout error:',e);
+    res.status(400).json({error:e?.message||'Nie udało się uruchomić płatności.'});
+  }
+});
+
+app.get('/api/orders/:id/payment-status',auth,(req,res)=>{
+  ensureStore(req.db);
+  const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  res.json({ok:true,order:orderForUser(order),confirmed:order.paymentStatus==='paid'});
+});
+
+async function handleStripeWebhook(req,res){
+  const stripe=getStripe(),secret=String(process.env.STRIPE_WEBHOOK_SECRET||'').trim();
+  if(!stripe||!secret)return res.status(503).send('Stripe webhook is not configured.');
+  let event;
+  try{event=stripe.webhooks.constructEvent(req.body,req.headers['stripe-signature'],secret)}
+  catch(e){console.error('Stripe webhook signature error:',e.message);return res.status(400).send('Invalid signature.');}
+  try{
+    const session=event.data.object;
+    const orderId=String(session?.metadata?.orderId||'');
+    if(orderId){
+      const db=load();ensureStore(db);const order=db.orders.find(o=>o.id===orderId);
+      if(order){
+        if(event.type==='checkout.session.completed'||event.type==='checkout.session.async_payment_succeeded'){
+          if(session.payment_status==='paid'||event.type==='checkout.session.async_payment_succeeded'){
+            const wasPaid=order.paymentStatus==='paid';
+            markOrderPaid(db,order);
+            order.stripeSessionId=session.id||order.stripeSessionId;
+            order.stripePaymentIntentId=typeof session.payment_intent==='string'?session.payment_intent:'';
+            order.updatedAt=Date.now();save(db);
+            if(!wasPaid)await sendPaidOrderEmail(db,order);
+          }
+        }else if(event.type==='checkout.session.async_payment_failed'){
+          if(order.paymentStatus!=='paid'){releaseStockReservation(db,order);order.paymentStatus='failed';order.updatedAt=Date.now();save(db)}
+        }else if(event.type==='checkout.session.expired'){
+          if(order.paymentStatus==='pending'){releaseStockReservation(db,order);order.paymentStatus='cancelled';order.updatedAt=Date.now();save(db)}
+        }
+      }
+    }
+    res.json({received:true});
+  }catch(e){console.error('Stripe webhook processing error:',e);res.status(500).send('Webhook processing failed.');}
+}
+
+
+// --- STARXV admin panel ---
+function adminEmails(){
+  return String(process.env.ADMIN_EMAILS||'').split(',').map(cleanEmail).filter(Boolean);
+}
+function adminOnly(req,res,next){
+  auth(req,res,()=>{
+    const allowed=adminEmails();
+    if(!allowed.length)return res.status(503).json({error:'Panel administratora nie jest skonfigurowany. Dodaj ADMIN_EMAILS do pliku .env.'});
+    if(!allowed.includes(cleanEmail(req.user.email)))return res.status(403).json({error:'To konto nie ma dostępu do panelu administratora.'});
+    next();
+  });
+}
+
+// --- STARXV InPost / ShipX shipping -------------------------------------------
+// Requires INPOST_TOKEN and INPOST_ORGANIZATION_ID in .env.
+// The ShipX PL API is asynchronous: creation may initially return no tracking_number.
+function inpostConfig(){
+  return {
+    token:String(process.env.INPOST_TOKEN||'').trim(),
+    organizationId:String(process.env.INPOST_ORGANIZATION_ID||'').trim(),
+    base:String(process.env.INPOST_API_BASE||'https://api-shipx-pl.easypack24.net/v1').trim().replace(/\/$/,''),
+    parcelTemplate:['small','medium','large'].includes(String(process.env.INPOST_PARCEL_TEMPLATE||'small').trim())?String(process.env.INPOST_PARCEL_TEMPLATE||'small').trim():'small'
+  };
+}
+function inpostConfigured(){const c=inpostConfig();return Boolean(c.token&&c.organizationId)}
+async function inpostRequest(pathname,{method='GET',body,auth=true,accept='application/json'}={}){
+  const c=inpostConfig();
+  if(auth&&!inpostConfigured())throw Object.assign(new Error('InPost nie jest jeszcze skonfigurowany. Dodaj INPOST_TOKEN i INPOST_ORGANIZATION_ID do .env.'),{status:503});
+  const headers={Accept:accept};
+  if(auth)headers.Authorization=`Bearer ${c.token}`;
+  if(body!==undefined)headers['Content-Type']='application/json';
+  const response=await fetch(c.base+pathname,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});
+  const contentType=String(response.headers.get('content-type')||'');
+  if(!response.ok){
+    let detail='';
+    try{const j=contentType.includes('json')?await response.json():null;detail=j?.description||j?.message||j?.error||''}catch{}
+    const err=new Error(detail||`InPost zwrócił błąd HTTP ${response.status}.`);err.status=response.status;throw err;
+  }
+  if(accept!=='application/json')return response;
+  return response.status===204?{}:response.json();
+}
+function receiverForInpost(order,withAddress){
+  const a=order.address||{};
+  const receiver={first_name:String(a.firstName||'').trim(),last_name:String(a.lastName||'').trim(),email:cleanEmail(a.email),phone:String(a.phone||'').replace(/\s+/g,'').trim()};
+  if(!receiver.first_name||!receiver.last_name||!receiver.email||!receiver.phone)throw new Error('Do utworzenia przesyłki InPost potrzebne są imię, nazwisko, e-mail i numer telefonu odbiorcy.');
+  if(withAddress){
+    receiver.address={line1:String(a.street||'').trim(),city:String(a.city||'').trim(),post_code:String(a.postal||'').trim(),country_code:'PL'};
+    if(!receiver.address.line1||!receiver.address.city||!receiver.address.post_code)throw new Error('Brakuje pełnego adresu odbiorcy.');
+  }
+  return receiver;
+}
+function makeInpostShipmentBody(order){
+  const c=inpostConfig(),delivery=order.delivery||{},locker=delivery?.locker||{};
+  const isLocker=delivery.type==='inpost';
+  const body={
+    receiver:receiverForInpost(order,!isLocker),
+    parcels:{template:c.parcelTemplate},
+    service:isLocker?'inpost_locker_standard':'inpost_courier_standard',
+    reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`
+  };
+  if(isLocker){
+    const point=String(locker.id||locker.name||'').trim();
+    if(!point)throw new Error('W zamówieniu nie zapisano kodu Paczkomatu.');
+    body.custom_attributes={target_point:point};
+  }
+  return body;
+}
+function inpostStageFromStatus(status,current=0){
+  const s=String(status||'');
+  if(s==='delivered')return 4;
+  if(['out_for_delivery','out_for_delivery_to_address','ready_to_pickup','pickup_reminder_sent','ready_to_pickup_from_branch','ready_to_pickup_from_pok'].includes(s))return 3;
+  if(['dispatched_by_sender','dispatched_by_sender_to_pok','collected_from_sender','taken_by_courier','adopted_at_source_branch','sent_from_source_branch','adopted_at_sorting_center','sent_from_sorting_center','adopted_at_target_branch','taken_by_courier_from_pok'].includes(s))return 3;
+  if(['confirmed','created','offers_prepared','offer_selected'].includes(s))return Math.max(2,Number(current||0));
+  return Number(current||0);
+}
+function applyInpostState(order,data){
+  if(data?.id)order.inpostShipmentId=data.id;
+  if(data?.tracking_number)order.trackingNumber=String(data.tracking_number);
+  if(data?.status)order.carrierStatus=String(data.status);
+  order.carrier='InPost';
+  order.trackingUpdatedAt=Date.now();
+  order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);
+  order.updatedAt=Date.now();
+}
+async function refreshInpostOrder(order){
+  if(order.inpostShipmentId){
+    const data=await inpostRequest(`/shipments/${encodeURIComponent(order.inpostShipmentId)}`);
+    applyInpostState(order,data);
+  }
+  if(order.trackingNumber){
+    try{
+      const tracking=await inpostRequest(`/tracking/${encodeURIComponent(order.trackingNumber)}`,{auth:false});
+      if(tracking?.status)order.carrierStatus=String(tracking.status);
+      order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);
+      order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();
+    }catch(e){console.warn('InPost tracking refresh:',e.message)}
+  }
+  return order;
+}
+app.get('/api/shipping/config',(req,res)=>res.json({ok:true,inpostConfigured:inpostConfigured(),carrier:'InPost'}));
+app.post('/api/admin/orders/:id/shipment/create',adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  if(order.paymentStatus!=='paid')return res.status(409).json({error:'Przesyłkę można utworzyć dopiero dla opłaconego zamówienia.'});
+  if(order.inpostShipmentId)return res.status(409).json({error:'Dla tego zamówienia istnieje już przesyłka InPost.'});
+  const data=await inpostRequest(`/organizations/${encodeURIComponent(inpostConfig().organizationId)}/shipments`,{method:'POST',body:makeInpostShipmentBody(order)});
+  applyInpostState(order,data);order.shippingStage=Math.max(1,Number(order.shippingStage||0));save(req.db);
+  res.status(201).json({ok:true,order:adminOrder(req.db,order)});
+}catch(e){console.error('InPost create shipment:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się utworzyć przesyłki InPost.'})}});
+app.post('/api/admin/orders/:id/shipment/sync',adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  if(!order.inpostShipmentId&&!order.trackingNumber)return res.status(409).json({error:'To zamówienie nie ma jeszcze przesyłki InPost.'});
+  await refreshInpostOrder(order);save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
+}catch(e){console.error('InPost sync:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się odświeżyć trackingu InPost.'})}});
+app.get('/api/admin/orders/:id/shipment/label',adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  if(!order.inpostShipmentId)return res.status(409).json({error:'To zamówienie nie ma jeszcze przesyłki InPost.'});
+  const r=await inpostRequest(`/shipments/${encodeURIComponent(order.inpostShipmentId)}/label?format=pdf`,{accept:'application/pdf'});
+  const buf=Buffer.from(await r.arrayBuffer());res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition',`inline; filename=STARXV-${String(order.orderNo||'shipment')}-InPost.pdf`);res.send(buf);
+}catch(e){console.error('InPost label:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się pobrać etykiety InPost.'})}});
+app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  const tracking=String(req.body?.trackingNumber||'').trim().replace(/\s+/g,'');
+  if(!/^[A-Za-z0-9-]{8,40}$/.test(tracking))return res.status(400).json({error:'Wpisz poprawny numer przesyłki.'});
+  order.trackingNumber=tracking;order.carrier='InPost';order.carrierStatus='manual';order.shippingStage=Math.max(2,Number(order.shippingStage||0));order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();save(req.db);
+  res.json({ok:true,order:adminOrder(req.db,order)});
+}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać numeru przesyłki.'})}});
+
+function adminOrder(db,o){
+  const u=(db.users||[]).find(x=>x.id===o.userId);
+  return {
+    ...orderForUser(o),
+    customer:u?{firstName:u.firstName,lastName:u.lastName,email:u.email}:{firstName:'',lastName:'',email:''},
+    stockCommitted:Boolean(o.stockCommitted)
+  };
+}
+app.get('/api/admin/me',adminOnly,(req,res)=>res.json({ok:true,user:publicUser(req.user)}));
+app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
+  ensureStore(req.db);
+  const orders=req.db.orders.map(o=>adminOrder(req.db,o)).sort((a,b)=>b.createdAt-a.createdAt);
+  const variants=[];
+  for(const [productId,p] of Object.entries(req.db.catalog))for(const [color,c] of Object.entries(p.colors||{}))for(const [size,stock] of Object.entries(c.sizes||{}))variants.push({productId,productName:p.name,color,colorLabel:c.label,size,stock:Number(stock||0)});
+  const paid=orders.filter(o=>o.paymentStatus==='paid');
+  res.json({ok:true,catalog:req.db.catalog,orders,stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
+});
+
+function cleanSlug(v,label='ID'){
+  const s=String(v||'').trim().toLowerCase().replace(/\s+/g,'-');
+  if(!/^[a-z0-9][a-z0-9-]{1,59}$/.test(s))throw new Error(`${label} może zawierać małe litery, cyfry i myślniki (2–60 znaków).`);
+  return s;
+}
+function cleanSize(v){
+  const s=String(v||'').trim().toUpperCase();
+  if(!/^[A-Z0-9+\-]{1,20}$/.test(s))throw new Error('Rozmiar może zawierać litery, cyfry, + i -.');
+  return s;
+}
+app.post('/api/admin/products',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const id=cleanSlug(req.body?.id,'ID produktu');
+    if(req.db.catalog[id])return res.status(409).json({error:'Produkt o takim ID już istnieje.'});
+    const name=String(req.body?.name||'').trim().slice(0,160);
+    const fit=String(req.body?.fit||'').trim().slice(0,80);
+    const category=['hoodies','tshirts','other'].includes(String(req.body?.category||''))?String(req.body.category):'other';
+    const image=String(req.body?.image||'').trim().slice(0,200000);
+    const price=Number(req.body?.price);
+    if(!name)return res.status(400).json({error:'Podaj nazwę produktu.'});
+    if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});
+    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,colors:{}};
+    save(req.db);res.status(201).json({ok:true,id,product:req.db.catalog[id]});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu.'})}
+});
+app.put('/api/admin/products/:id',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);const id=String(req.params.id||'');const p=req.db.catalog[id];
+    if(!p)return res.status(404).json({error:'Nie znaleziono produktu.'});
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'name')){const name=String(req.body.name||'').trim().slice(0,160);if(!name)return res.status(400).json({error:'Nazwa nie może być pusta.'});p.name=name}
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'fit'))p.fit=String(req.body.fit||'').trim().slice(0,80);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'category')){const category=String(req.body.category||'');if(!['hoodies','tshirts','other'].includes(category))return res.status(400).json({error:'Nieprawidłowa kategoria.'});p.category=category}
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'image'))p.image=String(req.body.image||'').trim().slice(0,200000);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'price')){const price=Number(req.body.price);if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});p.price=Math.round(price*100)/100}
+    save(req.db);res.json({ok:true,product:p});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu.'})}
+});
+app.delete('/api/admin/products/:id',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const id=String(req.params.id||'');
+    const product=req.db.catalog[id];
+    if(!product)return res.status(404).json({error:'Nie znaleziono produktu.'});
+
+    // A pending order may still need this product when payment is confirmed.
+    // Keep the catalog entry until that order is paid or cancelled.
+    const blockingOrder=(req.db.orders||[]).find(o=>
+      !o.stockCommitted && String(o.paymentStatus||'pending')==='pending' &&
+      Array.isArray(o.items) && o.items.some(x=>String(x.id||'')===id)
+    );
+    if(blockingOrder){
+      return res.status(409).json({error:`Nie można usunąć produktu, bo znajduje się w oczekującym zamówieniu #${blockingOrder.orderNo||''}. Najpierw oznacz zamówienie jako opłacone albo anulowane.`});
+    }
+
+    delete req.db.catalog[id];
+    save(req.db);
+    res.json({ok:true,id});
+  }catch(e){
+    res.status(400).json({error:e.message||'Nie udało się usunąć produktu.'});
+  }
+});
+
+app.post('/api/admin/products/:id/colors',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);const id=String(req.params.id||'');const p=req.db.catalog[id];
+    if(!p)return res.status(404).json({error:'Nie znaleziono produktu.'});
+    const color=cleanSlug(req.body?.color,'ID koloru');
+    if(p.colors?.[color])return res.status(409).json({error:'Ten kolor już istnieje.'});
+    const label=String(req.body?.label||'').trim().slice(0,80);if(!label)return res.status(400).json({error:'Podaj nazwę koloru.'});
+    if(!p.colors||typeof p.colors!=='object')p.colors={};p.colors[color]={label,sizes:{}};
+    save(req.db);res.status(201).json({ok:true,color,variant:p.colors[color]});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać koloru.'})}
+});
+app.post('/api/admin/products/:id/colors/:color/sizes',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
+    if(!c)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
+    const size=cleanSize(req.body?.size);if(Object.prototype.hasOwnProperty.call(c.sizes||{},size))return res.status(409).json({error:'Ten rozmiar już istnieje.'});
+    const stock=Number(req.body?.stock??0);if(!Number.isInteger(stock)||stock<0||stock>9999)return res.status(400).json({error:'Stan musi być liczbą całkowitą od 0 do 9999.'});
+    if(!c.sizes||typeof c.sizes!=='object')c.sizes={};c.sizes[size]=stock;save(req.db);res.status(201).json({ok:true,size,stock});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać rozmiaru.'})}
+});
+
+app.put('/api/admin/stock',adminOnly,(req,res)=>{
+  ensureStore(req.db);
+  const productId=String(req.body?.productId||''),color=String(req.body?.color||''),size=String(req.body?.size||'').toUpperCase();
+  const stock=Number(req.body?.stock);
+  const slot=req.db.catalog?.[productId]?.colors?.[color]?.sizes;
+  if(!slot||!Object.prototype.hasOwnProperty.call(slot,size))return res.status(404).json({error:'Nie znaleziono tego wariantu produktu.'});
+  if(!Number.isInteger(stock)||stock<0||stock>9999)return res.status(400).json({error:'Stan musi być liczbą całkowitą od 0 do 9999.'});
+  slot[size]=stock;save(req.db);res.json({ok:true,stock});
+});
+app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const order=req.db.orders.find(o=>o.id===req.params.id);
+    if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+    const requestedStatus=String(req.body?.paymentStatus||'');
+    if(requestedStatus){
+      if(!['pending','paid','cancelled'].includes(requestedStatus))return res.status(400).json({error:'Nieprawidłowy status płatności.'});
+      if(order.paymentStatus==='paid'&&requestedStatus!=='paid')return res.status(400).json({error:'Opłaconego zamówienia nie można cofnąć w tym panelu.'});
+      if(order.paymentStatus==='cancelled'&&requestedStatus!=='cancelled')return res.status(400).json({error:'Anulowanego zamówienia nie można ponownie aktywować w tym panelu.'});
+      if(requestedStatus==='paid')markOrderPaid(req.db,order);else{if(requestedStatus==='cancelled')releaseStockReservation(req.db,order);order.paymentStatus=requestedStatus;}
+    }
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'shippingStage')){
+      const stage=Number(req.body.shippingStage);
+      if(!Number.isInteger(stage)||stage<0||stage>4)return res.status(400).json({error:'Etap wysyłki musi być od 0 do 4.'});
+      order.shippingStage=stage;
+    }
+    order.updatedAt=Date.now();save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się zaktualizować zamówienia.'})}
+});
+
+app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?.avatarData||'');if(avatarData&&!/^data:image\/(jpeg|png|webp);base64,/.test(avatarData))return res.status(400).json({error:'Nieprawidłowy format zdjęcia.'});if(avatarData.length>5_500_000)return res.status(413).json({error:'Zdjęcie jest za duże.'});const i=req.db.users.findIndex(x=>x.id===req.user.id);req.db.users[i].avatarData=avatarData;save(req.db);res.json({ok:true,user:publicUser(req.db.users[i])})});
+app.get(['/admin','/admin/'],(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
+app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
+
+app.get('/{*splat}', (req,res) => {
+  res.sendFile(path.join(__dirname,'public','index.html'));
+});
+app.listen(PORT,()=>console.log(`STARXV działa na http://localhost:${PORT}`));
