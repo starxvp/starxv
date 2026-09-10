@@ -495,6 +495,15 @@ body.sx-light-theme .sx-selected-stock b{color:#111}
 .cart-item-main{min-width:0}.cart-item-name{font-size:14px;font-weight:800;line-height:1.25}.cart-item-fit{margin-top:5px;color:#666;font-size:8px;letter-spacing:.14em;font-weight:800}.cart-item-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:13px;font-size:10px;color:#aaa}.cart-item-meta b{color:#fff}
 .cart-row-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px}.qty{display:flex;align-items:center;border:1px solid var(--line);height:34px}.qty button{width:32px;height:32px;border:0;background:transparent;color:#fff;cursor:pointer;font-size:16px}.qty span{min-width:28px;text-align:center;font-size:11px;font-weight:800}.remove-item{border:0;background:none;color:#666;font-size:9px;letter-spacing:.12em;font-weight:800;cursor:pointer}.remove-item:hover{color:#fff}
 .cart-footer{padding:22px 28px 26px;border-top:1px solid var(--line);background:#080808}.cart-summary-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.cart-summary-row span{font-size:10px;color:#777;letter-spacing:.14em;font-weight:800}.cart-summary-row strong{font-size:19px}.checkout-btn{width:100%;height:58px;border:0;background:#fff;color:#000;font:inherit;font-size:10px;font-weight:900;letter-spacing:.16em;cursor:pointer;transition:.2s}.checkout-btn:disabled{background:#171717;color:#555;cursor:not-allowed}.checkout-hint{margin-top:10px;text-align:center;color:#555;font-size:8px;letter-spacing:.11em;font-weight:700;line-height:1.5}
+
+.cart-guest-lock{min-height:100%;display:grid;place-items:center;padding:42px 18px;text-align:center}
+.cart-guest-lock-inner{width:min(390px,100%);padding:38px 28px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.025)}
+.cart-guest-lock-icon{width:58px;height:58px;margin:0 auto 22px;border:1px solid rgba(255,255,255,.18);border-radius:50%;display:grid;place-items:center;font-size:24px}
+.cart-guest-lock strong{display:block;color:#fff;font-size:22px;letter-spacing:-.03em;margin-bottom:12px}
+.cart-guest-lock p{margin:0;color:#777;font-size:11px;line-height:1.75}
+.cart-guest-auth-btn{width:100%;height:54px;margin-top:24px;border:0;background:#fff;color:#000;font:inherit;font-size:9px;font-weight:950;letter-spacing:.14em;cursor:pointer}
+.cart-guest-auth-btn:hover{opacity:.88}
+
 .cart-toast{position:fixed;z-index:1500;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;padding:13px 18px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:rgba(10,10,10,.92);backdrop-filter:blur(12px);font-size:10px;font-weight:800;letter-spacing:.08em;transition:.25s}.cart-toast.show{opacity:1;transform:translate(-50%,0)}
 .add-btn.added{background:linear-gradient(90deg,var(--blue),var(--pink));color:#050505}
 @media(max-width:600px){.cart-panel{width:100%}.cart-header{height:78px;padding:0 18px}.cart-body{padding:14px 18px 24px}.cart-footer{padding:18px}.cart-item{grid-template-columns:24px 86px 1fr;gap:11px}.cart-thumb{width:86px;height:108px}.cart-item-name{font-size:12px}.cart-row-bottom{align-items:flex-end}.nav-button{padding:10px 13px}.cart-count{min-width:18px;height:18px}}
@@ -1480,7 +1489,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 (()=>{
   const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',fit:'[RELAXED FIT]',price:129};
   const m=document.getElementById('productModal'),c=document.querySelector('.product-card'),t=document.getElementById('galleryTrack'),dots=[...document.querySelectorAll('.dot')],label=document.getElementById('viewLabel');
-  const cartModal=document.getElementById('cartModal'),openCartBtn=document.getElementById('openCart'),closeCartBtn=document.getElementById('closeCart'),cartItems=document.getElementById('cartItems'),cartCount=document.getElementById('cartCount'),cartTotal=document.getElementById('cartTotal'),checkoutBtn=document.getElementById('checkoutBtn'),checkoutHint=document.getElementById('checkoutHint'),toast=document.getElementById('cartToast');
+  const cartModal=document.getElementById('cartModal'),openCartBtn=document.getElementById('openCart'),closeCartBtn=document.getElementById('closeCart'),cartItems=document.getElementById('cartItems'),cartCount=document.getElementById('cartCount'),cartTotal=document.getElementById('cartTotal'),checkoutBtn=document.getElementById('checkoutBtn'),checkoutHint=document.getElementById('checkoutHint'),toast=document.getElementById('cartToast'),cartFooter=cartModal?.querySelector('.cart-footer');
   const addBtn=document.querySelector('.add-btn'),sizeButtons=[...document.querySelectorAll('.sizes button')];
   let i=0,selectedSize='',selectedColor='black',cart=[];
   const COLOR_META={black:{label:'Czarny',name:'Black Hoodie x Graffiti - Fantastic Style'},pink:{label:'Różowy',name:'Pink Hoodie x Graffiti - Fantastic Style'},blue:{label:'Jasny niebieski',name:'Light Blue Hoodie x Graffiti - Fantastic Style'}};
@@ -1507,6 +1516,24 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   if(promoApply)promoApply.onclick=()=>{const code=(promoInput?.value||'').trim().toUpperCase();if(!code){localStorage.removeItem(PROMO_KEY);renderCart();showToast('Kod rabatowy usunięty');return}const p=PROMOS[code];if(!p){promoMessage.textContent='Ten kod jest nieprawidłowy lub nieaktywny.';promoMessage.classList.remove('ok');return}localStorage.setItem(PROMO_KEY,JSON.stringify({code:p.code}));renderCart();showToast(`Kod ${p.code} zastosowany`)};
 
   const renderCart=()=>{
+    if(!window.STARXV_AUTH_USER){
+      cart=[];
+      try{localStorage.removeItem('starxv-cart')}catch(e){}
+      if(cartCount) cartCount.textContent='0';
+      if(cartFooter) cartFooter.style.display='none';
+      cartItems.innerHTML=`<div class="cart-guest-lock"><div class="cart-guest-lock-inner">
+        <div class="cart-guest-lock-icon">🔒</div>
+        <strong>Koszyk jest zablokowany.</strong>
+        <p>Koszyk odblokuje się po zarejestrowaniu lub zalogowaniu na konto STARXV.</p>
+        <button class="cart-guest-auth-btn" id="cartGuestAuthBtn" type="button">ZAREJESTRUJ SIĘ / ZALOGUJ →</button>
+      </div></div>`;
+      document.getElementById('cartGuestAuthBtn')?.addEventListener('click',()=>{
+        closeCart();
+        setTimeout(()=>window.STARXV_REQUIRE_AUTH?.(),120);
+      });
+      return;
+    }
+    if(cartFooter) cartFooter.style.display='';
     // Synchronize products added by other product modules (e.g. T-shirts).
     try{
       const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
@@ -1576,6 +1603,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   document.querySelector('.gallery-arrow.next').onclick=()=>show(i+1);document.querySelector('.gallery-arrow.prev').onclick=()=>show(i-1);dots.forEach(d=>d.onclick=()=>show(+d.dataset.slide));
   sizeButtons.forEach(b=>b.onclick=()=>{sizeButtons.forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedSize=b.textContent.trim()});
   addBtn.onclick=addToCart;openCartBtn.onclick=openCart;closeCartBtn.onclick=closeCart;
+  window.addEventListener('starxv:auth-changed',()=>{if(cartModal.classList.contains('open'))renderCart();});
   cartModal.addEventListener('click',e=>{if(e.target===cartModal)closeCart()});
   checkoutBtn.onclick=()=>{if(checkoutBtn.disabled)return;window.STARXV_OPEN_CHECKOUT_CONFIRM?.();};
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(cartModal.classList.contains('open'))closeCart();else if(m.classList.contains('open'))closeProduct()}if(!m.classList.contains('open'))return;if(e.key==='ArrowRight')show(i+1);if(e.key==='ArrowLeft')show(i-1)});
