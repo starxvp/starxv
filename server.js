@@ -843,6 +843,7 @@ app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
 
 app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?.avatarData||'');if(avatarData&&!/^data:image\/(jpeg|png|webp);base64,/.test(avatarData))return res.status(400).json({error:'Nieprawidłowy format zdjęcia.'});if(avatarData.length>5_500_000)return res.status(413).json({error:'Zdjęcie jest za duże.'});const i=req.db.users.findIndex(x=>x.id===req.user.id);req.db.users[i].avatarData=avatarData;save(req.db);res.json({ok:true,user:publicUser(req.db.users[i])})});
 app.get(['/admin','/admin/'],(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
+app.use('/assets',express.static(path.join(__dirname,'public','assets'),{maxAge:'1y',immutable:true}));
 app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
 
 app.get('/{*splat}', (req,res) => {
