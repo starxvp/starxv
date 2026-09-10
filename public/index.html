@@ -1520,7 +1520,6 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   const renderCart=()=>{
     if(!window.STARXV_AUTH_USER){
       cart=[];
-      try{localStorage.removeItem('starxv-cart')}catch(e){}
       if(cartCount) cartCount.textContent='0';
       if(cartFooter) cartFooter.style.display='none';
       cartItems.innerHTML=`<div class="cart-guest-lock"><div class="cart-guest-lock-inner">
@@ -1611,6 +1610,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(cartModal.classList.contains('open'))closeCart();else if(m.classList.contains('open'))closeProduct()}if(!m.classList.contains('open'))return;if(e.key==='ArrowRight')show(i+1);if(e.key==='ArrowLeft')show(i-1)});
   let sx=0;document.querySelector('.gallery').addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});document.querySelector('.gallery').addEventListener('touchend',e=>{let dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45)show(i+(dx<0?1:-1))},{passive:true});
   window.addEventListener('starxv:auth-changed',renderCart);
+  window.addEventListener('starxv:cart-changed',()=>{try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{cart=[]}renderCart();});
   renderCart();
 })();
 </script>
@@ -1833,7 +1833,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     const a=currentUser,sub=$('accountSubtitle');
     window.STARXV_AUTH_USER=a||null;
     if(a){guest.style.display='none';profile.classList.add('active');const av=$('profileAvatar');av.textContent=a.avatarData?'':initials(a);av.style.backgroundImage=a.avatarData?`url(${a.avatarData})`:'';av.classList.toggle('has-photo',!!a.avatarData);$('profileName').textContent=`${a.firstName} ${a.lastName}`;$('profileEmail').textContent=a.email;$('profileCreated').textContent=new Date(a.createdAt).toLocaleDateString('pl-PL');badge.textContent=initials(a);badge.classList.add('show');sub.textContent='Twoje konto STARXV';openBtn.setAttribute('aria-label',`Konto: ${a.firstName} ${a.lastName}`)}
-    else{guest.style.display='block';profile.classList.remove('active');badge.classList.remove('show');badge.textContent='';sub.textContent='Zaloguj się lub utwórz konto';openBtn.setAttribute('aria-label','Zaloguj się lub utwórz konto');try{localStorage.removeItem('starxv-cart');localStorage.removeItem('starxv-favorites')}catch(e){}}
+    else{guest.style.display='block';profile.classList.remove('active');badge.classList.remove('show');badge.textContent='';sub.textContent='Zaloguj się lub utwórz konto';openBtn.setAttribute('aria-label','Zaloguj się lub utwórz konto');try{localStorage.removeItem('starxv-favorites')}catch(e){}}
     window.dispatchEvent(new Event('starxv:auth-changed'));
     if(!a)window.dispatchEvent(new Event('starxv:favorites-changed'));
   }
@@ -2336,7 +2336,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
 <script id="starxv-backend-preferences-sync">
 (()=>{
   'use strict';
-  const KEYS={favorites:'starxv-favorites',addresses:'starxv-addresses',defaultAddressId:'starxv-default-address'};
+  const KEYS={favorites:'starxv-favorites',addresses:'starxv-addresses',defaultAddressId:'starxv-default-address',cart:'starxv-cart'};
   const nativeSet=Storage.prototype.setItem;
   const nativeRemove=Storage.prototype.removeItem;
   let hydratedUserId='';
@@ -2347,7 +2347,8 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
   const snapshot=()=>({
     favorites:parseArray(KEYS.favorites),
     addresses:parseArray(KEYS.addresses),
-    defaultAddressId:localStorage.getItem(KEYS.defaultAddressId)||''
+    defaultAddressId:localStorage.getItem(KEYS.defaultAddressId)||'',
+    cart:parseArray(KEYS.cart)
   });
   const notify=()=>{
     try{window.dispatchEvent(new Event('storage'));}catch{}
@@ -2381,7 +2382,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
     try{
       const me=await fetch('/api/auth/me',{cache:'no-store'});
       if(!me.ok){
-        if(hydratedUserId){hydratedUserId='';hydrating=true;nativeRemove.call(localStorage,KEYS.favorites);nativeRemove.call(localStorage,KEYS.addresses);nativeRemove.call(localStorage,KEYS.defaultAddressId);hydrating=false;notify()}
+        if(hydratedUserId){hydratedUserId='';hydrating=true;nativeRemove.call(localStorage,KEYS.favorites);nativeRemove.call(localStorage,KEYS.addresses);nativeRemove.call(localStorage,KEYS.defaultAddressId);nativeRemove.call(localStorage,KEYS.cart);hydrating=false;notify()}
         return;
       }
       const meData=await me.json();
@@ -2392,8 +2393,8 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
       const data=await r.json();
       const server=data.preferences||{};
       const local=snapshot();
-      const serverEmpty=(!Array.isArray(server.favorites)||server.favorites.length===0)&&(!Array.isArray(server.addresses)||server.addresses.length===0)&&!server.defaultAddressId;
-      const localHas=local.favorites.length||local.addresses.length||local.defaultAddressId;
+      const serverEmpty=(!Array.isArray(server.favorites)||server.favorites.length===0)&&(!Array.isArray(server.addresses)||server.addresses.length===0)&&!server.defaultAddressId&&(!Array.isArray(server.cart)||server.cart.length===0);
+      const localHas=local.favorites.length||local.addresses.length||local.defaultAddressId||local.cart.length;
       hydratedUserId=uid;
       if(serverEmpty&&localHas){
         await putPreferences(local); // one-time migration from this browser
@@ -2404,8 +2405,10 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
       nativeSet.call(localStorage,KEYS.addresses,JSON.stringify(Array.isArray(server.addresses)?server.addresses:[]));
       if(server.defaultAddressId)nativeSet.call(localStorage,KEYS.defaultAddressId,String(server.defaultAddressId));
       else nativeRemove.call(localStorage,KEYS.defaultAddressId);
+      nativeSet.call(localStorage,KEYS.cart,JSON.stringify(Array.isArray(server.cart)?server.cart:[]));
       hydrating=false;
       notify();
+      try{window.dispatchEvent(new CustomEvent('starxv:cart-changed'));}catch{}
     }catch{}
   }
   window.STARXV_SYNC_ACCOUNT_DATA=hydrate;

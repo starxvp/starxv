@@ -449,7 +449,7 @@ app.post('/api/auth/reset-password',(req,res)=>{
   res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true});
 });
 app.post('/api/auth/register',async(req,res)=>{try{let {firstName,lastName,email,password}=req.body||{};firstName=cleanName(firstName);lastName=cleanName(lastName);email=cleanEmail(email);password=String(password||'');if(!firstName||!lastName||!validEmail(email)||!validPassword(password))return res.status(400).json({error:'Sprawdź dane. Hasło musi mieć 8–256 znaków.'});const db=load();if(db.users.some(u=>u.email===email))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});const now=Date.now();db.pending=(db.pending||[]).filter(p=>p.expiresAt>now&&p.email!==email);const code=String(crypto.randomInt(100000,1000000));db.pending.push({email,firstName,lastName,passwordHash:hashPassword(password),codeHash:codeHash(email,code),expiresAt:now+10*60*1000,attempts:0,createdAt:now});save(db);const sent=await sendCode(email,code);res.json({ok:true,expiresIn:600,developmentCode:sent.dev?code:undefined})}catch(e){console.error(e);res.status(500).json({error:'Nie udało się wysłać kodu. Spróbuj ponownie.'})}});
-app.post('/api/auth/verify',(req,res)=>{const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,'');const db=load(),now=Date.now(),p=db.pending.find(x=>x.email===email);if(!p||p.expiresAt<now)return res.status(400).json({error:'Kod wygasł. Wróć do rejestracji i wyślij nowy.'});if(p.attempts>=5)return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});if(p.codeHash!==codeHash(email,code)){p.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}if(db.users.some(u=>u.email===email))return res.status(409).json({error:'To konto już istnieje.'});const u={id:crypto.randomUUID(),firstName:p.firstName,lastName:p.lastName,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',favorites:[],addresses:[],defaultAddressId:''};db.users.push(u);db.pending=db.pending.filter(x=>x.email!==email);save(db);setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/verify',(req,res)=>{const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,'');const db=load(),now=Date.now(),p=db.pending.find(x=>x.email===email);if(!p||p.expiresAt<now)return res.status(400).json({error:'Kod wygasł. Wróć do rejestracji i wyślij nowy.'});if(p.attempts>=5)return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});if(p.codeHash!==codeHash(email,code)){p.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}if(db.users.some(u=>u.email===email))return res.status(409).json({error:'To konto już istnieje.'});const u={id:crypto.randomUUID(),firstName:p.firstName,lastName:p.lastName,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',favorites:[],addresses:[],defaultAddressId:'',cart:[]};db.users.push(u);db.pending=db.pending.filter(x=>x.email!==email);save(db);setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/login',(req,res)=>{const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');if(!validEmail(email)||password.length>256)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});const db=load(),u=db.users.find(x=>x.email===email);if(!u||!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',(req,res)=>{const t=cookie(req,'starxv_session');if(t)deleteSessionToken(t);res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true})});
 app.get('/api/auth/me',auth,(req,res)=>res.json({user:publicUser(req.user)}));
@@ -532,12 +532,29 @@ function accountPreferences(u){
   return {
     favorites:Array.isArray(u.favorites)?u.favorites:[],
     addresses:Array.isArray(u.addresses)?u.addresses:[],
-    defaultAddressId:String(u.defaultAddressId||'')
+    defaultAddressId:String(u.defaultAddressId||''),
+    cart:Array.isArray(u.cart)?u.cart:[]
   };
 }
 function cleanFavorites(value){
   if(!Array.isArray(value)) return [];
   return [...new Set(value.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,200);
+}
+function cleanCart(value){
+  if(!Array.isArray(value)) return [];
+  return value.slice(0,50).map(x=>({
+    id:String(x?.id||'').trim().slice(0,120),
+    name:String(x?.name||'').trim().slice(0,180),
+    fit:String(x?.fit||'').trim().slice(0,80),
+    price:Math.max(0,Math.min(100000,Number(x?.price)||0)),
+    color:String(x?.color||'').trim().slice(0,80),
+    colorLabel:String(x?.colorLabel||'').trim().slice(0,100),
+    size:String(x?.size||'').trim().toUpperCase().slice(0,20),
+    qty:Math.max(1,Math.min(20,Number(x?.qty||1)|0)),
+    selected:x?.selected!==false,
+    stockLimit:Math.max(0,Math.min(100000,Number(x?.stockLimit)||0)),
+    image:String(x?.image||'').trim().slice(0,2048)
+  })).filter(x=>x.id&&x.color&&x.size);
 }
 function cleanAddresses(value){
   if(!Array.isArray(value)) return [];
@@ -563,6 +580,7 @@ app.put('/api/account/preferences',auth,(req,res)=>{
   if(Object.prototype.hasOwnProperty.call(body,'favorites')) current.favorites=cleanFavorites(body.favorites);
   if(Object.prototype.hasOwnProperty.call(body,'addresses')) current.addresses=cleanAddresses(body.addresses);
   if(Object.prototype.hasOwnProperty.call(body,'defaultAddressId')) current.defaultAddressId=String(body.defaultAddressId||'').slice(0,120);
+  if(Object.prototype.hasOwnProperty.call(body,'cart')) current.cart=cleanCart(body.cart);
   const ids=new Set((current.addresses||[]).map(a=>a.id));
   if(current.defaultAddressId&&!ids.has(current.defaultAddressId)) current.defaultAddressId='';
   save(req.db);
