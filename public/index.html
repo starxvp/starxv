@@ -1932,8 +1932,33 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 
   function setupSearch(){
     const input=$('#sxSearchInput'),results=$('#sxSearchResults'); if(!input||!results)return;
-    const render=()=>{const q=input.value.trim().toLowerCase();if(!q){results.innerHTML='<div class="sx-muted" style="padding:16px 2px">Wpisz nazwę produktu, np. „hoodie” albo „graffiti”.</div>';return}const hit=(PRODUCT.name+' hoodie bluza graffiti black relaxed fit').toLowerCase().includes(q);results.innerHTML=hit?`<div class="sx-search-result" id="sxSearchHit"><img src="${getProductImage()}"><div><b>${PRODUCT.name}</b><small>${PRODUCT.fit} · ${PRODUCT.price} PLN</small></div></div>`:'<div class="sx-fav-empty">Brak produktów pasujących do wyszukiwania.</div>';$('#sxSearchHit')?.addEventListener('click',()=>{closeOverlay('sxSearchOverlay');openProduct()})};
-    input.addEventListener('input',render);render();
+    const escSearch=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const norm=x=>String(x??'').toLocaleLowerCase('pl-PL').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    let remoteCatalog={};
+    let renderToken=0;
+    const staticProducts=[
+      {id:PRODUCT.id,name:PRODUCT.name,fit:PRODUCT.fit,price:PRODUCT.price,image:getProductImage(),keywords:'hoodie bluza bluzy sweatshirt graffiti black czarna czarny relaxed fit drop 01',open:()=>openProduct()},
+      {id:'oversized-white-shirt',name:'White T-Shirt Different Reality.',fit:'OVERSIZED FIT',price:99,image:document.querySelector('#shirtCard .product-visual img')?.src||'/assets/b1322871e28ce217.webp',keywords:'t-shirt tshirt koszulka koszulki different reality white biala bialy blue niebieska niebieski purple fioletowa fioletowy oversized fit',open:()=>document.getElementById('shirtCard')?.click()}
+    ];
+    const getDynamicProducts=()=>Object.entries(remoteCatalog||{}).filter(([id])=>!['black-hoodie-graffiti','oversized-white-shirt'].includes(id)).map(([id,p])=>{
+      const colors=Object.entries(p.colors||{}).flatMap(([key,v])=>[key,v?.label,v?.name]).filter(Boolean).join(' ');
+      const image=p.image||p.images?.[0]||Object.values(p.colors||{}).map(v=>v?.image||v?.images?.[0]).find(Boolean)||'';
+      const category=String(p.category||'').toLowerCase().includes('shirt')?'koszulka koszulki tshirt t-shirt':'bluza bluzy hoodie';
+      return {id,name:p.name||id,fit:p.fit||'STARXV',price:Number(p.price||0),image,keywords:`${id} ${category} ${colors} ${p.description||''}`,open:()=>{const el=document.querySelector(`[data-product-id="${CSS.escape(id)}"]`);if(el)el.click();else window.STARXV_RENDER_DYNAMIC_CATALOG?.()}};
+    });
+    const loadCatalog=async()=>{try{const r=await fetch('/api/store/catalog',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();remoteCatalog=j.catalog||{}}}catch{remoteCatalog={}}};
+    const render=async()=>{
+      const token=++renderToken,qRaw=input.value.trim(),q=norm(qRaw);
+      if(!q){results.innerHTML='<div class="sx-muted" style="padding:16px 2px">Wyszukaj po nazwie, kategorii, kroju lub kolorze.</div>';return}
+      await loadCatalog();if(token!==renderToken)return;
+      const words=q.split(/\s+/).filter(Boolean);
+      const products=[...staticProducts,...getDynamicProducts()];
+      const hits=products.filter(p=>{const hay=norm(`${p.name} ${p.fit} ${p.price} ${p.keywords}`);return words.every(w=>hay.includes(w))});
+      if(!hits.length){results.innerHTML='<div class="sx-fav-empty">Brak produktów pasujących do wyszukiwania.</div>';return}
+      results.innerHTML=hits.map((p,i)=>`<div class="sx-search-result" data-search-index="${i}">${p.image?`<img src="${escSearch(p.image)}" alt="${escSearch(p.name)}">`:'<div style="width:76px;height:86px;border-radius:13px;background:#111"></div>'}<div><b>${escSearch(p.name)}</b><small>${escSearch(p.fit)} · ${Number(p.price||0).toFixed(0)} PLN</small></div></div>`).join('');
+      results.querySelectorAll('[data-search-index]').forEach(el=>el.addEventListener('click',()=>{const p=hits[Number(el.dataset.searchIndex)];closeOverlay('sxSearchOverlay');p?.open?.()}));
+    };
+    let timer;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,120)});render();
   }
 
   function openProduct(){getCard()?.click()}
