@@ -47,62 +47,241 @@ function rateLimit(name,max,windowMs){
 }
 setInterval(()=>{const now=Date.now();for(const [k,b] of rateBuckets)if(b.resetAt<=now)rateBuckets.delete(k)},10*60*1000).unref?.();
 
-// --- STARXV SQLite persistence -------------------------------------------------
-// Node 22+ ships node:sqlite, so there is no extra npm package to install.
-// Existing data/store.json is imported automatically the first time SQLite starts.
+// --- STARXV persistence: PostgreSQL on Render + SQLite fallback ----------------------
+// In production set DATABASE_URL to Render's Internal Database URL.
+// PostgreSQL is the durable source of truth. Local development can still use SQLite.
 fs.mkdirSync(DATA_DIR,{recursive:true});
-let sqlite;
-try{
-  const {DatabaseSync}=require('node:sqlite');
-  sqlite=new DatabaseSync(SQLITE_FILE);
-}catch(err){
-  throw new Error('STARXV wymaga Node.js 22 lub nowszego (node:sqlite). Zaktualizuj Node.js i uruchom ponownie npm start. '+err.message);
-}
-sqlite.exec(`
-  PRAGMA journal_mode=WAL;
-  PRAGMA foreign_keys=ON;
-  CREATE TABLE IF NOT EXISTS app_state (
-    id INTEGER PRIMARY KEY CHECK(id=1),
-    json TEXT NOT NULL,
-    updated_at INTEGER NOT NULL
-  );
-  CREATE TABLE IF NOT EXISTS sessions (
-    token TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    expires_at INTEGER NOT NULL,
-    created_at INTEGER NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-  CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
-`);
-const sqliteGetState=sqlite.prepare('SELECT json FROM app_state WHERE id=1');
-const sqlitePutState=sqlite.prepare(`INSERT INTO app_state(id,json,updated_at) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at`);
-const sqliteGetSession=sqlite.prepare('SELECT token,user_id AS userId,expires_at AS expires FROM sessions WHERE token=?');
-const sqliteInsertSession=sqlite.prepare('INSERT OR REPLACE INTO sessions(token,user_id,expires_at,created_at) VALUES(?,?,?,?)');
-const sqliteDeleteSession=sqlite.prepare('DELETE FROM sessions WHERE token=?');
-const sqliteDeleteUserSessions=sqlite.prepare('DELETE FROM sessions WHERE user_id=?');
-const sqliteDeleteOtherUserSessions=sqlite.prepare('DELETE FROM sessions WHERE user_id=? AND token<>?');
-const sqliteDeleteExpiredSessions=sqlite.prepare('DELETE FROM sessions WHERE expires_at<?');
+
+let sqlite=null;
+let pgPool=null;
+let persistenceMode='sqlite';
+let pgStateCache=null;
+let pgSessions=new Map();
+let pgWriteQueue=Promise.resolve();
 
 function defaultState(){return {users:[],pending:[]}}
-function importLegacyStoreOnce(){
-  if(sqliteGetState.get())return;
-  let initial=defaultState();
+
+function queuePgWrite(work){
+  pgWriteQueue=pgWriteQueue.then(work).catch(err=>{
+    console.error('PostgreSQL write error:',err);
+  });
+  return pgWriteQueue;
+}
+
+function pgSessionRow(row){
+  if(!row)return undefined;
+  return {
+    token:String(row.token),
+    userId:String(row.user_id),
+    expires:Number(row.expires_at)
+  };
+}
+
+let sqliteGetState,sqlitePutState,sqliteGetSession,sqliteInsertSession,sqliteDeleteSession,
+    sqliteDeleteUserSessions,sqliteDeleteOtherUserSessions,sqliteDeleteExpiredSessions;
+
+async function initPostgres(){
+  const {Pool}=require('pg');
+  pgPool=new Pool({
+    connectionString:String(process.env.DATABASE_URL||'').trim(),
+    max:5,
+    idleTimeoutMillis:30000,
+    connectionTimeoutMillis:10000
+  });
+
+  await pgPool.query('SELECT 1');
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS app_state (
+      id SMALLINT PRIMARY KEY CHECK(id=1),
+      json JSONB NOT NULL,
+      updated_at BIGINT NOT NULL
+    )
+  `);
+  await pgPool.query(`
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      expires_at BIGINT NOT NULL,
+      created_at BIGINT NOT NULL
+    )
+  `);
+  await pgPool.query('CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)');
+  await pgPool.query('CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)');
+
+  const existing=await pgPool.query('SELECT json FROM app_state WHERE id=1');
+  if(existing.rowCount){
+    const raw=existing.rows[0].json;
+    pgStateCache=typeof raw==='string'?JSON.parse(raw):raw;
+  }else{
+    let initial=defaultState();
+    try{
+      if(fs.existsSync(LEGACY_DATA))initial=JSON.parse(fs.readFileSync(LEGACY_DATA,'utf8'));
+    }catch(e){console.warn('Nie udało się odczytać starego store.json:',e.message)}
+    pgStateCache=initial;
+    await pgPool.query(
+      `INSERT INTO app_state(id,json,updated_at) VALUES(1,$1::jsonb,$2)
+       ON CONFLICT(id) DO UPDATE SET json=EXCLUDED.json, updated_at=EXCLUDED.updated_at`,
+      [JSON.stringify(initial),Date.now()]
+    );
+  }
+
+  const now=Date.now();
+  await pgPool.query('DELETE FROM sessions WHERE expires_at<$1',[now]);
+  const sessions=await pgPool.query('SELECT token,user_id,expires_at FROM sessions WHERE expires_at>=$1',[now]);
+  pgSessions.clear();
+  for(const row of sessions.rows)pgSessions.set(String(row.token),pgSessionRow(row));
+
+  sqliteGetState={
+    get:()=>({json:JSON.stringify(pgStateCache||defaultState())})
+  };
+  sqlitePutState={
+    run:(json,updatedAt)=>{
+      pgStateCache=JSON.parse(String(json));
+      return queuePgWrite(()=>pgPool.query(
+        `INSERT INTO app_state(id,json,updated_at) VALUES(1,$1::jsonb,$2)
+         ON CONFLICT(id) DO UPDATE SET json=EXCLUDED.json, updated_at=EXCLUDED.updated_at`,
+        [String(json),Number(updatedAt||Date.now())]
+      ));
+    }
+  };
+  sqliteGetSession={
+    get:(token)=>pgSessions.get(String(token))
+  };
+  sqliteInsertSession={
+    run:(token,userId,expires,createdAt)=>{
+      const key=String(token);
+      pgSessions.set(key,{token:key,userId:String(userId),expires:Number(expires)});
+      return queuePgWrite(()=>pgPool.query(
+        `INSERT INTO sessions(token,user_id,expires_at,created_at)
+         VALUES($1,$2,$3,$4)
+         ON CONFLICT(token) DO UPDATE SET user_id=EXCLUDED.user_id, expires_at=EXCLUDED.expires_at, created_at=EXCLUDED.created_at`,
+        [key,String(userId),Number(expires),Number(createdAt)]
+      ));
+    }
+  };
+  sqliteDeleteSession={
+    run:(token)=>{
+      const key=String(token);pgSessions.delete(key);
+      return queuePgWrite(()=>pgPool.query('DELETE FROM sessions WHERE token=$1',[key]));
+    }
+  };
+  sqliteDeleteUserSessions={
+    run:(userId)=>{
+      const id=String(userId);
+      for(const [k,s] of pgSessions)if(s.userId===id)pgSessions.delete(k);
+      return queuePgWrite(()=>pgPool.query('DELETE FROM sessions WHERE user_id=$1',[id]));
+    }
+  };
+  sqliteDeleteOtherUserSessions={
+    run:(userId,keepToken)=>{
+      const id=String(userId),keep=String(keepToken);
+      for(const [k,s] of pgSessions)if(s.userId===id&&k!==keep)pgSessions.delete(k);
+      return queuePgWrite(()=>pgPool.query('DELETE FROM sessions WHERE user_id=$1 AND token<>$2',[id,keep]));
+    }
+  };
+  sqliteDeleteExpiredSessions={
+    run:(cutoff)=>{
+      const n=Number(cutoff);
+      for(const [k,s] of pgSessions)if(Number(s.expires)<n)pgSessions.delete(k);
+      return queuePgWrite(()=>pgPool.query('DELETE FROM sessions WHERE expires_at<$1',[n]));
+    }
+  };
+
+  persistenceMode='postgres';
+  console.log('STARXV: PostgreSQL connected — persistent database enabled.');
+}
+
+function initSqlite(){
   try{
-    if(fs.existsSync(LEGACY_DATA))initial=JSON.parse(fs.readFileSync(LEGACY_DATA,'utf8'));
-  }catch(e){console.warn('Nie udało się odczytać starego store.json:',e.message)}
-  sqlitePutState.run(JSON.stringify(initial),Date.now());
-  if(fs.existsSync(LEGACY_DATA))console.log('STARXV: zaimportowano data/store.json do SQLite.');
+    const {DatabaseSync}=require('node:sqlite');
+    sqlite=new DatabaseSync(SQLITE_FILE);
+  }catch(err){
+    throw new Error('STARXV wymaga Node.js 22 lub nowszego (node:sqlite). '+err.message);
+  }
+  sqlite.exec(`
+    PRAGMA journal_mode=WAL;
+    PRAGMA foreign_keys=ON;
+    CREATE TABLE IF NOT EXISTS app_state (
+      id INTEGER PRIMARY KEY CHECK(id=1),
+      json TEXT NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      expires_at INTEGER NOT NULL,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+  `);
+  sqliteGetState=sqlite.prepare('SELECT json FROM app_state WHERE id=1');
+  sqlitePutState=sqlite.prepare(`INSERT INTO app_state(id,json,updated_at) VALUES(1,?,?) ON CONFLICT(id) DO UPDATE SET json=excluded.json, updated_at=excluded.updated_at`);
+  sqliteGetSession=sqlite.prepare('SELECT token,user_id AS userId,expires_at AS expires FROM sessions WHERE token=?');
+  sqliteInsertSession=sqlite.prepare('INSERT OR REPLACE INTO sessions(token,user_id,expires_at,created_at) VALUES(?,?,?,?)');
+  sqliteDeleteSession=sqlite.prepare('DELETE FROM sessions WHERE token=?');
+  sqliteDeleteUserSessions=sqlite.prepare('DELETE FROM sessions WHERE user_id=?');
+  sqliteDeleteOtherUserSessions=sqlite.prepare('DELETE FROM sessions WHERE user_id=? AND token<>?');
+  sqliteDeleteExpiredSessions=sqlite.prepare('DELETE FROM sessions WHERE expires_at<?');
+
+  if(!sqliteGetState.get()){
+    let initial=defaultState();
+    try{
+      if(fs.existsSync(LEGACY_DATA))initial=JSON.parse(fs.readFileSync(LEGACY_DATA,'utf8'));
+    }catch(e){console.warn('Nie udało się odczytać starego store.json:',e.message)}
+    sqlitePutState.run(JSON.stringify(initial),Date.now());
+    if(fs.existsSync(LEGACY_DATA))console.log('STARXV: zaimportowano data/store.json do SQLite.');
+  }
+  persistenceMode='sqlite';
+  console.log('STARXV: DATABASE_URL not set — using local SQLite.');
 }
-importLegacyStoreOnce();
+
+async function initPersistence(){
+  if(String(process.env.DATABASE_URL||'').trim()){
+    try{
+      await initPostgres();
+      return;
+    }catch(err){
+      console.error('STARXV PostgreSQL startup error:',err);
+      throw new Error('Nie udało się połączyć z PostgreSQL. Sprawdź DATABASE_URL. '+err.message);
+    }
+  }
+  initSqlite();
+}
+
 function load(){
-  try{const row=sqliteGetState.get();return row?JSON.parse(row.json):defaultState()}
-  catch(e){console.error('SQLite load error:',e);return defaultState()}
+  try{
+    const row=sqliteGetState.get();
+    return row?JSON.parse(row.json):defaultState();
+  }catch(e){
+    console.error(`${persistenceMode} load error:`,e);
+    return defaultState();
+  }
 }
-function save(db){sqlitePutState.run(JSON.stringify(db),Date.now())}
-function cleanupExpiredSessions(){try{sqliteDeleteExpiredSessions.run(Date.now())}catch(e){console.error('Session cleanup error:',e)}}
-cleanupExpiredSessions();
+function save(db){return sqlitePutState.run(JSON.stringify(db),Date.now())}
+function cleanupExpiredSessions(){
+  try{return sqliteDeleteExpiredSessions.run(Date.now())}
+  catch(e){console.error('Session cleanup error:',e)}
+}
 setInterval(cleanupExpiredSessions,60*60*1000).unref?.();
+
+async function closePersistence(){
+  try{
+    if(persistenceMode==='postgres'){
+      await pgWriteQueue;
+      await pgPool?.end();
+    }else{
+      sqlite?.close?.();
+    }
+  }catch(e){console.error('Persistence shutdown error:',e)}
+}
+
+for(const sig of ['SIGTERM','SIGINT']){
+  process.once(sig,async()=>{
+    await closePersistence();
+    process.exit(0);
+  });
+}
 
 let stripeClient=null;
 function getStripe(){
@@ -849,4 +1028,12 @@ app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
 app.get('/{*splat}', (req,res) => {
   res.sendFile(path.join(__dirname,'public','index.html'));
 });
-app.listen(PORT,()=>console.log(`STARXV działa na http://localhost:${PORT}`));
+initPersistence()
+  .then(()=>{
+    cleanupExpiredSessions();
+    app.listen(PORT,()=>console.log(`STARXV działa na http://localhost:${PORT} [${persistenceMode}]`));
+  })
+  .catch(err=>{
+    console.error('STARXV nie uruchomił się:',err);
+    process.exit(1);
+  });
