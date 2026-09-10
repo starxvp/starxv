@@ -943,7 +943,7 @@ body.sx-light-theme .sx-theme-menu-btn,body.sx-light-theme .sx-theme-view,body.s
 .sx-info-head small{display:block;color:#666;font-size:8px;font-weight:900;letter-spacing:.18em;margin-bottom:5px}.sx-info-head h3{font-size:24px;letter-spacing:-.04em;margin:0}.sx-info-close{width:42px;height:42px;border:1px solid var(--line);border-radius:12px;background:#111;color:#fff;font-size:22px;cursor:pointer}
 .sx-info-body{padding:24px}.sx-info-lead{color:#8a8a8a;font-size:11px;line-height:1.7;margin:0 0 20px}.sx-size-table{width:100%;border-collapse:collapse;font-size:11px}.sx-size-table th,.sx-size-table td{padding:14px 12px;border-bottom:1px solid var(--line);text-align:center}.sx-size-table th:first-child,.sx-size-table td:first-child{text-align:left}.sx-size-table th{color:#777;font-size:8px;letter-spacing:.12em}.sx-size-note{margin-top:16px;color:#666;font-size:9px;line-height:1.7}.sx-measure-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:20px}.sx-measure-card{padding:14px;border:1px solid var(--line);border-radius:13px;background:#0d0d0d}.sx-measure-card b{font-size:10px}.sx-measure-card span{display:block;margin-top:6px;color:#777;font-size:8px;line-height:1.5}
 /* Promo code */
-.sx-promo{margin-bottom:16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b}.sx-promo-label{font-size:8px;font-weight:900;letter-spacing:.14em;color:#777;margin-bottom:9px}.sx-promo-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.sx-promo-input{min-width:0;height:43px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:#080808;color:#fff;padding:0 12px;font:inherit;font-size:10px;text-transform:uppercase;outline:none}.sx-promo-input:focus{border-color:rgba(255,255,255,.38)}.sx-promo-btn{height:43px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:#141414;color:#fff;padding:0 14px;font:inherit;font-size:8px;font-weight:900;letter-spacing:.08em;cursor:pointer}.sx-promo-message{margin-top:8px;color:#777;font-size:8px;line-height:1.5}.sx-promo-message.ok{color:#a5d8b5}.sx-discount-row{display:none;justify-content:space-between;gap:16px;margin-bottom:12px;color:#9ecfae;font-size:9px;font-weight:800;letter-spacing:.08em}.sx-discount-row.show{display:flex}
+.sx-promo{margin-bottom:16px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#0b0b0b}.sx-promo-label{font-size:8px;font-weight:900;letter-spacing:.14em;color:#777;margin-bottom:9px}.sx-promo-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px}.sx-promo-input{min-width:0;height:43px;border:1px solid rgba(255,255,255,.13);border-radius:10px;background:#080808;color:#fff;padding:0 12px;font:inherit;font-size:10px;text-transform:uppercase;outline:none}.sx-promo-input:focus{border-color:rgba(255,255,255,.38)}.sx-promo-btn{height:43px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:#141414;color:#fff;padding:0 14px;font:inherit;font-size:8px;font-weight:900;letter-spacing:.08em;cursor:pointer}.sx-promo-remove{display:none;height:43px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:transparent;color:#aaa;padding:0 12px;font:inherit;font-size:8px;font-weight:900;letter-spacing:.08em;cursor:pointer}.sx-promo-remove.show{display:block}.sx-promo-remove:hover{color:#fff;border-color:rgba(255,255,255,.35)}.sx-promo-message{margin-top:8px;color:#777;font-size:8px;line-height:1.5}.sx-promo-message.ok{color:#a5d8b5}.sx-discount-row{display:none;justify-content:space-between;gap:16px;margin-bottom:12px;color:#9ecfae;font-size:9px;font-weight:800;letter-spacing:.08em}.sx-discount-row.show{display:flex}
 
 
 /* Legal footer and modal */
@@ -1344,12 +1344,12 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 <div class="cart-modal" id="cartModal" aria-hidden="true">
   <aside class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
     <div class="cart-header">
-      <div class="cart-title-wrap"><div><div class="cart-title" id="cartTitle">TWÓJ KOSZYK</div><div class="cart-subtitle">STARXV / SELECT YOUR DROP</div></div></div>
+      <div class="cart-title-wrap"><div><div class="cart-title" id="cartTitle">TWÓJ KOSZYK</div><div class="cart-subtitle">STARXV / SELECT YOUR PRODUCT</div></div></div>
       <button class="cart-close" id="closeCart" aria-label="Zamknij koszyk">×</button>
     </div>
     <div class="cart-body" id="cartItems"></div>
     <div class="cart-footer">
-      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button></div><div class="sx-promo-message" id="sxPromoMessage">Kod testowy: STARXV10 daje 10% rabatu.</div></div>
+      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Kod testowy: STARXV10 daje 10% rabatu.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
       <div class="cart-summary-row"><span>ZAZNACZONE / RAZEM</span><strong id="cartTotal">0 PLN</strong></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
@@ -1408,12 +1408,12 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 <div class="cart-modal" id="cartModal" aria-hidden="true">
   <aside class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
     <div class="cart-header">
-      <div class="cart-title-wrap"><div><div class="cart-title" id="cartTitle">TWÓJ KOSZYK</div><div class="cart-subtitle">STARXV / SELECT YOUR DROP</div></div></div>
+      <div class="cart-title-wrap"><div><div class="cart-title" id="cartTitle">TWÓJ KOSZYK</div><div class="cart-subtitle">STARXV / SELECT YOUR PRODUCT</div></div></div>
       <button class="cart-close" id="closeCart" aria-label="Zamknij koszyk">×</button>
     </div>
     <div class="cart-body" id="cartItems"></div>
     <div class="cart-footer">
-      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button></div><div class="sx-promo-message" id="sxPromoMessage">Kod testowy: STARXV10 daje 10% rabatu.</div></div>
+      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Kod testowy: STARXV10 daje 10% rabatu.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
       <div class="cart-summary-row"><span>ZAZNACZONE / RAZEM</span><strong id="cartTotal">0 PLN</strong></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
@@ -1511,9 +1511,11 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   const closeProduct=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!cartModal.classList.contains('open'))document.body.style.overflow=''};
   const openCart=()=>{closeProduct();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));};
   const closeCart=()=>{cartModal.classList.remove('open');cartModal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
-  const promoInput=document.getElementById('sxPromoInput'),promoApply=document.getElementById('sxPromoApply'),promoMessage=document.getElementById('sxPromoMessage'),discountRow=document.getElementById('sxDiscountRow'),discountCode=document.getElementById('sxDiscountCode'),discountValue=document.getElementById('sxDiscountValue');
-  const syncPromoUI=base=>{const p=getPromo();if(p){if(promoInput)promoInput.value=p.code;if(promoMessage){promoMessage.textContent=`Aktywny kod ${p.code}: −${p.percent}%`;promoMessage.classList.add('ok')}if(discountRow)discountRow.classList.add('show');if(discountCode)discountCode.textContent=p.code;if(discountValue)discountValue.textContent=`−${money(base-discountedTotal(base))}`}else{if(promoMessage){promoMessage.textContent='Wpisz kod rabatowy, jeśli go masz.';promoMessage.classList.remove('ok')}if(discountRow)discountRow.classList.remove('show')}};
+  const promoInput=document.getElementById('sxPromoInput'),promoApply=document.getElementById('sxPromoApply'),promoRemove=document.getElementById('sxPromoRemove'),promoMessage=document.getElementById('sxPromoMessage'),discountRow=document.getElementById('sxDiscountRow'),discountCode=document.getElementById('sxDiscountCode'),discountValue=document.getElementById('sxDiscountValue');
+  const syncPromoUI=base=>{const p=getPromo();if(p){if(promoInput)promoInput.value=p.code;if(promoMessage){promoMessage.textContent=`Aktywny kod ${p.code}: −${p.percent}%`;promoMessage.classList.add('ok')}if(discountRow)discountRow.classList.add('show');if(discountCode)discountCode.textContent=p.code;if(discountValue)discountValue.textContent=`−${money(base-discountedTotal(base))}`}else{if(promoMessage){promoMessage.textContent='Wpisz kod rabatowy, jeśli go masz.';promoMessage.classList.remove('ok')}if(discountRow)discountRow.classList.remove('show')}if(promoRemove)promoRemove.classList.toggle('show',!!(promoInput?.value||'').trim())};
   if(promoApply)promoApply.onclick=()=>{const code=(promoInput?.value||'').trim().toUpperCase();if(!code){localStorage.removeItem(PROMO_KEY);renderCart();showToast('Kod rabatowy usunięty');return}const p=PROMOS[code];if(!p){promoMessage.textContent='Ten kod jest nieprawidłowy lub nieaktywny.';promoMessage.classList.remove('ok');return}localStorage.setItem(PROMO_KEY,JSON.stringify({code:p.code}));renderCart();showToast(`Kod ${p.code} zastosowany`)};
+  if(promoInput)promoInput.addEventListener('input',()=>{if(promoRemove)promoRemove.classList.toggle('show',!!promoInput.value.trim())});
+  if(promoRemove)promoRemove.onclick=()=>{if(promoInput)promoInput.value='';localStorage.removeItem(PROMO_KEY);promoRemove.classList.remove('show');renderCart();showToast('Kod rabatowy usunięty')};
 
   const renderCart=()=>{
     if(!window.STARXV_AUTH_USER){
@@ -1541,7 +1543,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     }catch(e){}
     const newCount=cart.reduce((sum,x)=>sum+x.qty,0);if(cartCount.textContent!==String(newCount)){cartCount.textContent=newCount;openCartBtn.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:360,easing:'ease-out'});}else cartCount.textContent=newCount;
     if(!cart.length){
-      cartItems.innerHTML='<div class="cart-empty"><div><strong>Koszyk jest pusty.</strong><span>Wybierz rozmiar w dropie i dodaj bluzę do koszyka.</span></div></div>';
+      cartItems.innerHTML='<div class="cart-empty"><div><strong>Koszyk jest pusty.</strong><span>Wybierz rozmiar oraz kolor produktu i dodaj produkt do koszyka.</span></div></div>';
       cartTotal.textContent='0 PLN';syncPromoUI(0);checkoutBtn.disabled=true;checkoutHint.textContent='Zaznacz co najmniej jeden produkt, aby przejść dalej.';save();return;
     }
     const imgFor=x=>x.image||((COLOR_IMAGES[x.color||'black']||COLOR_IMAGES.black).front);
