@@ -572,6 +572,19 @@ function cleanAddresses(value){
 app.get('/api/account/preferences',auth,(req,res)=>{
   res.json({ok:true,preferences:accountPreferences(req.user)});
 });
+
+// Dedicated cart endpoints: cart persistence should not depend on the broader
+// preferences synchronization used by favorites and addresses.
+app.get('/api/account/cart',auth,(req,res)=>{
+  res.json({ok:true,cart:Array.isArray(req.user.cart)?req.user.cart:[]});
+});
+app.put('/api/account/cart',auth,(req,res)=>{
+  const i=req.db.users.findIndex(x=>x.id===req.user.id);
+  if(i<0)return res.status(401).json({error:'Sesja wygasła.'});
+  req.db.users[i].cart=cleanCart(req.body?.cart);
+  save(req.db);
+  res.json({ok:true,cart:req.db.users[i].cart});
+});
 app.put('/api/account/preferences',auth,(req,res)=>{
   const i=req.db.users.findIndex(x=>x.id===req.user.id);
   if(i<0)return res.status(401).json({error:'Sesja wygasła.'});

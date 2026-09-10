@@ -1485,6 +1485,57 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 })();
 </script>
 
+<script id="starxv-cart-account-persistence">
+(()=>{
+  'use strict';
+  let loading=false;
+  let saveTimer=0;
+
+  function readLocal(){
+    try{
+      const x=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
+      return Array.isArray(x)?x:[];
+    }catch{return[]}
+  }
+
+  async function saveNow(cart){
+    if(!window.STARXV_AUTH_USER)return false;
+    try{
+      const r=await fetch('/api/account/cart',{
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({cart:Array.isArray(cart)?cart:readLocal()})
+      });
+      return r.ok;
+    }catch{return false}
+  }
+
+  window.STARXV_CART_PERSIST=(cart)=>{
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>saveNow(cart),80);
+  };
+
+  window.STARXV_CART_LOAD=async()=>{
+    if(loading||!window.STARXV_AUTH_USER)return;
+    loading=true;
+    try{
+      const r=await fetch('/api/account/cart',{cache:'no-store'});
+      if(!r.ok)return;
+      const d=await r.json();
+      const cart=Array.isArray(d.cart)?d.cart:[];
+      localStorage.setItem('starxv-cart',JSON.stringify(cart));
+    }catch{}finally{loading=false}
+  };
+
+  window.addEventListener('starxv:auth-changed',()=>{
+    if(window.STARXV_AUTH_USER) setTimeout(()=>window.STARXV_CART_LOAD(),60);
+  });
+  document.addEventListener('DOMContentLoaded',()=>{
+    if(window.STARXV_AUTH_USER)setTimeout(()=>window.STARXV_CART_LOAD(),100);
+  });
+})();
+</script>
+
 <script>
 (()=>{
   const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',fit:'[RELAXED FIT]',price:129};
@@ -1498,7 +1549,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   const COLOR_IMAGES={'black': {'front': '/assets/5121825bc9637be7.webp', 'back': '/assets/5cd3d5eddb1fa2ab.webp'}, 'pink': {'front': '/assets/d0e0119a7c36215a.webp', 'back': '/assets/c93c033a70dba749.webp'}, 'blue': {'front': '/assets/3c193da7decbd7e9.webp', 'back': '/assets/950746c0d207ff93.webp'}};
   try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch(e){cart=[]}
   cart=cart.map(x=>({...x,selected:x.selected!==false}));
-  const save=()=>localStorage.setItem('starxv-cart',JSON.stringify(cart));
+  const save=()=>{localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart)};
   const money=n=>`${Number(n||0).toFixed(Number(n||0)%1?2:0)} PLN`;
   const PROMO_KEY='starxv-promo',PROMOS={STARXV10:{code:'STARXV10',percent:10}};
   const getPromo=()=>{try{const p=JSON.parse(localStorage.getItem(PROMO_KEY)||'null');return p&&PROMOS[p.code]?PROMOS[p.code]:null}catch{return null}};
@@ -1715,7 +1766,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
         await new Promise(r=>setTimeout(r,900));
       }
       if(confirmed){
-        try{const cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');localStorage.setItem('starxv-cart',JSON.stringify(Array.isArray(cart)?cart.filter(x=>x.selected===false):[]))}catch(e){}
+        try{const cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');const next=Array.isArray(cart)?cart.filter(x=>x.selected===false):[];localStorage.setItem('starxv-cart',JSON.stringify(next));window.STARXV_CART_PERSIST?.(next)}catch(e){}
         showStatus('success','Płatność potwierdzona','Dziękujemy za zakup. Zamówienie jest opłacone i pojawi się w „Moich zamówieniach”.',7000);
       }else{
         showStatus('success','Płatność jest weryfikowana','Płatność wróciła ze Stripe. Status zostanie zaktualizowany po potwierdzeniu webhooka.',7000);
@@ -2305,7 +2356,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
  function refreshStock(){const n=size?STOCK[color][size]:null;stockText.innerHTML=size?`Dostępność rozmiaru ${size}: <b>${n} szt.</b> — ${META[color].label}`:`Wybierz rozmiar, aby zobaczyć dostępność.`;sizes.forEach(b=>{const n=STOCK[color][b.textContent.trim()]||0;b.classList.toggle('sx-size-out',n<=0);b.disabled=n<=0})}
  document.querySelectorAll('.sx-shirt-color').forEach(b=>b.onclick=()=>{color=b.dataset.color;img.src=IMAGES[color];title.textContent=META[color].name;document.querySelectorAll('.sx-shirt-color').forEach(x=>x.classList.toggle('active',x===b));refreshStock()});
  sizes.forEach(b=>b.onclick=()=>{sizes.forEach(x=>x.classList.remove('selected'));b.classList.add('selected');size=b.textContent.trim();refreshStock()});
- add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!size){toast('Najpierw wybierz rozmiar');return};const limit=STOCK[color][size]||0;if(limit<=0){toast('Ten wariant jest niedostępny');return};let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{cart=[]}const existing=cart.find(x=>x.id===PRODUCT.id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){toast(`W magazynie jest tylko ${limit} szt. tego wariantu`);return}if(existing){existing.qty++;existing.selected=true;existing.image=IMAGES[color];existing.stockLimit=limit}else cart.push({...PRODUCT,name:META[color].name,color,size,qty:1,selected:true,image:IMAGES[color],stockLimit:limit,colorLabel:META[color].label});localStorage.setItem('starxv-cart',JSON.stringify(cart));document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);toast(`Dodano: ${META[color].label} / ${size}`);add.classList.add('added');add.innerHTML='DODANO DO KOSZYKA <span>✓</span>';setTimeout(()=>{add.classList.remove('added');add.innerHTML='DODAJ DO KOSZYKA <span>→</span>'},1100)};
+ add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!size){toast('Najpierw wybierz rozmiar');return};const limit=STOCK[color][size]||0;if(limit<=0){toast('Ten wariant jest niedostępny');return};let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{cart=[]}const existing=cart.find(x=>x.id===PRODUCT.id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){toast(`W magazynie jest tylko ${limit} szt. tego wariantu`);return}if(existing){existing.qty++;existing.selected=true;existing.image=IMAGES[color];existing.stockLimit=limit}else cart.push({...PRODUCT,name:META[color].name,color,size,qty:1,selected:true,image:IMAGES[color],stockLimit:limit,colorLabel:META[color].label});localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);toast(`Dodano: ${META[color].label} / ${size}`);add.classList.add('added');add.innerHTML='DODANO DO KOSZYKA <span>✓</span>';setTimeout(()=>{add.classList.remove('added');add.innerHTML='DODAJ DO KOSZYKA <span>→</span>'},1100)};
  const FKEY='starxv-favorites';const fav=document.getElementById('shirtFavBtn'),cardFav=document.getElementById('shirtCardFav');const readFav=()=>{try{const a=JSON.parse(localStorage.getItem(FKEY)||'[]');return Array.isArray(a)?a:[]}catch{return[]}};const paintFav=()=>{const on=readFav().includes(PRODUCT.id);if(fav){fav.classList.toggle('active',on);fav.textContent=on?'♥ W ULUBIONYCH':'♡ DODAJ DO ULUBIONYCH'}if(cardFav){cardFav.classList.toggle('active',on);cardFav.textContent=on?'♥':'♡';cardFav.setAttribute('aria-label',on?'Usuń koszulkę z ulubionych':'Dodaj koszulkę do ulubionych')}};const toggleShirtFav=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;let a=readFav();a=a.includes(PRODUCT.id)?a.filter(x=>x!==PRODUCT.id):[...a,PRODUCT.id];localStorage.setItem(FKEY,JSON.stringify(a));paintFav();window.dispatchEvent(new Event('starxv:favorites-changed'));toast(a.includes(PRODUCT.id)?'Dodano do ulubionych':'Usunięto z ulubionych')};if(fav)fav.onclick=toggleShirtFav;if(cardFav)cardFav.onclick=e=>{e.stopPropagation();toggleShirtFav()};paintFav();
  document.getElementById('shirtSizeGuide').onclick=()=>{const m=document.getElementById('sxShirtSizeGuide');m.classList.add('open');m.setAttribute('aria-hidden','false');};
  const shirtSizeModal=document.getElementById('sxShirtSizeGuide');
@@ -2336,7 +2387,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
 <script id="starxv-backend-preferences-sync">
 (()=>{
   'use strict';
-  const KEYS={favorites:'starxv-favorites',addresses:'starxv-addresses',defaultAddressId:'starxv-default-address',cart:'starxv-cart'};
+  const KEYS={favorites:'starxv-favorites',addresses:'starxv-addresses',defaultAddressId:'starxv-default-address'};
   const nativeSet=Storage.prototype.setItem;
   const nativeRemove=Storage.prototype.removeItem;
   let hydratedUserId='';
@@ -2347,8 +2398,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
   const snapshot=()=>({
     favorites:parseArray(KEYS.favorites),
     addresses:parseArray(KEYS.addresses),
-    defaultAddressId:localStorage.getItem(KEYS.defaultAddressId)||'',
-    cart:parseArray(KEYS.cart)
+    defaultAddressId:localStorage.getItem(KEYS.defaultAddressId)||''
   });
   const notify=()=>{
     try{window.dispatchEvent(new Event('storage'));}catch{}
@@ -2382,7 +2432,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
     try{
       const me=await fetch('/api/auth/me',{cache:'no-store'});
       if(!me.ok){
-        if(hydratedUserId){hydratedUserId='';hydrating=true;nativeRemove.call(localStorage,KEYS.favorites);nativeRemove.call(localStorage,KEYS.addresses);nativeRemove.call(localStorage,KEYS.defaultAddressId);nativeRemove.call(localStorage,KEYS.cart);hydrating=false;notify()}
+        if(hydratedUserId){hydratedUserId='';hydrating=true;nativeRemove.call(localStorage,KEYS.favorites);nativeRemove.call(localStorage,KEYS.addresses);nativeRemove.call(localStorage,KEYS.defaultAddressId);hydrating=false;notify()}
         return;
       }
       const meData=await me.json();
@@ -2393,8 +2443,8 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
       const data=await r.json();
       const server=data.preferences||{};
       const local=snapshot();
-      const serverEmpty=(!Array.isArray(server.favorites)||server.favorites.length===0)&&(!Array.isArray(server.addresses)||server.addresses.length===0)&&!server.defaultAddressId&&(!Array.isArray(server.cart)||server.cart.length===0);
-      const localHas=local.favorites.length||local.addresses.length||local.defaultAddressId||local.cart.length;
+      const serverEmpty=(!Array.isArray(server.favorites)||server.favorites.length===0)&&(!Array.isArray(server.addresses)||server.addresses.length===0)&&!server.defaultAddressId;
+      const localHas=local.favorites.length||local.addresses.length||local.defaultAddressId;
       hydratedUserId=uid;
       if(serverEmpty&&localHas){
         await putPreferences(local); // one-time migration from this browser
@@ -2405,7 +2455,6 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
       nativeSet.call(localStorage,KEYS.addresses,JSON.stringify(Array.isArray(server.addresses)?server.addresses:[]));
       if(server.defaultAddressId)nativeSet.call(localStorage,KEYS.defaultAddressId,String(server.defaultAddressId));
       else nativeRemove.call(localStorage,KEYS.defaultAddressId);
-      nativeSet.call(localStorage,KEYS.cart,JSON.stringify(Array.isArray(server.cart)?server.cart:[]));
       hydrating=false;
       notify();
       try{window.dispatchEvent(new CustomEvent('starxv:cart-changed'));}catch{}
@@ -2441,7 +2490,7 @@ body.sx-light-theme .sx-shipreturn-section{border-color:rgba(0,0,0,.08)!importan
    function paintSizes(){const sizes=Object.entries(p.colors?.[color]?.sizes||{});sbox.innerHTML=sizes.map(([sz,n])=>`<button class="sx-dyn-chip ${size===sz?'active':''}" data-size="${esc(sz)}" ${Number(n)<=0?'disabled':''}>${esc(sz)}</button>`).join('')||'<span class="sx-dyn-stock">Brak rozmiarów</span>';sbox.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{size=b.dataset.size;paintSizes();paintStock()});paintStock()}
    function paintStock(){if(!color){stock.textContent='Wybierz kolor.';return}if(!size){stock.textContent='Wybierz rozmiar.';return}const n=Number(p.colors?.[color]?.sizes?.[size]||0);stock.textContent=n>0?`Dostępne: ${n} szt.`:'Niedostępne'}
    function paintColors(){cbox.innerHTML=colors.map(([key,c])=>`<button class="sx-dyn-chip ${color===key?'active':''}" data-color="${esc(key)}">${esc(c.label||key)}</button>`).join('')||'<span class="sx-dyn-stock">Brak kolorów</span>';cbox.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{color=b.dataset.color;size='';paintColors();paintSizes()})}
-   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=String(p.image||'');const colorLabel=p.colors?.[color]?.label||color;if(existing){existing.qty++;existing.selected=true;existing.stockLimit=limit}else cart.push({id,name:p.name,fit:p.fit||'',price:Number(p.price||0),color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel});localStorage.setItem('starxv-cart',JSON.stringify(cart));const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
+   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=String(p.image||'');const colorLabel=p.colors?.[color]?.label||color;if(existing){existing.qty++;existing.selected=true;existing.stockLimit=limit}else cart.push({id,name:p.name,fit:p.fit||'',price:Number(p.price||0),color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel});localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
    color=colors[0]?.[0]||'';paintColors();paintSizes();m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}
  async function sync(){try{const r=await fetch('/api/store/catalog',{cache:'no-store'});if(!r.ok)return;const j=await r.json();catalog=j.catalog||{};render()}catch(e){console.warn('STARXV dynamic catalog',e)}}
  window.STARXV_RENDER_DYNAMIC_CATALOG=sync;document.addEventListener('DOMContentLoaded',sync);setInterval(sync,15000);
