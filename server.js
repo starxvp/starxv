@@ -780,6 +780,36 @@ function releaseStockReservation(db,order){
 }
 app.get('/api/store/catalog',(req,res)=>{const db=load();ensureStore(db);save(db);res.json({ok:true,catalog:publicCatalog(db)})});
 app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id).map(orderForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
+
+function ensureReturnRequests(db){if(!Array.isArray(db.returnRequests))db.returnRequests=[];return db.returnRequests}
+function nextReturnNo(db){const nums=ensureReturnRequests(db).map(x=>Number(String(x.returnNo||'').replace(/\D/g,''))||0);return `RT-${Math.max(1000,...nums)+1}`}
+function returnForUser(r){return {id:r.id,returnNo:r.returnNo,orderId:r.orderId,orderNo:r.orderNo,type:r.type,reason:r.reason,details:r.details||'',items:r.items||[],status:r.status||'new',adminReply:r.adminReply||'',createdAt:r.createdAt,updatedAt:r.updatedAt||r.createdAt}}
+app.get('/api/returns',auth,(req,res)=>{ensureReturnRequests(req.db);res.json({ok:true,returns:req.db.returnRequests.filter(r=>r.userId===req.user.id).map(returnForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
+app.post('/api/orders/:id/return-request',auth,(req,res)=>{
+  try{
+    ensureStore(req.db);ensureReturnRequests(req.db);
+    const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
+    if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+    if(order.paymentStatus!=='paid'||Number(order.shippingStage||0)<4)return res.status(409).json({error:'Zwrot lub reklamację można zgłosić po dostarczeniu opłaconego zamówienia.'});
+    const type=String(req.body?.type||'return');if(!['return','complaint'].includes(type))return res.status(400).json({error:'Nieprawidłowy typ zgłoszenia.'});
+    const reason=String(req.body?.reason||'').trim().slice(0,120),details=String(req.body?.details||'').trim().slice(0,1500);
+    if(reason.length<2)return res.status(400).json({error:'Wybierz powód zgłoszenia.'});
+    const requested=Array.isArray(req.body?.items)?req.body.items:[];
+    const items=[];
+    for(const q of requested){
+      const oi=(order.items||[]).find(x=>String(x.id)===String(q.id)&&String(x.color)===String(q.color)&&String(x.size)===String(q.size));
+      if(!oi)continue;const qty=Math.max(1,Math.min(Number(oi.qty||1),Math.floor(Number(q.qty||1))));
+      items.push({id:oi.id,name:oi.name,color:oi.color,colorLabel:oi.colorLabel||oi.color,size:oi.size,qty,price:Number(oi.price||0)});
+    }
+    if(!items.length)return res.status(400).json({error:'Wybierz co najmniej jeden produkt.'});
+    const active=req.db.returnRequests.find(r=>r.userId===req.user.id&&r.orderId===order.id&&!['rejected','completed'].includes(r.status||'new'));
+    if(active)return res.status(409).json({error:`Dla tego zamówienia istnieje już aktywne zgłoszenie ${active.returnNo}.`});
+    const now=Date.now(),rr={id:crypto.randomUUID(),returnNo:nextReturnNo(req.db),userId:req.user.id,email:cleanEmail(order.address?.email||req.user.email),orderId:order.id,orderNo:order.orderNo,type,reason,details,items,status:'new',adminReply:'',createdAt:now,updatedAt:now};
+    req.db.returnRequests.push(rr);save(req.db);
+    res.json({ok:true,request:returnForUser(rr)});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się wysłać zgłoszenia.'})}
+});
+
 app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   ensureStore(req.db);
   const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
@@ -1260,6 +1290,24 @@ app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
 app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?.avatarData||'');if(avatarData&&!/^data:image\/(jpeg|png|webp);base64,/.test(avatarData))return res.status(400).json({error:'Nieprawidłowy format zdjęcia.'});if(avatarData.length>5_500_000)return res.status(413).json({error:'Zdjęcie jest za duże.'});const i=req.db.users.findIndex(x=>x.id===req.user.id);req.db.users[i].avatarData=avatarData;save(req.db);res.json({ok:true,user:publicUser(req.db.users[i])})});
 
 // STARXV admin — zgłoszenia problemów
+
+app.get('/api/admin/returns',adminOnly,(req,res)=>{ensureReturnRequests(req.db);res.json({ok:true,returns:req.db.returnRequests.slice().sort((a,b)=>b.createdAt-a.createdAt)})});
+app.patch('/api/admin/returns/:id',adminOnly,async(req,res)=>{
+  ensureReturnRequests(req.db);const rr=req.db.returnRequests.find(x=>x.id===req.params.id);
+  if(!rr)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  const status=String(req.body?.status||rr.status),reply=String(req.body?.reply??rr.adminReply??'').trim().slice(0,2000);
+  if(!['new','review','accepted','rejected','completed'].includes(status))return res.status(400).json({error:'Nieprawidłowy status.'});
+  const changed=status!==rr.status;rr.status=status;rr.adminReply=reply;rr.updatedAt=Date.now();save(req.db);
+  if(changed||reply){
+    try{
+      const key=String(process.env.RESEND_API_KEY||'').trim(),to=cleanEmail(rr.email);
+      if(key&&to){const names={new:'Nowe',review:'W trakcie weryfikacji',accepted:'Zaakceptowane',rejected:'Odrzucone',completed:'Zakończone'};const resend=new Resend(key);await resend.emails.send({from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,subject:`STARXV — ${rr.returnNo} • ${names[status]||status}`,text:`Status zgłoszenia ${rr.returnNo}: ${names[status]||status}.${reply?`\n\nOdpowiedź STARXV:\n${reply}`:''}\n\nSzczegóły znajdziesz na swoim koncie STARXV.`})}
+    }catch(e){console.error('Return status email error:',e.message)}
+  }
+  res.json({ok:true,request:rr});
+});
+app.delete('/api/admin/returns/:id',adminOnly,(req,res)=>{ensureReturnRequests(req.db);const n=req.db.returnRequests.length;req.db.returnRequests=req.db.returnRequests.filter(x=>x.id!==req.params.id);if(req.db.returnRequests.length===n)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});save(req.db);res.json({ok:true})});
+
 app.get('/api/admin/support-reports',adminOnly,(req,res)=>{
   const reports=(Array.isArray(req.db.supportReports)?req.db.supportReports:[]).map(r=>{
     const messages=supportMessages(r);
