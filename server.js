@@ -743,7 +743,29 @@ function normalizeOrderItems(db,items){
   ensureStore(db);if(!Array.isArray(items)||!items.length)throw new Error('Koszyk jest pusty.');if(items.length>30)throw new Error('Za dużo pozycji w koszyku.');
   return items.map(raw=>{const id=String(raw?.id||''),color=String(raw?.color||''),size=String(raw?.size||'').toUpperCase(),qty=Math.max(1,Math.min(20,Number(raw?.qty||1)|0));const product=db.catalog[id],variant=product?.colors?.[color],stock=Number(variant?.sizes?.[size]);if(!product||!variant||!Number.isFinite(stock))throw new Error('Nieprawidłowy wariant produktu.');if(qty>stock)throw new Error(`Brak wystarczającego stanu: ${product.name} ${variant.label} / ${size}. Dostępne: ${stock} szt.`);return {id,name:product.name,fit:product.fit,color,colorLabel:variant.label,size,qty,price:Number(product.price),stockLimit:stock,image:String(raw?.image||'').slice(0,5_500_000)}})
 }
-function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,trackingUpdatedAt:Number(o.trackingUpdatedAt||0)}}
+function orderEvent(order,key,title,note='',at=Date.now()){
+  if(!Array.isArray(order.timeline))order.timeline=[];
+  const last=order.timeline[order.timeline.length-1];
+  if(last&&last.key===key&&String(last.note||'')===String(note||''))return;
+  order.timeline.push({id:crypto.randomUUID(),key:String(key||''),title:String(title||''),note:String(note||''),at:Number(at||Date.now())});
+  if(order.timeline.length>100)order.timeline=order.timeline.slice(-100);
+}
+function ensureOrderTimeline(order){
+  if(!Array.isArray(order.timeline))order.timeline=[];
+  if(!order.timeline.length){
+    orderEvent(order,'created','Zamówienie utworzone','Oczekujemy na potwierdzenie płatności.',order.createdAt||Date.now());
+    if(order.paymentStatus==='paid')orderEvent(order,'paid','Płatność potwierdzona','Zamówienie zostało opłacone.',order.updatedAt||order.createdAt||Date.now());
+    if(order.paymentStatus==='cancelled')orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie nie będzie dalej realizowane.',order.cancelledAt||order.updatedAt||Date.now());
+    if(order.paymentStatus==='failed')orderEvent(order,'payment_failed','Płatność nieudana','Płatność nie została potwierdzona.',order.updatedAt||Date.now());
+    if(order.paymentStatus==='paid'&&Number(order.shippingStage||0)>0){
+      const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
+      const stage=Math.max(0,Math.min(4,Number(order.shippingStage||0)));
+      orderEvent(order,`shipping_${stage}`,names[stage],'Aktualny etap realizacji zamówienia.',order.updatedAt||Date.now());
+    }
+  }
+  return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
+}
+function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
 function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
 function reserveStockForOrder(db,order){
   if(order.stockCommitted||order.stockReserved)return;
@@ -768,16 +790,18 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   order.paymentStatus='cancelled';
   order.cancelledAt=Date.now();
   order.updatedAt=Date.now();
+  orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie zostało anulowane przed potwierdzeniem płatności.',order.cancelledAt);
   save(req.db);
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').toUpperCase();const discount=promoCode==='STARXV10'?Math.round(subtotal*.10*100)/100:0;const total=Math.max(0,Math.round((subtotal-discount)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery:req.body?.delivery||null,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount}:null,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false};req.db.orders.push(order);save(req.db);res.json({ok:true,order:orderForUser(order)})}catch(e){res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+app.post('/api/orders/prepare',auth,(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').toUpperCase();const discount=promoCode==='STARXV10'?Math.round(subtotal*.10*100)/100:0;const total=Math.max(0,Math.round((subtotal-discount)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery:req.body?.delivery||null,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount}:null,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone','Oczekujemy na potwierdzenie płatności.',order.createdAt);req.db.orders.push(order);save(req.db);res.json({ok:true,order:orderForUser(order)})}catch(e){res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
   if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
   else decrementStockForOrder(db,order);
-  order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now()
+  order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now();
+  orderEvent(order,'paid','Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.',order.updatedAt);
 }
 
 
@@ -989,6 +1013,7 @@ function inpostStageFromStatus(status,current=0){
   return Number(current||0);
 }
 function applyInpostState(order,data){
+  const before=Number(order.shippingStage||0);
   if(data?.id)order.inpostShipmentId=data.id;
   if(data?.tracking_number)order.trackingNumber=String(data.tracking_number);
   if(data?.status)order.carrierStatus=String(data.status);
@@ -996,6 +1021,12 @@ function applyInpostState(order,data){
   order.trackingUpdatedAt=Date.now();
   order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);
   order.updatedAt=Date.now();
+  const after=Number(order.shippingStage||0);
+  if(after!==before){
+    const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
+    const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana przewoźnikowi.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];
+    orderEvent(order,`shipping_${after}`,names[after]||'Aktualizacja dostawy',notes[after]||'Status dostawy został zaktualizowany.',order.updatedAt);
+  }
 }
 async function refreshInpostOrder(order){
   if(order.inpostShipmentId){
@@ -1040,7 +1071,7 @@ app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{
   if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
   const tracking=String(req.body?.trackingNumber||'').trim().replace(/\s+/g,'');
   if(!/^[A-Za-z0-9-]{8,40}$/.test(tracking))return res.status(400).json({error:'Wpisz poprawny numer przesyłki.'});
-  order.trackingNumber=tracking;order.carrier='InPost';order.carrierStatus='manual';order.shippingStage=Math.max(2,Number(order.shippingStage||0));order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();save(req.db);
+  const beforeStage=Number(order.shippingStage||0);order.trackingNumber=tracking;order.carrier='InPost';order.carrierStatus='manual';order.shippingStage=Math.max(2,beforeStage);order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();if(order.shippingStage!==beforeStage)orderEvent(order,'shipping_2','Nadane',`Numer przesyłki InPost: ${tracking}`,order.updatedAt);save(req.db);
   res.json({ok:true,order:adminOrder(req.db,order)});
 }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać numeru przesyłki.'})}});
 
@@ -1160,6 +1191,8 @@ app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
     ensureStore(req.db);
     const order=req.db.orders.find(o=>o.id===req.params.id);
     if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+    const beforePayment=String(order.paymentStatus||'pending');
+    const beforeStage=Number(order.shippingStage||0);
     const requestedStatus=String(req.body?.paymentStatus||'');
     if(requestedStatus){
       if(!['pending','paid','cancelled'].includes(requestedStatus))return res.status(400).json({error:'Nieprawidłowy status płatności.'});
@@ -1172,7 +1205,15 @@ app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
       if(!Number.isInteger(stage)||stage<0||stage>4)return res.status(400).json({error:'Etap wysyłki musi być od 0 do 4.'});
       order.shippingStage=stage;
     }
-    order.updatedAt=Date.now();save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
+    order.updatedAt=Date.now();
+    if(beforePayment!==order.paymentStatus&&order.paymentStatus==='cancelled')orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie zostało anulowane przez obsługę sklepu.',order.updatedAt);
+    if(beforeStage!==Number(order.shippingStage||0)&&order.paymentStatus==='paid'){
+      const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
+      const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];
+      const st=Number(order.shippingStage||0);
+      orderEvent(order,`shipping_${st}`,names[st]||'Aktualizacja realizacji',notes[st]||'Status zamówienia został zaktualizowany.',order.updatedAt);
+    }
+    save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zaktualizować zamówienia.'})}
 });
 
