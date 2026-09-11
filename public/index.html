@@ -332,17 +332,17 @@
     }
     .manifesto-copy strong { color: #fff; }
 
-    /* NEWSLETTER / STARXV UPDATE */
+    /* ACCOUNT NOTIFICATIONS */
     .newsletter {
       text-align: center;
-      padding: 20px 0 150px;
+      padding: 20px 0 54px;
     }
     .newsletter-box {
       position: relative;
       overflow: hidden;
       border: 1px solid rgba(255,255,255,.12);
       border-radius: 28px;
-      padding: 86px 34px 74px;
+      padding: 76px 34px 66px;
       background:
         radial-gradient(circle at 18% 10%, rgba(99,159,255,.13), transparent 34%),
         radial-gradient(circle at 82% 4%, rgba(238,136,189,.13), transparent 34%),
@@ -350,18 +350,8 @@
         #080808;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 30px 90px rgba(0,0,0,.26);
     }
-    .newsletter-box::before,
-    .newsletter-box::after {
-      content: "";
-      position: absolute;
-      width: 220px;
-      height: 1px;
-      top: 34px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
-    }
-    .newsletter-box::before { left: 24px; }
-    .newsletter-box::after { right: 24px; }
-    .newsletter .section-kicker {
+    .newsletter .section-kicker,
+    .contact-section .section-kicker {
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -372,7 +362,8 @@
       color: #a2a2a2;
       margin-bottom: 22px;
     }
-    .newsletter .section-kicker::before {
+    .newsletter .section-kicker::before,
+    .contact-section .section-kicker::before {
       content: "";
       width: 6px;
       height: 6px;
@@ -382,72 +373,173 @@
     }
     .newsletter h2 {
       margin: 0;
-      font-size: clamp(42px, 7vw, 86px);
+      font-size: clamp(42px, 7vw, 84px);
       letter-spacing: -.075em;
-      line-height: .88;
+      line-height: .9;
       text-transform: uppercase;
     }
-    .newsletter p {
+    .newsletter > .newsletter-box > p {
       color: #858585;
-      margin: 26px auto 32px;
-      max-width: 560px;
+      margin: 25px auto 34px;
+      max-width: 590px;
       line-height: 1.7;
       font-size: 13px;
     }
-    .newsletter-note {
-      margin-top: 13px;
-      color: #555;
-      font-size: 9px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-    }
-    .email {
-      width: min(470px, 100%);
+    .sx-marketing-control {
+      width: min(610px,100%);
+      margin: 0 auto;
       display: flex;
-      margin: auto;
-      border: 1px solid rgba(255,255,255,.17);
-      border-radius: 16px;
-      padding: 6px;
-      background: rgba(4,4,4,.86);
-      box-shadow: 0 16px 50px rgba(0,0,0,.28);
-      transition: border-color .2s, transform .2s;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      text-align: left;
+      padding: 20px 22px;
+      border: 1px solid rgba(255,255,255,.13);
+      border-radius: 18px;
+      background: rgba(0,0,0,.34);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
     }
-    .email:focus-within {
-      border-color: rgba(255,255,255,.34);
-      transform: translateY(-1px);
-    }
-    .email input {
-      flex: 1;
-      min-width: 0;
-      border: 0;
-      outline: 0;
-      background: transparent;
-      color: #fff;
-      padding: 13px 15px;
-      font: inherit;
+    .sx-marketing-copy b {
+      display:block;
       font-size: 12px;
-    }
-    .email input::placeholder { color: #5f5f5f; }
-    .email button {
-      border: 0;
-      border-radius: 11px;
-      padding: 13px 19px;
-      background: #fff;
-      color: #000;
-      font-weight: 900;
-      font-size: 9px;
-      letter-spacing: .13em;
+      letter-spacing: .07em;
       text-transform: uppercase;
-      cursor: pointer;
-      transition: transform .18s, opacity .18s;
+      margin-bottom: 7px;
     }
-    .email button:hover { transform: translateY(-1px); opacity: .9; }
+    .sx-marketing-copy span {
+      display:block;
+      color:#717171;
+      font-size:11px;
+      line-height:1.55;
+      max-width:430px;
+    }
+    .sx-switch {
+      position: relative;
+      width: 54px;
+      height: 30px;
+      flex: none;
+      cursor: pointer;
+    }
+    .sx-switch input {
+      position:absolute;
+      opacity:0;
+      pointer-events:none;
+    }
+    .sx-switch-track {
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+      background:#171717;
+      border:1px solid rgba(255,255,255,.15);
+      transition:.22s ease;
+    }
+    .sx-switch-track::after {
+      content:"";
+      position:absolute;
+      width:22px;height:22px;
+      left:3px;top:3px;
+      border-radius:50%;
+      background:#737373;
+      transition:.22s cubic-bezier(.2,.8,.2,1);
+    }
+    .sx-switch input:checked + .sx-switch-track {
+      background:#fff;
+      border-color:#fff;
+    }
+    .sx-switch input:checked + .sx-switch-track::after {
+      transform:translateX(24px);
+      background:#050505;
+    }
+    .sx-switch input:disabled + .sx-switch-track {
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    .newsletter-note {
+      min-height:16px;
+      margin-top:14px;
+      color:#5c5c5c;
+      font-size:9px;
+      letter-spacing:.11em;
+      text-transform:uppercase;
+    }
+
+    /* CONTACT CARD */
+    .contact-section {
+      text-align:center;
+      padding: 0 0 145px;
+    }
+    .contact-card {
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:28px;
+      padding:72px 34px;
+      background:
+        linear-gradient(120deg,rgba(255,255,255,.035),transparent 42%),
+        #070707;
+    }
+    .contact-card::after {
+      content:"STARXV";
+      position:absolute;
+      right:-8px;
+      bottom:-31px;
+      font-size:clamp(70px,13vw,170px);
+      font-weight:900;
+      letter-spacing:-.08em;
+      color:rgba(255,255,255,.018);
+      pointer-events:none;
+    }
+    .contact-card h2 {
+      position:relative;
+      z-index:1;
+      margin:0;
+      font-size:clamp(40px,6vw,76px);
+      line-height:.92;
+      letter-spacing:-.065em;
+      text-transform:uppercase;
+    }
+    .contact-card p {
+      position:relative;
+      z-index:1;
+      color:#7d7d7d;
+      font-size:12px;
+      line-height:1.7;
+      max-width:560px;
+      margin:24px auto 30px;
+    }
+    .contact-mail {
+      position:relative;
+      z-index:1;
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      padding:15px 20px;
+      border-radius:14px;
+      background:#fff;
+      color:#000;
+      text-decoration:none;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      transition:.2s;
+    }
+    .contact-mail:hover { transform:translateY(-2px); opacity:.9; }
+    .contact-small {
+      position:relative;
+      z-index:1;
+      margin-top:16px;
+      color:#4f4f4f;
+      font-size:9px;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+    }
     @media(max-width:600px){
-      .newsletter{padding-top:0;padding-bottom:110px}
-      .newsletter-box{border-radius:22px;padding:64px 20px 56px}
-      .email{border-radius:14px}
-      .email button{padding:13px 14px}
-      .newsletter-box::before,.newsletter-box::after{width:90px}
+      .newsletter{padding-top:0;padding-bottom:34px}
+      .newsletter-box,.contact-card{border-radius:22px;padding:58px 20px 52px}
+      .contact-section{padding-bottom:100px}
+      .sx-marketing-control{padding:17px;gap:14px}
+      .sx-marketing-copy span{font-size:10px}
     }
 
     /* FOOTER */
@@ -1296,27 +1388,44 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 </div>
 </section>
 
-<section class="newsletter" id="contact">
+<section class="newsletter" id="updates">
 <div class="newsletter-box">
-<div class="section-kicker">03 / STARXV UPDATE</div>
-<h2>DON'T MISS<br/><span class="gradient-text">WHAT'S NEXT.</span></h2>
+<div class="section-kicker">03 / POWIADOMIENIA</div>
+<h2>STAY IN<br/><span class="gradient-text">THE LOOP.</span></h2>
 <p>
-          Nowe dropy, restocki i premiery STARXV — bez zbędnego spamu.
-          Zostaw e-mail i bądź wcześniej tam, gdzie dzieje się coś nowego.
+          Zdecyduj, czy chcesz dostawać od STARXV informacje o nowościach,
+          restockach, premierach i okazjonalnych akcjach promocyjnych.
         </p>
-<form class="email" onsubmit="event.preventDefault(); alert('Dzięki! Jesteś na liście STARXV.');">
-<input placeholder="E-mail" required="" type="email"/>
-<button type="submit">DOŁĄCZ →</button>
-</form>
-<div class="newsletter-note">STARXV / ONLY THE IMPORTANT STUFF</div>
+<div class="sx-marketing-control">
+  <div class="sx-marketing-copy">
+    <b>Newsletter i informacje marketingowe</b>
+    <span>Możesz włączyć lub wyłączyć te wiadomości w dowolnym momencie. Ustawienie jest zapisane na Twoim koncie STARXV.</span>
+  </div>
+  <label class="sx-switch" aria-label="Newsletter i informacje marketingowe">
+    <input id="sxMarketingToggle" type="checkbox" disabled>
+    <span class="sx-switch-track"></span>
+  </label>
+</div>
+<div class="newsletter-note" id="sxMarketingStatus">Zaloguj się, aby zmienić to ustawienie.</div>
+</div>
+</section>
+
+<section class="contact-section" id="contact">
+<div class="contact-card">
+<div class="section-kicker">04 / CONTACT</div>
+<h2>LET'S<br/><span class="gradient-text">TALK.</span></h2>
+<p>
+          Masz pytanie dotyczące produktu, zamówienia, współpracy albo samego STARXV?
+          Napisz do nas — odpowiemy najszybciej, jak będzie to możliwe.
+        </p>
+<a class="contact-mail" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl <span>→</span></a>
+<div class="contact-small">STARXV / CUSTOMER &amp; GENERAL CONTACT</div>
 </div>
 </section>
 </main>
 <footer>
 <img alt="STARXV" src="/assets/a21bc8c9acad5dd8.webp"/>
-<div class="starxv-footer-contact" style="text-align:center;margin:0 auto 18px;line-height:1.7;">
-  <div style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;opacity:.62;margin-bottom:4px;">Kontakt</div>
-  <a href="mailto:kontakt@starxv.pl" style="color:inherit;text-decoration:none;font-size:14px;">kontakt@starxv.pl</a>
+<a href="mailto:kontakt@starxv.pl" style="color:inherit;text-decoration:none;font-size:14px;">kontakt@starxv.pl</a>
 </div>
 <div>© 2026 STARXV — All rights reserved</div>
 <div class="sx-footer-legal"><button type="button" data-sx-legal="terms">Regulamin</button><button type="button" data-sx-legal="privacy">Polityka prywatności</button><button type="button" data-sx-legal="copyright">Prawa autorskie</button><span class="sx-copyright">© 2026 STARXV. Wszelkie prawa zastrzeżone.</span></div>
@@ -2832,6 +2941,66 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
  modal.querySelector('.sx-return-close').onclick=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
  modal.onclick=e=>{if(e.target===modal)modal.querySelector('.sx-return-close').click()};
  document.addEventListener('click',e=>{const b=e.target.closest('[data-return-order]');if(!b)return;try{open(JSON.parse(decodeURIComponent(b.dataset.returnOrder)))}catch{}});
+})();
+</script>
+
+
+<script id="starxv-marketing-preference">
+(()=>{
+  const toggle=document.getElementById('sxMarketingToggle');
+  const status=document.getElementById('sxMarketingStatus');
+  if(!toggle||!status)return;
+  let busy=false;
+
+  async function loadPreference(){
+    if(busy)return;
+    try{
+      const me=await fetch('/api/auth/me',{credentials:'include',cache:'no-store'});
+      if(!me.ok){
+        toggle.checked=false;
+        toggle.disabled=true;
+        status.textContent='Zaloguj się, aby zmienić to ustawienie.';
+        return;
+      }
+      const prefs=await fetch('/api/account/preferences',{credentials:'include',cache:'no-store'});
+      if(!prefs.ok)throw new Error();
+      const data=await prefs.json();
+      toggle.checked=data?.preferences?.marketingEmails===true;
+      toggle.disabled=false;
+      status.textContent=toggle.checked?'Powiadomienia marketingowe są włączone.':'Powiadomienia marketingowe są wyłączone.';
+    }catch{
+      toggle.disabled=true;
+      status.textContent='Nie udało się pobrać ustawienia. Spróbuj ponownie.';
+    }
+  }
+
+  toggle.addEventListener('change',async()=>{
+    const wanted=toggle.checked;
+    busy=true;
+    toggle.disabled=true;
+    status.textContent='Zapisywanie…';
+    try{
+      const r=await fetch('/api/account/preferences',{
+        method:'PUT',
+        credentials:'include',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({marketingEmails:wanted})
+      });
+      const data=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(data.error||'Nie udało się zapisać.');
+      toggle.checked=data?.preferences?.marketingEmails===true;
+      status.textContent=toggle.checked?'Powiadomienia marketingowe są włączone.':'Powiadomienia marketingowe są wyłączone.';
+    }catch(e){
+      toggle.checked=!wanted;
+      status.textContent=e.message||'Nie udało się zapisać ustawienia.';
+    }finally{
+      busy=false;
+      toggle.disabled=false;
+    }
+  });
+
+  window.addEventListener('starxv:auth-changed',loadPreference);
+  loadPreference();
 })();
 </script>
 

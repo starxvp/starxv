@@ -533,7 +533,8 @@ function accountPreferences(u){
     favorites:Array.isArray(u.favorites)?u.favorites:[],
     addresses:Array.isArray(u.addresses)?u.addresses:[],
     defaultAddressId:String(u.defaultAddressId||''),
-    cart:Array.isArray(u.cart)?u.cart:[]
+    cart:Array.isArray(u.cart)?u.cart:[],
+    marketingEmails:u.marketingEmails===true
   };
 }
 function cleanFavorites(value){
@@ -719,6 +720,7 @@ app.put('/api/account/preferences',auth,(req,res)=>{
   if(Object.prototype.hasOwnProperty.call(body,'addresses')) current.addresses=cleanAddresses(body.addresses);
   if(Object.prototype.hasOwnProperty.call(body,'defaultAddressId')) current.defaultAddressId=String(body.defaultAddressId||'').slice(0,120);
   if(Object.prototype.hasOwnProperty.call(body,'cart')) current.cart=cleanCart(body.cart);
+  if(Object.prototype.hasOwnProperty.call(body,'marketingEmails')) current.marketingEmails=body.marketingEmails===true;
   const ids=new Set((current.addresses||[]).map(a=>a.id));
   if(current.defaultAddressId&&!ids.has(current.defaultAddressId)) current.defaultAddressId='';
   save(req.db);
