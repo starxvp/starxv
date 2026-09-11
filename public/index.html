@@ -542,6 +542,125 @@
       .sx-marketing-copy span{font-size:10px}
     }
 
+
+    /* CONTACT MAIL APP PICKER */
+    .sx-mail-picker {
+      position: fixed;
+      inset: 0;
+      z-index: 999999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .sx-mail-picker.show { display:flex; }
+    .sx-mail-picker-card {
+      position: relative;
+      width: min(470px,100%);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 24px;
+      padding: 30px;
+      background:
+        radial-gradient(circle at 15% 0%,rgba(99,159,255,.09),transparent 30%),
+        radial-gradient(circle at 88% 0%,rgba(238,136,189,.08),transparent 32%),
+        #090909;
+      box-shadow: 0 30px 100px rgba(0,0,0,.55);
+      animation: sxMailIn .18s ease-out;
+    }
+    @keyframes sxMailIn {
+      from { opacity:0; transform:translateY(8px) scale(.985); }
+      to { opacity:1; transform:none; }
+    }
+    .sx-mail-picker-close {
+      position:absolute;
+      top:14px;
+      right:14px;
+      width:36px;
+      height:36px;
+      border-radius:50%;
+      border:1px solid rgba(255,255,255,.13);
+      background:#111;
+      color:#fff;
+      font-size:18px;
+      cursor:pointer;
+    }
+    .sx-mail-picker-kicker {
+      color:#6f6f6f;
+      font-size:9px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      margin-bottom:10px;
+    }
+    .sx-mail-picker h3 {
+      margin:0;
+      padding-right:48px;
+      font-size:28px;
+      letter-spacing:-.04em;
+    }
+    .sx-mail-picker p {
+      margin:10px 0 22px;
+      color:#777;
+      font-size:12px;
+      line-height:1.65;
+    }
+    .sx-mail-options {
+      display:grid;
+      gap:10px;
+    }
+    .sx-mail-option {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:15px;
+      width:100%;
+      padding:16px 17px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:15px;
+      background:#0e0e0e;
+      color:#fff;
+      text-decoration:none;
+      cursor:pointer;
+      transition:.18s;
+      font:inherit;
+      text-align:left;
+    }
+    .sx-mail-option:hover {
+      transform:translateY(-1px);
+      border-color:rgba(255,255,255,.27);
+      background:#131313;
+    }
+    .sx-mail-option-main {
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .sx-mail-option-main b {
+      font-size:12px;
+      letter-spacing:.04em;
+    }
+    .sx-mail-option-main span {
+      color:#696969;
+      font-size:10px;
+    }
+    .sx-mail-option-arrow {
+      color:#777;
+      font-size:18px;
+    }
+    .sx-mail-recipient {
+      margin-top:17px;
+      color:#535353;
+      font-size:9px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      text-align:center;
+    }
+    @media(max-width:600px){
+      .sx-mail-picker-card{padding:26px 18px 20px;border-radius:20px}
+    }
+
     /* FOOTER */
     footer {
       border-top: 1px solid var(--line);
@@ -1418,7 +1537,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
           Masz pytanie dotyczące produktu, zamówienia, współpracy albo samego STARXV?
           Napisz do nas — odpowiemy najszybciej, jak będzie to możliwe.
         </p>
-<a class="contact-mail" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl <span>→</span></a>
+<button class="contact-mail" id="sxContactMailOpen" type="button">kontakt@starxv.pl <span>→</span></button>
 <div class="contact-small">STARXV / CUSTOMER &amp; GENERAL CONTACT</div>
 </div>
 </section>
@@ -2943,6 +3062,33 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
 </script>
 
 
+
+<script id="starxv-contact-mail-picker">
+(()=>{
+  const openBtn=document.getElementById('sxContactMailOpen');
+  const modal=document.getElementById('sxMailPicker');
+  const closeBtn=document.getElementById('sxMailPickerClose');
+  if(!openBtn||!modal||!closeBtn)return;
+
+  const open=()=>{
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+  };
+  const close=()=>{
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+  };
+
+  openBtn.addEventListener('click',open);
+  closeBtn.addEventListener('click',close);
+  modal.addEventListener('click',(e)=>{ if(e.target===modal) close(); });
+  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&modal.classList.contains('show')) close(); });
+  modal.querySelectorAll('.sx-mail-option').forEach(a=>a.addEventListener('click',()=>setTimeout(close,120)));
+})();
+</script>
+
 <script id="starxv-marketing-preference">
 (()=>{
   const toggle=document.getElementById('sxMarketingToggle');
@@ -3001,6 +3147,35 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
   loadPreference();
 })();
 </script>
+
+
+<div class="sx-mail-picker" id="sxMailPicker" aria-hidden="true">
+  <div class="sx-mail-picker-card" role="dialog" aria-modal="true" aria-labelledby="sxMailPickerTitle">
+    <button class="sx-mail-picker-close" id="sxMailPickerClose" type="button" aria-label="Zamknij">×</button>
+    <div class="sx-mail-picker-kicker">STARXV / CONTACT</div>
+    <h3 id="sxMailPickerTitle">Gdzie chcesz napisać?</h3>
+    <p>Wybierz aplikację lub serwis pocztowy. Adres odbiorcy będzie już ustawiony na kontakt@starxv.pl.</p>
+    <div class="sx-mail-options">
+      <a class="sx-mail-option" href="mailto:kontakt@starxv.pl?subject=Kontakt%20STARXV">
+        <span class="sx-mail-option-main"><b>Apple Mail / domyślna poczta</b><span>Otwiera aplikację pocztową ustawioną na urządzeniu</span></span>
+        <span class="sx-mail-option-arrow">→</span>
+      </a>
+      <a class="sx-mail-option" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=kontakt%40starxv.pl&su=Kontakt%20STARXV">
+        <span class="sx-mail-option-main"><b>Gmail</b><span>Otwiera gotową wiadomość do STARXV</span></span>
+        <span class="sx-mail-option-arrow">→</span>
+      </a>
+      <a class="sx-mail-option" target="_blank" rel="noopener" href="https://outlook.live.com/mail/0/deeplink/compose?to=kontakt%40starxv.pl&subject=Kontakt%20STARXV">
+        <span class="sx-mail-option-main"><b>Outlook</b><span>Otwiera ekran tworzenia wiadomości</span></span>
+        <span class="sx-mail-option-arrow">→</span>
+      </a>
+      <a class="sx-mail-option" target="_blank" rel="noopener" href="https://compose.mail.yahoo.com/?to=kontakt%40starxv.pl&subject=Kontakt%20STARXV">
+        <span class="sx-mail-option-main"><b>Yahoo Mail</b><span>Otwiera gotową wiadomość w Yahoo Mail</span></span>
+        <span class="sx-mail-option-arrow">→</span>
+      </a>
+    </div>
+    <div class="sx-mail-recipient">ODBiorca: kontakt@starxv.pl</div>
+  </div>
+</div>
 
 </body>
 </html>
