@@ -1275,6 +1275,31 @@ app.put('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać zdjęć koloru.'})}
 });
 
+
+app.delete('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const id=String(req.params.id||''),color=String(req.params.color||'');
+    const product=req.db.catalog?.[id],variant=product?.colors?.[color];
+    if(!product||!variant)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
+
+    // Do not remove a variant still referenced by a pending order.
+    const blockingOrder=(req.db.orders||[]).find(o=>
+      !o.stockCommitted && String(o.paymentStatus||'pending')==='pending' &&
+      Array.isArray(o.items) && o.items.some(x=>String(x.id||'')===id&&String(x.color||'')===color)
+    );
+    if(blockingOrder){
+      return res.status(409).json({error:`Nie można usunąć tego koloru, bo znajduje się w oczekującym zamówieniu #${blockingOrder.orderNo||''}.`});
+    }
+
+    delete product.colors[color];
+    save(req.db);
+    res.json({ok:true,productId:id,color});
+  }catch(e){
+    res.status(400).json({error:e.message||'Nie udało się usunąć koloru.'});
+  }
+});
+
 app.post('/api/admin/products/:id/colors/:color/sizes',adminOnly,(req,res)=>{
   try{
     ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];

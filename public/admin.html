@@ -51,6 +51,11 @@
 @media(max-width:620px){.orderHeadActions{width:100%;justify-content:flex-end}.orderDeleteBtn{padding:8px 10px}}
 </style>
 
+
+<style id="sx-color-delete-style">
+.colorDeleteBtn{padding:8px 10px;font-size:9px;white-space:nowrap}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden"><div class="brand">STARXV</div><p class="sub">panel administratora</p><div id="loginMsg" class="msg">Zaloguj się kontem administratora.</div><input id="email" type="email" placeholder="E-mail"><input id="password" type="password" placeholder="Hasło"><button id="loginBtn" class="btn primary" style="width:100%;margin-top:8px">ZALOGUJ</button></div>
@@ -82,8 +87,8 @@ async function boot(){try{const j=await api('/api/admin/me');$('#who').textConte
 async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');render(j);$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
 function render(j){shippingConfig=j.shipping||shippingConfig;const s=j.stats||{};$('#sOrders').textContent=s.orders??0;$('#sPending').textContent=s.pending??0;$('#sRevenue').textContent=money(s.revenue);$('#sStock').textContent=s.stock??0;renderProducts(j.catalog||{});renderOrders(j.orders||[])}
 function renderProducts(catalog){
- $('#products').innerHTML=Object.entries(catalog).map(([pid,p])=>`<div class="card" data-product="${esc(pid)}"><b>${esc(p.name)}</b><div class="meta">ID: ${esc(pid)}</div><div class="editor"><input data-pname value="${esc(p.name)}" placeholder="Nazwa"><input data-pprice type="number" min="0" step="0.01" value="${Number(p.price||0)}"><input data-pfit value="${esc(p.fit||'')}" placeholder="Fit"><select data-pcategory><option value="hoodies" ${(p.category||'other')==='hoodies'?'selected':''}>Bluzy</option><option value="tshirts" ${(p.category||'other')==='tshirts'?'selected':''}>Koszulki</option><option value="other" ${(p.category||'other')==='other'?'selected':''}>Inne</option></select><input data-pimage value="${esc(p.image||'')}" placeholder="URL zdjęcia / data:image..."><button class="btn" data-save-product>Zapisz produkt</button><button class="btn danger" data-delete-product>Usuń produkt</button></div>${Object.entries(p.colors||{}).map(([color,c])=>`<div class="colorBox" data-color-box="${esc(color)}"><div class="colorHead"><div><b>${esc(c.label)}</b><div class="meta">ID koloru: ${esc(color)}</div></div></div><div class="colorGallery"><div class="colorGalleryTitle">ZDJĘCIA TEGO KOLORU</div><div class="colorGalleryGrid"><input data-color-front value="${esc(c.images?.front||'')}" placeholder="FRONT — URL / data:image..."><input data-color-back value="${esc(c.images?.back||'')}" placeholder="BACK — URL / data:image..."><button class="btn" data-save-color-images data-pid="${esc(pid)}" data-color="${esc(color)}">ZAPISZ ZDJĘCIA</button></div></div>${Object.entries(c.sizes||{}).map(([size,stock])=>`<div class="variant"><span>Rozmiar <b>${esc(size)}</b></span><input min="0" max="9999" step="1" type="number" value="${Number(stock||0)}" data-stock="${esc(pid)}|${esc(color)}|${esc(size)}"><button class="btn" data-save-stock>Zapisz</button></div>`).join('')}<div class="addSize"><input data-new-size placeholder="Nowy rozmiar, np. XXL"><input data-new-size-stock type="number" min="0" max="9999" step="1" value="0" placeholder="Stan"><button class="btn" data-add-size data-pid="${esc(pid)}" data-color="${esc(color)}">+ ROZMIAR</button></div></div>`).join('')}<div class="addLine"><input data-new-color-id placeholder="ID koloru, np. red"><input data-new-color-label placeholder="Nazwa koloru, np. Czerwony"><button class="btn" data-add-color data-pid="${esc(pid)}">+ KOLOR</button></div></div>`).join('');
- document.querySelectorAll('[data-save-stock]').forEach(b=>b.onclick=saveStock);document.querySelectorAll('[data-save-color-images]').forEach(b=>b.onclick=saveColorImages);document.querySelectorAll('[data-save-product]').forEach(b=>b.onclick=saveProduct);document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=deleteProduct);document.querySelectorAll('[data-add-color]').forEach(b=>b.onclick=addColor);document.querySelectorAll('[data-add-size]').forEach(b=>b.onclick=addSize)
+ $('#products').innerHTML=Object.entries(catalog).map(([pid,p])=>`<div class="card" data-product="${esc(pid)}"><b>${esc(p.name)}</b><div class="meta">ID: ${esc(pid)}</div><div class="editor"><input data-pname value="${esc(p.name)}" placeholder="Nazwa"><input data-pprice type="number" min="0" step="0.01" value="${Number(p.price||0)}"><input data-pfit value="${esc(p.fit||'')}" placeholder="Fit"><select data-pcategory><option value="hoodies" ${(p.category||'other')==='hoodies'?'selected':''}>Bluzy</option><option value="tshirts" ${(p.category||'other')==='tshirts'?'selected':''}>Koszulki</option><option value="other" ${(p.category||'other')==='other'?'selected':''}>Inne</option></select><input data-pimage value="${esc(p.image||'')}" placeholder="URL zdjęcia / data:image..."><button class="btn" data-save-product>Zapisz produkt</button><button class="btn danger" data-delete-product>Usuń produkt</button></div>${Object.entries(p.colors||{}).map(([color,c])=>`<div class="colorBox" data-color-box="${esc(color)}"><div class="colorHead"><div><b>${esc(c.label)}</b><div class="meta">ID koloru: ${esc(color)}</div></div><button class="btn danger colorDeleteBtn" type="button" data-delete-color data-pid="${esc(pid)}" data-color="${esc(color)}">USUŃ KOLOR</button></div><div class="colorGallery"><div class="colorGalleryTitle">ZDJĘCIA TEGO KOLORU</div><div class="colorGalleryGrid"><input data-color-front value="${esc(c.images?.front||'')}" placeholder="FRONT — URL / data:image..."><input data-color-back value="${esc(c.images?.back||'')}" placeholder="BACK — URL / data:image..."><button class="btn" data-save-color-images data-pid="${esc(pid)}" data-color="${esc(color)}">ZAPISZ ZDJĘCIA</button></div></div>${Object.entries(c.sizes||{}).map(([size,stock])=>`<div class="variant"><span>Rozmiar <b>${esc(size)}</b></span><input min="0" max="9999" step="1" type="number" value="${Number(stock||0)}" data-stock="${esc(pid)}|${esc(color)}|${esc(size)}"><button class="btn" data-save-stock>Zapisz</button></div>`).join('')}<div class="addSize"><input data-new-size placeholder="Nowy rozmiar, np. XXL"><input data-new-size-stock type="number" min="0" max="9999" step="1" value="0" placeholder="Stan"><button class="btn" data-add-size data-pid="${esc(pid)}" data-color="${esc(color)}">+ ROZMIAR</button></div></div>`).join('')}<div class="addLine"><input data-new-color-id placeholder="ID koloru, np. red"><input data-new-color-label placeholder="Nazwa koloru, np. Czerwony"><button class="btn" data-add-color data-pid="${esc(pid)}">+ KOLOR</button></div></div>`).join('');
+ document.querySelectorAll('[data-save-stock]').forEach(b=>b.onclick=saveStock);document.querySelectorAll('[data-save-color-images]').forEach(b=>b.onclick=saveColorImages);document.querySelectorAll('[data-delete-color]').forEach(b=>b.onclick=deleteColor);document.querySelectorAll('[data-save-product]').forEach(b=>b.onclick=saveProduct);document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=deleteProduct);document.querySelectorAll('[data-add-color]').forEach(b=>b.onclick=addColor);document.querySelectorAll('[data-add-size]').forEach(b=>b.onclick=addSize)
 }
 async function saveProduct(e){const box=e.currentTarget.closest('[data-product]');try{e.currentTarget.disabled=true;await api('/api/admin/products/'+encodeURIComponent(box.dataset.product),{method:'PUT',body:JSON.stringify({name:box.querySelector('[data-pname]').value,price:Number(box.querySelector('[data-pprice]').value),fit:box.querySelector('[data-pfit]').value,category:box.querySelector('[data-pcategory]').value,image:box.querySelector('[data-pimage]').value})});$('#msg').textContent='Produkt zapisany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function deleteProduct(e){
@@ -95,6 +100,21 @@ async function deleteProduct(e){
   $('#msg').textContent='Produkt usunięty.';
   await load();
  }catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}
+}
+
+
+async function deleteColor(e){
+ const b=e.currentTarget,box=b.closest('[data-color-box]'),id=b.dataset.pid,color=b.dataset.color;
+ const label=box?.querySelector('.colorHead b')?.textContent||color;
+ if(!confirm(`Usunąć kolor „${label}” z tego produktu? Usunięte zostaną też jego rozmiary, stany i zdjęcia.`))return;
+ try{
+   b.disabled=true;b.textContent='USUWANIE…';
+   await api('/api/admin/products/'+encodeURIComponent(id)+'/colors/'+encodeURIComponent(color),{method:'DELETE'});
+   $('#msg').textContent='Kolor produktu został usunięty.';
+   await load();
+ }catch(err){
+   alert(err.message);b.disabled=false;b.textContent='USUŃ KOLOR';
+ }
 }
 
 async function saveColorImages(e){
