@@ -586,24 +586,80 @@ app.put('/api/account/cart',auth,(req,res)=>{
   res.json({ok:true,cart:req.db.users[i].cart});
 });
 
+
+app.post('/api/support/reports/:id/reply',auth,rateLimit('support-customer-reply',20,15*60*1000),(req,res)=>{
+  const report=(Array.isArray(req.db.supportReports)?req.db.supportReports:[]).find(r=>r.id===req.params.id&&r.userId===req.user.id);
+  if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  if((report.status||'new')==='resolved'||report.closedByCustomer)return res.status(409).json({error:'To zgłoszenie jest zamknięte. Otwórz je ponownie, aby odpowiedzieć.'});
+  const text=String(req.body?.text||'').trim().slice(0,2000);
+  if(text.length<2)return res.status(400).json({error:'Wpisz wiadomość.'});
+  supportMessages(report).push({id:crypto.randomUUID(),author:'customer',text,createdAt:new Date().toISOString()});
+  report.supportReadAt=null;
+  report.updatedAt=new Date().toISOString();
+  if((report.status||'new')==='resolved')report.status='progress';
+  save(req.db);
+  res.json({ok:true,report:supportForUser(report)});
+});
+app.post('/api/support/reports/:id/close',auth,(req,res)=>{
+  const report=(Array.isArray(req.db.supportReports)?req.db.supportReports:[]).find(r=>r.id===req.params.id&&r.userId===req.user.id);
+  if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  report.status='resolved';report.closedByCustomer=true;report.updatedAt=new Date().toISOString();save(req.db);
+  res.json({ok:true,report:supportForUser(report)});
+});
+app.post('/api/support/reports/:id/reopen',auth,(req,res)=>{
+  const report=(Array.isArray(req.db.supportReports)?req.db.supportReports:[]).find(r=>r.id===req.params.id&&r.userId===req.user.id);
+  if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  report.status='progress';report.closedByCustomer=false;report.updatedAt=new Date().toISOString();save(req.db);
+  res.json({ok:true,report:supportForUser(report)});
+});
+
 app.use('/api/support/report',rateLimit('support-report',8,15*60*1000));
 
 app.post('/api/support/reports/read',auth,(req,res)=>{
   const now=new Date().toISOString();let changed=false;
   for(const r of (Array.isArray(req.db.supportReports)?req.db.supportReports:[])){
-    if(r.userId===req.user.id&&r.supportReply){
-      const unread=!r.customerReadAt||new Date(r.customerReadAt)<new Date(r.supportRepliedAt||0);
-      if(unread){r.customerReadAt=now;changed=true}
+    if(r.userId!==req.user.id)continue;
+    const lastSupport=[...supportMessages(r)].reverse().find(m=>m.author==='support');
+    if(lastSupport&&(!r.customerReadAt||new Date(r.customerReadAt)<new Date(lastSupport.createdAt||0))){
+      r.customerReadAt=now;changed=true;
     }
   }
   if(changed)save(req.db);
   res.json({ok:true});
 });
 
+
+function supportMessages(report){
+  if(!Array.isArray(report.messages))report.messages=[];
+  if(report.supportReply && !report.messages.some(m=>m.legacySupportReply)){
+    report.messages.push({
+      id:crypto.randomUUID(),
+      author:'support',
+      text:String(report.supportReply),
+      createdAt:report.supportRepliedAt||report.updatedAt||report.createdAt||new Date().toISOString(),
+      legacySupportReply:true
+    });
+  }
+  return report.messages;
+}
+function supportForUser(report){
+  const messages=supportMessages(report).map(m=>({
+    id:m.id,author:m.author==='support'?'support':'customer',
+    text:String(m.text||''),createdAt:m.createdAt||report.createdAt
+  }));
+  const lastSupport=[...messages].reverse().find(m=>m.author==='support');
+  const unread=Boolean(lastSupport && (!report.customerReadAt || new Date(report.customerReadAt)<new Date(lastSupport.createdAt||0)));
+  return {
+    id:report.id,ticketNo:report.ticketNo||'',type:report.type,description:report.description,
+    status:report.status||'new',messages,unread,
+    createdAt:report.createdAt,updatedAt:report.updatedAt||null,closedByCustomer:Boolean(report.closedByCustomer)
+  };
+}
+
 app.get('/api/support/reports',auth,(req,res)=>{
   const reports=(Array.isArray(req.db.supportReports)?req.db.supportReports:[])
     .filter(r=>r.userId===req.user.id)
-    .map(r=>({id:r.id,ticketNo:r.ticketNo||'',type:r.type,description:r.description,status:r.status||'new',supportReply:r.supportReply||'',supportRepliedAt:r.supportRepliedAt||null,unread:Boolean(r.supportReply&&(!r.customerReadAt||new Date(r.customerReadAt)<new Date(r.supportRepliedAt||0))),createdAt:r.createdAt,updatedAt:r.updatedAt||null}))
+    .map(r=>supportForUser(r))
     .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
   res.json({ok:true,reports});
 });
@@ -628,7 +684,11 @@ app.post('/api/support/report',auth,async(req,res)=>{
     description,
     page,
     createdAt:new Date().toISOString(),
-    status:'new'
+    status:'new',
+    messages:[{id:crypto.randomUUID(),author:'customer',text:description,createdAt:new Date().toISOString()}],
+    customerReadAt:new Date().toISOString(),
+    supportReadAt:null,
+    closedByCustomer:false
   };
   req.db.supportReports.unshift(report);
   req.db.supportReports=req.db.supportReports.slice(0,1000);
@@ -1120,16 +1180,28 @@ app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?
 
 // STARXV admin — zgłoszenia problemów
 app.get('/api/admin/support-reports',adminOnly,(req,res)=>{
-  const reports=Array.isArray(req.db.supportReports)?req.db.supportReports:[];
+  const reports=(Array.isArray(req.db.supportReports)?req.db.supportReports:[]).map(r=>{
+    const messages=supportMessages(r);
+    const lastCustomer=[...messages].reverse().find(m=>m.author==='customer');
+    const adminUnread=Boolean(lastCustomer && (!r.supportReadAt || new Date(r.supportReadAt)<new Date(lastCustomer.createdAt||0)));
+    return {...r,messages,adminUnread};
+  });
   res.json({ok:true,reports});
 });
+
+app.post('/api/admin/support-reports/:id/read',adminOnly,(req,res)=>{
+  const report=(Array.isArray(req.db.supportReports)?req.db.supportReports:[]).find(r=>r.id===req.params.id);
+  if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  report.supportReadAt=new Date().toISOString();save(req.db);res.json({ok:true});
+});
+
 app.patch('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
   const reports=Array.isArray(req.db.supportReports)?req.db.supportReports:[];
   const report=reports.find(x=>x.id===req.params.id);
   if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
   const status=String(req.body?.status||'');
   if(!['new','progress','resolved'].includes(status))return res.status(400).json({error:'Nieprawidłowy status.'});
-  report.status=status;report.updatedAt=new Date().toISOString();save(req.db);
+  report.status=status;if(status!=='resolved')report.closedByCustomer=false;report.updatedAt=new Date().toISOString();save(req.db);
   res.json({ok:true,report});
 });
 
@@ -1139,10 +1211,14 @@ app.post('/api/admin/support-reports/:id/reply',adminOnly,async(req,res)=>{
   if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
   const reply=String(req.body?.reply||'').trim().slice(0,2000);
   if(reply.length<2)return res.status(400).json({error:'Wpisz odpowiedź dla klienta.'});
+  const repliedAt=new Date().toISOString();
+  supportMessages(report).push({id:crypto.randomUUID(),author:'support',text:reply,createdAt:repliedAt});
   report.supportReply=reply;
-  report.supportRepliedAt=new Date().toISOString();
+  report.supportRepliedAt=repliedAt;
   report.customerReadAt=null;
-  report.updatedAt=report.supportRepliedAt;
+  report.supportReadAt=repliedAt;
+  report.closedByCustomer=false;
+  report.updatedAt=repliedAt;
   if((report.status||'new')==='new')report.status='progress';
   save(req.db);
 
