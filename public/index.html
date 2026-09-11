@@ -780,6 +780,25 @@ body.sx-light-theme .sx-selected-stock b{color:#111}
 .add-btn.added{background:linear-gradient(90deg,var(--blue),var(--pink));color:#050505}
 @media(max-width:600px){.cart-panel{width:100%}.cart-header{height:78px;padding:0 18px}.cart-body{padding:14px 18px 24px}.cart-footer{padding:18px}.cart-item{grid-template-columns:24px 86px 1fr;gap:11px}.cart-thumb{width:86px;height:108px}.cart-item-name{font-size:12px}.cart-row-bottom{align-items:flex-end}.nav-button{padding:10px 13px}.cart-count{min-width:18px;height:18px}}
 
+
+/* PROFESSIONAL AUTH CHOICES */
+.sx-auth-choice{display:grid;gap:10px;margin:18px 0 14px}
+.sx-auth-provider{
+  width:100%;height:54px;border-radius:14px;border:1px solid rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  background:#fff;color:#111;font:inherit;font-size:11px;font-weight:850;
+  letter-spacing:.02em;cursor:pointer;transition:.18s ease
+}
+.sx-auth-provider:hover{transform:translateY(-1px);box-shadow:0 10px 30px rgba(0,0,0,.22)}
+.sx-auth-provider.email{background:#0d0d0d;color:#fff;border-color:rgba(255,255,255,.16)}
+.sx-auth-provider svg{width:20px;height:20px;flex:none}
+.sx-auth-divider{display:flex;align-items:center;gap:12px;margin:15px 0;color:#555;font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+.sx-auth-divider:before,.sx-auth-divider:after{content:"";height:1px;flex:1;background:rgba(255,255,255,.1)}
+.sx-auth-email-panel{display:none}
+.sx-auth-email-panel.show{display:block;animation:sxAuthReveal .18s ease-out}
+@keyframes sxAuthReveal{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.sx-auth-provider-note{margin-top:8px;text-align:center;color:#626262;font-size:9px;line-height:1.5}
+
 /* ORDERS SYSTEM */
 .nav-actions{display:flex;align-items:center;gap:10px}
 .orders-nav-button{position:relative;width:52px;height:52px;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:rgba(255,255,255,.035);color:#fff;cursor:pointer;display:grid;place-items:center;transition:transform .25s ease,background .25s ease,border-color .25s ease}
@@ -1563,14 +1582,30 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
       <div id="authGuest">
         <div class="auth-tabs"><button class="auth-tab active" data-auth-tab="login">ZALOGUJ SIĘ</button><button class="auth-tab" data-auth-tab="register">UTWÓRZ KONTO</button></div>
         <div class="auth-view active" data-auth-view="login">
-          <h3>Witaj ponownie.</h3><p class="auth-lead">Zaloguj się do swojego lokalnego konta STARXV.</p>
-          <div class="auth-grid"><div class="auth-field full"><label>E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="twoj@email.pl"></div><div class="auth-field full"><label>Hasło</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••"></div></div>
-          <button class="auth-submit" id="loginSubmit">ZALOGUJ SIĘ →</button><button class="sx-forgot-open" type="button">NIE PAMIĘTASZ HASŁA?</button><div class="auth-message" id="loginMessage"></div>
+          <h3>Witaj ponownie.</h3><p class="auth-lead">Wybierz sposób logowania do STARXV.</p>
+          <div class="sx-auth-choice">
+            <button class="sx-auth-provider sx-google-auth" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.39a4.61 4.61 0 0 1-2 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.89 6.62-2.39l-3.23-2.51c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.06v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.39 13.93A6.02 6.02 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.48H3.06A10 10 0 0 0 2 12c0 1.61.39 3.13 1.06 4.52l3.33-2.59Z"/><path fill="#EA4335" d="M12 5.94c1.47 0 2.78.5 3.81 1.49l2.86-2.86A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.48l3.33 2.59C7.18 7.7 9.39 5.94 12 5.94Z"/></svg><span>KONTYNUUJ Z GOOGLE</span></button>
+            <button class="sx-auth-provider email sx-email-auth-toggle" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 6.5h17v11h-17z" stroke="currentColor" stroke-width="1.7"/><path d="m4.2 7.2 7.8 6 7.8-6" stroke="currentColor" stroke-width="1.7"/></svg><span>KONTYNUUJ PRZEZ E-MAIL</span></button>
+          </div>
+          <div class="sx-auth-provider-note">Google wymaga jednorazowego połączenia konta STARXV z usługą Google.</div>
+          <div class="sx-auth-email-panel">
+            <div class="sx-auth-divider"><span>e-mail i hasło</span></div>
+            <div class="auth-grid"><div class="auth-field full"><label>E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="twoj@email.pl"></div><div class="auth-field full"><label>Hasło</label><input id="loginPassword" type="password" autocomplete="current-password" placeholder="••••••••"></div></div>
+            <button class="auth-submit" id="loginSubmit">ZALOGUJ SIĘ →</button><button class="sx-forgot-open" type="button">NIE PAMIĘTASZ HASŁA?</button><div class="auth-message" id="loginMessage"></div>
+          </div>
         </div>
         <div class="auth-view" data-auth-view="register">
-          <h3>Utwórz konto.</h3><p class="auth-lead">Konto pozwala zachować dane profilu w tej przeglądarce.</p>
-          <div class="auth-grid"><div class="auth-field"><label>Imię</label><input id="registerFirstName" autocomplete="given-name"></div><div class="auth-field"><label>Nazwisko</label><input id="registerLastName" autocomplete="family-name"></div><div class="auth-field full"><label>E-mail</label><input id="registerEmail" type="email" autocomplete="email"></div><div class="auth-field"><label>Hasło</label><input id="registerPassword" type="password" autocomplete="new-password" placeholder="minimum 6 znaków"></div><div class="auth-field"><label>Powtórz hasło</label><input id="registerPassword2" type="password" autocomplete="new-password"></div></div>
-          <button class="auth-submit" id="registerSubmit">WYŚLIJ KOD →</button><div class="auth-message" id="registerMessage"></div>
+          <h3>Utwórz konto.</h3><p class="auth-lead">Wybierz sposób utworzenia konta STARXV.</p>
+          <div class="sx-auth-choice">
+            <button class="sx-auth-provider sx-google-auth" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.39a4.61 4.61 0 0 1-2 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.38Z"/><path fill="#34A853" d="M12 22c2.7 0 4.96-.89 6.62-2.39l-3.23-2.51c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.06v2.59A10 10 0 0 0 12 22Z"/><path fill="#FBBC05" d="M6.39 13.93A6.02 6.02 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.48H3.06A10 10 0 0 0 2 12c0 1.61.39 3.13 1.06 4.52l3.33-2.59Z"/><path fill="#EA4335" d="M12 5.94c1.47 0 2.78.5 3.81 1.49l2.86-2.86A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.48l3.33 2.59C7.18 7.7 9.39 5.94 12 5.94Z"/></svg><span>KONTYNUUJ Z GOOGLE</span></button>
+            <button class="sx-auth-provider email sx-email-auth-toggle" type="button"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3.5 6.5h17v11h-17z" stroke="currentColor" stroke-width="1.7"/><path d="m4.2 7.2 7.8 6 7.8-6" stroke="currentColor" stroke-width="1.7"/></svg><span>KONTYNUUJ PRZEZ E-MAIL</span></button>
+          </div>
+          <div class="sx-auth-provider-note">Przy rejestracji przez e-mail nadal potwierdzisz adres kodem STARXV.</div>
+          <div class="sx-auth-email-panel">
+            <div class="sx-auth-divider"><span>rejestracja e-mail</span></div>
+            <div class="auth-grid"><div class="auth-field"><label>Imię</label><input id="registerFirstName" autocomplete="given-name"></div><div class="auth-field"><label>Nazwisko</label><input id="registerLastName" autocomplete="family-name"></div><div class="auth-field full"><label>E-mail</label><input id="registerEmail" type="email" autocomplete="email"></div><div class="auth-field"><label>Hasło</label><input id="registerPassword" type="password" autocomplete="new-password" placeholder="minimum 8 znaków"></div><div class="auth-field"><label>Powtórz hasło</label><input id="registerPassword2" type="password" autocomplete="new-password"></div></div>
+            <button class="auth-submit" id="registerSubmit">WYŚLIJ KOD →</button><div class="auth-message" id="registerMessage"></div>
+          </div>
         </div>
         <div class="auth-view" data-auth-view="verify">
           <h3>Potwierdź e-mail.</h3><p class="auth-lead" id="verifyLead">Wpisz 6-cyfrowy kod wysłany na Twój adres e-mail.</p>
@@ -3183,6 +3218,35 @@ document.addEventListener('DOMContentLoaded',()=>{
     <div class="sx-mail-recipient">ODBiorca: kontakt@starxv.pl</div>
   </div>
 </div>
+
+
+<script id="starxv-auth-provider-ui">
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.sx-email-auth-toggle').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const view=btn.closest('.auth-view');
+      const panel=view?.querySelector('.sx-auth-email-panel');
+      if(!panel)return;
+      panel.classList.add('show');
+      btn.style.display='none';
+      setTimeout(()=>panel.querySelector('input')?.focus(),80);
+    });
+  });
+
+  document.querySelectorAll('.sx-google-auth').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const view=btn.closest('.auth-view');
+      const existing=view?.querySelector('.auth-message');
+      if(existing){
+        existing.textContent='Logowanie Google jest przygotowane wizualnie. Żeby działało naprawdę, trzeba jeszcze podłączyć Google OAuth do backendu STARXV.';
+        existing.classList.add('show');
+      }else{
+        alert('Google OAuth wymaga jeszcze konfiguracji po stronie backendu STARXV.');
+      }
+    });
+  });
+});
+</script>
 
 </body>
 </html>
