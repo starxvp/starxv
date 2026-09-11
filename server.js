@@ -1264,6 +1264,17 @@ app.post('/api/admin/products/:id/colors',adminOnly,(req,res)=>{
     save(req.db);res.status(201).json({ok:true,color,variant:p.colors[color]});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać koloru.'})}
 });
+
+app.put('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
+    if(!c)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
+    const cleanImage=v=>String(v||'').trim().slice(0,5_500_000);
+    c.images={front:cleanImage(req.body?.front),back:cleanImage(req.body?.back)};
+    save(req.db);res.json({ok:true,color,variant:c});
+  }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać zdjęć koloru.'})}
+});
+
 app.post('/api/admin/products/:id/colors/:color/sizes',adminOnly,(req,res)=>{
   try{
     ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
