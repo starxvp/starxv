@@ -585,6 +585,45 @@ app.put('/api/account/cart',auth,(req,res)=>{
   save(req.db);
   res.json({ok:true,cart:req.db.users[i].cart});
 });
+
+app.use('/api/support/report',rateLimit('support-report',8,15*60*1000));
+app.post('/api/support/report',auth,async(req,res)=>{
+  const type=String(req.body?.type||'Inne').trim().slice(0,80);
+  const description=String(req.body?.description||'').trim().slice(0,1500);
+  const page=String(req.body?.page||'/').trim().slice(0,300);
+  if(description.length<5)return res.status(400).json({error:'Opisz problem trochę dokładniej.'});
+
+  const report={
+    id:crypto.randomUUID(),
+    userId:req.user.id,
+    email:req.user.email,
+    type,
+    description,
+    page,
+    createdAt:new Date().toISOString(),
+    status:'new'
+  };
+  if(!Array.isArray(req.db.supportReports))req.db.supportReports=[];
+  req.db.supportReports.unshift(report);
+  req.db.supportReports=req.db.supportReports.slice(0,1000);
+  save(req.db);
+
+  const key=String(process.env.RESEND_API_KEY||'').trim();
+  if(key){
+    try{
+      const resend=new Resend(key);
+      await resend.emails.send({
+        from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',
+        to:'kontakt@starxv.pl',
+        replyTo:req.user.email,
+        subject:`STARXV — zgłoszenie problemu: ${type}`,
+        text:`Nowe zgłoszenie STARXV\n\nTyp: ${type}\nKonto: ${req.user.email}\nStrona: ${page}\nData: ${report.createdAt}\n\nOpis:\n${description}`
+      });
+    }catch(err){console.error('Support report email error:',err?.message||err)}
+  }
+  res.json({ok:true,id:report.id});
+});
+
 app.put('/api/account/preferences',auth,(req,res)=>{
   const i=req.db.users.findIndex(x=>x.id===req.user.id);
   if(i<0)return res.status(401).json({error:'Sesja wygasła.'});

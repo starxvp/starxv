@@ -1063,7 +1063,7 @@ body.sx-light-theme .profile-meta-row b{color:#111!important}
 </style>
 
 <style id="starxv-profile-main-links-v1">
-.account-profile.active .sx-profile-main-links{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+.account-profile.active .sx-profile-main-links{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
 .account-profile.active .sx-profile-main-links .sx-profile-link-card{position:relative!important;min-height:88px!important;height:auto!important;margin:0!important;padding:17px 46px 17px 18px!important;border:1px solid var(--line)!important;background:#0b0b0b!important;color:#fff!important;text-align:left!important;font:inherit!important;cursor:pointer!important;transition:transform .18s ease,border-color .18s ease,background .18s ease!important;overflow:hidden!important}
 .account-profile.active .sx-profile-main-links .sx-profile-link-card:hover{transform:translateY(-2px)!important;background:#101010!important;border-color:rgba(255,255,255,.2)!important}
 .sx-profile-link-kicker{display:block;margin-bottom:9px;font-size:7px;font-weight:900;letter-spacing:.16em;color:#666}
@@ -2122,7 +2122,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
     const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
-    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>DOSTAWA I ZWROTY</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
+    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>DOSTAWA I ZWROTY</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM</b><span class="sx-profile-link-arrow">→</span></button></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();},0);
   }
@@ -2609,6 +2609,64 @@ body.sx-light-theme .sx-security-shell{background:#f8f8f8;border-color:#ddd}.sx-
   emailConfirm.addEventListener('click',async()=>{const code=String(emailCode.value||'').replace(/\D/g,'');if(!pendingNewEmail||code.length!==6){msg(emailMsg,'Wpisz pełny 6-cyfrowy kod.','error');return}emailConfirm.disabled=true;try{const d=await api('/account/change-email/confirm',{newEmail:pendingNewEmail,code});const changed=d.user?.email||pendingNewEmail;currentEmail.textContent=changed;document.querySelectorAll('#profileEmail').forEach(el=>el.textContent=changed);email.value='';emailPassword.value='';emailCode.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'Adres e-mail został zmieniony.','success');window.dispatchEvent(new Event('starxv:auth-changed'))}catch(e){msg(emailMsg,e.message,'error')}finally{emailConfirm.disabled=false}});
   passwordBtn.addEventListener('click',async()=>{const old=currentPassword.value,p1=newPassword.value,p2=newPassword2.value;if(!old){msg(passwordMsg,'Wpisz obecne hasło.','error');return}if(p1.length<8){msg(passwordMsg,'Nowe hasło musi mieć minimum 8 znaków.','error');return}if(p1!==p2){msg(passwordMsg,'Nowe hasła nie są takie same.','error');return}passwordBtn.disabled=true;try{await api('/account/change-password',{currentPassword:old,newPassword:p1});currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();msg(passwordMsg,'Hasło zostało zmienione. Inne sesje zostały wylogowane.','success')}catch(e){msg(passwordMsg,e.message,'error')}finally{passwordBtn.disabled=false}});
   installButtons();document.addEventListener('DOMContentLoaded',installButtons);setTimeout(installButtons,500);
+})();
+</script>
+
+
+<!-- STARXV: ZGŁOŚ PROBLEM -->
+<style id="starxv-report-problem-style">
+.sx-report-overlay{position:fixed;inset:0;z-index:1900;background:rgba(0,0,0,.78);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;visibility:hidden;pointer-events:none;transition:.25s}
+.sx-report-overlay.open{opacity:1;visibility:visible;pointer-events:auto}
+.sx-report-box{width:min(620px,100%);max-height:90vh;overflow:auto;background:#090909;border:1px solid rgba(255,255,255,.13);padding:30px;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+.sx-report-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:24px}.sx-report-kicker{font-size:8px;font-weight:900;letter-spacing:.18em;color:#777;margin-bottom:8px}.sx-report-title{font-size:23px;font-weight:950;letter-spacing:-.03em}.sx-report-close{border:0;background:transparent;color:#aaa;font-size:27px;cursor:pointer}
+.sx-report-sub{color:#888;font-size:11px;line-height:1.65;margin:0 0 22px}.sx-report-label{display:block;margin:16px 0 8px;font-size:8px;font-weight:900;letter-spacing:.14em;color:#888}
+.sx-report-select,.sx-report-text{width:100%;box-sizing:border-box;border:1px solid rgba(255,255,255,.14);background:#0d0d0d;color:#fff;padding:14px;font:inherit;font-size:11px;outline:none}.sx-report-text{min-height:145px;resize:vertical;line-height:1.6}.sx-report-select:focus,.sx-report-text:focus{border-color:rgba(114,183,255,.65)}
+.sx-report-meta{margin-top:8px;color:#555;font-size:8px;line-height:1.5}.sx-report-submit{width:100%;height:50px;margin-top:20px;border:0;background:#fff;color:#050505;font:inherit;font-size:9px;font-weight:950;letter-spacing:.13em;cursor:pointer}.sx-report-submit:disabled{opacity:.45;cursor:wait}.sx-report-status{min-height:18px;margin-top:12px;font-size:10px;color:#8b8b8b}.sx-report-status.ok{color:#7edba2}.sx-report-status.err{color:#ff899c}
+.sx-report-problem-card{border-color:rgba(255,255,255,.16)!important}
+body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(0,0,0,.15)}body.sx-light-theme .sx-report-select,body.sx-light-theme .sx-report-text{background:#fafafa;color:#111;border-color:rgba(0,0,0,.15)}
+@media(max-width:700px){.sx-report-box{padding:23px}.sx-report-title{font-size:20px}}
+</style>
+<div class="sx-report-overlay" id="sxReportProblemOverlay" aria-hidden="true">
+  <div class="sx-report-box" role="dialog" aria-modal="true" aria-labelledby="sxReportProblemTitle">
+    <div class="sx-report-head"><div><div class="sx-report-kicker">STARXV / SUPPORT</div><div class="sx-report-title" id="sxReportProblemTitle">Zgłoś problem</div></div><button class="sx-report-close" id="sxReportProblemClose" type="button" aria-label="Zamknij">×</button></div>
+    <p class="sx-report-sub">Jeśli coś na stronie nie działa prawidłowo, opisz problem. Zgłoszenie trafi do supportu STARXV.</p>
+    <form id="sxReportProblemForm">
+      <label class="sx-report-label" for="sxReportProblemType">RODZAJ PROBLEMU</label>
+      <select class="sx-report-select" id="sxReportProblemType">
+        <option value="Błąd strony">Błąd strony</option><option value="Koszyk">Koszyk</option><option value="Zamówienie">Zamówienie</option><option value="Płatność">Płatność</option><option value="Konto / logowanie">Konto / logowanie</option><option value="Dostawa">Dostawa</option><option value="Inne">Inne</option>
+      </select>
+      <label class="sx-report-label" for="sxReportProblemText">OPIS PROBLEMU</label>
+      <textarea class="sx-report-text" id="sxReportProblemText" maxlength="1500" required placeholder="Napisz, co dokładnie nie działa..."></textarea>
+      <div class="sx-report-meta">Do zgłoszenia zostanie automatycznie dodana aktualna strona oraz data zgłoszenia.</div>
+      <button class="sx-report-submit" id="sxReportProblemSubmit" type="submit">WYŚLIJ ZGŁOSZENIE →</button>
+      <div class="sx-report-status" id="sxReportProblemStatus"></div>
+    </form>
+  </div>
+</div>
+<script id="starxv-report-problem-script">
+(()=>{
+  const $=s=>document.querySelector(s);
+  const overlay=$('#sxReportProblemOverlay'), form=$('#sxReportProblemForm'), status=$('#sxReportProblemStatus'), submit=$('#sxReportProblemSubmit');
+  function open(){overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');if(status){status.textContent='';status.className='sx-report-status'}setTimeout(()=>$('#sxReportProblemText')?.focus(),120)}
+  function close(){overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true')}
+  document.addEventListener('click',e=>{if(e.target.closest?.('#sxReportProblemBtn'))open()});
+  $('#sxReportProblemClose')?.addEventListener('click',close);
+  overlay?.addEventListener('click',e=>{if(e.target===overlay)close()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay?.classList.contains('open'))close()});
+  form?.addEventListener('submit',async e=>{
+    e.preventDefault();
+    const description=$('#sxReportProblemText').value.trim(), type=$('#sxReportProblemType').value;
+    if(description.length<5){status.textContent='Opisz problem trochę dokładniej.';status.className='sx-report-status err';return}
+    submit.disabled=true;status.textContent='Wysyłanie…';status.className='sx-report-status';
+    try{
+      const r=await fetch('/api/support/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,description,page:location.pathname+location.search})});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Nie udało się wysłać zgłoszenia.');
+      status.textContent='Dziękujemy. Zgłoszenie zostało wysłane ✓';status.className='sx-report-status ok';form.reset();
+      setTimeout(close,1800);
+    }catch(err){status.textContent=err.message||'Nie udało się wysłać zgłoszenia.';status.className='sx-report-status err'}
+    finally{submit.disabled=false}
+  });
 })();
 </script>
 
