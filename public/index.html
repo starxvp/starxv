@@ -3064,7 +3064,7 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
 
 
 <script id="starxv-contact-mail-picker">
-(()=>{
+document.addEventListener('DOMContentLoaded',()=>{
   const openBtn=document.getElementById('sxContactMailOpen');
   const modal=document.getElementById('sxMailPicker');
   const closeBtn=document.getElementById('sxMailPickerClose');
@@ -3081,12 +3081,19 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
     document.body.style.overflow='';
   };
 
-  openBtn.addEventListener('click',open);
+  openBtn.addEventListener('click',(e)=>{
+    e.preventDefault();
+    open();
+  });
   closeBtn.addEventListener('click',close);
   modal.addEventListener('click',(e)=>{ if(e.target===modal) close(); });
-  document.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&modal.classList.contains('show')) close(); });
-  modal.querySelectorAll('.sx-mail-option').forEach(a=>a.addEventListener('click',()=>setTimeout(close,120)));
-})();
+  document.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape'&&modal.classList.contains('show')) close();
+  });
+  modal.querySelectorAll('.sx-mail-option').forEach(a=>{
+    a.addEventListener('click',()=>setTimeout(close,120));
+  });
+});
 </script>
 
 <script id="starxv-marketing-preference">
