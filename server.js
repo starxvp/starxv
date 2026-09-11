@@ -1294,6 +1294,30 @@ app.put('/api/admin/stock',adminOnly,(req,res)=>{
   if(!Number.isInteger(stock)||stock<0||stock>9999)return res.status(400).json({error:'Stan musi być liczbą całkowitą od 0 do 9999.'});
   slot[size]=stock;save(req.db);res.json({ok:true,stock});
 });
+
+app.delete('/api/admin/orders/:id',adminOnly,(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const idx=req.db.orders.findIndex(o=>o.id===req.params.id);
+    if(idx<0)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+    const order=req.db.orders[idx];
+
+    // If the order is still pending and has a stock reservation, release it.
+    if(String(order.paymentStatus||'pending')!=='paid')releaseStockReservation(req.db,order);
+
+    // Remove return/complaint records tied to the deleted order so no orphan data remains.
+    if(Array.isArray(req.db.returnRequests)){
+      req.db.returnRequests=req.db.returnRequests.filter(r=>r.orderId!==order.id);
+    }
+
+    req.db.orders.splice(idx,1);
+    save(req.db);
+    res.json({ok:true,id:order.id,orderNo:order.orderNo});
+  }catch(e){
+    res.status(400).json({error:e.message||'Nie udało się usunąć zamówienia.'});
+  }
+});
+
 app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
   try{
     ensureStore(req.db);
