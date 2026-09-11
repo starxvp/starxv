@@ -791,10 +791,10 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   order.cancelledAt=Date.now();
   order.updatedAt=Date.now();
   orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie zostało anulowane przed potwierdzeniem płatności.',order.cancelledAt);
-  save(req.db);
+  save(req.db);sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').toUpperCase();const discount=promoCode==='STARXV10'?Math.round(subtotal*.10*100)/100:0;const total=Math.max(0,Math.round((subtotal-discount)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery:req.body?.delivery||null,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount}:null,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone','Oczekujemy na potwierdzenie płatności.',order.createdAt);req.db.orders.push(order);save(req.db);res.json({ok:true,order:orderForUser(order)})}catch(e){res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+app.post('/api/orders/prepare',auth,(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').toUpperCase();const discount=promoCode==='STARXV10'?Math.round(subtotal*.10*100)/100:0;const total=Math.max(0,Math.round((subtotal-discount)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery:req.body?.delivery||null,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount}:null,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone','Oczekujemy na potwierdzenie płatności.',order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order)})}catch(e){res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
@@ -837,6 +837,43 @@ async function sendPaidOrderEmail(db,order){
     if(error)console.error('Resend order confirmation error:',error);
   }catch(e){console.error('Order confirmation email error:',e.message)}
 }
+
+async function sendOrderUpdateEmail(db,order,eventKey,opts={}){
+  try{
+    const key=String(process.env.RESEND_API_KEY||'').trim();
+    if(!key)return false;
+    if(!order.mailEvents||typeof order.mailEvents!=='object')order.mailEvents={};
+    const dedupe=String(opts.dedupeKey||eventKey);
+    if(order.mailEvents[dedupe])return false;
+    const u=(db.users||[]).find(x=>x.id===order.userId);
+    const to=cleanEmail(order.address?.email||u?.email);
+    if(!to)return false;
+    const tracking=String(order.trackingNumber||'').trim();
+    const t={
+      created:['Zamówienie zostało utworzone','Otrzymaliśmy Twoje zamówienie. Oczekujemy na potwierdzenie płatności.'],
+      paid:['Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.'],
+      preparing:['Przygotowujemy zamówienie','Twoje produkty są przygotowywane do wysyłki.'],
+      shipped:['Paczka została nadana',tracking?`Przesyłka została nadana. Numer InPost: ${tracking}`:'Przesyłka została nadana przewoźnikowi.'],
+      transit:['Paczka jest w drodze',tracking?`Przesyłka jest w drodze. Numer InPost: ${tracking}`:'Przesyłka jest w drodze.'],
+      delivered:['Zamówienie dostarczone','Przesyłka została oznaczona jako dostarczona. Dziękujemy za zakupy w STARXV.'],
+      tracking:['Numer przesyłki InPost',tracking?`Twój numer przesyłki InPost: ${tracking}`:'Do zamówienia został dodany numer przesyłki.'],
+      cancelled:['Zamówienie anulowane','Zamówienie zostało anulowane i nie będzie dalej realizowane.']
+    };
+    const [title,body]=t[eventKey]||['Aktualizacja zamówienia','Status Twojego zamówienia został zaktualizowany.'];
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const base=String(process.env.PUBLIC_URL||'https://starxv.pl').replace(/\/+$/,'');
+    const resend=new Resend(key);
+    const {error}=await resend.emails.send({
+      from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,
+      subject:`STARXV — ${title} #${order.orderNo}`,
+      text:`STARXV\n\n${title}\nZamówienie #${order.orderNo}\n\n${body}${tracking?`\n\nInPost: ${tracking}`:''}\n\nStatus zamówienia: ${base}`,
+      html:`<div style="background:#090909;color:#fff;font-family:Arial,sans-serif;padding:36px 20px"><div style="max-width:560px;margin:auto"><div style="font-size:25px;font-weight:900;letter-spacing:5px;margin-bottom:30px">STARXV</div><div style="font-size:10px;color:#777;letter-spacing:2px">ZAMÓWIENIE #${esc(order.orderNo)}</div><h1 style="font-size:22px;margin:10px 0 14px">${esc(title)}</h1><p style="font-size:14px;line-height:1.7;color:#bbb">${esc(body)}</p>${tracking?`<div style="border:1px solid #292929;padding:14px;margin:22px 0"><span style="font-size:10px;color:#777">INPOST</span><br><b>${esc(tracking)}</b></div>`:''}<a href="${esc(base)}" style="display:inline-block;background:#fff;color:#000;text-decoration:none;padding:12px 18px;font-size:11px;font-weight:900;margin-top:12px">SPRAWDŹ ZAMÓWIENIE →</a><div style="font-size:10px;color:#555;margin-top:30px">STARXV • kontakt@starxv.pl</div></div></div>`
+    });
+    if(error){console.error('Resend order update error:',error);return false}
+    order.mailEvents[dedupe]=Date.now();save(db);return true;
+  }catch(e){console.error('Order update email error:',e.message);return false}
+}
+
 
 app.get('/api/payments/config',(req,res)=>{
   res.json({ok:true,stripeConfigured:Boolean(process.env.STRIPE_SECRET_KEY&&process.env.STRIPE_WEBHOOK_SECRET),currency:'pln'});
@@ -1012,26 +1049,26 @@ function inpostStageFromStatus(status,current=0){
   if(['confirmed','created','offers_prepared','offer_selected'].includes(s))return Math.max(2,Number(current||0));
   return Number(current||0);
 }
-function applyInpostState(order,data){
-  const before=Number(order.shippingStage||0);
+function applyInpostState(order,data,db=null){
+  const before=Number(order.shippingStage||0),beforeTracking=String(order.trackingNumber||'');
   if(data?.id)order.inpostShipmentId=data.id;
   if(data?.tracking_number)order.trackingNumber=String(data.tracking_number);
   if(data?.status)order.carrierStatus=String(data.status);
-  order.carrier='InPost';
-  order.trackingUpdatedAt=Date.now();
-  order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);
-  order.updatedAt=Date.now();
+  order.carrier='InPost';order.trackingUpdatedAt=Date.now();
+  order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);order.updatedAt=Date.now();
   const after=Number(order.shippingStage||0);
   if(after!==before){
     const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
     const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana przewoźnikowi.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];
     orderEvent(order,`shipping_${after}`,names[after]||'Aktualizacja dostawy',notes[after]||'Status dostawy został zaktualizowany.',order.updatedAt);
+    if(db){const k={1:'preparing',2:'shipped',3:'transit',4:'delivered'}[after];if(k)sendOrderUpdateEmail(db,order,k,{dedupeKey:`shipping_${after}`})}
   }
+  if(db&&!beforeTracking&&order.trackingNumber)sendOrderUpdateEmail(db,order,'tracking',{dedupeKey:`tracking_${order.trackingNumber}`});
 }
-async function refreshInpostOrder(order){
+async function refreshInpostOrder(order,db=null){
   if(order.inpostShipmentId){
     const data=await inpostRequest(`/shipments/${encodeURIComponent(order.inpostShipmentId)}`);
-    applyInpostState(order,data);
+    applyInpostState(order,data,db);
   }
   if(order.trackingNumber){
     try{
@@ -1050,14 +1087,14 @@ app.post('/api/admin/orders/:id/shipment/create',adminOnly,async(req,res)=>{try{
   if(order.paymentStatus!=='paid')return res.status(409).json({error:'Przesyłkę można utworzyć dopiero dla opłaconego zamówienia.'});
   if(order.inpostShipmentId)return res.status(409).json({error:'Dla tego zamówienia istnieje już przesyłka InPost.'});
   const data=await inpostRequest(`/organizations/${encodeURIComponent(inpostConfig().organizationId)}/shipments`,{method:'POST',body:makeInpostShipmentBody(order)});
-  applyInpostState(order,data);order.shippingStage=Math.max(1,Number(order.shippingStage||0));save(req.db);
+  applyInpostState(order,data,db);order.shippingStage=Math.max(1,Number(order.shippingStage||0));save(req.db);
   res.status(201).json({ok:true,order:adminOrder(req.db,order)});
 }catch(e){console.error('InPost create shipment:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się utworzyć przesyłki InPost.'})}});
 app.post('/api/admin/orders/:id/shipment/sync',adminOnly,async(req,res)=>{try{
   ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
   if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
   if(!order.inpostShipmentId&&!order.trackingNumber)return res.status(409).json({error:'To zamówienie nie ma jeszcze przesyłki InPost.'});
-  await refreshInpostOrder(order);save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
+  await refreshInpostOrder(order,req.db);save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
 }catch(e){console.error('InPost sync:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się odświeżyć trackingu InPost.'})}});
 app.get('/api/admin/orders/:id/shipment/label',adminOnly,async(req,res)=>{try{
   ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
@@ -1071,7 +1108,7 @@ app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{
   if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
   const tracking=String(req.body?.trackingNumber||'').trim().replace(/\s+/g,'');
   if(!/^[A-Za-z0-9-]{8,40}$/.test(tracking))return res.status(400).json({error:'Wpisz poprawny numer przesyłki.'});
-  const beforeStage=Number(order.shippingStage||0);order.trackingNumber=tracking;order.carrier='InPost';order.carrierStatus='manual';order.shippingStage=Math.max(2,beforeStage);order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();if(order.shippingStage!==beforeStage)orderEvent(order,'shipping_2','Nadane',`Numer przesyłki InPost: ${tracking}`,order.updatedAt);save(req.db);
+  const beforeStage=Number(order.shippingStage||0),beforeTracking=String(order.trackingNumber||'');order.trackingNumber=tracking;order.carrier='InPost';order.carrierStatus='manual';order.shippingStage=Math.max(2,beforeStage);order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();if(order.shippingStage!==beforeStage)orderEvent(order,'shipping_2','Nadane',`Numer przesyłki InPost: ${tracking}`,order.updatedAt);save(req.db);if(beforeTracking!==tracking)sendOrderUpdateEmail(req.db,order,'tracking',{dedupeKey:`tracking_${tracking}`});if(order.shippingStage!==beforeStage)sendOrderUpdateEmail(req.db,order,'shipped',{dedupeKey:'shipping_2'});
   res.json({ok:true,order:adminOrder(req.db,order)});
 }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać numeru przesyłki.'})}});
 
@@ -1212,7 +1249,10 @@ app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
       const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];
       const st=Number(order.shippingStage||0);
       orderEvent(order,`shipping_${st}`,names[st]||'Aktualizacja realizacji',notes[st]||'Status zamówienia został zaktualizowany.',order.updatedAt);
+      const mailKey={1:'preparing',2:'shipped',3:'transit',4:'delivered'}[st];
+      if(mailKey)sendOrderUpdateEmail(req.db,order,mailKey,{dedupeKey:`shipping_${st}`});
     }
+    if(beforePayment!==order.paymentStatus&&order.paymentStatus==='cancelled')sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
     save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zaktualizować zamówienia.'})}
 });
