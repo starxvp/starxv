@@ -344,6 +344,27 @@ function auth(req,res,next){const t=cookie(req,'starxv_session');if(!t)return re
 function validEmail(v){return v.length<=320&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)}
 function validPassword(v){return v.length>=8&&v.length<=256}
 function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
+
+function googleClientId(){return String(process.env.GOOGLE_CLIENT_ID||'').trim()}
+async function googleTokenInfo(accessToken){
+  const token=String(accessToken||'').trim();
+  if(!token||token.length>4096)throw new Error('Brak tokenu Google.');
+  const r=await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`,{
+    headers:{'Accept':'application/json'}
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error('Nie udało się zweryfikować logowania Google.');
+  return data;
+}
+async function googleUserInfo(accessToken){
+  const r=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{
+    headers:{'Authorization':`Bearer ${accessToken}`,'Accept':'application/json'}
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error('Nie udało się pobrać danych konta Google.');
+  return data;
+}
+
 async function sendCode(email, code) {
   const apiKey = process.env.RESEND_API_KEY;
 
@@ -453,6 +474,63 @@ app.post('/api/auth/verify',(req,res)=>{const email=cleanEmail(req.body?.email),
 app.post('/api/auth/login',(req,res)=>{const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');if(!validEmail(email)||password.length>256)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});const db=load(),u=db.users.find(x=>x.email===email);if(!u||!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',(req,res)=>{const t=cookie(req,'starxv_session');if(t)deleteSessionToken(t);res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true})});
 app.get('/api/auth/me',auth,(req,res)=>res.json({user:publicUser(req.user)}));
+
+app.get('/api/auth/google-config',(req,res)=>{
+  const clientId=googleClientId();
+  res.setHeader('Cache-Control','no-store');
+  res.json({enabled:!!clientId,clientId:clientId||null});
+});
+
+app.post('/api/auth/google',async(req,res)=>{
+  try{
+    const clientId=googleClientId();
+    if(!clientId)return res.status(503).json({error:'Logowanie Google nie jest jeszcze skonfigurowane.'});
+
+    const accessToken=String(req.body?.accessToken||'').trim();
+    const info=await googleTokenInfo(accessToken);
+    const audience=String(info.aud||info.azp||'');
+    if(audience!==clientId)return res.status(401).json({error:'Nieprawidłowy token Google.'});
+    if(Number(info.expires_in||0)<=0)return res.status(401).json({error:'Sesja Google wygasła. Spróbuj ponownie.'});
+
+    const profile=await googleUserInfo(accessToken);
+    const email=cleanEmail(profile.email);
+    const verified=profile.email_verified===true||String(profile.email_verified)==='true';
+    if(!verified||!validEmail(email))return res.status(401).json({error:'Google nie potwierdził adresu e-mail.'});
+
+    const db=load();
+    let user=db.users.find(u=>cleanEmail(u.email)===email);
+    if(!user){
+      const firstName=cleanName(profile.given_name||String(profile.name||'STARXV').split(' ')[0]||'STARXV');
+      const lastName=cleanName(profile.family_name||String(profile.name||'').split(' ').slice(1).join(' ')||'User');
+      user={
+        id:crypto.randomUUID(),
+        firstName:firstName||'STARXV',
+        lastName:lastName||'User',
+        email,
+        passwordHash:hashPassword(crypto.randomBytes(32).toString('hex')),
+        createdAt:Date.now(),
+        avatarData:'',
+        favorites:[],
+        addresses:[],
+        defaultAddressId:'',
+        cart:[],
+        googleSub:String(profile.sub||''),
+        authProviders:['google']
+      };
+      db.users.push(user);
+    }else{
+      user.googleSub=String(profile.sub||user.googleSub||'');
+      user.authProviders=Array.from(new Set([...(Array.isArray(user.authProviders)?user.authProviders:[]),'google']));
+    }
+    save(db);
+    setSession(res,user.id);
+    res.json({ok:true,user:publicUser(user)});
+  }catch(e){
+    console.error('Google auth error:',e);
+    res.status(401).json({error:e?.message||'Nie udało się zalogować przez Google.'});
+  }
+});
+
 
 
 // --- STARXV account security: change password + verified e-mail change ---
