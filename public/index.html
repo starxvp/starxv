@@ -332,38 +332,89 @@
     }
     .manifesto-copy strong { color: #fff; }
 
-    /* NEWSLETTER */
+    /* NEWSLETTER / STARXV UPDATE */
     .newsletter {
       text-align: center;
-      padding-bottom: 150px;
+      padding: 20px 0 150px;
     }
     .newsletter-box {
-      border: 1px solid var(--line);
-      padding: 70px 30px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 28px;
+      padding: 86px 34px 74px;
       background:
-        radial-gradient(circle at 50% 0%, rgba(238,136,189,.08), transparent 45%),
-        var(--surface);
+        radial-gradient(circle at 18% 10%, rgba(99,159,255,.13), transparent 34%),
+        radial-gradient(circle at 82% 4%, rgba(238,136,189,.13), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,.025), transparent 44%),
+        #080808;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 30px 90px rgba(0,0,0,.26);
+    }
+    .newsletter-box::before,
+    .newsletter-box::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 1px;
+      top: 34px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+    }
+    .newsletter-box::before { left: 24px; }
+    .newsletter-box::after { right: 24px; }
+    .newsletter .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      padding: 8px 13px;
+      background: rgba(255,255,255,.025);
+      color: #a2a2a2;
+      margin-bottom: 22px;
+    }
+    .newsletter .section-kicker::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 0 14px rgba(255,255,255,.55);
     }
     .newsletter h2 {
-      font-size: clamp(36px, 6vw, 72px);
-      letter-spacing: -.065em;
-      line-height: .95;
+      margin: 0;
+      font-size: clamp(42px, 7vw, 86px);
+      letter-spacing: -.075em;
+      line-height: .88;
+      text-transform: uppercase;
     }
     .newsletter p {
-      color: #777;
-      margin: 20px auto 30px;
-      max-width: 500px;
-      line-height: 1.6;
+      color: #858585;
+      margin: 26px auto 32px;
+      max-width: 560px;
+      line-height: 1.7;
       font-size: 13px;
     }
+    .newsletter-note {
+      margin-top: 13px;
+      color: #555;
+      font-size: 9px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
     .email {
-      width: min(430px, 100%);
+      width: min(470px, 100%);
       display: flex;
       margin: auto;
-      border: 1px solid rgba(255,255,255,.16);
-      border-radius: 999px;
-      padding: 5px;
-      background: #080808;
+      border: 1px solid rgba(255,255,255,.17);
+      border-radius: 16px;
+      padding: 6px;
+      background: rgba(4,4,4,.86);
+      box-shadow: 0 16px 50px rgba(0,0,0,.28);
+      transition: border-color .2s, transform .2s;
+    }
+    .email:focus-within {
+      border-color: rgba(255,255,255,.34);
+      transform: translateY(-1px);
     }
     .email input {
       flex: 1;
@@ -372,21 +423,31 @@
       outline: 0;
       background: transparent;
       color: #fff;
-      padding: 12px 16px;
+      padding: 13px 15px;
       font: inherit;
       font-size: 12px;
     }
+    .email input::placeholder { color: #5f5f5f; }
     .email button {
       border: 0;
-      border-radius: 999px;
-      padding: 12px 18px;
+      border-radius: 11px;
+      padding: 13px 19px;
       background: #fff;
       color: #000;
-      font-weight: 800;
-      font-size: 10px;
-      letter-spacing: .12em;
+      font-weight: 900;
+      font-size: 9px;
+      letter-spacing: .13em;
       text-transform: uppercase;
       cursor: pointer;
+      transition: transform .18s, opacity .18s;
+    }
+    .email button:hover { transform: translateY(-1px); opacity: .9; }
+    @media(max-width:600px){
+      .newsletter{padding-top:0;padding-bottom:110px}
+      .newsletter-box{border-radius:22px;padding:64px 20px 56px}
+      .email{border-radius:14px}
+      .email button{padding:13px 14px}
+      .newsletter-box::before,.newsletter-box::after{width:90px}
     }
 
     /* FOOTER */
@@ -1237,16 +1298,17 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 
 <section class="newsletter" id="contact">
 <div class="newsletter-box">
-<div class="section-kicker">03 / Stay close</div>
-<h2>BE FIRST<br/><span class="gradient-text">TO KNOW.</span></h2>
+<div class="section-kicker">03 / STARXV UPDATE</div>
+<h2>DON'T MISS<br/><span class="gradient-text">WHAT'S NEXT.</span></h2>
 <p>
-          Zapisz się, aby otrzymywać informacje o dropach,
-          nowych produktach i limitowanych edycjach STARXV.
+          Nowe dropy, restocki i premiery STARXV — bez zbędnego spamu.
+          Zostaw e-mail i bądź wcześniej tam, gdzie dzieje się coś nowego.
         </p>
-<form class="email" onsubmit="event.preventDefault(); alert('Dziękujemy za zapis!');">
-<input placeholder="Twój e-mail" required="" type="email"/>
-<button type="submit">Join</button>
+<form class="email" onsubmit="event.preventDefault(); alert('Dzięki! Jesteś na liście STARXV.');">
+<input placeholder="E-mail" required="" type="email"/>
+<button type="submit">DOŁĄCZ →</button>
 </form>
+<div class="newsletter-note">STARXV / ONLY THE IMPORTANT STUFF</div>
 </div>
 </section>
 </main>
