@@ -587,10 +587,23 @@ app.put('/api/account/cart',auth,(req,res)=>{
 });
 
 app.use('/api/support/report',rateLimit('support-report',8,15*60*1000));
+
+app.post('/api/support/reports/read',auth,(req,res)=>{
+  const now=new Date().toISOString();let changed=false;
+  for(const r of (Array.isArray(req.db.supportReports)?req.db.supportReports:[])){
+    if(r.userId===req.user.id&&r.supportReply){
+      const unread=!r.customerReadAt||new Date(r.customerReadAt)<new Date(r.supportRepliedAt||0);
+      if(unread){r.customerReadAt=now;changed=true}
+    }
+  }
+  if(changed)save(req.db);
+  res.json({ok:true});
+});
+
 app.get('/api/support/reports',auth,(req,res)=>{
   const reports=(Array.isArray(req.db.supportReports)?req.db.supportReports:[])
     .filter(r=>r.userId===req.user.id)
-    .map(r=>({id:r.id,ticketNo:r.ticketNo||'',type:r.type,description:r.description,status:r.status||'new',supportReply:r.supportReply||'',supportRepliedAt:r.supportRepliedAt||null,createdAt:r.createdAt,updatedAt:r.updatedAt||null}))
+    .map(r=>({id:r.id,ticketNo:r.ticketNo||'',type:r.type,description:r.description,status:r.status||'new',supportReply:r.supportReply||'',supportRepliedAt:r.supportRepliedAt||null,unread:Boolean(r.supportReply&&(!r.customerReadAt||new Date(r.customerReadAt)<new Date(r.supportRepliedAt||0))),createdAt:r.createdAt,updatedAt:r.updatedAt||null}))
     .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
   res.json({ok:true,reports});
 });
@@ -1128,6 +1141,7 @@ app.post('/api/admin/support-reports/:id/reply',adminOnly,async(req,res)=>{
   if(reply.length<2)return res.status(400).json({error:'Wpisz odpowiedź dla klienta.'});
   report.supportReply=reply;
   report.supportRepliedAt=new Date().toISOString();
+  report.customerReadAt=null;
   report.updatedAt=report.supportRepliedAt;
   if((report.status||'new')==='new')report.status='progress';
   save(req.db);
