@@ -590,7 +590,7 @@ app.use('/api/support/report',rateLimit('support-report',8,15*60*1000));
 app.get('/api/support/reports',auth,(req,res)=>{
   const reports=(Array.isArray(req.db.supportReports)?req.db.supportReports:[])
     .filter(r=>r.userId===req.user.id)
-    .map(r=>({id:r.id,ticketNo:r.ticketNo||'',type:r.type,description:r.description,status:r.status||'new',createdAt:r.createdAt,updatedAt:r.updatedAt||null}))
+    .map(r=>({id:r.id,ticketNo:r.ticketNo||'',type:r.type,description:r.description,status:r.status||'new',supportReply:r.supportReply||'',supportRepliedAt:r.supportRepliedAt||null,createdAt:r.createdAt,updatedAt:r.updatedAt||null}))
     .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
   res.json({ok:true,reports});
 });
@@ -1119,6 +1119,34 @@ app.patch('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
   report.status=status;report.updatedAt=new Date().toISOString();save(req.db);
   res.json({ok:true,report});
 });
+
+app.post('/api/admin/support-reports/:id/reply',adminOnly,async(req,res)=>{
+  const reports=Array.isArray(req.db.supportReports)?req.db.supportReports:[];
+  const report=reports.find(x=>x.id===req.params.id);
+  if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  const reply=String(req.body?.reply||'').trim().slice(0,2000);
+  if(reply.length<2)return res.status(400).json({error:'Wpisz odpowiedź dla klienta.'});
+  report.supportReply=reply;
+  report.supportRepliedAt=new Date().toISOString();
+  report.updatedAt=report.supportRepliedAt;
+  if((report.status||'new')==='new')report.status='progress';
+  save(req.db);
+
+  const key=String(process.env.RESEND_API_KEY||'').trim();
+  if(key&&report.email){
+    try{
+      const resend=new Resend(key);
+      await resend.emails.send({
+        from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',
+        to:report.email,
+        subject:`STARXV Support — odpowiedź ${report.ticketNo||''}`,
+        text:`Cześć,\n\nSTARXV Support odpowiedział na Twoje zgłoszenie ${report.ticketNo||''}.\n\n${reply}\n\nStatus: ${report.status==='resolved'?'Rozwiązane':'W trakcie'}\n\nOdpowiedź zobaczysz również po zalogowaniu w Profil → Zgłoś problem.`
+      });
+    }catch(err){console.error('Support reply email error:',err?.message||err)}
+  }
+  res.json({ok:true,report});
+});
+
 app.delete('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
   if(!Array.isArray(req.db.supportReports))req.db.supportReports=[];
   const n=req.db.supportReports.length;
