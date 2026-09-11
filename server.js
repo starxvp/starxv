@@ -1091,6 +1091,29 @@ app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
 });
 
 app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?.avatarData||'');if(avatarData&&!/^data:image\/(jpeg|png|webp);base64,/.test(avatarData))return res.status(400).json({error:'Nieprawidłowy format zdjęcia.'});if(avatarData.length>5_500_000)return res.status(413).json({error:'Zdjęcie jest za duże.'});const i=req.db.users.findIndex(x=>x.id===req.user.id);req.db.users[i].avatarData=avatarData;save(req.db);res.json({ok:true,user:publicUser(req.db.users[i])})});
+
+// STARXV admin — zgłoszenia problemów
+app.get('/api/admin/support-reports',adminOnly,(req,res)=>{
+  const reports=Array.isArray(req.db.supportReports)?req.db.supportReports:[];
+  res.json({ok:true,reports});
+});
+app.patch('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
+  const reports=Array.isArray(req.db.supportReports)?req.db.supportReports:[];
+  const report=reports.find(x=>x.id===req.params.id);
+  if(!report)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  const status=String(req.body?.status||'');
+  if(!['new','progress','resolved'].includes(status))return res.status(400).json({error:'Nieprawidłowy status.'});
+  report.status=status;report.updatedAt=new Date().toISOString();save(req.db);
+  res.json({ok:true,report});
+});
+app.delete('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
+  if(!Array.isArray(req.db.supportReports))req.db.supportReports=[];
+  const n=req.db.supportReports.length;
+  req.db.supportReports=req.db.supportReports.filter(x=>x.id!==req.params.id);
+  if(req.db.supportReports.length===n)return res.status(404).json({error:'Nie znaleziono zgłoszenia.'});
+  save(req.db);res.json({ok:true});
+});
+
 app.get(['/admin','/admin/'],(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.use('/assets',express.static(path.join(__dirname,'public','assets'),{maxAge:'1y',immutable:true}));
 app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
