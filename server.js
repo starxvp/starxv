@@ -587,14 +587,28 @@ app.put('/api/account/cart',auth,(req,res)=>{
 });
 
 app.use('/api/support/report',rateLimit('support-report',8,15*60*1000));
+app.get('/api/support/reports',auth,(req,res)=>{
+  const reports=(Array.isArray(req.db.supportReports)?req.db.supportReports:[])
+    .filter(r=>r.userId===req.user.id)
+    .map(r=>({id:r.id,ticketNo:r.ticketNo||'',type:r.type,description:r.description,status:r.status||'new',createdAt:r.createdAt,updatedAt:r.updatedAt||null}))
+    .sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+  res.json({ok:true,reports});
+});
+
 app.post('/api/support/report',auth,async(req,res)=>{
   const type=String(req.body?.type||'Inne').trim().slice(0,80);
   const description=String(req.body?.description||'').trim().slice(0,1500);
   const page=String(req.body?.page||'/').trim().slice(0,300);
   if(description.length<5)return res.status(400).json({error:'Opisz problem trochę dokładniej.'});
 
+  if(!Array.isArray(req.db.supportReports))req.db.supportReports=[];
+  const maxTicket=req.db.supportReports.reduce((m,r)=>{
+    const n=Number(String(r.ticketNo||'').replace(/\D/g,''));
+    return Number.isFinite(n)?Math.max(m,n):m;
+  },1000);
   const report={
     id:crypto.randomUUID(),
+    ticketNo:`SX-${maxTicket+1}`,
     userId:req.user.id,
     email:req.user.email,
     type,
@@ -603,7 +617,6 @@ app.post('/api/support/report',auth,async(req,res)=>{
     createdAt:new Date().toISOString(),
     status:'new'
   };
-  if(!Array.isArray(req.db.supportReports))req.db.supportReports=[];
   req.db.supportReports.unshift(report);
   req.db.supportReports=req.db.supportReports.slice(0,1000);
   save(req.db);
@@ -621,7 +634,7 @@ app.post('/api/support/report',auth,async(req,res)=>{
       });
     }catch(err){console.error('Support report email error:',err?.message||err)}
   }
-  res.json({ok:true,id:report.id});
+  res.json({ok:true,id:report.id,ticketNo:report.ticketNo});
 });
 
 app.put('/api/account/preferences',auth,(req,res)=>{
