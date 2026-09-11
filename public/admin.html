@@ -8,6 +8,33 @@
 
 .shippingBox{margin-top:14px;padding:14px;border:1px solid #272727;background:#0a0a0a;border-radius:14px}.shippingTitle{font-size:11px;font-weight:900;letter-spacing:.08em;margin-bottom:8px}.shippingGrid{display:grid;grid-template-columns:minmax(200px,1fr) auto auto;gap:8px;align-items:end}.shippingGrid input{min-width:0}.shipState{font-size:12px;color:#aaa;line-height:1.7;margin-bottom:10px}.shipGood{color:#8fe5ad}.shipWarn{color:#ffcf78}@media(max-width:700px){.shippingGrid{grid-template-columns:1fr}.shippingGrid .btn{width:100%}}
 </style>
+
+<style id="sx-admin-tabs-style">
+.admin-tabs{
+  display:flex;gap:8px;align-items:center;overflow-x:auto;
+  margin:22px 0 24px;padding:7px;
+  border:1px solid #252525;border-radius:16px;background:#080808;
+  scrollbar-width:none;position:sticky;top:10px;z-index:40;
+  box-shadow:0 14px 35px rgba(0,0,0,.28)
+}
+.admin-tabs::-webkit-scrollbar{display:none}
+.admin-tab{
+  appearance:none;border:1px solid transparent;background:transparent;color:#777;
+  border-radius:11px;padding:12px 15px;white-space:nowrap;cursor:pointer;
+  font:800 10px/1 inherit;letter-spacing:.08em;transition:.18s ease
+}
+.admin-tab:hover{color:#fff;background:#111;border-color:#252525}
+.admin-tab.active{background:#fff;color:#050505;border-color:#fff}
+.admin-panel{display:none!important}
+.admin-panel.active{display:block!important;animation:sxAdminPanelIn .18s ease}
+@keyframes sxAdminPanelIn{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
+.admin-panel.sx-pa,.admin-panel.sx-ra,#sxSupportAdmin.admin-panel{margin-top:0}
+@media(max-width:760px){
+  .admin-tabs{border-radius:12px;margin-top:16px}
+  .admin-tab{padding:11px 12px;font-size:9px}
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden"><div class="brand">STARXV</div><p class="sub">panel administratora</p><div id="loginMsg" class="msg">Zaloguj się kontem administratora.</div><input id="email" type="email" placeholder="E-mail"><input id="password" type="password" placeholder="Hasło"><button id="loginBtn" class="btn primary" style="width:100%;margin-top:8px">ZALOGUJ</button></div>
@@ -15,9 +42,17 @@
  <div class="top"><div><div class="brand">STARXV</div><div class="sub">panel administratora</div></div><div class="row"><span id="who" class="meta"></span><button id="refresh" class="btn">Odśwież</button><button id="logout" class="btn">Wyloguj</button></div></div>
  <div id="msg" class="msg"></div>
  <div class="grid"><div class="card stat"><span class="sub">Zamówienia</span><b id="sOrders">—</b></div><div class="card stat"><span class="sub">Oczekujące</span><b id="sPending">—</b></div><div class="card stat"><span class="sub">Przychód opłaconych</span><b id="sRevenue">—</b></div><div class="card stat"><span class="sub">Sztuk w magazynie</span><b id="sStock">—</b></div></div>
- <div class="section"><h2>Dodaj nowy produkt</h2><div class="card"><div class="newProduct"><input id="newId" placeholder="ID, np. starxv-tee-01"><input id="newName" placeholder="Nazwa produktu"><input id="newPrice" type="number" min="0" step="0.01" placeholder="Cena PLN"><input id="newFit" placeholder="Fit, np. OVERSIZED FIT"><select id="newCategory"><option value="hoodies">Bluzy</option><option value="tshirts">Koszulki</option><option value="other">Inne</option></select><input id="newImage" placeholder="Zdjęcie: URL lub data:image/... (opcjonalnie)"><button id="addProduct" class="btn primary">DODAJ</button></div><div class="hint">Po dodaniu produkt automatycznie pojawi się w sklepie. Bez zdjęcia pokaże się placeholder STARXV.</div></div></div>
- <div class="section"><h2>Produkty, kolory, rozmiary i stany</h2><div id="products" class="products"></div></div>
- <div class="section"><h2>Zamówienia</h2><div id="orders" class="orders"></div></div>
+ <nav class="admin-tabs" id="adminTabs" aria-label="Sekcje panelu administratora">
+   <button class="admin-tab active" type="button" data-admin-tab="orders">ZAMÓWIENIA</button>
+   <button class="admin-tab" type="button" data-admin-tab="products">PRODUKTY</button>
+   <button class="admin-tab" type="button" data-admin-tab="add-product">DODAJ PRODUKT</button>
+   <button class="admin-tab" type="button" data-admin-tab="promos">KODY RABATOWE</button>
+   <button class="admin-tab" type="button" data-admin-tab="returns">ZWROTY / REKLAMACJE</button>
+   <button class="admin-tab" type="button" data-admin-tab="support">ZGŁOSZENIA</button>
+ </nav>
+ <div class="section admin-panel" data-admin-panel="add-product"><h2>Dodaj nowy produkt</h2><div class="card"><div class="newProduct"><input id="newId" placeholder="ID, np. starxv-tee-01"><input id="newName" placeholder="Nazwa produktu"><input id="newPrice" type="number" min="0" step="0.01" placeholder="Cena PLN"><input id="newFit" placeholder="Fit, np. OVERSIZED FIT"><select id="newCategory"><option value="hoodies">Bluzy</option><option value="tshirts">Koszulki</option><option value="other">Inne</option></select><input id="newImage" placeholder="Zdjęcie: URL lub data:image/... (opcjonalnie)"><button id="addProduct" class="btn primary">DODAJ</button></div><div class="hint">Po dodaniu produkt automatycznie pojawi się w sklepie. Bez zdjęcia pokaże się placeholder STARXV.</div></div></div>
+ <div class="section admin-panel" data-admin-panel="products"><h2>Produkty, kolory, rozmiary i stany</h2><div id="products" class="products"></div></div>
+ <div class="section admin-panel active" data-admin-panel="orders"><h2>Zamówienia</h2><div id="orders" class="orders"></div></div>
 </div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,7 +124,7 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 <style id="sx-promo-admin-style">
 .sx-pa{margin:28px 0;padding:22px;border:1px solid #292929;background:#0b0b0b;color:#fff}.sx-pa h2{margin:0 0 5px}.sx-pa-sub{color:#777;font-size:12px;margin-bottom:16px}.sx-pa-form{display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr .8fr;gap:8px;margin-bottom:12px}.sx-pa input,.sx-pa select{background:#111;color:#fff;border:1px solid #333;padding:10px;box-sizing:border-box;width:100%}.sx-pa-create{background:#fff;color:#000;border:0;padding:11px 14px;font-weight:900;cursor:pointer}.sx-pa-card{border:1px solid #292929;padding:14px;margin:9px 0;display:grid;grid-template-columns:1fr auto;gap:12px}.sx-pa-meta{font-size:11px;color:#888;margin-top:5px}.sx-pa-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.sx-pa-actions button{background:#151515;color:#fff;border:1px solid #333;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.sx-pa-badge{font-size:10px;font-weight:900}.sx-pa-empty{color:#777;font-size:12px}@media(max-width:800px){.sx-pa-form{grid-template-columns:1fr 1fr}.sx-pa-card{grid-template-columns:1fr}}
 </style>
-<section class="sx-pa"><h2>KODY RABATOWE</h2><div class="sx-pa-sub">Twórz i zarządzaj kodami używanymi w koszyku STARXV.</div>
+<section class="sx-pa admin-panel" data-admin-panel="promos"><h2>KODY RABATOWE</h2><div class="sx-pa-sub">Twórz i zarządzaj kodami używanymi w koszyku STARXV.</div>
 <div class="sx-pa-form"><input id="sxPaCode" maxlength="24" placeholder="KOD np. DROP20"><select id="sxPaType"><option value="percent">Procent %</option><option value="fixed">Kwota PLN</option></select><input id="sxPaValue" type="number" min="0.01" step="0.01" placeholder="Wartość"><input id="sxPaMin" type="number" min="0" step="0.01" placeholder="Min. koszyk"><input id="sxPaLimit" type="number" min="1" step="1" placeholder="Limit użyć"></div>
 <button class="sx-pa-create" id="sxPaCreate">UTWÓRZ KOD →</button><div id="sxPaMsg" class="sx-pa-sub" style="margin-top:8px"></div><div id="sxPromoAdminList"><div class="sx-pa-empty">Ładowanie…</div></div></section>
 <script id="sx-promo-admin-script">
@@ -103,7 +138,7 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 })();
 </script>
 
-<section class="sx-ra"><h2>ZWROTY I REKLAMACJE</h2><div class="sx-ra-sub">Zgłoszenia dotyczące dostarczonych zamówień.</div><div id="sxReturnsAdmin"><div class="sx-ra-empty">Ładowanie…</div></div></section>
+<section class="sx-ra admin-panel" data-admin-panel="returns"><h2>ZWROTY I REKLAMACJE</h2><div class="sx-ra-sub">Zgłoszenia dotyczące dostarczonych zamówień.</div><div id="sxReturnsAdmin"><div class="sx-ra-empty">Ładowanie…</div></div></section>
 <script id="sx-returns-admin-script">
 (()=>{
  let data=[];const root=document.getElementById('sxReturnsAdmin'),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -115,7 +150,7 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 })();
 </script>
 
-<section id="sxSupportAdmin">
+<section id="sxSupportAdmin" class="admin-panel" data-admin-panel="support">
 <h2>ZGŁOSZENIA PROBLEMÓW</h2><div class="sx-sa-sub">Zgłoszenia wysłane przez klientów STARXV.</div>
 <div class="sx-sa-filters"><button class="sx-sa-filter active" data-f="all">WSZYSTKIE</button><button class="sx-sa-filter" data-f="new">NOWE</button><button class="sx-sa-filter" data-f="progress">W TRAKCIE</button><button class="sx-sa-filter" data-f="resolved">ROZWIĄZANE</button></div>
 <div id="sxSupportAdminList"><div class="sx-sa-empty">Ładowanie…</div></div>
@@ -130,6 +165,26 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
  document.querySelectorAll('.sx-sa-filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.sx-sa-filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.f;render()});
  list.onclick=async e=>{const ticket=e.target.closest('[data-admin-ticket]');if(ticket?.dataset.adminTicket)fetch('/api/admin/support-reports/'+encodeURIComponent(ticket.dataset.adminTicket)+'/read',{method:'POST'}).catch(()=>{});const b=e.target.closest('button');if(!b)return;if(b.dataset.reply){const box=list.querySelector(`[data-reply-box="${CSS.escape(b.dataset.reply)}"]`);const reply=box?.value.trim()||'';if(!reply){alert('Wpisz odpowiedź dla klienta.');return}b.disabled=true;try{const r=await fetch('/api/admin/support-reports/'+encodeURIComponent(b.dataset.reply)+'/reply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reply})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Nie udało się wysłać odpowiedzi.');await load()}catch(err){alert(err.message||'Nie udało się wysłać odpowiedzi.')}finally{b.disabled=false}return}if(b.dataset.status){const r=await fetch('/api/admin/support-reports/'+encodeURIComponent(b.dataset.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:b.dataset.status})});if(r.ok)load()}else if(b.dataset.del&&confirm('Usunąć to zgłoszenie?')){const r=await fetch('/api/admin/support-reports/'+encodeURIComponent(b.dataset.del),{method:'DELETE'});if(r.ok)load()}};
  load();
+})();
+</script>
+
+
+<script id="sx-admin-tabs-script">
+(()=>{
+  const tabs=[...document.querySelectorAll('[data-admin-tab]')];
+  const panels=[...document.querySelectorAll('[data-admin-panel]')];
+  if(!tabs.length||!panels.length)return;
+  const valid=new Set(panels.map(x=>x.dataset.adminPanel));
+  function openTab(name,save=true){
+    if(!valid.has(name))name='orders';
+    tabs.forEach(b=>b.classList.toggle('active',b.dataset.adminTab===name));
+    panels.forEach(p=>p.classList.toggle('active',p.dataset.adminPanel===name));
+    if(save)try{localStorage.setItem('starxv-admin-tab',name)}catch{}
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  tabs.forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.adminTab)));
+  let initial='orders';try{initial=localStorage.getItem('starxv-admin-tab')||'orders'}catch{}
+  openTab(initial,false);
 })();
 </script>
 
