@@ -721,7 +721,6 @@
     }
     .sx-nav-brand{display:flex;align-items:center;gap:14px}
     @media(max-width:700px){.sx-test-version{font-size:7px;letter-spacing:.11em;min-width:91px}.sx-nav-brand{gap:9px}}
-    @media(prefers-reduced-motion:reduce){.sx-test-version::after{animation:none!important}}
     footer {
       border-top: 1px solid var(--line);
       padding: 30px 5vw;
@@ -3413,18 +3412,15 @@ document.addEventListener('DOMContentLoaded',()=>{
     return ch === ' ' ? ' ' : randomChar();
   }).join('');
 
+  let running = false;
   function runVersionLoad(){
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      el.textContent = target;
-      el.dataset.ghost = '';
-      return;
-    }
-
+    if (running) return;
+    running = true;
     el.classList.add('is-loading');
     let frame = 0;
-    const totalFrames = 34;
+    const totalFrames = 42;
     const timer = setInterval(() => {
-      const progress = Math.min(target.length, Math.floor((frame / totalFrames) * (target.length + 2)));
+      const progress = Math.min(target.length, Math.floor((frame / totalFrames) * (target.length + 1)));
       let visible = '';
       for (let i = 0; i < target.length; i++) {
         const ch = target[i];
@@ -3433,7 +3429,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         else visible += randomChar();
       }
       el.textContent = visible;
-      el.dataset.ghost = randomTail(Math.max(0, progress - 2));
+      el.dataset.ghost = randomTail(Math.max(0, progress - 3));
       frame++;
 
       if (frame > totalFrames) {
@@ -3441,12 +3437,13 @@ document.addEventListener('DOMContentLoaded',()=>{
         el.textContent = target;
         el.dataset.ghost = '';
         el.classList.remove('is-loading');
+        running = false;
       }
-    }, 38);
+    }, 45);
   }
 
-  setTimeout(runVersionLoad, 700);
-  setInterval(runVersionLoad, 4800);
+  runVersionLoad();
+  setInterval(runVersionLoad, 4200);
 })();
 </script>
 
