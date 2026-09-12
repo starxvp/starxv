@@ -1219,8 +1219,10 @@ function campaignEmailContent(c){
 async function sendMarketingCampaignEmail(to,c){
   const apiKey=String(process.env.RESEND_API_KEY||'').trim();if(!apiKey){if(process.env.NODE_ENV==='production')throw new Error('Brak RESEND_API_KEY.');console.log(`[STARXV DEV] Marketing → ${to}: ${c.subject}`);return {dev:true}}
   const resend=new Resend(apiKey),content=campaignEmailContent(c);
-  const attachments=[{path:path.join(__dirname,'public','assets','starxv-nowosci.png'),filename:'starxv-nowosci.jpg',contentId:'starxv-newsletter-logo'}];
-  if(c.image)attachments.push({content:Buffer.from(c.image.base64,'base64'),filename:c.image.filename,contentId:c.image.contentId});
+  const logoPath=path.join(__dirname,'public','assets','starxv-nowosci.png');
+  const logoContent=fs.readFileSync(logoPath).toString('base64');
+  const attachments=[{content:logoContent,filename:'starxv-nowosci.png',contentId:'starxv-newsletter-logo'}];
+  if(c.image)attachments.push({content:c.image.base64,filename:c.image.filename,contentId:c.image.contentId});
   const {data,error}=await resend.emails.send({from:marketingSender(),to,subject:c.subject,text:content.text,html:content.html,attachments});
   if(error){console.error('Resend marketing error:',error);throw new Error(error.message||'Nie udało się wysłać e-maila.')}return {dev:false,id:data?.id||''};
 }
