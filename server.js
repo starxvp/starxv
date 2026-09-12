@@ -1193,22 +1193,31 @@ function cleanCampaignUrl(v){
 }
 function marketingSender(){return String(process.env.NEWSLETTER_FROM||'STARXV Nowości <kontakt@starxv.pl>').trim()}
 function marketingSubscribers(db){return (db.users||[]).filter(u=>u.marketingEmails===true&&validEmail(cleanEmail(u.email)))}
+function marketingCampaignImage(body){
+  const dataUrl=String(body?.imageDataUrl||'').trim();if(!dataUrl)return null;
+  const m=dataUrl.match(/^data:(image\/(?:png|jpeg|gif));base64,([A-Za-z0-9+/=]+)$/i);if(!m)throw new Error('Zdjęcie musi być plikiem JPG, PNG albo GIF.');
+  const mime=m[1].toLowerCase(),base64=m[2],bytes=Buffer.from(base64,'base64');
+  if(!bytes.length||bytes.length>2.5*1024*1024)throw new Error('Zdjęcie może mieć maksymalnie 2,5 MB.');
+  const ext=mime==='image/jpeg'?'jpg':mime.split('/')[1],rawName=cleanCampaignText(body?.imageName,100).replace(/[^a-zA-Z0-9._-]/g,'_');
+  return {mime,base64,filename:rawName||`starxv-news.${ext}`,contentId:'starxv-campaign-image'};
+}
 function marketingCampaignInput(body){
   const type=campaignType(body?.type),subject=cleanCampaignText(body?.subject,120),title=cleanCampaignText(body?.title,120),message=cleanCampaignText(body?.message,3000);
-  const product=cleanCampaignText(body?.product,120),variant=cleanCampaignText(body?.variant,120),ctaLabel=cleanCampaignText(body?.ctaLabel,50)||'ZOBACZ STARXV',ctaUrl=cleanCampaignUrl(body?.ctaUrl);
+  const product=cleanCampaignText(body?.product,120),variant=cleanCampaignText(body?.variant,120),ctaLabel=cleanCampaignText(body?.ctaLabel,50)||'ZOBACZ STARXV',ctaUrl=cleanCampaignUrl(body?.ctaUrl),image=marketingCampaignImage(body);
   if(subject.length<3)throw new Error('Podaj temat wiadomości.');if(title.length<2)throw new Error('Podaj tytuł wiadomości.');if(message.length<5)throw new Error('Treść wiadomości jest za krótka.');
-  return {type,subject,title,message,product,variant,ctaLabel,ctaUrl};
+  return {type,subject,title,message,product,variant,ctaLabel,ctaUrl,image};
 }
 function campaignEmailContent(c){
   const tag=campaignTypeLabel(c.type),extra=[c.product,c.variant].filter(Boolean).join(' · ');
   const messageHtml=emailEscape(c.message).replace(/\n/g,'<br>');
-  const html=`<!doctype html><html><body style="margin:0;background:#f4f4f4;color:#111;font-family:Arial,sans-serif"><div style="max-width:620px;margin:0 auto;padding:28px 14px"><div style="background:#0a0a0a;color:#fff;padding:28px 30px 24px"><div style="font-size:26px;font-weight:900;letter-spacing:2px">STARXV</div><div style="margin-top:8px;font-size:10px;letter-spacing:2px;color:#aaa">${emailEscape(tag)}</div></div><div style="background:#fff;padding:34px 30px"><div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#777;margin-bottom:12px">${emailEscape(tag)}</div><h1 style="font-size:27px;line-height:1.1;margin:0 0 12px">${emailEscape(c.title)}</h1>${extra?`<div style="font-size:12px;color:#666;margin-bottom:22px">${emailEscape(extra)}</div>`:''}<div style="font-size:15px;line-height:1.7;color:#222">${messageHtml}</div><a href="${emailEscape(c.ctaUrl)}" style="display:inline-block;margin-top:28px;padding:13px 20px;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:900;letter-spacing:1px">${emailEscape(c.ctaLabel)}</a><div style="margin-top:34px;padding-top:20px;border-top:1px solid #e8e8e8;font-size:10px;line-height:1.55;color:#888">Otrzymujesz tę wiadomość, ponieważ na koncie STARXV masz włączone powiadomienia marketingowe. Możesz je wyłączyć w dowolnym momencie w Profilu → Powiadomienia marketingowe.</div></div></div></body></html>`;
+  const imageHtml=c.image?`<div style="margin:0 0 24px"><img src="cid:${emailEscape(c.image.contentId)}" alt="STARXV" style="display:block;width:100%;max-width:560px;height:auto;border:0"></div>`:'';
+  const html=`<!doctype html><html><body style="margin:0;background:#f4f4f4;color:#111;font-family:Arial,sans-serif"><div style="max-width:620px;margin:0 auto;padding:28px 14px"><div style="background:#0a0a0a;color:#fff;padding:28px 30px 24px"><div style="font-size:26px;font-weight:900;letter-spacing:2px">STARXV</div><div style="margin-top:8px;font-size:10px;letter-spacing:2px;color:#aaa">${emailEscape(tag)}</div></div><div style="background:#fff;padding:34px 30px">${imageHtml}<div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#777;margin-bottom:12px">${emailEscape(tag)}</div><h1 style="font-size:27px;line-height:1.1;margin:0 0 12px">${emailEscape(c.title)}</h1>${extra?`<div style="font-size:12px;color:#666;margin-bottom:22px">${emailEscape(extra)}</div>`:''}<div style="font-size:15px;line-height:1.7;color:#222">${messageHtml}</div><a href="${emailEscape(c.ctaUrl)}" style="display:inline-block;margin-top:28px;padding:13px 20px;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:900;letter-spacing:1px">${emailEscape(c.ctaLabel)}</a><div style="margin-top:34px;padding-top:20px;border-top:1px solid #e8e8e8;font-size:10px;line-height:1.55;color:#888">Otrzymujesz tę wiadomość, ponieważ na koncie STARXV masz włączone powiadomienia marketingowe. Możesz je wyłączyć w dowolnym momencie w Profilu → Powiadomienia marketingowe.</div></div></div></body></html>`;
   const text=`STARXV — ${tag}\n\n${c.title}${extra?'\n'+extra:''}\n\n${c.message}\n\n${c.ctaLabel}: ${c.ctaUrl}\n\nOtrzymujesz tę wiadomość, ponieważ na koncie STARXV masz włączone powiadomienia marketingowe. Możesz je wyłączyć w Profilu.`;
   return {html,text};
 }
 async function sendMarketingCampaignEmail(to,c){
   const apiKey=String(process.env.RESEND_API_KEY||'').trim();if(!apiKey){if(process.env.NODE_ENV==='production')throw new Error('Brak RESEND_API_KEY.');console.log(`[STARXV DEV] Marketing → ${to}: ${c.subject}`);return {dev:true}}
-  const resend=new Resend(apiKey),content=campaignEmailContent(c);const {data,error}=await resend.emails.send({from:marketingSender(),to,subject:c.subject,text:content.text,html:content.html});
+  const resend=new Resend(apiKey),content=campaignEmailContent(c),attachments=c.image?[{content:Buffer.from(c.image.base64,'base64'),filename:c.image.filename,contentId:c.image.contentId}]:[];const {data,error}=await resend.emails.send({from:marketingSender(),to,subject:c.subject,text:content.text,html:content.html,...(attachments.length?{attachments}:{})});
   if(error){console.error('Resend marketing error:',error);throw new Error(error.message||'Nie udało się wysłać e-maila.')}return {dev:false,id:data?.id||''};
 }
 async function sendCampaignToSubscribers(db,c){
@@ -1404,7 +1413,7 @@ app.post('/api/admin/marketing-campaigns/test',rateLimit('marketing-test',20,60*
 app.post('/api/admin/marketing-campaigns',rateLimit('marketing-send',12,60*60*1000),adminOnly,async(req,res)=>{try{
   ensureStore(req.db);const campaign=marketingCampaignInput(req.body||{}),subscribers=marketingSubscribers(req.db);
   if(!subscribers.length)return res.status(400).json({error:'Brak użytkowników z włączonymi powiadomieniami marketingowymi.'});
-  const createdAt=Date.now(),record={id:crypto.randomUUID(),...campaign,createdAt,createdBy:req.user.id,createdByEmail:cleanEmail(req.user.email),sender:marketingSender(),status:'sending',recipientCount:subscribers.length,sentCount:0,failedCount:0};
+  const createdAt=Date.now(),record={id:crypto.randomUUID(),...campaign,image:undefined,hasImage:Boolean(campaign.image),imageName:campaign.image?.filename||'',createdAt,createdBy:req.user.id,createdByEmail:cleanEmail(req.user.email),sender:marketingSender(),status:'sending',recipientCount:subscribers.length,sentCount:0,failedCount:0};
   req.db.marketingCampaigns.unshift(record);req.db.marketingCampaigns=req.db.marketingCampaigns.slice(0,200);save(req.db);
   const result=await sendCampaignToSubscribers(req.db,campaign);record.sentCount=result.sentCount;record.failedCount=result.failedCount;record.status=result.failedCount===0?'sent':result.sentCount>0?'partial':'failed';record.sentAt=Date.now();record.errors=result.errors;save(req.db);
   res.json({ok:true,campaign:record});
