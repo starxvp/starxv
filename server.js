@@ -1612,6 +1612,14 @@ app.delete('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
   save(req.db);res.json({ok:true});
 });
 
+// Explicit SEO endpoints: return crawler-friendly 200 responses and MIME types.
+app.get('/robots.txt',(req,res)=>{
+  res.status(200).type('text/plain; charset=utf-8').set('Cache-Control','public, max-age=300').sendFile(path.join(__dirname,'public','robots.txt'));
+});
+app.get('/sitemap.xml',(req,res)=>{
+  res.status(200).type('application/xml; charset=utf-8').set('Cache-Control','public, max-age=300').sendFile(path.join(__dirname,'public','sitemap.xml'));
+});
+
 app.get(['/privacy','/privacy/','/privacy.html'],(req,res)=>res.sendFile(path.join(__dirname,'public','privacy.html')));
 app.get(['/admin','/admin/'],(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.use('/assets',express.static(path.join(__dirname,'public','assets'),{maxAge:'1y',immutable:true}));
