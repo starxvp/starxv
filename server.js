@@ -22,6 +22,16 @@ app.use((req,res,next)=>{
   res.setHeader('Permissions-Policy','camera=(), microphone=(), geolocation=(self), payment=(self)');
   res.setHeader('Cross-Origin-Opener-Policy','same-origin-allow-popups');
   res.setHeader('Cross-Origin-Resource-Policy','same-origin');
+  // The storefront still uses inline JS/CSS, so 'unsafe-inline' is temporarily
+  // required. External origins are kept to the services STARXV actually uses.
+  res.setHeader('Content-Security-Policy',[
+    "default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://geowidget.inpost.pl",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://geowidget.inpost.pl",
+    "font-src 'self' https://fonts.gstatic.com data:","img-src 'self' data: blob: https:",
+    "connect-src 'self' https://accounts.google.com https://geowidget.inpost.pl",
+    "frame-src 'self' https://accounts.google.com https://www.openstreetmap.org https://geowidget.inpost.pl"
+  ].join('; '));
   if(process.env.NODE_ENV==='production')res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
   next();
 });
@@ -307,7 +317,13 @@ app.use(express.json({limit:'5mb'}));
 app.use('/api',(req,res,next)=>{
   if(!['POST','PUT','PATCH','DELETE'].includes(req.method))return next();
   const origin=String(req.headers.origin||'').trim();
-  if(!origin)return next();
+  // Browser state-changing requests must carry a same-site Origin. The InPost
+  // webhook is server-to-server and authenticates separately below.
+  if(!origin){
+    if(req.path==='/inpost/webhook')return next();
+    if(process.env.NODE_ENV==='production')return res.status(403).json({error:'Brak nagłówka Origin.'});
+    return next();
+  }
   try{
     const originUrl=new URL(origin);
     const host=String(req.headers.host||'');
@@ -1237,6 +1253,9 @@ app.get('/api/shipping/points/:name',rateLimit('inpost-point',120,10*60*1000),as
 app.get('/api/inpost/webhook',(req,res)=>res.status(200).send('OK'));
 app.post('/api/inpost/webhook',rateLimit('inpost-webhook',300,10*60*1000),(req,res)=>{try{
   const expected=String(process.env.INPOST_WEBHOOK_SECRET||'').trim(),provided=String(req.query.secret||req.headers['x-starxv-inpost-secret']||'').trim();
+  // Never accept unauthenticated production webhooks. This prevents an attacker
+  // from spoofing shipment status changes if the environment variable was missed.
+  if(process.env.NODE_ENV==='production'&&!expected)return res.status(503).json({error:'InPost webhook is not configured.'});
   if(expected&&(!provided||provided.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(provided),Buffer.from(expected))))return res.status(403).json({error:'Forbidden'});
   const cfg=inpostConfig(),org=String(req.body?.organization_id??'');
   if(cfg.organizationId&&org&&org!==String(cfg.organizationId))return res.status(403).json({error:'Wrong organization'});
