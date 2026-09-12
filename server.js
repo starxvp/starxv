@@ -883,8 +883,12 @@ const REVIEW_PRODUCTS=new Set(['black-hoodie-graffiti','oversized-white-shirt'])
 function reviewProductId(v){const id=String(v||'').trim();return REVIEW_PRODUCTS.has(id)?id:''}
 function cleanReviewText(v){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,500)}
 function reviewAuthor(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return u?cleanName(u.firstName||'Klient').slice(0,30)||'Klient':'Klient'}
-function hasPaidProduct(db,userId,productId){return (db.orders||[]).some(o=>o.userId===userId&&o.paymentStatus==='paid'&&(o.items||[]).some(i=>String(i.id)===String(productId)))}
-function publicReview(db,r){return {id:r.id,productId:r.productId,name:reviewAuthor(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:hasPaidProduct(db,r.userId,r.productId)}}
+function deliveredOrderForUser(db,userId,orderId){return (db.orders||[]).find(o=>String(o.id)===String(orderId)&&o.userId===userId&&o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4)}
+function reviewPurchaseItem(order,productId,color,size){return (order?.items||[]).find(i=>String(i.id)===String(productId)&&String(i.color||'')===String(color||'')&&String(i.size||'').toUpperCase()===String(size||'').toUpperCase())}
+function reviewKey(r){return [String(r.orderId||''),String(r.productId||''),String(r.color||''),String(r.size||'').toUpperCase()].join('|')}
+function reviewIsVerified(db,r){const order=(db.orders||[]).find(o=>String(o.id)===String(r.orderId||'')&&o.userId===r.userId&&o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4);return Boolean(order&&reviewPurchaseItem(order,r.productId,r.color,r.size))}
+function publicReview(db,r){return {id:r.id,productId:r.productId,orderId:r.orderId||'',name:reviewAuthor(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
+function orderReviewsForUser(db,order){return (db.reviews||[]).filter(r=>r.userId===order.userId&&String(r.orderId||'')===String(order.id)).map(r=>publicReview(db,r))}
 
 app.get('/api/reviews/:productId',(req,res)=>{
   const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
@@ -895,21 +899,31 @@ app.get('/api/reviews/:productId',(req,res)=>{
 });
 app.get('/api/reviews/:productId/mine',auth,(req,res)=>{
   const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
-  const r=req.db.reviews.find(x=>x.productId===productId&&x.userId===req.user.id);res.json({ok:true,review:r?publicReview(req.db,r):null,visible:r?r.visible!==false:null});
+  const reviews=req.db.reviews.filter(x=>x.productId===productId&&x.userId===req.user.id).map(r=>publicReview(req.db,r));res.json({ok:true,reviews,review:reviews[0]||null});
 });
 app.post('/api/reviews/:productId',rateLimit('review-write',15,15*60*1000),auth,(req,res)=>{
   const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
-  const text=cleanReviewText(req.body?.text),rating=Number(req.body?.rating);
-  if(text.length<3)return res.status(400).json({error:'Opinia musi mieć co najmniej 3 znaki.'});if(!Number.isInteger(rating)||rating<1||rating>5)return res.status(400).json({error:'Wybierz ocenę od 1 do 5.'});
-  const now=Date.now();let r=req.db.reviews.find(x=>x.productId===productId&&x.userId===req.user.id);
-  if(r){r.text=text;r.rating=rating;r.updatedAt=now}else{r={id:crypto.randomUUID(),productId,userId:req.user.id,rating,text,visible:true,createdAt:now,updatedAt:now};req.db.reviews.push(r)}
+  const text=cleanReviewText(req.body?.text),rating=Number(req.body?.rating),orderId=String(req.body?.orderId||''),color=String(req.body?.color||''),size=String(req.body?.size||'').toUpperCase();
+  if(text.length<3)return res.status(400).json({error:'Opinia musi mieć co najmniej 3 znaki.'});
+  if(!Number.isInteger(rating)||rating<1||rating>5)return res.status(400).json({error:'Wybierz ocenę od 1 do 5.'});
+  const order=deliveredOrderForUser(req.db,req.user.id,orderId);if(!order)return res.status(403).json({error:'Opinię możesz dodać dopiero po dostarczeniu opłaconego zamówienia.'});
+  const item=reviewPurchaseItem(order,productId,color,size);if(!item)return res.status(400).json({error:'Nie znaleziono tego wariantu produktu w zamówieniu.'});
+  const now=Date.now();let r=req.db.reviews.find(x=>x.userId===req.user.id&&String(x.orderId||'')===orderId&&x.productId===productId&&String(x.color||'')===String(item.color||'')&&String(x.size||'').toUpperCase()===String(item.size||'').toUpperCase());
+  if(r){r.text=text;r.rating=rating;r.updatedAt=now;r.visible=true;r.color=String(item.color||'');r.colorLabel=String(item.colorLabel||item.color||'');r.size=String(item.size||'').toUpperCase()}
+  else{r={id:crypto.randomUUID(),orderId:order.id,productId,userId:req.user.id,color:String(item.color||''),colorLabel:String(item.colorLabel||item.color||''),size:String(item.size||'').toUpperCase(),rating,text,visible:true,createdAt:now,updatedAt:now};req.db.reviews.push(r)}
   save(req.db);res.json({ok:true,review:publicReview(req.db,r),message:'Opinia została zapisana.'});
+});
+app.delete('/api/reviews/by-id/:id',auth,(req,res)=>{
+  ensureStore(req.db);const r=req.db.reviews.find(x=>x.id===req.params.id&&x.userId===req.user.id);if(!r)return res.status(404).json({error:'Nie znaleziono Twojej opinii.'});
+  req.db.reviews=req.db.reviews.filter(x=>x.id!==r.id);save(req.db);res.json({ok:true});
 });
 app.delete('/api/reviews/:productId',auth,(req,res)=>{
   const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
-  const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(r=>!(r.productId===productId&&r.userId===req.user.id));if(req.db.reviews.length===before)return res.status(404).json({error:'Nie masz opinii dla tego produktu.'});save(req.db);res.json({ok:true});
+  const orderId=String(req.query?.orderId||''),color=String(req.query?.color||''),size=String(req.query?.size||'').toUpperCase();
+  const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(r=>!(r.productId===productId&&r.userId===req.user.id&&(!orderId||String(r.orderId||'')===orderId)&&(!color||String(r.color||'')===color)&&(!size||String(r.size||'').toUpperCase()===size)));
+  if(req.db.reviews.length===before)return res.status(404).json({error:'Nie masz opinii dla tego produktu.'});save(req.db);res.json({ok:true});
 });
-app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id).map(orderForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
+app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id).map(o=>({...orderForUser(o),reviews:orderReviewsForUser(req.db,o)})).sort((a,b)=>b.createdAt-a.createdAt)})});
 
 
 function ensurePromoCodes(db){
