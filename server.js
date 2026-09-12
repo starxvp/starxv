@@ -833,6 +833,7 @@ function ensureStore(db){
   if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.reviews))db.reviews=[];
+  if(!Array.isArray(db.marketingCampaigns))db.marketingCampaigns=[];
   return db;
 }
 function publicCatalog(db){ensureStore(db);return db.catalog}
@@ -1179,6 +1180,45 @@ async function handleStripeWebhook(req,res){
 }
 
 
+
+// --- STARXV marketing/news campaigns -----------------------------------------
+const CAMPAIGN_TYPES=new Set(['newsletter','site_update','new_product','new_variant','restock','other']);
+function campaignType(v){const x=String(v||'').trim();return CAMPAIGN_TYPES.has(x)?x:'other'}
+function campaignTypeLabel(v){return ({newsletter:'NEWSLETTER',site_update:'ZMIANY NA STRONIE',new_product:'NOWY PRODUKT',new_variant:'NOWY WARIANT',restock:'POWRÓT DO MAGAZYNU',other:'NOWOŚĆ STARXV'})[campaignType(v)]||'NOWOŚĆ STARXV'}
+function cleanCampaignText(v,max=3000){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,max)}
+function emailEscape(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function cleanCampaignUrl(v){
+  const raw=String(v||'').trim();if(!raw)return 'https://starxv.pl/';
+  try{const u=new URL(raw);if(u.protocol!=='https:'||!['starxv.pl','www.starxv.pl'].includes(u.hostname.toLowerCase()))throw new Error();return u.toString().slice(0,1000)}catch{throw new Error('Link przycisku musi prowadzić do https://starxv.pl.')}
+}
+function marketingSender(){return String(process.env.NEWSLETTER_FROM||'STARXV Nowości <kontakt@starxv.pl>').trim()}
+function marketingSubscribers(db){return (db.users||[]).filter(u=>u.marketingEmails===true&&validEmail(cleanEmail(u.email)))}
+function marketingCampaignInput(body){
+  const type=campaignType(body?.type),subject=cleanCampaignText(body?.subject,120),title=cleanCampaignText(body?.title,120),message=cleanCampaignText(body?.message,3000);
+  const product=cleanCampaignText(body?.product,120),variant=cleanCampaignText(body?.variant,120),ctaLabel=cleanCampaignText(body?.ctaLabel,50)||'ZOBACZ STARXV',ctaUrl=cleanCampaignUrl(body?.ctaUrl);
+  if(subject.length<3)throw new Error('Podaj temat wiadomości.');if(title.length<2)throw new Error('Podaj tytuł wiadomości.');if(message.length<5)throw new Error('Treść wiadomości jest za krótka.');
+  return {type,subject,title,message,product,variant,ctaLabel,ctaUrl};
+}
+function campaignEmailContent(c){
+  const tag=campaignTypeLabel(c.type),extra=[c.product,c.variant].filter(Boolean).join(' · ');
+  const messageHtml=emailEscape(c.message).replace(/\n/g,'<br>');
+  const html=`<!doctype html><html><body style="margin:0;background:#f4f4f4;color:#111;font-family:Arial,sans-serif"><div style="max-width:620px;margin:0 auto;padding:28px 14px"><div style="background:#0a0a0a;color:#fff;padding:28px 30px 24px"><div style="font-size:26px;font-weight:900;letter-spacing:2px">STARXV</div><div style="margin-top:8px;font-size:10px;letter-spacing:2px;color:#aaa">${emailEscape(tag)}</div></div><div style="background:#fff;padding:34px 30px"><div style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#777;margin-bottom:12px">${emailEscape(tag)}</div><h1 style="font-size:27px;line-height:1.1;margin:0 0 12px">${emailEscape(c.title)}</h1>${extra?`<div style="font-size:12px;color:#666;margin-bottom:22px">${emailEscape(extra)}</div>`:''}<div style="font-size:15px;line-height:1.7;color:#222">${messageHtml}</div><a href="${emailEscape(c.ctaUrl)}" style="display:inline-block;margin-top:28px;padding:13px 20px;background:#111;color:#fff;text-decoration:none;font-size:11px;font-weight:900;letter-spacing:1px">${emailEscape(c.ctaLabel)}</a><div style="margin-top:34px;padding-top:20px;border-top:1px solid #e8e8e8;font-size:10px;line-height:1.55;color:#888">Otrzymujesz tę wiadomość, ponieważ na koncie STARXV masz włączone powiadomienia marketingowe. Możesz je wyłączyć w dowolnym momencie w Profilu → Powiadomienia marketingowe.</div></div></div></body></html>`;
+  const text=`STARXV — ${tag}\n\n${c.title}${extra?'\n'+extra:''}\n\n${c.message}\n\n${c.ctaLabel}: ${c.ctaUrl}\n\nOtrzymujesz tę wiadomość, ponieważ na koncie STARXV masz włączone powiadomienia marketingowe. Możesz je wyłączyć w Profilu.`;
+  return {html,text};
+}
+async function sendMarketingCampaignEmail(to,c){
+  const apiKey=String(process.env.RESEND_API_KEY||'').trim();if(!apiKey){if(process.env.NODE_ENV==='production')throw new Error('Brak RESEND_API_KEY.');console.log(`[STARXV DEV] Marketing → ${to}: ${c.subject}`);return {dev:true}}
+  const resend=new Resend(apiKey),content=campaignEmailContent(c);const {data,error}=await resend.emails.send({from:marketingSender(),to,subject:c.subject,text:content.text,html:content.html});
+  if(error){console.error('Resend marketing error:',error);throw new Error(error.message||'Nie udało się wysłać e-maila.')}return {dev:false,id:data?.id||''};
+}
+async function sendCampaignToSubscribers(db,c){
+  const recipients=marketingSubscribers(db),results=[];
+  for(let i=0;i<recipients.length;i+=5){
+    const chunk=recipients.slice(i,i+5);const part=await Promise.all(chunk.map(async u=>{try{await sendMarketingCampaignEmail(cleanEmail(u.email),c);return {ok:true}}catch(e){console.error(`Marketing send failed for user ${u.id}:`,e.message);return {ok:false,error:String(e.message||'Błąd wysyłki').slice(0,180)}}}));results.push(...part);
+  }
+  return {recipientCount:recipients.length,sentCount:results.filter(x=>x.ok).length,failedCount:results.filter(x=>!x.ok).length,errors:results.filter(x=>!x.ok).map(x=>x.error).slice(0,5)};
+}
+
 // --- STARXV admin panel ---
 function adminEmails(){
   return String(process.env.ADMIN_EMAILS||'').split(',').map(cleanEmail).filter(Boolean);
@@ -1353,6 +1393,23 @@ function adminOrder(db,o){
   };
 }
 app.get('/api/admin/me',adminOnly,(req,res)=>res.json({ok:true,user:publicUser(req.user)}));
+
+app.get('/api/admin/marketing-campaigns',adminOnly,(req,res)=>{
+  ensureStore(req.db);const campaigns=req.db.marketingCampaigns.slice().sort((a,b)=>Number(b.createdAt||0)-Number(a.createdAt||0)).slice(0,100);
+  res.json({ok:true,subscriberCount:marketingSubscribers(req.db).length,sender:marketingSender(),campaigns});
+});
+app.post('/api/admin/marketing-campaigns/test',rateLimit('marketing-test',20,60*60*1000),adminOnly,async(req,res)=>{try{
+  const campaign=marketingCampaignInput(req.body||{});await sendMarketingCampaignEmail(cleanEmail(req.user.email),campaign);res.json({ok:true,to:cleanEmail(req.user.email),sender:marketingSender()});
+}catch(e){res.status(400).json({error:e.message||'Nie udało się wysłać wiadomości testowej.'})}});
+app.post('/api/admin/marketing-campaigns',rateLimit('marketing-send',12,60*60*1000),adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const campaign=marketingCampaignInput(req.body||{}),subscribers=marketingSubscribers(req.db);
+  if(!subscribers.length)return res.status(400).json({error:'Brak użytkowników z włączonymi powiadomieniami marketingowymi.'});
+  const createdAt=Date.now(),record={id:crypto.randomUUID(),...campaign,createdAt,createdBy:req.user.id,createdByEmail:cleanEmail(req.user.email),sender:marketingSender(),status:'sending',recipientCount:subscribers.length,sentCount:0,failedCount:0};
+  req.db.marketingCampaigns.unshift(record);req.db.marketingCampaigns=req.db.marketingCampaigns.slice(0,200);save(req.db);
+  const result=await sendCampaignToSubscribers(req.db,campaign);record.sentCount=result.sentCount;record.failedCount=result.failedCount;record.status=result.failedCount===0?'sent':result.sentCount>0?'partial':'failed';record.sentAt=Date.now();record.errors=result.errors;save(req.db);
+  res.json({ok:true,campaign:record});
+}catch(e){console.error('Marketing campaign error:',e);res.status(400).json({error:e.message||'Nie udało się wysłać kampanii.'})}});
+
 app.get('/api/admin/reviews',adminOnly,(req,res)=>{ensureStore(req.db);const reviews=req.db.reviews.slice().sort((a,b)=>Number(b.updatedAt||b.createdAt)-Number(a.updatedAt||a.createdAt)).map(r=>({...publicReview(req.db,r),visible:r.visible!==false,email:(req.db.users||[]).find(u=>u.id===r.userId)?.email||''}));res.json({ok:true,reviews})});
 app.patch('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);const r=req.db.reviews.find(x=>x.id===req.params.id);if(!r)return res.status(404).json({error:'Nie znaleziono opinii.'});if(Object.prototype.hasOwnProperty.call(req.body||{},'visible'))r.visible=Boolean(req.body.visible);r.updatedAt=Date.now();save(req.db);res.json({ok:true,review:{...publicReview(req.db,r),visible:r.visible!==false}})});
 app.delete('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(x=>x.id!==req.params.id);if(req.db.reviews.length===before)return res.status(404).json({error:'Nie znaleziono opinii.'});save(req.db);res.json({ok:true})});
