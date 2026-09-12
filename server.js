@@ -612,6 +612,7 @@ app.delete('/api/account',auth,(req,res)=>{
 
   // Unpaid draft orders can be discarded; completed/paid records stay in the shop records.
   req.db.orders=(req.db.orders||[]).filter(o=>!(o.userId===userId && String(o.paymentStatus||'pending')!=='paid'));
+  req.db.reviews=(req.db.reviews||[]).filter(r=>r.userId!==userId);
   req.db.users=(req.db.users||[]).filter(u=>u.id!==userId);
   req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==cleanEmail(email));
   save(req.db);
@@ -831,6 +832,7 @@ function ensureStore(db){
   // Seed the starter catalog only once. Do not recreate products that an admin deliberately deleted.
   if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
   if(!Array.isArray(db.orders))db.orders=[];
+  if(!Array.isArray(db.reviews))db.reviews=[];
   return db;
 }
 function publicCatalog(db){ensureStore(db);return db.catalog}
@@ -875,6 +877,38 @@ function releaseStockReservation(db,order){
   order.stockReserved=false;order.stockReservedReleasedAt=Date.now();
 }
 app.get('/api/store/catalog',(req,res)=>{const db=load();ensureStore(db);save(db);res.json({ok:true,catalog:publicCatalog(db)})});
+
+// --- Product reviews: shared backend storage ---------------------------------
+const REVIEW_PRODUCTS=new Set(['black-hoodie-graffiti','oversized-white-shirt']);
+function reviewProductId(v){const id=String(v||'').trim();return REVIEW_PRODUCTS.has(id)?id:''}
+function cleanReviewText(v){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,500)}
+function reviewAuthor(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return u?cleanName(u.firstName||'Klient').slice(0,30)||'Klient':'Klient'}
+function hasPaidProduct(db,userId,productId){return (db.orders||[]).some(o=>o.userId===userId&&o.paymentStatus==='paid'&&(o.items||[]).some(i=>String(i.id)===String(productId)))}
+function publicReview(db,r){return {id:r.id,productId:r.productId,name:reviewAuthor(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:hasPaidProduct(db,r.userId,r.productId)}}
+
+app.get('/api/reviews/:productId',(req,res)=>{
+  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
+  const db=load();ensureStore(db);
+  const reviews=db.reviews.filter(r=>r.productId===productId&&r.visible!==false).sort((a,b)=>Number(b.updatedAt||b.createdAt)-Number(a.updatedAt||a.createdAt)).map(r=>publicReview(db,r));
+  const average=reviews.length?reviews.reduce((sum,r)=>sum+r.rating,0)/reviews.length:0;
+  res.setHeader('Cache-Control','no-store');res.json({ok:true,reviews,average:Math.round(average*10)/10,count:reviews.length});
+});
+app.get('/api/reviews/:productId/mine',auth,(req,res)=>{
+  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
+  const r=req.db.reviews.find(x=>x.productId===productId&&x.userId===req.user.id);res.json({ok:true,review:r?publicReview(req.db,r):null,visible:r?r.visible!==false:null});
+});
+app.post('/api/reviews/:productId',rateLimit('review-write',15,15*60*1000),auth,(req,res)=>{
+  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
+  const text=cleanReviewText(req.body?.text),rating=Number(req.body?.rating);
+  if(text.length<3)return res.status(400).json({error:'Opinia musi mieć co najmniej 3 znaki.'});if(!Number.isInteger(rating)||rating<1||rating>5)return res.status(400).json({error:'Wybierz ocenę od 1 do 5.'});
+  const now=Date.now();let r=req.db.reviews.find(x=>x.productId===productId&&x.userId===req.user.id);
+  if(r){r.text=text;r.rating=rating;r.updatedAt=now}else{r={id:crypto.randomUUID(),productId,userId:req.user.id,rating,text,visible:true,createdAt:now,updatedAt:now};req.db.reviews.push(r)}
+  save(req.db);res.json({ok:true,review:publicReview(req.db,r),message:'Opinia została zapisana.'});
+});
+app.delete('/api/reviews/:productId',auth,(req,res)=>{
+  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
+  const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(r=>!(r.productId===productId&&r.userId===req.user.id));if(req.db.reviews.length===before)return res.status(404).json({error:'Nie masz opinii dla tego produktu.'});save(req.db);res.json({ok:true});
+});
 app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id).map(orderForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
 
 
@@ -1305,6 +1339,10 @@ function adminOrder(db,o){
   };
 }
 app.get('/api/admin/me',adminOnly,(req,res)=>res.json({ok:true,user:publicUser(req.user)}));
+app.get('/api/admin/reviews',adminOnly,(req,res)=>{ensureStore(req.db);const reviews=req.db.reviews.slice().sort((a,b)=>Number(b.updatedAt||b.createdAt)-Number(a.updatedAt||a.createdAt)).map(r=>({...publicReview(req.db,r),visible:r.visible!==false,email:(req.db.users||[]).find(u=>u.id===r.userId)?.email||''}));res.json({ok:true,reviews})});
+app.patch('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);const r=req.db.reviews.find(x=>x.id===req.params.id);if(!r)return res.status(404).json({error:'Nie znaleziono opinii.'});if(Object.prototype.hasOwnProperty.call(req.body||{},'visible'))r.visible=Boolean(req.body.visible);r.updatedAt=Date.now();save(req.db);res.json({ok:true,review:{...publicReview(req.db,r),visible:r.visible!==false}})});
+app.delete('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(x=>x.id!==req.params.id);if(req.db.reviews.length===before)return res.status(404).json({error:'Nie znaleziono opinii.'});save(req.db);res.json({ok:true})});
+
 app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
   ensureStore(req.db);
   const orders=req.db.orders.map(o=>adminOrder(req.db,o)).sort((a,b)=>b.createdAt-a.createdAt);
