@@ -1568,6 +1568,7 @@ app.delete('/api/admin/support-reports/:id',adminOnly,(req,res)=>{
   save(req.db);res.json({ok:true});
 });
 
+app.get(['/privacy','/privacy/','/privacy.html'],(req,res)=>res.sendFile(path.join(__dirname,'public','privacy.html')));
 app.get(['/admin','/admin/'],(req,res)=>res.sendFile(path.join(__dirname,'public','admin.html')));
 app.use('/assets',express.static(path.join(__dirname,'public','assets'),{maxAge:'1y',immutable:true}));
 app.use(express.static(path.join(__dirname,'public'),{extensions:['html']}));
