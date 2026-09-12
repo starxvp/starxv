@@ -845,7 +845,7 @@ function ensureOrderTimeline(order){
   }
   return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
 }
-function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
+function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
 function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
 function reserveStockForOrder(db,order){
   if(order.stockCommitted||order.stockReserved)return;
@@ -933,7 +933,7 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   save(req.db);sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const total=Math.max(0,Math.round((subtotal-discount)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery:req.body?.delivery||null,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone','Oczekujemy na potwierdzenie płatności.',order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order)})}catch(e){res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+app.post('/api/orders/prepare',auth,async(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
@@ -968,11 +968,12 @@ async function sendPaidOrderEmail(db,order){
     const resend=new Resend(key);
     const itemLines=(order.items||[]).map(x=>`${x.name} — ${x.colorLabel||x.color} / ${x.size} × ${x.qty}`).join('\n');
     const total=Number(order.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const shipping=Number(order.shippingCost||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
     const {error}=await resend.emails.send({
       from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,
       subject:`STARXV — potwierdzenie zamówienia #${order.orderNo}`,
-      text:`Dziękujemy za zamówienie #${order.orderNo}.\n\nPłatność została potwierdzona.\n\n${itemLines}\n\nRazem: ${total} PLN\n\nStatus zamówienia możesz sprawdzić w profilu STARXV.`,
-      html:`<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px"><h1 style="font-size:28px;margin:0 0 26px">STARXV</h1><p>Płatność za zamówienie <b>#${order.orderNo}</b> została potwierdzona.</p><div style="margin:24px 0;padding:18px;border:1px solid #ddd">${(order.items||[]).map(x=>`<div style="margin:8px 0"><b>${String(x.name||'STARXV').replace(/[<>&]/g,'')}</b><br><span style="color:#666">${String(x.colorLabel||x.color||'').replace(/[<>&]/g,'')} / ${String(x.size||'').replace(/[<>&]/g,'')} × ${Number(x.qty||1)}</span></div>`).join('')}<hr style="border:0;border-top:1px solid #ddd;margin:18px 0"><b>Razem: ${total} PLN</b></div><p style="color:#666">Aktualny status realizacji znajdziesz w sekcji „Moje zamówienia” na swoim koncie.</p></div>`
+      text:`Dziękujemy za zamówienie #${order.orderNo}.\n\nPłatność została potwierdzona.\n\n${itemLines}\n\nDostawa: ${shipping} PLN\nRazem: ${total} PLN\n\nStatus zamówienia możesz sprawdzić w profilu STARXV.`,
+      html:`<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px"><h1 style="font-size:28px;margin:0 0 26px">STARXV</h1><p>Płatność za zamówienie <b>#${order.orderNo}</b> została potwierdzona.</p><div style="margin:24px 0;padding:18px;border:1px solid #ddd">${(order.items||[]).map(x=>`<div style="margin:8px 0"><b>${String(x.name||'STARXV').replace(/[<>&]/g,'')}</b><br><span style="color:#666">${String(x.colorLabel||x.color||'').replace(/[<>&]/g,'')} / ${String(x.size||'').replace(/[<>&]/g,'')} × ${Number(x.qty||1)}</span></div>`).join('')}<hr style="border:0;border-top:1px solid #ddd;margin:18px 0"><div style="color:#666;margin-bottom:6px">Dostawa: ${shipping} PLN</div><b>Razem: ${total} PLN</b></div><p style="color:#666">Aktualny status realizacji znajdziesz w sekcji „Moje zamówienia” na swoim koncie.</p></div>`
     });
     if(error)console.error('Resend order confirmation error:',error);
   }catch(e){console.error('Order confirmation email error:',e.message)}
@@ -1128,20 +1129,28 @@ function adminOnly(req,res,next){
 }
 
 // --- STARXV InPost / ShipX shipping -------------------------------------------
-// Requires INPOST_TOKEN and INPOST_ORGANIZATION_ID in .env.
-// The ShipX PL API is asynchronous: creation may initially return no tracking_number.
+// ShipX: private server token + organization ID. Geowidget token is PUBLIC and may be sent to the browser.
+// Prices are shop-configured delivery charges, not rates fetched from InPost.
+function envMoney(name,fallback){const raw=String(process.env[name]??'').trim().replace(',','.');const n=raw===''?fallback:Number(raw);return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:fallback}
 function inpostConfig(){
   return {
     token:String(process.env.INPOST_TOKEN||'').trim(),
     organizationId:String(process.env.INPOST_ORGANIZATION_ID||'').trim(),
+    geowidgetToken:String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim(),
     base:String(process.env.INPOST_API_BASE||'https://api-shipx-pl.easypack24.net/v1').trim().replace(/\/$/,''),
-    parcelTemplate:['small','medium','large'].includes(String(process.env.INPOST_PARCEL_TEMPLATE||'small').trim())?String(process.env.INPOST_PARCEL_TEMPLATE||'small').trim():'small'
+    pointsBase:String(process.env.INPOST_POINTS_API_BASE||'https://api.inpost.pl/v1').trim().replace(/\/$/,''),
+    parcelTemplate:['small','medium','large'].includes(String(process.env.INPOST_PARCEL_TEMPLATE||'small').trim())?String(process.env.INPOST_PARCEL_TEMPLATE||'small').trim():'small',
+    lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),
+    courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),
+    freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0)
   };
 }
 function inpostConfigured(){const c=inpostConfig();return Boolean(c.token&&c.organizationId)}
+function shippingPublicConfig(){const c=inpostConfig();return {carrier:'InPost',inpostConfigured:inpostConfigured(),geowidgetToken:c.geowidgetToken||'',currency:'PLN',lockerPrice:c.lockerPrice,courierPrice:c.courierPrice,freeShippingFrom:c.freeShippingFrom,parcelTemplate:c.parcelTemplate}}
+function shippingCostFor(delivery,discountedSubtotal){const c=inpostConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 async function inpostRequest(pathname,{method='GET',body,auth=true,accept='application/json'}={}){
   const c=inpostConfig();
-  if(auth&&!inpostConfigured())throw Object.assign(new Error('InPost nie jest jeszcze skonfigurowany. Dodaj INPOST_TOKEN i INPOST_ORGANIZATION_ID do .env.'),{status:503});
+  if(auth&&!inpostConfigured())throw Object.assign(new Error('InPost nie jest jeszcze skonfigurowany. Dodaj INPOST_TOKEN i INPOST_ORGANIZATION_ID do zmiennych środowiskowych.'),{status:503});
   const headers={Accept:accept};
   if(auth)headers.Authorization=`Bearer ${c.token}`;
   if(body!==undefined)headers['Content-Type']='application/json';
@@ -1149,11 +1158,30 @@ async function inpostRequest(pathname,{method='GET',body,auth=true,accept='appli
   const contentType=String(response.headers.get('content-type')||'');
   if(!response.ok){
     let detail='';
-    try{const j=contentType.includes('json')?await response.json():null;detail=j?.description||j?.message||j?.error||''}catch{}
+    try{const j=contentType.includes('json')?await response.json():null;detail=j?.description||j?.message||j?.error||Object.values(j?.details||{}).flat().join(', ')||''}catch{}
     const err=new Error(detail||`InPost zwrócił błąd HTTP ${response.status}.`);err.status=response.status;throw err;
   }
   if(accept!=='application/json')return response;
   return response.status===204?{}:response.json();
+}
+async function inpostPointsRequest(pathname){
+  const c=inpostConfig(),response=await fetch(c.pointsBase+pathname,{headers:{Accept:'application/json'}});
+  if(!response.ok)throw Object.assign(new Error(`Nie udało się pobrać punktów InPost (HTTP ${response.status}).`),{status:response.status});
+  return response.json();
+}
+function publicInpostPoint(p){
+  if(!p)return null;const loc=p.location||{},ad=p.address||{},det=p.address_details||{};
+  return {id:String(p.name||''),name:String(p.name||''),address:[ad.line1,ad.line2].filter(Boolean).join(', ')||[det.street,det.building_number,det.post_code,det.city].filter(Boolean).join(' '),lat:Number(loc.latitude),lng:Number(loc.longitude),openingHours:String(p.opening_hours||''),description:String(p.location_description||''),type:Array.isArray(p.type)?p.type:[],functions:Array.isArray(p.functions)?p.functions:[]};
+}
+async function getInpostPoint(name){const code=String(name||'').trim().toUpperCase();if(!/^[A-Z0-9_-]{3,30}$/.test(code))return null;try{return await inpostPointsRequest(`/points/${encodeURIComponent(code)}`)}catch(e){if(e.status===404)return null;throw e}}
+async function normalizeAndValidateDelivery(raw,address){
+  const type=raw?.type==='address'?'address':'inpost';
+  if(type==='address')return {type:'address',address:{firstName:address.firstName,lastName:address.lastName,street:address.street,postal:address.postal,city:address.city,country:'PL'}};
+  const requested=String(raw?.locker?.id||raw?.locker?.name||'').trim().toUpperCase();
+  if(!requested)throw Object.assign(new Error('Wybierz Paczkomat lub PaczkoPunkt InPost.'),{status:400});
+  const point=await getInpostPoint(requested);
+  if(!point||String(point.status||'').toLowerCase()!=='operating'||!(Array.isArray(point.functions)&&point.functions.includes('parcel_collect')))throw Object.assign(new Error('Wybrany punkt InPost nie jest dostępny do odbioru. Wybierz inny punkt.'),{status:400});
+  return {type:'inpost',locker:publicInpostPoint(point)};
 }
 function receiverForInpost(order,withAddress){
   const a=order.address||{};
@@ -1168,59 +1196,56 @@ function receiverForInpost(order,withAddress){
 function makeInpostShipmentBody(order){
   const c=inpostConfig(),delivery=order.delivery||{},locker=delivery?.locker||{};
   const isLocker=delivery.type==='inpost';
-  const body={
-    receiver:receiverForInpost(order,!isLocker),
-    parcels:{template:c.parcelTemplate},
-    service:isLocker?'inpost_locker_standard':'inpost_courier_standard',
-    reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`
-  };
-  if(isLocker){
-    const point=String(locker.id||locker.name||'').trim();
-    if(!point)throw new Error('W zamówieniu nie zapisano kodu Paczkomatu.');
-    body.custom_attributes={target_point:point};
-  }
+  const body={receiver:receiverForInpost(order,!isLocker),parcels:{template:c.parcelTemplate},service:isLocker?'inpost_locker_standard':'inpost_courier_standard',reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`};
+  if(isLocker){const point=String(locker.id||locker.name||'').trim();if(!point)throw new Error('W zamówieniu nie zapisano kodu punktu InPost.');body.custom_attributes={target_point:point}}
   return body;
 }
 function inpostStageFromStatus(status,current=0){
   const s=String(status||'');
   if(s==='delivered')return 4;
-  if(['out_for_delivery','out_for_delivery_to_address','ready_to_pickup','pickup_reminder_sent','ready_to_pickup_from_branch','ready_to_pickup_from_pok'].includes(s))return 3;
-  if(['dispatched_by_sender','dispatched_by_sender_to_pok','collected_from_sender','taken_by_courier','adopted_at_source_branch','sent_from_source_branch','adopted_at_sorting_center','sent_from_sorting_center','adopted_at_target_branch','taken_by_courier_from_pok'].includes(s))return 3;
-  if(['confirmed','created','offers_prepared','offer_selected'].includes(s))return Math.max(2,Number(current||0));
+  if(['out_for_delivery','out_for_delivery_to_address','ready_to_pickup','pickup_reminder_sent','ready_to_pickup_from_branch','ready_to_pickup_from_pok','collected_from_sender','taken_by_courier','adopted_at_source_branch','sent_from_source_branch','adopted_at_sorting_center','sent_from_sorting_center','adopted_at_target_branch','taken_by_courier_from_pok'].includes(s))return 3;
+  if(['dispatched_by_sender','dispatched_by_sender_to_pok'].includes(s))return Math.max(2,Number(current||0));
+  if(['confirmed','created','offers_prepared','offer_selected'].includes(s))return Math.max(1,Number(current||0));
   return Number(current||0);
 }
 function applyInpostState(order,data,db=null){
   const before=Number(order.shippingStage||0),beforeTracking=String(order.trackingNumber||'');
-  if(data?.id)order.inpostShipmentId=data.id;
-  if(data?.tracking_number)order.trackingNumber=String(data.tracking_number);
-  if(data?.status)order.carrierStatus=String(data.status);
-  order.carrier='InPost';order.trackingUpdatedAt=Date.now();
-  order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);order.updatedAt=Date.now();
+  if(data?.id)order.inpostShipmentId=data.id;if(data?.tracking_number)order.trackingNumber=String(data.tracking_number);if(data?.status)order.carrierStatus=String(data.status);
+  order.carrier='InPost';order.trackingUpdatedAt=Date.now();order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);order.updatedAt=Date.now();
   const after=Number(order.shippingStage||0);
-  if(after!==before){
-    const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
-    const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana przewoźnikowi.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];
-    orderEvent(order,`shipping_${after}`,names[after]||'Aktualizacja dostawy',notes[after]||'Status dostawy został zaktualizowany.',order.updatedAt);
-    if(db){const k={1:'preparing',2:'shipped',3:'transit',4:'delivered'}[after];if(k)sendOrderUpdateEmail(db,order,k,{dedupeKey:`shipping_${after}`})}
-  }
+  if(after!==before){const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana przewoźnikowi.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];orderEvent(order,`shipping_${after}`,names[after]||'Aktualizacja dostawy',notes[after]||'Status dostawy został zaktualizowany.',order.updatedAt);if(db){const k={1:'preparing',2:'shipped',3:'transit',4:'delivered'}[after];if(k)sendOrderUpdateEmail(db,order,k,{dedupeKey:`shipping_${after}`})}}
   if(db&&!beforeTracking&&order.trackingNumber)sendOrderUpdateEmail(db,order,'tracking',{dedupeKey:`tracking_${order.trackingNumber}`});
 }
 async function refreshInpostOrder(order,db=null){
-  if(order.inpostShipmentId){
-    const data=await inpostRequest(`/shipments/${encodeURIComponent(order.inpostShipmentId)}`);
-    applyInpostState(order,data,db);
-  }
-  if(order.trackingNumber){
-    try{
-      const tracking=await inpostRequest(`/tracking/${encodeURIComponent(order.trackingNumber)}`,{auth:false});
-      if(tracking?.status)order.carrierStatus=String(tracking.status);
-      order.shippingStage=inpostStageFromStatus(order.carrierStatus,order.shippingStage);
-      order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();
-    }catch(e){console.warn('InPost tracking refresh:',e.message)}
-  }
+  if(order.inpostShipmentId){const data=await inpostRequest(`/shipments/${encodeURIComponent(order.inpostShipmentId)}`);applyInpostState(order,data,db)}
   return order;
 }
-app.get('/api/shipping/config',(req,res)=>res.json({ok:true,inpostConfigured:inpostConfigured(),carrier:'InPost'}));
+app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicConfig()}));
+app.get('/api/shipping/points',rateLimit('inpost-points',120,10*60*1000),async(req,res)=>{try{
+  const q=String(req.query.q||'').trim(),postal=String(req.query.postal||'').trim(),lat=Number(req.query.lat),lng=Number(req.query.lng),limit=Math.max(1,Math.min(50,Number(req.query.limit)||20));
+  const params=new URLSearchParams({functions:'parcel_collect',status:'Operating',per_page:String(limit)});
+  if(Number.isFinite(lat)&&Number.isFinite(lng)){params.set('relative_point',`${lat},${lng}`);params.set('sort_by','distance_to_relative_point');params.set('sort_order','asc');params.set('max_distance','50000');params.set('limit',String(limit))}
+  else if(/^\d{2}-?\d{3}$/.test(postal||q)){const pc=(postal||q).replace(/^(\d{2})(\d{3})$/,'$1-$2');params.set('relative_post_code',pc);params.set('sort_by','distance_to_relative_point');params.set('sort_order','asc');params.set('max_distance','50000');params.set('limit',String(limit))}
+  else if(/^[A-Za-z]{2,5}\d{1,4}[A-Za-z]?$/i.test(q)){params.set('name',q.toUpperCase())}
+  else if(q){params.set('city',q)}
+  const data=await inpostPointsRequest(`/points?${params.toString()}`),items=Array.isArray(data?.items)?data.items:[];
+  res.setHeader('Cache-Control','public, max-age=60');res.json({ok:true,points:items.map(publicInpostPoint).filter(Boolean)});
+}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:502).json({error:e.message||'Nie udało się pobrać punktów InPost.'})}});
+app.get('/api/shipping/points/:name',rateLimit('inpost-point',120,10*60*1000),async(req,res)=>{try{const p=await getInpostPoint(req.params.name);if(!p)return res.status(404).json({error:'Nie znaleziono punktu InPost.'});res.json({ok:true,point:publicInpostPoint(p)})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:502).json({error:e.message||'Nie udało się pobrać punktu InPost.'})}});
+// ShipX webhook: configure https://YOUR_DOMAIN/api/inpost/webhook?secret=... in Manager Paczek -> Moje konto -> API -> Ustawienia organizacji.
+// INPOST_WEBHOOK_SECRET is strongly recommended. GET must return 200 so InPost can validate the address.
+app.get('/api/inpost/webhook',(req,res)=>res.status(200).send('OK'));
+app.post('/api/inpost/webhook',rateLimit('inpost-webhook',300,10*60*1000),(req,res)=>{try{
+  const expected=String(process.env.INPOST_WEBHOOK_SECRET||'').trim(),provided=String(req.query.secret||req.headers['x-starxv-inpost-secret']||'').trim();
+  if(expected&&(!provided||provided.length!==expected.length||!crypto.timingSafeEqual(Buffer.from(provided),Buffer.from(expected))))return res.status(403).json({error:'Forbidden'});
+  const cfg=inpostConfig(),org=String(req.body?.organization_id??'');
+  if(cfg.organizationId&&org&&org!==String(cfg.organizationId))return res.status(403).json({error:'Wrong organization'});
+  const payload=req.body?.payload||{},shipmentId=String(payload.shipment_id||''),tracking=String(payload.tracking_number||''),status=String(payload.status||'');
+  if(!shipmentId&&!tracking)return res.status(200).json({ok:true,ignored:true});
+  const db=load();ensureStore(db);const order=(db.orders||[]).find(o=>(shipmentId&&String(o.inpostShipmentId||'')===shipmentId)||(tracking&&String(o.trackingNumber||'')===tracking));
+  if(!order)return res.status(200).json({ok:true,ignored:true});
+  applyInpostState(order,{id:shipmentId||order.inpostShipmentId,tracking_number:tracking||order.trackingNumber,status:status||order.carrierStatus},db);save(db);res.status(200).json({ok:true});
+}catch(e){console.error('InPost webhook error:',e);res.status(200).json({ok:false})}});
 app.post('/api/admin/orders/:id/shipment/create',adminOnly,async(req,res)=>{try{
   ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
   if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
@@ -1267,7 +1292,7 @@ app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
   const variants=[];
   for(const [productId,p] of Object.entries(req.db.catalog))for(const [color,c] of Object.entries(p.colors||{}))for(const [size,stock] of Object.entries(c.sizes||{}))variants.push({productId,productName:p.name,color,colorLabel:c.label,size,stock:Number(stock||0)});
   const paid=orders.filter(o=>o.paymentStatus==='paid');
-  res.json({ok:true,catalog:req.db.catalog,orders,stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
+  res.json({ok:true,catalog:req.db.catalog,orders,shipping:shippingPublicConfig(),stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
 });
 
 function cleanSlug(v,label='ID'){
