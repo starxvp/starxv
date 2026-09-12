@@ -680,9 +680,60 @@
     }
 
     /* FOOTER */
-    .sx-test-version{font-size:9px;font-weight:800;letter-spacing:.16em;color:#666;text-transform:uppercase;white-space:nowrap}
+    .sx-test-version{
+      position:relative;
+      display:inline-block;
+      font-size:9px;
+      font-weight:800;
+      letter-spacing:.16em;
+      color:#777;
+      text-transform:uppercase;
+      white-space:nowrap;
+      animation:sxVersionFlicker 4.8s steps(1,end) infinite;
+    }
+    .sx-test-version::before,.sx-test-version::after{
+      content:attr(data-text);
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+    }
+    .sx-test-version::before{
+      color:#6dff8a;
+      text-shadow:-1px 0 #6dff8a;
+      animation:sxVersionGlitchTop 4.8s steps(1,end) infinite;
+    }
+    .sx-test-version::after{
+      color:#fff;
+      text-shadow:1px 0 #6dff8a;
+      animation:sxVersionGlitchBottom 4.8s steps(1,end) infinite;
+    }
+    @keyframes sxVersionFlicker{
+      0%,7%,9%,11%,46%,48%,50%,82%,84%,100%{opacity:1;transform:translate(0)}
+      8%,47%,83%{opacity:.35;color:#6dff8a;transform:translateX(1px)}
+      10%,49%{opacity:.75;transform:translateX(-1px)}
+    }
+    @keyframes sxVersionGlitchTop{
+      0%,44%,51%,80%,86%,100%{opacity:0;clip-path:inset(0 0 100% 0);transform:translate(0)}
+      45%{opacity:.9;clip-path:inset(0 0 58% 0);transform:translate(-2px,-1px)}
+      46%{opacity:.65;clip-path:inset(18% 0 48% 0);transform:translate(2px,0)}
+      47%{opacity:0}
+      81%{opacity:.8;clip-path:inset(5% 0 67% 0);transform:translate(2px,-1px)}
+      82%{opacity:.55;clip-path:inset(35% 0 38% 0);transform:translate(-1px,0)}
+      85%{opacity:0}
+    }
+    @keyframes sxVersionGlitchBottom{
+      0%,44%,51%,80%,86%,100%{opacity:0;clip-path:inset(100% 0 0 0);transform:translate(0)}
+      45%{opacity:.7;clip-path:inset(62% 0 0 0);transform:translate(2px,1px)}
+      46%{opacity:.45;clip-path:inset(48% 0 18% 0);transform:translate(-2px,0)}
+      47%{opacity:0}
+      81%{opacity:.65;clip-path:inset(68% 0 3% 0);transform:translate(-2px,1px)}
+      82%{opacity:.4;clip-path:inset(40% 0 33% 0);transform:translate(1px,0)}
+      85%{opacity:0}
+    }
     .sx-nav-brand{display:flex;align-items:center;gap:14px}
     @media(max-width:700px){.sx-test-version{font-size:7px;letter-spacing:.11em}.sx-nav-brand{gap:9px}}
+    @media(prefers-reduced-motion:reduce){.sx-test-version,.sx-test-version::before,.sx-test-version::after{animation:none!important}}
     footer {
       border-top: 1px solid var(--line);
       padding: 30px 5vw;
@@ -1467,7 +1518,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 <nav>
 <div class="sx-nav-brand"><a aria-label="STARXV" href="#">
 <img alt="STARXV" class="nav-logo" src="/assets/a21bc8c9acad5dd8.webp"/>
-</a><span class="sx-test-version">TEST VERSION 0.0</span></div>
+</a><span class="sx-test-version" data-text="TEST VERSION 0.0">TEST VERSION 0.0</span></div>
 <div class="nav-links">
 <a href="#shop">Shop</a>
 <a href="#story">Brand</a>
