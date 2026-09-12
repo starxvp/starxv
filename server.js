@@ -488,7 +488,7 @@ app.post('/api/auth/google',async(req,res)=>{
 
     const accessToken=String(req.body?.accessToken||'').trim();
     const info=await googleTokenInfo(accessToken);
-    const audience=String(info.aud||info.azp||'');
+    const audience=String(info.audience||info.issued_to||info.aud||info.azp||'');
     if(audience!==clientId)return res.status(401).json({error:'Nieprawidłowy token Google.'});
     if(Number(info.expires_in||0)<=0)return res.status(401).json({error:'Sesja Google wygasła. Spróbuj ponownie.'});
 
