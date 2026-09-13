@@ -1181,20 +1181,22 @@ function adminOnly(req,res,next){
   });
 }
 
-// --- STARXV InPost shipping — manual mode, no ShipX / Points API -----------
-// STARXV stores the chosen locker code/address and shipping price locally in the order.
-// The parcel itself is created manually in InPost. Tracking numbers are added from admin.
+// --- STARXV InPost shipping — production checkout + official Geowidget V5 -----------
+// Point selection uses the public Geowidget token. Parcel creation can still be handled manually in InPost.
 function envMoney(name,fallback){const raw=String(process.env[name]??'').trim().replace(',','.');const n=raw===''?fallback:Number(raw);return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:fallback}
-function shippingPublicConfig(){return {carrier:'InPost',manualMode:true,currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0)}}
+function shippingPublicConfig(){const geowidgetToken=String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim();return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),geowidgetConfigured:Boolean(geowidgetToken),geowidgetToken}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 function normalizeAndValidateDelivery(raw,address){
   const type=raw?.type==='address'?'address':'inpost';
   if(type==='address')return {type:'address',address:{firstName:address.firstName,lastName:address.lastName,street:address.street,postal:address.postal,city:address.city,country:'PL'}};
   const code=String(raw?.locker?.id||raw?.locker?.name||'').trim().toUpperCase().replace(/\s+/g,'');
   const pointAddress=String(raw?.locker?.address||'').trim().replace(/\s+/g,' ');
-  if(!/^[A-Z0-9_-]{3,30}$/.test(code))throw Object.assign(new Error('Wpisz poprawny kod Paczkomatu lub PaczkoPunktu InPost.'),{status:400});
-  if(pointAddress.length<3||pointAddress.length>160)throw Object.assign(new Error('Wpisz adres lub miejscowość wybranego punktu InPost.'),{status:400});
-  return {type:'inpost',locker:{id:code,name:code,address:pointAddress,manual:true}};
+  if(!/^[A-Z0-9_-]{3,30}$/.test(code))throw Object.assign(new Error('Wybierz poprawny punkt InPost.'),{status:400});
+  if(pointAddress.length<3||pointAddress.length>200)throw Object.assign(new Error('Wybrany punkt InPost nie ma poprawnego adresu.'),{status:400});
+  const lat=Number(raw?.locker?.location?.latitude),lng=Number(raw?.locker?.location?.longitude);
+  const locker={id:code,name:code,address:pointAddress,source:String(raw?.locker?.source||'inpost-geowidget')};
+  if(Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180)locker.location={latitude:lat,longitude:lng};
+  return {type:'inpost',locker};
 }
 app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicConfig()}));
 app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{

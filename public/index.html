@@ -52,13 +52,16 @@
 
 
 
-<link href="styles.css" rel="stylesheet"/><link href="mobile.css" rel="stylesheet"/></head>
+<link href="styles.css" rel="stylesheet"/><link href="mobile.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://geowidget.inpost.pl/inpost-geowidget.css"/>
+<script src="https://geowidget.inpost.pl/inpost-geowidget.js" defer></script>
+</head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
 <nav>
 <div class="sx-nav-brand"><a aria-label="STARXV" href="#">
 <img alt="STARXV" class="nav-logo" src="/assets/a21bc8c9acad5dd8.webp">
-</img></a><span class="sx-test-version" data-ghost="">TEST VERSION 0.0</span></div>
+</img></a></div>
 <div class="nav-links">
 <a href="#shop">Shop</a>
 <a href="#story">Brand</a>
@@ -384,7 +387,7 @@
 <div aria-hidden="true" class="checkout-overlay" id="checkoutOverlay"><div class="checkout-shell"><div class="checkout-top"><div><div class="checkout-kicker">SECURE CHECKOUT</div><div class="checkout-brand">STARXV</div></div><button aria-label="Zamknij checkout" class="checkout-close" id="checkoutClose">×</button></div><div class="checkout-main"><div><div class="checkout-kicker" id="stageLabel">ETAP 1 Z 4</div><div class="checkout-steps"><div class="checkout-step-dot active"></div><div class="checkout-step-dot"></div><div class="checkout-step-dot"></div><div class="checkout-step-dot"></div></div>
 <section class="checkout-stage active" data-stage="1"><h2>Dane i dostawa.</h2><p>Wybierz zapisany adres albo dodaj nowy. Dane możesz poprawić przed zapisaniem.</p><div class="stage1-address-picker"><div class="stage1-address-head"><strong>ZAPISANE ADRESY</strong><button class="stage1-new-address" id="stage1NewAddress" type="button">+ DODAJ NOWY</button></div><div class="stage1-saved-list" id="stage1SavedAddresses"></div></div><div class="stage1-address-mode" id="stage1AddressMode"><b>NOWY ADRES</b> — uzupełnij dane poniżej.</div><div class="form-grid"><div class="field"><label>Imię</label><input autocomplete="given-name" id="firstName" required=""/></div><div class="field"><label>Nazwisko</label><input autocomplete="family-name" id="lastName" required=""/></div><div class="field"><label>E-mail</label><input autocomplete="email" id="email" required="" type="email"/></div><div class="field"><label>Telefon</label><input autocomplete="tel" id="phone" placeholder="+48 ..." required="" type="tel"/></div><div class="field full"><label>Ulica i numer</label><input autocomplete="street-address" id="street" required=""/></div><div class="field"><label>Kod pocztowy</label><input autocomplete="postal-code" id="postal" placeholder="00-000" required=""/></div><div class="field"><label>Miasto</label><input autocomplete="address-level2" id="city" required=""/></div><div class="field full"><label>Kraj</label><select id="country"><option value="PL">Polska</option></select></div></div><div class="stage-actions"><button class="stage-next" id="saveAddressNext">ZAPISZ ADRES →</button></div></section>
 <section class="checkout-stage" data-stage="2"><h2>Wybierz adres.</h2><p>Możesz mieć zapisanych kilka adresów. Ten, który zaznaczysz i potwierdzisz, stanie się domyślnym adresem dostawy.</p><div class="address-list" id="addressList"></div><div class="stage-actions"><button class="stage-back" data-back="1">← WRÓĆ</button><button class="stage-next" id="confirmAddress">USTAW DOMYŚLNY →</button></div></section>
-<section class="checkout-stage" data-stage="3"><h2>Sposób dostawy.</h2><p>Wybierz Paczkomat InPost albo dostawę na adres.</p><div class="delivery-choice-grid"><button class="delivery-choice selected" data-delivery="inpost" type="button"><b>📦 PACZKOMAT INPOST</b><span>Wybierz dogodny punkt odbioru i zapisz go do zamówienia.</span></button><button class="delivery-choice" data-delivery="address" type="button"><b>🏠 DOSTAWA NA ADRES</b><span>Wyślemy zamówienie na adres zatwierdzony w etapie 2.</span></button></div><div class="delivery-panel active" id="inpostDeliveryPanel"><div class="locker-shell locker-shell-production"><div class="locker-list-head"><span>WYBIERZ PACZKOMAT INPOST</span><span class="locker-status-pill">DOSTAWA DO PUNKTU</span></div><div class="inpost-production-layout"><div class="inpost-map-card"><div class="inpost-map-top"><div><strong>Mapa punktów</strong><span>Mapa jest dostępna przez cały czas podczas wyboru dostawy.</span></div><a class="locker-locate" href="https://inpost.pl/znajdz-paczkomat" target="_blank" rel="noopener">OTWÓRZ PEŁNĄ MAPĘ INPOST ↗</a></div><div class="inpost-map-frame-wrap"><iframe id="inpostOpenMap" title="Mapa wyboru punktu InPost" loading="lazy" referrerpolicy="no-referrer" src="https://www.openstreetmap.org/export/embed.html?bbox=13.95%2C48.85%2C24.15%2C55.10&amp;layer=mapnik"></iframe><div class="inpost-map-overlay"><div class="inpost-map-overlay-card"><b>Znajdź Paczkomat na oficjalnej mapie InPost</b><span>Po wybraniu punktu wpisz poniżej jego kod oraz adres. Dane zostaną zapisane do zamówienia.</span><a href="https://inpost.pl/znajdz-paczkomat" target="_blank" rel="noopener">PRZEJDŹ DO MAPY INPOST</a></div></div></div></div><div class="inpost-select-card"><div class="inpost-select-heading"><span class="inpost-step-dot">1</span><div><strong>Dane wybranego punktu</strong><span>Przepisz kod i adres z oficjalnej mapy InPost.</span></div></div><div class="locker-manual-grid locker-manual-grid-production"><label><span>KOD PACZKOMATU / PUNKTU *</span><input autocomplete="off" class="locker-search" id="manualLockerCode" maxlength="30" placeholder="np. KAT01M" type="text"/></label><label><span>ADRES PUNKTU *</span><input autocomplete="off" class="locker-search" id="manualLockerAddress" maxlength="160" placeholder="np. ul. Przykładowa 1, Katowice" type="text"/></label><button class="locker-locate" id="saveManualLocker" type="button">ZAPISZ PUNKT</button></div><div class="locker-selected" id="lockerSelected"><strong>Nie wybrano jeszcze punktu.</strong><br/>Wybierz Paczkomat na mapie InPost i zapisz jego dane.</div><div class="inpost-security-note">Przed przejściem dalej sprawdź kod i adres punktu. Wybrany Paczkomat będzie widoczny w podsumowaniu oraz przy zamówieniu.</div></div></div></div></div><div class="delivery-panel" id="addressDeliveryPanel"><div class="delivery-current-address" id="deliveryAddressPreview"></div></div><div class="stage-actions"><button class="stage-back" data-back="2">← WRÓĆ</button><button class="stage-next" id="confirmDelivery">ZATWIERDŹ DOSTAWĘ →</button></div></section><section class="checkout-stage" data-stage="4"><h2>Płatność.</h2><p>Wybierz preferowaną metodę. Płatność zostanie bezpiecznie obsłużona przez Przelewy24.</p><div class="payment-grid" id="paymentGrid"><div class="pay-card selected" data-method="auto"><div><b>Wszystkie metody</b><span>BLIK, karta, portfele i szybkie przelewy</span></div><span class="pay-badge">POLECANE</span></div><div class="pay-card" data-method="blik"><div><b>BLIK</b><span>Kod z aplikacji banku</span></div><span class="pay-badge">PLN</span></div><div class="pay-card" data-method="card"><div><b>Karta</b><span>Visa / Mastercard</span></div><span class="pay-badge">3D SECURE</span></div><div class="pay-card" data-method="p24"><div><b>Szybki przelew</b><span>Bankowość online przez Przelewy24</span></div><span class="pay-badge">BANK</span></div><div class="pay-card" data-method="wallet"><div><b>Apple Pay / Google Pay</b><span>Jeśli portfel jest dostępny na urządzeniu</span></div><span class="pay-badge">WALLET</span></div></div><div class="stripe-note"><strong>Bezpieczna płatność:</strong> po kliknięciu przycisku STARXV utworzy transakcję i przekieruje Cię do zabezpieczonego panelu Przelewy24. STARXV nie zapisuje danych Twojej karty.</div><div class="secure-mark">🔒 PRZELEWY24 • SZYFROWANE POŁĄCZENIE</div><div class="stage-actions"><button class="stage-back" data-back="3">← WRÓĆ</button><button class="stage-next" id="payNow">PRZEJDŹ DO PŁATNOŚCI →</button></div></section></div><aside class="order-summary"><h3>Twoje zamówienie</h3><div id="checkoutSummaryItems"></div><div class="summary-total summary-subtotal"><span>PRODUKTY</span><strong id="checkoutSubtotal">0 PLN</strong></div><div class="summary-total summary-shipping-row"><span>DOSTAWA</span><strong id="checkoutShipping">—</strong></div><div class="summary-total summary-grand"><span>RAZEM</span><strong id="checkoutTotal">0 PLN</strong></div><div class="summary-delivery">Szacowana dostawa: 2–5 dni roboczych od potwierdzenia płatności. Dokładne informacje mogą zostać wysłane w potwierdzeniu zamówienia.</div></aside></div></div></div>
+<section class="checkout-stage" data-stage="3"><h2>Sposób dostawy.</h2><p>Wybierz Paczkomat InPost albo dostawę na adres.</p><div class="delivery-choice-grid"><button class="delivery-choice selected" data-delivery="inpost" type="button"><b>📦 PACZKOMAT INPOST</b><span>Wybierz dogodny punkt odbioru i zapisz go do zamówienia.</span></button><button class="delivery-choice" data-delivery="address" type="button"><b>🏠 DOSTAWA NA ADRES</b><span>Wyślemy zamówienie na adres zatwierdzony w etapie 2.</span></button></div><div class="delivery-panel active" id="inpostDeliveryPanel"><div class="locker-shell locker-shell-production"><div class="locker-list-head"><span>WYBIERZ PUNKT INPOST</span><span class="locker-status-pill">PACZKOMAT / PACZKOPUNKT</span></div><div class="inpost-production-layout"><div class="inpost-map-card"><div class="inpost-map-top"><div><strong>Mapa punktów InPost</strong><span>Wyszukaj miejscowość, ulicę albo użyj swojej lokalizacji i wybierz punkt bezpośrednio na mapie.</span></div></div><div id="inpostGeoWidgetHost" class="inpost-geowidget-host"><div class="inpost-map-loading"><span class="inpost-map-spinner"></span><strong>Ładowanie mapy InPost…</strong></div></div></div><div class="inpost-select-card"><div class="inpost-select-heading"><span class="inpost-step-dot">✓</span><div><strong>Wybrany punkt odbioru</strong><span>Po kliknięciu punktu na mapie jego kod, adres i lokalizacja zostaną automatycznie zapisane do zamówienia.</span></div></div><div class="locker-selected" id="lockerSelected"><strong>Nie wybrano jeszcze punktu.</strong><br/>Wybierz Paczkomat lub PaczkoPunkt bezpośrednio na mapie.</div><button class="inpost-change-point" id="changeInpostPoint" type="button" hidden>Zmień punkt na mapie</button><div class="inpost-security-note">Wybrany punkt zostanie zapisany przy zamówieniu i użyty jako miejsce odbioru przesyłki.</div></div></div></div></div><div class="delivery-panel" id="addressDeliveryPanel"><div class="delivery-current-address" id="deliveryAddressPreview"></div></div><div class="stage-actions"><button class="stage-back" data-back="2">← WRÓĆ</button><button class="stage-next" id="confirmDelivery">ZATWIERDŹ DOSTAWĘ →</button></div></section><section class="checkout-stage" data-stage="4"><h2>Płatność.</h2><p>Wybierz preferowaną metodę. Płatność zostanie bezpiecznie obsłużona przez Przelewy24.</p><div class="payment-grid" id="paymentGrid"><div class="pay-card selected" data-method="auto"><div><b>Wszystkie metody</b><span>BLIK, karta, portfele i szybkie przelewy</span></div><span class="pay-badge">POLECANE</span></div><div class="pay-card" data-method="blik"><div><b>BLIK</b><span>Kod z aplikacji banku</span></div><span class="pay-badge">PLN</span></div><div class="pay-card" data-method="card"><div><b>Karta</b><span>Visa / Mastercard</span></div><span class="pay-badge">3D SECURE</span></div><div class="pay-card" data-method="p24"><div><b>Szybki przelew</b><span>Bankowość online przez Przelewy24</span></div><span class="pay-badge">BANK</span></div><div class="pay-card" data-method="wallet"><div><b>Apple Pay / Google Pay</b><span>Jeśli portfel jest dostępny na urządzeniu</span></div><span class="pay-badge">WALLET</span></div></div><div class="stripe-note"><strong>Bezpieczna płatność:</strong> po kliknięciu przycisku STARXV utworzy transakcję i przekieruje Cię do zabezpieczonego panelu Przelewy24. STARXV nie zapisuje danych Twojej karty.</div><div class="secure-mark">🔒 PRZELEWY24 • SZYFROWANE POŁĄCZENIE</div><div class="stage-actions"><button class="stage-back" data-back="3">← WRÓĆ</button><button class="stage-next" id="payNow">PRZEJDŹ DO PŁATNOŚCI →</button></div></section></div><aside class="order-summary"><h3>Twoje zamówienie</h3><div id="checkoutSummaryItems"></div><div class="summary-total summary-subtotal"><span>PRODUKTY</span><strong id="checkoutSubtotal">0 PLN</strong></div><div class="summary-total summary-shipping-row"><span>DOSTAWA</span><strong id="checkoutShipping">—</strong></div><div class="summary-total summary-grand"><span>RAZEM</span><strong id="checkoutTotal">0 PLN</strong></div><div class="summary-delivery">Szacowana dostawa: 2–5 dni roboczych od potwierdzenia płatności. Dokładne informacje mogą zostać wysłane w potwierdzeniu zamówienia.</div></aside></div></div></div>
 <div class="payment-status" id="paymentStatus"><strong id="paymentStatusTitle"></strong><p id="paymentStatusText"></p></div>
 <script id="starxv-auth-guard">
 (function(){
@@ -611,7 +614,7 @@
   const statusBox=document.getElementById('paymentStatus'),statusTitle=document.getElementById('paymentStatusTitle'),statusText=document.getElementById('paymentStatusText');
   const summaryItems=document.getElementById('checkoutSummaryItems'),summarySubtotal=document.getElementById('checkoutSubtotal'),summaryShipping=document.getElementById('checkoutShipping'),summaryTotal=document.getElementById('checkoutTotal');
   const $=id=>document.getElementById(id), fields=['firstName','lastName','email','phone','street','postal','city'];
-  let stage=1,selectedAddressId=null,paymentPreference='auto',deliveryMethod='inpost',selectedLocker=null,shippingConfig={lockerPrice:14.99,courierPrice:19.99,freeShippingFrom:0,currency:'PLN',manualMode:true};
+  let stage=1,selectedAddressId=null,paymentPreference='auto',deliveryMethod='inpost',selectedLocker=null,shippingConfig={lockerPrice:14.99,courierPrice:19.99,freeShippingFrom:0,currency:'PLN',geowidgetToken:'',geowidgetConfigured:false};
   const money=n=>`${n} PLN`;
   const getCart=()=>{try{return JSON.parse(localStorage.getItem('starxv-cart')||'[]')}catch{return[]}};
   const selectedItems=()=>getCart().filter(x=>x.selected!==false);
@@ -655,17 +658,53 @@
   const setStage=n=>{stage=n;stages.forEach(s=>s.classList.toggle('active',+s.dataset.stage===n));steps.forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1)});stageLabel.textContent=`ETAP ${n} Z 4`;window.scrollTo({top:0,behavior:'smooth'})};
   const renderSummary=()=>{const items=selectedItems(),COLOR_META=window.STARXV_COLOR_META||{black:{label:'Czarny'},pink:{label:'Różowy'},blue:{label:'Jasny niebieski'}},COLOR_IMAGES=window.STARXV_COLOR_IMAGES||{};summaryItems.innerHTML=items.map(x=>{const color=x.color||'black',cm=COLOR_META[color]||COLOR_META.black,img=x.image||((COLOR_IMAGES[color]||COLOR_IMAGES.black)||{}).front||'';return `<div class="summary-item"><img src="${img}" alt=""><div><div class="summary-item-name">${x.name}</div><div class="summary-item-meta">${x.fit}<br>Kolor: ${cm.label} • Rozmiar: ${x.size} • Ilość: ${x.qty}<br>${money(x.price*x.qty)}</div></div></div>`}).join('');const base=items.reduce((s,x)=>s+x.price*x.qty,0),afterDiscount=window.STARXV_DISCOUNT_TOTAL?window.STARXV_DISCOUNT_TOTAL(base):base,free=Number(shippingConfig.freeShippingFrom||0)>0&&afterDiscount>=Number(shippingConfig.freeShippingFrom||0),shipping=free?0:Number(deliveryMethod==='inpost'?shippingConfig.lockerPrice:shippingConfig.courierPrice)||0;summarySubtotal.textContent=money(afterDiscount);summaryShipping.textContent=shipping===0?'0 PLN':money(shipping);summaryTotal.textContent=money(Math.round((afterDiscount+shipping)*100)/100);document.querySelectorAll('[data-delivery]').forEach(btn=>{let x=btn.querySelector('.delivery-choice-price');if(!x){x=document.createElement('span');x.className='delivery-choice-price';btn.appendChild(x)}const price=btn.dataset.delivery==='inpost'?Number(shippingConfig.lockerPrice||0):Number(shippingConfig.courierPrice||0);x.textContent=free?'DARMOWA':money(price)})};
   const renderAddresses=()=>{const list=$('addressList'),addresses=getAddresses(),def=getDefaultId();if(!addresses.length){list.innerHTML='<div style="color:#777;font-size:12px">Brak zapisanych adresów. Wróć do poprzedniego etapu i dodaj adres.</div>';return}if(!selectedAddressId)selectedAddressId=def||addresses[0].id;list.innerHTML=addresses.map(a=>`<div class="address-card ${a.id===selectedAddressId?'selected':''}" data-id="${a.id}"><div class="address-radio"></div><strong>${a.firstName} ${a.lastName}</strong><p>${a.street}<br>${a.postal} ${a.city}, Polska<br>${a.email} • ${a.phone}</p>${a.id===def?'<span class="address-default">DOMYŚLNY ADRES</span>':''}</div>`).join('');list.querySelectorAll('.address-card').forEach(el=>el.onclick=()=>{selectedAddressId=el.dataset.id;renderAddresses()})};
-  // Etap 3 — InPost bez API. Klient wpisuje kod i adres punktu ręcznie.
+  // Etap 3 — oficjalny selektor punktów InPost (Geowidget V5).
   const renderDeliveryAddress=()=>{const a=getAddresses().find(x=>x.id===selectedAddressId);$('deliveryAddressPreview').innerHTML=a?`<strong>${a.firstName} ${a.lastName}</strong><br>${a.street}<br>${a.postal} ${a.city}, Polska`:'<strong>Brak wybranego adresu.</strong><br>Wróć do etapu 2 i wybierz adres.'};
-  const cleanLockerCode=v=>String(v||'').trim().toUpperCase().replace(/\s+/g,'');
-  const cleanLockerAddress=v=>String(v||'').trim().replace(/\s+/g,' ');
-  const renderSelectedLocker=()=>{const box=$('lockerSelected');if(!box)return;if(!selectedLocker){box.classList.remove('has-locker');box.innerHTML='<strong>Nie wybrano jeszcze punktu.</strong><br>Wybierz Paczkomat na mapie InPost i zapisz jego dane.';return}box.classList.add('has-locker');box.innerHTML=`<strong>${selectedLocker.id}</strong><br>${selectedLocker.address}<br><span style="color:#777">Punkt zapisany do zamówienia • sprawdź dane przed płatnością</span>`;if($('manualLockerCode'))$('manualLockerCode').value=selectedLocker.id||'';if($('manualLockerAddress'))$('manualLockerAddress').value=selectedLocker.address||''};
-  const saveManualLocker=()=>{const code=cleanLockerCode($('manualLockerCode')?.value),address=cleanLockerAddress($('manualLockerAddress')?.value);if(!/^[A-Z0-9_-]{3,30}$/.test(code)){showStatus('error','Sprawdź kod punktu','Wpisz kod Paczkomatu, np. KAT01M.');return false}if(address.length<3){showStatus('error','Dodaj adres punktu','Wpisz ulicę lub miejscowość wybranego punktu InPost.');return false}selectedLocker={id:code,name:code,address};localStorage.setItem('starxv-selected-locker',JSON.stringify(selectedLocker));renderSelectedLocker();showStatus('success','Punkt zapisany',`${code} został zapisany do zamówienia.`,2200);return true};
-  async function loadShippingConfig(){try{const r=await fetch('/api/shipping/config',{credentials:'include'}),d=await r.json();if(r.ok)shippingConfig={...shippingConfig,...d}}catch(e){}renderSummary()}
+  const safeTxt=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const pointAddress=point=>{
+    const a=point?.address_details||point?.address||{};
+    if(a.line1||a.line2)return [a.line1,a.line2].filter(Boolean).join(', ');
+    const street=[a.street,a.building_number||a.house_number].filter(Boolean).join(' ');
+    const city=[a.post_code||a.postal_code,a.city].filter(Boolean).join(' ');
+    return [street,city].filter(Boolean).join(', ')||String(point?.location_description||point?.address||'').trim();
+  };
+  const renderSelectedLocker=()=>{
+    const box=$('lockerSelected'),change=$('changeInpostPoint');if(!box)return;
+    if(!selectedLocker){box.classList.remove('has-locker');box.innerHTML='<strong>Nie wybrano jeszcze punktu.</strong><br>Wybierz Paczkomat lub PaczkoPunkt bezpośrednio na mapie.';if(change)change.hidden=true;return}
+    box.classList.add('has-locker');
+    const coords=selectedLocker.location&&Number.isFinite(Number(selectedLocker.location.latitude))&&Number.isFinite(Number(selectedLocker.location.longitude))?`<span class="inpost-coords">${Number(selectedLocker.location.latitude).toFixed(5)}, ${Number(selectedLocker.location.longitude).toFixed(5)}</span>`:'';
+    box.innerHTML=`<strong>${safeTxt(selectedLocker.id)}</strong><br>${safeTxt(selectedLocker.address)}${coords?'<br>'+coords:''}<br><span class="inpost-point-saved">Punkt odbioru zapisany do zamówienia</span>`;
+    if(change)change.hidden=false;
+  };
+  const setSelectedInpostPoint=point=>{
+    const id=String(point?.name||point?.id||'').trim().toUpperCase();
+    const address=pointAddress(point);
+    const loc=point?.location||{};
+    if(!id||!address){showStatus('error','Nie udało się wybrać punktu','Wybierz inny punkt na mapie InPost.');return}
+    selectedLocker={id,name:id,address,location:{latitude:Number(loc.latitude),longitude:Number(loc.longitude)},source:'inpost-geowidget'};
+    if(!Number.isFinite(selectedLocker.location.latitude)||!Number.isFinite(selectedLocker.location.longitude))delete selectedLocker.location;
+    localStorage.setItem('starxv-selected-locker',JSON.stringify(selectedLocker));
+    renderSelectedLocker();
+    showStatus('success','Punkt InPost wybrany',`${id} został zapisany do zamówienia.`,2400);
+  };
+  document.addEventListener('starxv-inpost-point-selected',event=>setSelectedInpostPoint(event.detail||event.details||{}));
+  let inpostWidgetMounted=false;
+  const mountInpostGeowidget=()=>{
+    const host=$('inpostGeoWidgetHost');if(!host||inpostWidgetMounted)return;
+    const token=String(shippingConfig.geowidgetToken||'').trim();
+    if(!token){host.innerHTML='<div class="inpost-map-unavailable"><strong>Wybór punktu jest chwilowo niedostępny.</strong><span>Wybierz dostawę na adres albo spróbuj ponownie później.</span></div>';return}
+    const widget=document.createElement('inpost-geowidget');
+    widget.id='starxvInpostGeowidget';
+    widget.setAttribute('onpoint','starxv-inpost-point-selected');
+    widget.setAttribute('token',token);
+    widget.setAttribute('language','pl');
+    widget.setAttribute('config','parcelCollect');
+    host.replaceChildren(widget);inpostWidgetMounted=true;
+  };
+  $('changeInpostPoint')?.addEventListener('click',()=>{const host=$('inpostGeoWidgetHost');host?.scrollIntoView({behavior:'smooth',block:'center'});host?.querySelector('inpost-geowidget')?.focus?.()});
+  async function loadShippingConfig(){try{const r=await fetch('/api/shipping/config',{credentials:'include'}),d=await r.json();if(r.ok)shippingConfig={...shippingConfig,...d}}catch(e){}renderSummary();mountInpostGeowidget()}
   const setDeliveryMethod=method=>{deliveryMethod=method;document.querySelectorAll('.delivery-choice').forEach(x=>x.classList.toggle('selected',x.dataset.delivery===method));$('inpostDeliveryPanel')?.classList.toggle('active',method==='inpost');$('addressDeliveryPanel')?.classList.toggle('active',method==='address');if(method==='address')renderDeliveryAddress();renderSummary()};
   document.querySelectorAll('.delivery-choice').forEach(x=>x.addEventListener('click',()=>setDeliveryMethod(x.dataset.delivery)));
-  $('saveManualLocker')?.addEventListener('click',saveManualLocker);
-  $('manualLockerCode')?.addEventListener('input',e=>{e.target.value=e.target.value.toUpperCase()});
   try{selectedLocker=JSON.parse(localStorage.getItem('starxv-selected-locker')||'null')}catch{}
   if(selectedLocker){selectedLocker={id:cleanLockerCode(selectedLocker.id||selectedLocker.name),name:cleanLockerCode(selectedLocker.id||selectedLocker.name),address:cleanLockerAddress(selectedLocker.address)};if(!selectedLocker.id||!selectedLocker.address)selectedLocker=null}
   renderSelectedLocker();
@@ -682,7 +721,7 @@
   $('saveAddressNext').onclick=()=>{if(saveCurrentAddress())setStage(2)};
   document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>setStage(+b.dataset.back));
   $('confirmAddress').onclick=()=>{if(!selectedAddressId){showStatus('error','Wybierz adres','Zaznacz adres dostawy przed przejściem dalej.');return}localStorage.setItem('starxv-default-address',selectedAddressId);renderAddresses();setStage(3)};
-  $('confirmDelivery').onclick=()=>{const address=getAddresses().find(a=>a.id===selectedAddressId);if(deliveryMethod==='address'&&!address){showStatus('error','Brak adresu','Wróć do etapu 2 i wybierz adres dostawy.');return}if(deliveryMethod==='inpost'&&!selectedLocker){showStatus('error','Wybierz punkt InPost','Wpisz kod i adres Paczkomatu, a potem kliknij „Zapisz punkt”.');return}const delivery=deliveryMethod==='inpost'?{type:'inpost',locker:selectedLocker}:{type:'address',address};localStorage.setItem('starxv-delivery-choice',JSON.stringify(delivery));setStage(4)};
+  $('confirmDelivery').onclick=()=>{const address=getAddresses().find(a=>a.id===selectedAddressId);if(deliveryMethod==='address'&&!address){showStatus('error','Brak adresu','Wróć do etapu 2 i wybierz adres dostawy.');return}if(deliveryMethod==='inpost'&&!selectedLocker){showStatus('error','Wybierz punkt InPost','Wybierz Paczkomat lub PaczkoPunkt bezpośrednio na mapie.');return}const delivery=deliveryMethod==='inpost'?{type:'inpost',locker:selectedLocker}:{type:'address',address};localStorage.setItem('starxv-delivery-choice',JSON.stringify(delivery));setStage(4)};
   document.querySelectorAll('.pay-card').forEach(card=>card.onclick=()=>{document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');paymentPreference=card.dataset.method});
   $('payNow').onclick=async()=>{const items=selectedItems(),address=getAddresses().find(a=>a.id===selectedAddressId);let delivery=null;try{delivery=JSON.parse(localStorage.getItem('starxv-delivery-choice')||'null')}catch{}if(!items.length||!address||!delivery){showStatus('error','Brak danych','Koszyk, adres albo sposób dostawy nie jest gotowy.');return}const btn=$('payNow');btn.disabled=true;btn.textContent='ŁĄCZENIE Z PRZELEWY24...';try{const prep=await fetch('/api/orders/prepare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,address,delivery,paymentPreference,promo:(window.STARXV_GET_PROMO?.()||null)})});const prepared=await prep.json().catch(()=>({}));if(!prep.ok)throw new Error(prepared.error||'Nie udało się sprawdzić stanu magazynowego.');if(prepared.order){summaryShipping.textContent=money(Number(prepared.order.shippingCost||0));summaryTotal.textContent=money(Number(prepared.order.total||0))}const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,address,delivery,paymentPreference,orderId:prepared.order?.id})});const data=await res.json().catch(()=>({}));if(!res.ok||!data.url)throw new Error(data.error||'Zamówienie zostało zapisane jako oczekujące, ale płatności nie są jeszcze podłączone.');window.location.href=data.url}catch(err){showStatus('error','Płatność nie została uruchomiona',location.protocol==='file:'?'Prawdziwa płatność Przelewy24 wymaga uruchomienia backendu i konfiguracji danych P24 na serwerze.':(err.message||'Spróbuj ponownie za chwilę.'));btn.disabled=false;btn.textContent='PRZEJDŹ DO PŁATNOŚCI →'}};
   const params=new URLSearchParams(location.search),paymentResult=params.get('payment'),paymentOrderId=params.get('order');
@@ -1812,53 +1851,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   setGoogleButtons(false,'ŁADOWANIE GOOGLE…');
   loadGoogleConfig();
 });
-</script>
-<script>
-(() => {
-  const el = document.querySelector('.sx-test-version');
-  if (!el) return;
-
-  const target = 'TEST VERSION 0.0';
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#<>/_-';
-  const randomChar = () => chars[Math.floor(Math.random() * chars.length)];
-  const randomTail = (from) => [...target].map((ch, i) => {
-    if (i < from) return target[i];
-    return ch === ' ' ? ' ' : randomChar();
-  }).join('');
-
-  let running = false;
-  function runVersionLoad(){
-    if (running) return;
-    running = true;
-    el.classList.add('is-loading');
-    let frame = 0;
-    const totalFrames = 42;
-    const timer = setInterval(() => {
-      const progress = Math.min(target.length, Math.floor((frame / totalFrames) * (target.length + 1)));
-      let visible = '';
-      for (let i = 0; i < target.length; i++) {
-        const ch = target[i];
-        if (ch === ' ') visible += ' ';
-        else if (i < progress) visible += target[i];
-        else visible += randomChar();
-      }
-      el.textContent = visible;
-      el.dataset.ghost = randomTail(Math.max(0, progress - 3));
-      frame++;
-
-      if (frame > totalFrames) {
-        clearInterval(timer);
-        el.textContent = target;
-        el.dataset.ghost = '';
-        el.classList.remove('is-loading');
-        running = false;
-      }
-    }, 45);
-  }
-
-  runVersionLoad();
-  setInterval(runVersionLoad, 4200);
-})();
 </script>
 <div aria-hidden="true" class="sx-suggested-modal" id="sxSuggestedDeliveryModal">
 <div aria-labelledby="sxSuggestedDeliveryTitle" aria-modal="true" class="sx-suggested-card" role="dialog">
