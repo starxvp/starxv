@@ -81,6 +81,15 @@
 .cart-item-price .sx-cart-discount{display:inline-block;margin-top:4px;padding:3px 6px;border-radius:999px;background:#fff;color:#000;font-size:8px}
 </style>
 
+
+<style id="starxv-cart-discount-visuals">
+.cart-item-price{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.cart-item-price .sx-cart-current{font-weight:900}
+.cart-item-price .sx-cart-old{color:#666;text-decoration:line-through;font-size:10px;font-weight:700}
+.cart-item-price .sx-cart-discount{display:inline-flex;align-items:center;justify-content:center;padding:3px 7px;border-radius:999px;background:#fff;color:#000;font-size:8px;font-weight:950;letter-spacing:.05em}
+.cart-item-price .sx-cart-save{font-size:9px;color:#888;font-weight:700}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -530,7 +539,31 @@
   if(promoInput)promoInput.addEventListener('input',()=>{if(promoRemove)promoRemove.classList.toggle('show',!!promoInput.value.trim())});
   if(promoRemove)promoRemove.onclick=()=>{if(promoInput)promoInput.value='';localStorage.removeItem(PROMO_KEY);promoRemove.classList.remove('show');renderCart();showToast('Kod rabatowy usunięty')};
 
-  const renderCart=()=>{
+  
+  const hydrateCartDiscounts=()=>{
+    try{
+      const catalog=window.STARXV_CATALOG||{};
+      let changed=false;
+      for(const item of cart){
+        const p=catalog[item.id];
+        if(!p)continue;
+        const base=Number(p.price||0);
+        const discount=Math.min(99,Math.max(0,Number(p.discountPercent||0)));
+        const effective=discount>0?Math.round(base*(1-discount/100)*100)/100:base;
+        if(Number(item.price)!==effective||Number(item.basePrice||0)!==base||Number(item.discountPercent||0)!==discount){
+          item.price=effective;
+          item.basePrice=base;
+          item.discountPercent=discount;
+          changed=true;
+        }
+      }
+      if(changed){
+        localStorage.setItem('starxv-cart',JSON.stringify(cart));
+        window.STARXV_CART_PERSIST?.(cart);
+      }
+    }catch(e){}
+  };
+const renderCart=()=>{hydrateCartDiscounts();
     if(!window.STARXV_AUTH_USER){
       cart=[];
       if(cartCount) cartCount.textContent='0';
@@ -565,7 +598,7 @@
       <input class="cart-check" type="checkbox" ${x.selected?'checked':''} aria-label="Zaznacz ${x.name}, rozmiar ${x.size}">
       <div class="cart-thumb"><img src="${imgFor(x)}" alt="${x.name}"></div>
       <div class="cart-item-main">
-        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div></div><div class="cart-item-side"><strong class="cart-item-price">${money(x.price*x.qty)}${Number(x.discountPercent||0)>0?`<span class="sx-cart-old">${money(Number(x.basePrice||x.price)*x.qty)}</span><span class="sx-cart-discount">-${Number(x.discountPercent)}%</span>`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
+        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div></div><div class="cart-item-side"><strong class="cart-item-price"><span class="sx-cart-current">${money(x.price*x.qty)}</span>${Number(x.discountPercent||0)>0?`<span class="sx-cart-old">${money(Number(x.basePrice||x.price)*x.qty)}</span><span class="sx-cart-discount">-${Number(x.discountPercent)}%</span><span class="sx-cart-save">OSZCZĘDZASZ ${money((Number(x.basePrice||x.price)-Number(x.price))*x.qty)}</span>`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
         <div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div>
         <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div></div>
       </div></div>`).join('');
@@ -1589,7 +1622,7 @@
 
       const t=c['oversized-white-shirt'];
       if(t){
-        if(window.STARXV_SHIRT_STOCK){for(const color of ['white','blue','purple'])copySizes(window.STARXV_SHIRT_STOCK[color],t.colors?.[color]?.sizes);window.STARXV_REFRESH_SHIRT_STOCK?.()}
+        if(window.STARXV_SHIRT_STOCK){for(const color of ['white','blue','purple'])copySizes(window.STARXV_SHIRT_STOCK[color],t.colors?.[color]?.sizes);window.STARXV_REFRESH_SHIRT_STOCK?.()};window.dispatchEvent(new Event('starxv:cart-updated'))
         applyStatic('oversized-white-shirt',t,'#shirtCard .price','#shirtModal .detail-price',window.STARXV_SHIRT_PRODUCT,null);
       }
 
