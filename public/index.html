@@ -69,6 +69,18 @@
 .sx-dyn-discount{display:inline-flex;width:max-content;margin-top:8px;padding:6px 9px;border-radius:999px;background:#fff;color:#000;font-size:9px;font-weight:900;letter-spacing:.08em}
 </style>
 
+
+<style id="starxv-static-discount-style">
+.sx-static-price-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sx-static-promo-price,.sx-card-promo-price{font-weight:900;color:#fff}
+.sx-static-old-price,.sx-card-old-price{font-size:.72em;color:#696969;text-decoration:line-through;margin-left:6px}
+.sx-static-discount,.sx-card-discount{display:inline-flex;align-items:center;justify-content:center;margin-left:7px;padding:4px 7px;border-radius:999px;background:#fff;color:#000;font-size:9px;font-weight:950;letter-spacing:.04em;vertical-align:middle}
+.detail-price.sx-has-promo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.detail-price .sx-static-old-price{font-size:13px}
+.cart-item-price .sx-cart-old{display:block;color:#666;text-decoration:line-through;font-size:10px;font-weight:700;margin-top:3px}
+.cart-item-price .sx-cart-discount{display:inline-block;margin-top:4px;padding:3px 6px;border-radius:999px;background:#fff;color:#000;font-size:8px}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -487,7 +499,7 @@
 </script>
 <script>
 (()=>{
-  const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',fit:'[RELAXED FIT]',price:129};
+  const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',fit:'[RELAXED FIT]',price:129};window.STARXV_HOODIE_PRODUCT=PRODUCT;
   const m=document.getElementById('productModal'),c=document.querySelector('.product-card'),t=document.getElementById('galleryTrack'),dots=[...document.querySelectorAll('.dot')],label=document.getElementById('viewLabel');
   const cartModal=document.getElementById('cartModal'),openCartBtn=document.getElementById('openCart'),closeCartBtn=document.getElementById('closeCart'),cartItems=document.getElementById('cartItems'),cartCount=document.getElementById('cartCount'),cartTotal=document.getElementById('cartTotal'),checkoutBtn=document.getElementById('checkoutBtn'),checkoutHint=document.getElementById('checkoutHint'),toast=document.getElementById('cartToast'),cartFooter=cartModal?.querySelector('.cart-footer');
   const addBtn=document.querySelector('.add-btn'),sizeButtons=[...document.querySelectorAll('.sizes button')];
@@ -511,6 +523,7 @@
   const closeProduct=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!cartModal.classList.contains('open'))document.body.style.overflow=''};
   const openCart=()=>{closeProduct();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));};
   const closeCart=()=>{cartModal.classList.remove('open');cartModal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
+  window.addEventListener('starxv:cart-updated',()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}));}catch{}renderCart();});
   const promoInput=document.getElementById('sxPromoInput'),promoApply=document.getElementById('sxPromoApply'),promoRemove=document.getElementById('sxPromoRemove'),promoMessage=document.getElementById('sxPromoMessage'),discountRow=document.getElementById('sxDiscountRow'),discountCode=document.getElementById('sxDiscountCode'),discountValue=document.getElementById('sxDiscountValue');
   const syncPromoUI=base=>{const p=getPromo();if(p){if(promoInput)promoInput.value=p.code;if(promoMessage){promoMessage.textContent=`Aktywny kod ${p.code}: ${p.type==='fixed'?`−${money(Number(p.value||0))}`:`−${Number(p.value||0)}%`}`;promoMessage.classList.add('ok')}if(discountRow)discountRow.classList.add('show');if(discountCode)discountCode.textContent=p.code;if(discountValue)discountValue.textContent=`−${money(base-discountedTotal(base))}`}else{if(promoMessage){promoMessage.textContent='Wpisz kod rabatowy, jeśli go masz.';promoMessage.classList.remove('ok')}if(discountRow)discountRow.classList.remove('show')}if(promoRemove)promoRemove.classList.toggle('show',!!(promoInput?.value||'').trim())};
   if(promoApply)promoApply.onclick=async()=>{const code=(promoInput?.value||'').trim().toUpperCase();if(!code){localStorage.removeItem(PROMO_KEY);renderCart();showToast('Kod rabatowy usunięty');return}const base=cart.filter(x=>x.selected!==false).reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||1),0);promoApply.disabled=true;try{const r=await fetch('/api/promos/validate?code='+encodeURIComponent(code)+'&subtotal='+encodeURIComponent(base),{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'Ten kod jest nieprawidłowy lub nieaktywny.');localStorage.setItem(PROMO_KEY,JSON.stringify(d.promo));renderCart();showToast(`Kod ${d.promo.code} zastosowany`)}catch(e){localStorage.removeItem(PROMO_KEY);promoMessage.textContent=e.message||'Ten kod jest nieprawidłowy lub nieaktywny.';promoMessage.classList.remove('ok');renderCart()}finally{promoApply.disabled=false}};
@@ -552,7 +565,7 @@
       <input class="cart-check" type="checkbox" ${x.selected?'checked':''} aria-label="Zaznacz ${x.name}, rozmiar ${x.size}">
       <div class="cart-thumb"><img src="${imgFor(x)}" alt="${x.name}"></div>
       <div class="cart-item-main">
-        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div></div><div class="cart-item-side"><strong class="cart-item-price">${money(x.price*x.qty)}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
+        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div></div><div class="cart-item-side"><strong class="cart-item-price">${money(x.price*x.qty)}${Number(x.discountPercent||0)>0?`<span class="sx-cart-old">${money(Number(x.basePrice||x.price)*x.qty)}</span><span class="sx-cart-discount">-${Number(x.discountPercent)}%</span>`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
         <div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div>
         <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div></div>
       </div></div>`).join('');
@@ -1019,7 +1032,7 @@
 <div class="sx-cookie" id="sxCookie"><div class="sx-cookie-copy"><b>Cookies w STARXV</b><span>Używamy lokalnego zapisu w przeglądarce, aby działały m.in. koszyk, konto, ulubione i zamówienia. Ta wersja sklepu nie korzysta z backendu.</span></div><div class="sx-cookie-actions"><button class="sx-cookie-essential" data-cookie="essential">TYLKO NIEZBĘDNE</button><button class="sx-cookie-accept" data-cookie="all">AKCEPTUJ</button></div></div>
 <script>
 (()=>{
-  const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',price:129,fit:'RELAXED FIT'};
+  const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',price:129,fit:'RELAXED FIT'};window.STARXV_HOODIE_SEARCH_PRODUCT=PRODUCT;
   const STOCK=window.STARXV_VARIANT_STOCK||{black:{S:8,M:12,L:6,XL:4},pink:{S:5,M:7,L:3,XL:2},blue:{S:4,M:6,L:5,XL:3}};
   const currentStock=()=>STOCK[window.STARXV_SELECTED_COLOR||'black']||STOCK.black;
   const FAV_KEY='starxv-favorites', REVIEW_KEY='starxv-reviews', CONSENT_KEY='starxv-cookie-consent';
@@ -1353,7 +1366,7 @@
 </script>
 <script id="sxTshirtScript">
 (()=>{
- const PRODUCT={id:'oversized-white-shirt',name:'White T-Shirt Different Reality.',fit:'[OVERSIZED FIT]',price:99};
+ const PRODUCT={id:'oversized-white-shirt',name:'White T-Shirt Different Reality.',fit:'[OVERSIZED FIT]',price:99};window.STARXV_SHIRT_PRODUCT=PRODUCT;
  const IMAGES={white:'/assets/b1322871e28ce217.webp',blue:'/assets/db1c1c2ba94a0b95.webp',purple:'/assets/56d096d96f0f1e39.webp'};
  const META={white:{label:'Biały',name:'White T-Shirt Different Reality.'},blue:{label:'Jasny niebieski',name:'Light Blue T-Shirt Different Reality.'},purple:{label:'Fioletowy',name:'Purple T-Shirt Different Reality.'}};
  const STOCK={white:{S:8,M:12,L:8,XL:5},blue:{S:6,M:8,L:6,XL:4},purple:{S:5,M:7,L:5,XL:3}};window.STARXV_SHIRT_STOCK=STOCK;window.STARXV_REFRESH_SHIRT_STOCK=()=>refreshStock();
@@ -1486,7 +1499,7 @@
  function ensureSection(){let sec=document.getElementById('sxDynamicCatalog');if(sec)return sec;const shop=document.getElementById('shop');if(!shop)return null;sec=document.createElement('section');sec.id='sxDynamicCatalog';sec.innerHTML=`<div class="sx-dyn-head"><div><div class="section-kicker">02 / Katalog</div><h2>NOWE<br>PRODUKTY.</h2></div><p>Produkty dodane z panelu administratora pojawiają się tutaj automatycznie.</p></div><div class="products" id="sxDynamicProducts"></div>`;shop.insertAdjacentElement('afterend',sec);return sec}
  function productImage(p,color,side='front'){const imgs=p?.colors?.[color]?.images||{};return String(imgs?.[side]||imgs?.front||p?.image||'').trim()}
  function imgHTML(p,name,color='',side='front'){const src=productImage(p,color,side);return src?`<img src="${esc(src)}" alt="${esc(name)}" onerror="this.outerHTML='${placeholder.replace(/'/g,"\\'")}'">`:placeholder}
- function render(){const sec=ensureSection();if(!sec)return;const grid=document.getElementById('sxDynamicProducts');const entries=Object.entries(catalog).filter(([id])=>!STATIC_IDS.has(id));if(!entries.length){sec.style.display='none';return}sec.style.display='block';grid.innerHTML=entries.map(([id,p])=>`<article class="card product-card sx-dyn-card" role="button" tabindex="0" data-product-id="${esc(id)}" data-category="${esc(inferCategory(p))}" aria-label="Otwórz ${esc(p.name)}"><div class="product-visual">${imgHTML(p,p.name,Object.keys(p.colors||{})[0]||'','front')}</div><div class="card-info"><div><div class="card-name">${esc(p.name)}</div><div class="card-meta">[${esc(p.fit||'STARXV')}]</div></div><div class="price">${Number(p.price||0).toFixed(0)} PLN</div></div></article>`).join('');grid.querySelectorAll('[data-product-id]').forEach(el=>{const open=()=>openProduct(el.dataset.productId);el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}})}
+ function render(){const sec=ensureSection();if(!sec)return;const grid=document.getElementById('sxDynamicProducts');const entries=Object.entries(catalog).filter(([id])=>!STATIC_IDS.has(id));if(!entries.length){sec.style.display='none';return}sec.style.display='block';grid.innerHTML=entries.map(([id,p])=>`<article class="card product-card sx-dyn-card" role="button" tabindex="0" data-product-id="${esc(id)}" data-category="${esc(inferCategory(p))}" aria-label="Otwórz ${esc(p.name)}"><div class="product-visual">${imgHTML(p,p.name,Object.keys(p.colors||{})[0]||'','front')}</div><div class="card-info"><div><div class="card-name">${esc(p.name)}</div><div class="card-meta">[${esc(p.fit||'STARXV')}]</div></div><div class="price">${(()=>{const b=Number(p.price||0),d=Math.min(99,Math.max(0,Number(p.discountPercent||0)));return d>0?`<span class="sx-card-promo-price">${(b*(1-d/100)).toFixed(0)} PLN</span><span class="sx-card-old-price">${b.toFixed(0)} PLN</span><span class="sx-card-discount">-${d}%</span>`:`${b.toFixed(0)} PLN`})()}</div></div></article>`).join('');grid.querySelectorAll('[data-product-id]').forEach(el=>{const open=()=>openProduct(el.dataset.productId);el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}})}
  function ensureModal(){let m=document.getElementById('sxDynModal');if(m)return m;m=document.createElement('div');m.id='sxDynModal';m.className='sx-dyn-modal';m.setAttribute('aria-hidden','true');m.innerHTML=`<div class="sx-dyn-box"><button class="sx-dyn-close" type="button">×</button><div class="sx-dyn-media" id="sxDynMedia"></div><div class="sx-dyn-copy"><div class="detail-kicker">STARXV / CATALOG</div><h2 id="sxDynName"></h2><div class="fit-tag" id="sxDynFit"></div><div class="sx-dyn-price" id="sxDynPrice"></div><div class="sx-dyn-price-old" id="sxDynPriceOld" hidden></div><div class="sx-dyn-discount" id="sxDynDiscount" hidden></div><div class="sx-dyn-composition" id="sxDynComposition" hidden></div><div class="size-label">KOLOR</div><div class="sx-dyn-colors" id="sxDynColors"></div><div class="size-label">ROZMIAR</div><div class="sx-dyn-sizes" id="sxDynSizes"></div><div class="sx-dyn-stock" id="sxDynStock"></div><div class="sx-dyn-actions"><button class="sx-dyn-add" id="sxDynAdd">DODAJ DO KOSZYKA →</button><button class="sx-dyn-fav" id="sxDynFav">♡</button></div></div></div>`;document.body.appendChild(m);m.querySelector('.sx-dyn-close').onclick=closeModal;m.onclick=e=>{if(e.target===m)closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&m.classList.contains('open'))closeModal()});return m}
  function closeModal(){const m=document.getElementById('sxDynModal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');document.body.style.overflow=''}}
  function openProduct(id){const p=catalog[id];if(!p)return;const m=ensureModal();let color='',size='';const colors=Object.entries(p.colors||{});const media=document.getElementById('sxDynMedia');document.getElementById('sxDynName').textContent=p.name||id;document.getElementById('sxDynFit').textContent=`[${p.fit||'STARXV'}]`;const basePrice=Number(p.price||0);const discount=Math.min(99,Math.max(0,Number(p.discountPercent||0)));const promoPrice=discount>0?basePrice*(1-discount/100):basePrice;const priceEl=document.getElementById('sxDynPrice');const oldPriceEl=document.getElementById('sxDynPriceOld');const discountEl=document.getElementById('sxDynDiscount');if(priceEl)priceEl.textContent=`${promoPrice.toFixed(0)} PLN`;if(oldPriceEl){oldPriceEl.hidden=!(discount>0);oldPriceEl.textContent=discount>0?`${basePrice.toFixed(0)} PLN`:''}if(discountEl){discountEl.hidden=!(discount>0);discountEl.textContent=discount>0?`-${discount}%`:''}const comp=document.getElementById('sxDynComposition');if(comp){const txt=String(p.composition||'').trim();comp.hidden=!txt;comp.innerHTML=txt?`<span>SKŁAD</span><b>${esc(txt)}</b>`:''}const cbox=document.getElementById('sxDynColors'),sbox=document.getElementById('sxDynSizes'),stock=document.getElementById('sxDynStock'),add=document.getElementById('sxDynAdd'),fav=document.getElementById('sxDynFav');
@@ -1497,7 +1510,7 @@
    function paintStock(){if(!color){stock.textContent='Wybierz kolor.';return}if(!size){stock.textContent='Wybierz rozmiar.';return}const n=Number(p.colors?.[color]?.sizes?.[size]||0);stock.textContent=n>0?`Dostępne: ${n} szt.`:'Niedostępne'}
    function paintMedia(){const front=productImage(p,color,'front'),back=productImage(p,color,'back');if(!front&&!back){media.innerHTML=placeholder;return}const imgs=[front,back].filter((x,n,a)=>x&&a.indexOf(x)===n);media.innerHTML=`<div class="sx-dyn-gallery">${imgs.map((src,n)=>`<img src="${esc(src)}" alt="${esc(p.name)} ${n===0?'front':'back'}">`).join('')}</div>`}
    function paintColors(){cbox.innerHTML=colors.map(([key,c])=>`<button class="sx-dyn-chip ${color===key?'active':''}" data-color="${esc(key)}">${esc(c.label||key)}</button>`).join('')||'<span class="sx-dyn-stock">Brak kolorów</span>';cbox.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{color=b.dataset.color;size='';paintMedia();paintColors();paintSizes()})}
-   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=productImage(p,color,'front');const colorLabel=p.colors?.[color]?.label||color;if(existing){existing.qty++;existing.selected=true;existing.stockLimit=limit}else cart.push({id,name:p.name,fit:p.fit||'',price:Number(p.price||0),color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel});localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
+   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=productImage(p,color,'front');const colorLabel=p.colors?.[color]?.label||color;if(existing){const base=Number(p.price||0),disc=Math.min(99,Math.max(0,Number(p.discountPercent||0))),effective=disc>0?base*(1-disc/100):base;existing.qty++;existing.selected=true;existing.stockLimit=limit;existing.price=Math.round(effective*100)/100;existing.basePrice=base;existing.discountPercent=disc}else{const base=Number(p.price||0),disc=Math.min(99,Math.max(0,Number(p.discountPercent||0))),effective=disc>0?base*(1-disc/100):base;cart.push({id,name:p.name,fit:p.fit||'',price:Math.round(effective*100)/100,basePrice:base,discountPercent:disc,color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel})}localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
    color=colors[0]?.[0]||'';paintMedia();paintColors();paintSizes();m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}
  async function sync(){try{const r=await fetch('/api/store/catalog',{cache:'no-store'});if(!r.ok)return;const j=await r.json();catalog=j.catalog||{};render()}catch(e){console.warn('STARXV dynamic catalog',e)}}
  window.STARXV_RENDER_DYNAMIC_CATALOG=sync;document.addEventListener('DOMContentLoaded',sync);setInterval(sync,15000);
@@ -1509,15 +1522,61 @@
   async function syncCatalog(){
     try{
       const r=await fetch('/api/store/catalog',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json(),c=j.catalog||{};
-      const h=c['black-hoodie-graffiti'];if(h&&window.STARXV_VARIANT_STOCK){for(const color of ['black','pink','blue'])copySizes(window.STARXV_VARIANT_STOCK[color],h.colors?.[color]?.sizes);window.STARXV_REFRESH_STOCK?.()}
-      const t=c['oversized-white-shirt'];if(t&&window.STARXV_SHIRT_STOCK){for(const color of ['white','blue','purple'])copySizes(window.STARXV_SHIRT_STOCK[color],t.colors?.[color]?.sizes);window.STARXV_REFRESH_SHIRT_STOCK?.()}
+      const effectivePrice=p=>{const base=Number(p?.price||0),disc=Math.min(99,Math.max(0,Number(p?.discountPercent||0)));return {base,disc,price:disc>0?Math.round(base*(1-disc/100)*100)/100:base}};
+      const priceHTML=p=>{const x=effectivePrice(p);return x.disc>0?`<span class="sx-static-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span><span class="sx-static-old-price">${Number(x.base).toFixed(x.base%1?2:0)} PLN</span><span class="sx-static-discount">-${x.disc}%</span>`:`${Number(x.base).toFixed(x.base%1?2:0)} PLN`};
+      const applyStatic=(id,p,cardSel,modalSel,productObj,searchObj)=>{
+        if(!p)return;
+        const x=effectivePrice(p);
+        if(productObj){productObj.price=x.price;productObj.basePrice=x.base;productObj.discountPercent=x.disc}
+        if(searchObj){searchObj.price=x.price;searchObj.basePrice=x.base;searchObj.discountPercent=x.disc}
+        const cardPrice=document.querySelector(cardSel);
+        if(cardPrice){cardPrice.innerHTML=priceHTML(p);cardPrice.classList.toggle('sx-has-promo',x.disc>0)}
+        const modalPrice=document.querySelector(modalSel);
+        if(modalPrice){modalPrice.innerHTML=priceHTML(p);modalPrice.classList.toggle('sx-has-promo',x.disc>0)}
+      };
+
+      const h=c['black-hoodie-graffiti'];
+      if(h){
+        if(window.STARXV_VARIANT_STOCK){for(const color of ['black','pink','blue'])copySizes(window.STARXV_VARIANT_STOCK[color],h.colors?.[color]?.sizes);window.STARXV_REFRESH_STOCK?.()}
+        applyStatic('black-hoodie-graffiti',h,'#shop .product-card .price','#productModal .detail-price',window.STARXV_HOODIE_PRODUCT,window.STARXV_HOODIE_SEARCH_PRODUCT);
+      }
+
+      const t=c['oversized-white-shirt'];
+      if(t){
+        if(window.STARXV_SHIRT_STOCK){for(const color of ['white','blue','purple'])copySizes(window.STARXV_SHIRT_STOCK[color],t.colors?.[color]?.sizes);window.STARXV_REFRESH_SHIRT_STOCK?.()}
+        applyStatic('oversized-white-shirt',t,'#shirtCard .price','#shirtModal .detail-price',window.STARXV_SHIRT_PRODUCT,null);
+      }
+
+      // Reprice items already in the cart so totals/checkout also use the current product promotion.
+      try{
+        const cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
+        if(Array.isArray(cart)){
+          let changed=false;
+          for(const item of cart){
+            const p=c[item.id];
+            if(!p)continue;
+            const x=effectivePrice(p);
+            if(Number(item.price)!==Number(x.price)||Number(item.discountPercent||0)!==Number(x.disc)||Number(item.basePrice||0)!==Number(x.base)){
+              item.price=x.price;
+              item.basePrice=x.base;
+              item.discountPercent=x.disc;
+              changed=true;
+            }
+          }
+          if(changed){
+            localStorage.setItem('starxv-cart',JSON.stringify(cart));
+            window.STARXV_CART_PERSIST?.(cart);
+            window.dispatchEvent(new Event('starxv:cart-updated'));
+          }
+        }
+      }catch{}
     }catch(e){console.warn('STARXV inventory sync:',e)}
   }
   async function syncOrders(){
     try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(r.status===401)return false;if(!r.ok)return false;const j=await r.json();localStorage.setItem('starxv-orders',JSON.stringify(Array.isArray(j.orders)?j.orders:[]));return true}catch{return false}
   }
   window.STARXV_SYNC_CATALOG=syncCatalog;window.STARXV_SYNC_ORDERS=syncOrders;
-  syncCatalog();syncOrders();
+  syncCatalog();syncOrders();setInterval(syncCatalog,15000);
   const btn=document.getElementById('openOrders');if(btn){const old=btn.onclick;btn.onclick=async e=>{await syncOrders();return old?.call(btn,e)}}
   window.addEventListener('starxv:auth-changed',()=>{syncCatalog();syncOrders()});
 })();
