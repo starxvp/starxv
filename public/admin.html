@@ -59,9 +59,10 @@
 .colorDeleteBtn{padding:8px 10px;font-size:9px;white-space:nowrap}
 </style>
 
+<script async defer src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body>
-<div id="login" class="login hidden"><div class="brand">STARXV</div><p class="sub">panel administratora</p><div id="loginMsg" class="msg">Zaloguj się kontem administratora.</div><input id="email" type="email" placeholder="E-mail"><input id="password" type="password" placeholder="Hasło"><button id="loginBtn" class="btn primary" style="width:100%;margin-top:8px">ZALOGUJ</button></div>
+<div id="login" class="login hidden"><div class="brand">STARXV</div><p class="sub">panel administratora</p><div id="loginMsg" class="msg">Zaloguj się kontem administratora.</div><button id="adminGoogleBtn" class="btn primary" style="width:100%;margin:10px 0 14px" disabled>KONTYNUUJ Z GOOGLE</button><div style="display:flex;align-items:center;gap:10px;color:#666;font-size:10px;margin:2px 0 12px"><span style="height:1px;background:#292929;flex:1"></span><span>LUB E-MAIL</span><span style="height:1px;background:#292929;flex:1"></span></div><input id="email" type="email" autocomplete="email" placeholder="E-mail"><input id="password" type="password" autocomplete="current-password" placeholder="Hasło"><button id="loginBtn" class="btn" style="width:100%;margin-top:8px">ZALOGUJ E-MAILEM</button></div>
 <div id="app" class="wrap hidden">
  <div class="top"><div><div class="brand">STARXV</div><div class="sub">panel administratora</div></div><div class="row"><span id="who" class="meta"></span><button id="refresh" class="btn">Odśwież</button><button id="logout" class="btn">Wyloguj</button></div></div>
  <div id="msg" class="msg"></div>
@@ -84,11 +85,11 @@
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('pl-PL',{style:'currency',currency:'PLN'}).format(Number(n||0));
 const stageNames=['Nowe','Przygotowanie','Nadane','W drodze','Dostarczone'];
-let shippingConfig={manualMode:true};
+let shippingConfig={inpostConfigured:false};
 async function api(url,opt={}){const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});let j={};try{j=await r.json()}catch{}if(!r.ok)throw Object.assign(new Error(j.error||'Błąd serwera'),{status:r.status});return j}
 function showLogin(text='Zaloguj się kontem administratora.'){$('#app').classList.add('hidden');$('#login').classList.remove('hidden');$('#loginMsg').textContent=text}
 function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden')}
-async function boot(){try{const j=await api('/api/admin/me');$('#who').textContent=j.user.email;showApp();await load()}catch(e){showLogin(e.status===403?'To konto nie ma uprawnień administratora.':e.status===503?e.message:'Zaloguj się kontem administratora.')}}
+async function boot(){try{const j=await api('/api/admin/me',{cache:'no-store'});$('#who').textContent=j.user.email;showApp();await load()}catch(e){showLogin(e.status===403?'To konto nie ma uprawnień administratora.':e.status===503?e.message:'Zaloguj się kontem administratora.');window.STARXV_ADMIN_INIT_GOOGLE?.()}}
 async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
 function render(j){shippingConfig=j.shipping||shippingConfig;const s=j.stats||{};$('#sOrders').textContent=s.orders??0;$('#sPending').textContent=s.pending??0;$('#sRevenue').textContent=money(s.revenue);$('#sStock').textContent=s.stock??0;renderProducts(j.catalog||{});renderOrders(j.orders||[])}
 function renderProducts(catalog){
@@ -136,14 +137,18 @@ function renderOrders(orders){
  $('#orders').innerHTML=orders.map(o=>{
    const locker=o.delivery?.type==='inpost'?(o.delivery?.locker?.id||o.delivery?.locker?.name||'Paczkomat'):'';
    const deliveryText=locker?`Paczkomat InPost: ${esc(locker)}`:`${esc(o.address?.firstName)} ${esc(o.address?.lastName)}, ${esc(o.address?.street)}, ${esc(o.address?.postal)} ${esc(o.address?.city)}`;
-   const hasShipment=Boolean(o.trackingNumber);
+   const hasShipment=Boolean(o.inpostShipmentId||o.trackingNumber);
    const tracking=o.trackingNumber?esc(o.trackingNumber):'jeszcze brak';
-   const state=o.carrierStatus?esc(o.carrierStatus):(hasShipment?'numer przesyłki zapisany':'oczekuje na ręczne nadanie');
-   return `<div class="order" data-order="${esc(o.id)}"><div class="orderhead"><div><b>Zamówienie #${esc(o.orderNo)}</b><div class="meta">${new Date(o.createdAt).toLocaleString('pl-PL')} · ${esc(o.customer?.firstName)} ${esc(o.customer?.lastName)} · ${esc(o.customer?.email)}</div></div><div class="orderHeadActions"><button class="btn danger orderDeleteBtn" type="button" data-delete-order>USUŃ ZAMÓWIENIE</button><b>${money(o.total)}</b></div></div><div class="items">${(o.items||[]).map(x=>`<div>${esc(x.name)} — ${esc(x.colorLabel)} / ${esc(x.size)} × ${Number(x.qty||1)}</div>`).join('')}</div><div class="meta">Dostawa: ${deliveryText}${o.address?.phone?' · '+esc(o.address.phone):''} · Koszt dostawy: ${money(o.shippingCost||0)}</div><div class="row"><label>Status płatności <select data-pay><option value="pending" ${o.paymentStatus==='pending'?'selected':''}>Oczekuje</option><option value="paid" ${o.paymentStatus==='paid'?'selected':''}>Opłacone</option><option value="cancelled" ${o.paymentStatus==='cancelled'?'selected':''}>Anulowane</option></select></label><label>Wysyłka <select data-stage>${stageNames.map((n,i)=>`<option value="${i}" ${Number(o.shippingStage)===i?'selected':''}>${esc(n)}</option>`).join('')}</select></label><button class="btn primary" data-save-order>ZAPISZ</button></div><div class="shippingBox"><div class="shippingTitle">INPOST — TRYB RĘCZNY</div><div class="shipState">Status: <b class="${hasShipment?'shipGood':'shipWarn'}">${state}</b><br>Numer przesyłki: <b>${tracking}</b>${o.delivery?.type==='inpost'?`<br>Punkt odbioru: <b>${esc(locker)}</b>${o.delivery?.locker?.address?`<br>Adres punktu: <b>${esc(o.delivery.locker.address)}</b>`:''}`:''}</div><div class="shippingGrid"><input data-manual-tracking placeholder="Numer przesyłki InPost" value="${o.trackingNumber?esc(o.trackingNumber):''}"><button class="btn primary" data-manual-save>ZAPISZ NUMER</button></div><div class="hint">Bez API InPost: nadaj paczkę ręcznie w InPost, skopiuj numer przesyłki i zapisz go tutaj. Klient zobaczy numer oraz link do śledzenia. Status realizacji ustawiasz ręcznie powyżej.</div></div></div>`;
+   const state=o.carrierStatus?esc(o.carrierStatus):(hasShipment?'utworzona, oczekuje na tracking':'nie utworzono');
+   const canCreate=o.paymentStatus==='paid'&&!o.inpostShipmentId;
+   return `<div class="order" data-order="${esc(o.id)}"><div class="orderhead"><div><b>Zamówienie #${esc(o.orderNo)}</b><div class="meta">${new Date(o.createdAt).toLocaleString('pl-PL')} · ${esc(o.customer?.firstName)} ${esc(o.customer?.lastName)} · ${esc(o.customer?.email)}</div></div><div class="orderHeadActions"><button class="btn danger orderDeleteBtn" type="button" data-delete-order>USUŃ ZAMÓWIENIE</button><b>${money(o.total)}</b></div></div><div class="items">${(o.items||[]).map(x=>`<div>${esc(x.name)} — ${esc(x.colorLabel)} / ${esc(x.size)} × ${Number(x.qty||1)}</div>`).join('')}</div><div class="meta">Dostawa: ${deliveryText}${o.address?.phone?' · '+esc(o.address.phone):''} · Koszt dostawy: ${money(o.shippingCost||0)}</div><div class="row"><label>Status płatności <select data-pay><option value="pending" ${o.paymentStatus==='pending'?'selected':''}>Oczekuje</option><option value="paid" ${o.paymentStatus==='paid'?'selected':''}>Opłacone</option><option value="cancelled" ${o.paymentStatus==='cancelled'?'selected':''}>Anulowane</option></select></label><label>Wysyłka <select data-stage>${stageNames.map((n,i)=>`<option value="${i}" ${Number(o.shippingStage)===i?'selected':''}>${esc(n)}</option>`).join('')}</select></label><button class="btn primary" data-save-order>ZAPISZ</button></div><div class="shippingBox"><div class="shippingTitle">INPOST / TRACKING</div><div class="shipState">Status: <b class="${hasShipment?'shipGood':'shipWarn'}">${state}</b><br>Numer przesyłki: <b>${tracking}</b>${o.delivery?.type==='inpost'?`<br>Punkt odbioru: <b>${esc(locker)}</b>`:''}</div><div class="shippingGrid"><input data-manual-tracking placeholder="Numer przesyłki InPost" value="${o.trackingNumber?esc(o.trackingNumber):''}"><button class="btn" data-manual-save>ZAPISZ NUMER</button>${canCreate?`<button class="btn primary" data-create-shipment ${shippingConfig.inpostConfigured?'':'title="Najpierw skonfiguruj InPost w .env"'}>UTWÓRZ W INPOST</button>`:`<button class="btn" data-sync-shipment ${hasShipment?'':'disabled'}>ODŚWIEŻ TRACKING</button>`}${o.inpostShipmentId?`<button class="btn" data-label>ETYKIETA PDF</button>`:''}</div>${!shippingConfig.inpostConfigured?'<div class="hint">Automatyczne tworzenie przesyłek wymaga INPOST_TOKEN i INPOST_ORGANIZATION_ID w zmiennych środowiskowych. Numer trackingowy możesz też wpisać ręcznie.</div>':`<div class="hint">InPost API: aktywne · Paczkomat ${money(shippingConfig.lockerPrice||0)} · Kurier ${money(shippingConfig.courierPrice||0)}${shippingConfig.geowidgetToken?' · Geowidget: aktywny':' · Geowidget: brak tokenu (działa lista punktów)'}</div>`}</div></div>`;
  }).join('');
  document.querySelectorAll('[data-save-order]').forEach(b=>b.onclick=saveOrder);
  document.querySelectorAll('[data-delete-order]').forEach(b=>b.onclick=deleteOrder);
+ document.querySelectorAll('[data-create-shipment]').forEach(b=>b.onclick=createShipment);
+ document.querySelectorAll('[data-sync-shipment]').forEach(b=>b.onclick=syncShipment);
  document.querySelectorAll('[data-manual-save]').forEach(b=>b.onclick=saveManualTracking);
+ document.querySelectorAll('[data-label]').forEach(b=>b.onclick=openLabel);
 }
 
 async function deleteOrder(e){
@@ -164,8 +169,51 @@ async function deleteOrder(e){
 }
 
 async function saveOrder(e){const box=e.currentTarget.closest('[data-order]');try{e.currentTarget.disabled=true;await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order),{method:'PUT',body:JSON.stringify({paymentStatus:box.querySelector('[data-pay]').value,shippingStage:Number(box.querySelector('[data-stage]').value)})});$('#msg').textContent='Zamówienie zaktualizowane.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
+async function createShipment(e){const box=e.currentTarget.closest('[data-order]');if(!shippingConfig.inpostConfigured){alert('Najpierw dodaj INPOST_TOKEN i INPOST_ORGANIZATION_ID do pliku .env.');return}if(!confirm('Utworzyć prawdziwą przesyłkę InPost dla tego zamówienia?'))return;try{e.currentTarget.disabled=true;e.currentTarget.textContent='TWORZENIE…';await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order)+'/shipment/create',{method:'POST',body:'{}'});$('#msg').textContent='Przesyłka InPost została utworzona.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
+async function syncShipment(e){const box=e.currentTarget.closest('[data-order]');try{e.currentTarget.disabled=true;e.currentTarget.textContent='ODŚWIEŻAM…';await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order)+'/shipment/sync',{method:'POST',body:'{}'});$('#msg').textContent='Tracking InPost odświeżony.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function saveManualTracking(e){const box=e.currentTarget.closest('[data-order]'),tracking=box.querySelector('[data-manual-tracking]').value.trim();try{e.currentTarget.disabled=true;await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order)+'/shipment/manual',{method:'POST',body:JSON.stringify({trackingNumber:tracking})});$('#msg').textContent='Numer przesyłki zapisany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
-$('#loginBtn').onclick=async()=>{try{$('#loginMsg').textContent='Logowanie…';await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});await boot()}catch(e){$('#loginMsg').textContent=e.message}};
+function openLabel(e){const box=e.currentTarget.closest('[data-order]');window.open('/api/admin/orders/'+encodeURIComponent(box.dataset.order)+'/shipment/label','_blank','noopener')}
+async function adminPasswordLogin(){try{$('#loginMsg').textContent='Logowanie…';$('#loginBtn').disabled=true;await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});await boot()}catch(e){$('#loginMsg').textContent=e.message||'Nie udało się zalogować.'}finally{$('#loginBtn').disabled=false}}
+$('#loginBtn').onclick=adminPasswordLogin;
+$('#password').addEventListener('keydown',e=>{if(e.key==='Enter')adminPasswordLogin()});
+$('#email').addEventListener('keydown',e=>{if(e.key==='Enter')$('#password').focus()});
+
+(()=>{
+ let googleClient=null,starting=false;
+ const btn=$('#adminGoogleBtn');
+ const set=(enabled,text)=>{if(!btn)return;btn.disabled=!enabled;if(text)btn.textContent=text};
+ async function init(){
+   if(starting)return;starting=true;
+   try{
+     const r=await fetch('/api/auth/google-config',{cache:'no-store',credentials:'same-origin'});
+     const cfg=await r.json().catch(()=>({}));
+     if(!r.ok||!cfg.enabled||!cfg.clientId){set(false,'GOOGLE NIEDOSTĘPNE');return}
+     const wait=()=>{
+       if(window.google?.accounts?.oauth2){
+         googleClient=google.accounts.oauth2.initTokenClient({
+           client_id:cfg.clientId,
+           scope:'openid email profile',
+           callback:async resp=>{
+             if(resp?.error||!resp?.access_token){set(true,'KONTYNUUJ Z GOOGLE');return}
+             try{
+               set(false,'LOGOWANIE…');
+               const lr=await fetch('/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({accessToken:resp.access_token})});
+               const data=await lr.json().catch(()=>({}));
+               if(!lr.ok)throw new Error(data.error||'Nie udało się zalogować przez Google.');
+               await boot();
+             }catch(e){$('#loginMsg').textContent=e.message||'Nie udało się zalogować przez Google.';set(true,'KONTYNUUJ Z GOOGLE')}
+           }
+         });
+         set(true,'KONTYNUUJ Z GOOGLE');
+       }else setTimeout(wait,120);
+     };
+     wait();
+   }catch{set(false,'GOOGLE NIEDOSTĘPNE')}
+ }
+ window.STARXV_ADMIN_INIT_GOOGLE=init;
+ btn?.addEventListener('click',()=>{if(googleClient){set(false,'OTWIERANIE GOOGLE…');googleClient.requestAccessToken({prompt:'select_account'});setTimeout(()=>{if(btn.disabled)set(true,'KONTYNUUJ Z GOOGLE')},12000)}});
+ init();
+})();
 $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'})}catch{}showLogin()};boot();
 </script>
 
@@ -289,41 +337,89 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 
 <script id="sx-admin-tabs-script">
 (()=>{
+  'use strict';
+
   const tabBar=document.getElementById('adminTabs');
-  if(tabBar){
-    tabBar.addEventListener('wheel',e=>{
-      if(tabBar.scrollWidth<=tabBar.clientWidth)return;
-      e.preventDefault();
-      tabBar.scrollLeft+=e.deltaY||e.deltaX;
-    },{passive:false});
-    let dragging=false,startX=0,startScroll=0;
-    tabBar.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='mouse'&&e.button!==0)return;
-      dragging=true;startX=e.clientX;startScroll=tabBar.scrollLeft;
-      tabBar.setPointerCapture?.(e.pointerId);
-    });
-    tabBar.addEventListener('pointermove',e=>{
-      if(!dragging)return;
-      const dx=e.clientX-startX;
-      if(Math.abs(dx)>3)tabBar.scrollLeft=startScroll-dx;
-    });
-    const stopDrag=()=>{dragging=false};
-    tabBar.addEventListener('pointerup',stopDrag);
-    tabBar.addEventListener('pointercancel',stopDrag);
-  }
-  const tabs=[...document.querySelectorAll('[data-admin-tab]')];
+  const tabs=[...document.querySelectorAll('#adminTabs [data-admin-tab]')];
   const panels=[...document.querySelectorAll('[data-admin-panel]')];
-  if(!tabs.length||!panels.length)return;
-  const valid=new Set(panels.map(x=>x.dataset.adminPanel));
+  if(!tabBar||!tabs.length||!panels.length)return;
+
+  const valid=new Set(panels.map(p=>p.dataset.adminPanel).filter(Boolean));
+
   function openTab(name,save=true){
     if(!valid.has(name))name='orders';
-    tabs.forEach(b=>b.classList.toggle('active',b.dataset.adminTab===name));
-    panels.forEach(p=>p.classList.toggle('active',p.dataset.adminPanel===name));
-    if(save)try{localStorage.setItem('starxv-admin-tab',name)}catch{}
-    window.scrollTo({top:0,behavior:'smooth'});
+
+    tabs.forEach(btn=>{
+      const on=btn.dataset.adminTab===name;
+      btn.classList.toggle('active',on);
+      btn.setAttribute('aria-selected',on?'true':'false');
+      btn.tabIndex=on?0:-1;
+    });
+
+    panels.forEach(panel=>{
+      const on=panel.dataset.adminPanel===name;
+      panel.classList.toggle('active',on);
+      panel.hidden=!on;
+    });
+
+    if(save){
+      try{localStorage.setItem('starxv-admin-tab',name)}catch{}
+      try{history.replaceState(null,'','#admin-'+name)}catch{}
+    }
+
+    requestAnimationFrame(()=>{
+      tabs.find(b=>b.dataset.adminTab===name)?.scrollIntoView?.({
+        behavior:'smooth',
+        block:'nearest',
+        inline:'nearest'
+      });
+    });
   }
-  tabs.forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.adminTab)));
-  let initial='orders';try{initial=localStorage.getItem('starxv-admin-tab')||'orders'}catch{}
+
+  // Capture phase makes navigation work even if another admin module
+  // accidentally stops bubbling on a click.
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest?.('#adminTabs [data-admin-tab]');
+    if(!btn)return;
+    e.preventDefault();
+    e.stopPropagation();
+    openTab(btn.dataset.adminTab,true);
+  },true);
+
+  tabBar.addEventListener('keydown',e=>{
+    const current=Math.max(0,tabs.indexOf(document.activeElement));
+    let next=current;
+    if(e.key==='ArrowRight')next=(current+1)%tabs.length;
+    else if(e.key==='ArrowLeft')next=(current-1+tabs.length)%tabs.length;
+    else if(e.key==='Home')next=0;
+    else if(e.key==='End')next=tabs.length-1;
+    else return;
+    e.preventDefault();
+    tabs[next].focus();
+    openTab(tabs[next].dataset.adminTab,true);
+  });
+
+  // Horizontal scroll only with mouse wheel; no pointer-drag handler,
+  // because it could interfere with normal button clicks.
+  tabBar.addEventListener('wheel',e=>{
+    if(tabBar.scrollWidth<=tabBar.clientWidth)return;
+    if(Math.abs(e.deltaY)>Math.abs(e.deltaX)){
+      e.preventDefault();
+      tabBar.scrollLeft+=e.deltaY;
+    }
+  },{passive:false});
+
+  window.STARXV_ADMIN_OPEN_TAB=openTab;
+
+  let initial='orders';
+  const hash=(location.hash||'').replace(/^#admin-/,'');
+  if(valid.has(hash)) initial=hash;
+  else{
+    try{
+      const saved=localStorage.getItem('starxv-admin-tab');
+      if(valid.has(saved))initial=saved;
+    }catch{}
+  }
   openTab(initial,false);
 })();
 </script>
