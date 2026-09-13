@@ -685,7 +685,60 @@
   const initInpostMap=()=>{if(inpostMapReady)return;if(!window.L){setTimeout(initInpostMap,150);return}const el=$('inpostCustomMap');if(!el)return;inpostMap=L.map(el,{zoomControl:true,attributionControl:true,minZoom:5,maxZoom:18}).setView([52.0693,19.4803],6);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(inpostMap);inpostLayer=L.layerGroup().addTo(inpostMap);inpostMapReady=true;inpostMap.on('moveend',()=>{clearTimeout(inpostMoveTimer);inpostMoveTimer=setTimeout(loadAroundMap,450)});fetchInpostPoints({relative_point:'52.0693,19.4803',max_distance:'50000',limit:'60'});setTimeout(()=>inpostMap.invalidateSize(),250)};
   const searchInpost=()=>{const q=String($('inpostPointSearch')?.value||'').trim();if(!q){loadAroundMap();return}if(/^[A-Za-z]{2,}[A-Za-z0-9_-]*\d[A-Za-z0-9_-]*$/i.test(q.replace(/\s/g,''))){fetchInpostPoints({name:q.replace(/\s/g,'').toUpperCase()},{fit:true});return}if(/^\d{2}-\d{3}$/.test(q)){fetchInpostPoints({post_code:q},{fit:true});return}fetchInpostPoints({city:q},{fit:true})};
   $('inpostPointSearchBtn')?.addEventListener('click',searchInpost);$('inpostPointSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchInpost()}});$('inpostFilter247')?.addEventListener('change',renderInpostPoints);$('inpostFilterEasy')?.addEventListener('change',renderInpostPoints);
-  $('inpostUseLocation')?.addEventListener('click',()=>{if(!navigator.geolocation){showStatus('error','Brak lokalizacji','Ta przeglądarka nie udostępnia lokalizacji.');return}const btn=$('inpostUseLocation');btn.disabled=true;btn.textContent='POBIERANIE…';navigator.geolocation.getCurrentPosition(pos=>{btn.disabled=false;btn.textContent='◎ MOJA LOKALIZACJA';const lat=pos.coords.latitude,lng=pos.coords.longitude;if(inpostMap)inpostMap.setView([lat,lng],13);fetchInpostPoints({relative_point:`${lat},${lng}`,max_distance:'25000',limit:'100'},{fit:true})},()=>{btn.disabled=false;btn.textContent='◎ MOJA LOKALIZACJA';showStatus('error','Nie udało się pobrać lokalizacji','Możesz wyszukać miejscowość lub kod pocztowy ręcznie.')},{enableHighAccuracy:false,timeout:8000,maximumAge:300000})});
+  async function requestInpostLocation(){
+    const btn=$('inpostUseLocation');
+    if(!btn)return;
+    if(!window.isSecureContext){
+      showStatus('error','Lokalizacja wymaga HTTPS','Otwórz sklep przez https://starxv.pl i spróbuj ponownie.');
+      return;
+    }
+    if(!navigator.geolocation){
+      showStatus('error','Brak obsługi lokalizacji','Ta przeglądarka nie udostępnia funkcji lokalizacji.');
+      return;
+    }
+    btn.disabled=true;
+    btn.textContent='PROSZĘ O ZGODĘ…';
+    try{
+      if(navigator.permissions?.query){
+        try{
+          const permission=await navigator.permissions.query({name:'geolocation'});
+          if(permission.state==='denied'){
+            btn.disabled=false;
+            btn.textContent='◎ MOJA LOKALIZACJA';
+            showStatus('error','Lokalizacja jest zablokowana','Włącz dostęp do lokalizacji dla starxv.pl w ustawieniach strony/przeglądarki i kliknij ponownie.');
+            return;
+          }
+        }catch(_e){}
+      }
+      navigator.geolocation.getCurrentPosition(
+        pos=>{
+          btn.disabled=false;
+          btn.textContent='◎ MOJA LOKALIZACJA';
+          const lat=pos.coords.latitude,lng=pos.coords.longitude;
+          showStatus('success','Lokalizacja pobrana','Pokazuję najbliższe punkty InPost.');
+          if(inpostMap)inpostMap.setView([lat,lng],13);
+          fetchInpostPoints({relative_point:`${lat},${lng}`,max_distance:'25000',limit:'100'},{fit:true});
+        },
+        err=>{
+          btn.disabled=false;
+          btn.textContent='◎ MOJA LOKALIZACJA';
+          if(err?.code===1){
+            showStatus('error','Brak zgody na lokalizację','Zezwól starxv.pl na dostęp do lokalizacji w ustawieniach przeglądarki i kliknij ponownie.');
+          }else if(err?.code===2){
+            showStatus('error','Nie można ustalić lokalizacji','Sprawdź, czy lokalizacja/GPS jest włączona na urządzeniu.');
+          }else{
+            showStatus('error','Lokalizacja nie odpowiada','Spróbuj ponownie albo wyszukaj miejscowość lub kod pocztowy ręcznie.');
+          }
+        },
+        {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+      );
+    }catch(_e){
+      btn.disabled=false;
+      btn.textContent='◎ MOJA LOKALIZACJA';
+      showStatus('error','Nie udało się uruchomić lokalizacji','Spróbuj ponownie lub sprawdź uprawnienia strony w przeglądarce.');
+    }
+  }
+  $('inpostUseLocation')?.addEventListener('click',requestInpostLocation);
   $('changeInpostPoint')?.addEventListener('click',()=>{$('inpostCustomMap')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>inpostMap?.invalidateSize(),350)});
   async function loadShippingConfig(){try{const r=await fetch('/api/shipping/config',{credentials:'include'}),d=await r.json();if(r.ok)shippingConfig={...shippingConfig,...d}}catch(e){}renderSummary();if(stage===3)initInpostMap()}
   const setDeliveryMethod=method=>{deliveryMethod=method;document.querySelectorAll('.delivery-choice').forEach(x=>x.classList.toggle('selected',x.dataset.delivery===method));$('inpostDeliveryPanel')?.classList.toggle('active',method==='inpost');$('addressDeliveryPanel')?.classList.toggle('active',method==='address');if(method==='address')renderDeliveryAddress();if(method==='inpost'&&stage===3)setTimeout(()=>{if(!inpostMapReady)initInpostMap();else{inpostMap?.invalidateSize(true);loadAroundMap()}},100);renderSummary()};
