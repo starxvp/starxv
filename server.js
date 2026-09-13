@@ -1382,12 +1382,17 @@ app.post('/api/admin/products',adminOnly,(req,res)=>{
     const category=['hoodies','tshirts','other'].includes(String(req.body?.category||''))?String(req.body.category):'other';
     const image=String(req.body?.image||'').trim().slice(0,200000);
     const composition=String(req.body?.composition||'').trim().slice(0,500);
+    const gpsrManufacturer=String(req.body?.gpsrManufacturer||'').trim().slice(0,200);
+    const gpsrManufacturerAddress=String(req.body?.gpsrManufacturerAddress||'').trim().slice(0,300);
+    const gpsrManufacturerEmail=String(req.body?.gpsrManufacturerEmail||'').trim().slice(0,320);
+    const gpsrProductId=String(req.body?.gpsrProductId||id).trim().slice(0,120);
+    const gpsrSafety=String(req.body?.gpsrSafety||'').trim().slice(0,1500);
     const discountPercent=Math.min(99,Math.max(0,Number(req.body?.discountPercent)||0));
     const price=Number(req.body?.price);
     if(!name)return res.status(400).json({error:'Podaj nazwę produktu.'});
     if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});
     const now=Date.now();
-    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,discountPercent,colors:{},offeredAt:now,priceHistory:[],promotionStartedAt:null,omnibusReferencePrice:null,omnibusReferenceType:null};
+    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,gpsrManufacturer,gpsrManufacturerAddress,gpsrManufacturerEmail,gpsrProductId,gpsrSafety,discountPercent,colors:{},offeredAt:now,priceHistory:[],promotionStartedAt:null,omnibusReferencePrice:null,omnibusReferenceType:null};
     ensureProductPriceTracking(req.db.catalog[id],now);
     // A brand-new product has no price before its first announced reduction. Until a genuine prior price exists,
     // the storefront will show the current selling price without a promotional claim.
@@ -1405,6 +1410,11 @@ app.put('/api/admin/products/:id',adminOnly,(req,res)=>{
     if(Object.prototype.hasOwnProperty.call(req.body||{},'category')){const category=String(req.body.category||'');if(!['hoodies','tshirts','other'].includes(category))return res.status(400).json({error:'Nieprawidłowa kategoria.'});p.category=category}
     if(Object.prototype.hasOwnProperty.call(req.body||{},'image'))p.image=String(req.body.image||'').trim().slice(0,200000);
     if(Object.prototype.hasOwnProperty.call(req.body||{},'composition'))p.composition=String(req.body.composition||'').trim().slice(0,500);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrManufacturer'))p.gpsrManufacturer=String(req.body.gpsrManufacturer||'').trim().slice(0,200);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrManufacturerAddress'))p.gpsrManufacturerAddress=String(req.body.gpsrManufacturerAddress||'').trim().slice(0,300);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrManufacturerEmail'))p.gpsrManufacturerEmail=String(req.body.gpsrManufacturerEmail||'').trim().slice(0,320);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrProductId'))p.gpsrProductId=String(req.body.gpsrProductId||id).trim().slice(0,120);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrSafety'))p.gpsrSafety=String(req.body.gpsrSafety||'').trim().slice(0,1500);
     if(Object.prototype.hasOwnProperty.call(req.body||{},'discountPercent'))p.discountPercent=Math.min(99,Math.max(0,Number(req.body.discountPercent)||0));
     if(Object.prototype.hasOwnProperty.call(req.body||{},'price')){const price=Number(req.body.price);if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});p.price=Math.round(price*100)/100}
     const afterPrice=effectiveCatalogPrice(p),afterDiscount=Number(p.discountPercent||0),afterBase=Number(p.price||0);

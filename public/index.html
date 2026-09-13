@@ -404,6 +404,16 @@
 }
 </style>
 
+<style id="starxv-gpsr-style">
+.sx-gpsr-box{margin-top:18px;border:1px solid rgba(255,255,255,.10);background:#0b0b0b}
+.sx-gpsr-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border:0;background:transparent;color:#fff;cursor:pointer;font:900 9px/1.2 Arial,sans-serif;letter-spacing:.14em;text-align:left}
+.sx-gpsr-plus{font-size:17px;font-weight:400;transition:.18s}.sx-gpsr-box.open .sx-gpsr-plus{transform:rotate(45deg)}
+.sx-gpsr-content{display:none;padding:0 16px 16px}.sx-gpsr-box.open .sx-gpsr-content{display:grid;gap:12px}
+.sx-gpsr-row{display:grid;gap:4px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)}
+.sx-gpsr-row span{font-size:8px;font-weight:900;letter-spacing:.13em;color:#666}
+.sx-gpsr-row b,.sx-gpsr-row p{margin:0;color:#cfcfcf;font-size:10px;line-height:1.55;font-weight:650;overflow-wrap:anywhere}
+.sx-gpsr-row a{color:inherit}.sx-gpsr-incomplete{color:#777!important;font-style:italic}
+</style>
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -2870,5 +2880,31 @@ window.STARXV_CART_PRICE_HTML=function(item){
 })();
 </script>
 
+<script id="starxv-gpsr-product-info">
+(function(){
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function html(p,id){
+  const a=String(p?.gpsrManufacturer||'').trim(),b=String(p?.gpsrManufacturerAddress||'').trim(),e=String(p?.gpsrManufacturerEmail||'').trim(),pid=String(p?.gpsrProductId||id||'').trim(),s=String(p?.gpsrSafety||'').trim();
+  return `<div class="sx-gpsr-box"><button class="sx-gpsr-toggle" type="button" aria-expanded="false"><span>PRODUCENT I BEZPIECZEŃSTWO PRODUKTU</span><span class="sx-gpsr-plus">+</span></button><div class="sx-gpsr-content">
+  <div class="sx-gpsr-row"><span>PRODUCENT</span><b class="${a?'':'sx-gpsr-incomplete'}">${a?esc(a):'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</b></div>
+  <div class="sx-gpsr-row"><span>ADRES POCZTOWY PRODUCENTA</span><b class="${b?'':'sx-gpsr-incomplete'}">${b?esc(b):'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</b></div>
+  <div class="sx-gpsr-row"><span>KONTAKT ELEKTRONICZNY</span><b class="${e?'':'sx-gpsr-incomplete'}">${e?`<a href="mailto:${esc(e)}">${esc(e)}</a>`:'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</b></div>
+  <div class="sx-gpsr-row"><span>IDENTYFIKATOR PRODUKTU</span><b>${esc(pid||id||'—')}</b></div>
+  <div class="sx-gpsr-row"><span>INFORMACJE / OSTRZEŻENIA BEZPIECZEŃSTWA</span><p class="${s?'':'sx-gpsr-incomplete'}">${s?esc(s):'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</p></div>
+  </div></div>`;
+ }
+ function place(modal,p,id){
+  if(!modal||!p)return;const copy=modal.querySelector('.product-copy,.sx-dyn-copy,.product-info,.product-content')||modal;
+  let old=copy.querySelector('.sx-gpsr-box'),wrap=document.createElement('div');wrap.innerHTML=html(p,id);let box=wrap.firstElementChild;
+  if(old){if(old.classList.contains('open'))box.classList.add('open');old.replaceWith(box)}else{const actions=copy.querySelector('.sx-dyn-actions,.add-btn,.product-actions');actions?copy.insertBefore(box,actions):copy.appendChild(box)}
+  const btn=box.querySelector('.sx-gpsr-toggle');btn.onclick=()=>{const on=box.classList.toggle('open');btn.setAttribute('aria-expanded',on?'true':'false')};
+ }
+ function refresh(){const c=window.STARXV_CATALOG||{};place(document.getElementById('productModal'),c['black-hoodie-graffiti'],'black-hoodie-graffiti');place(document.getElementById('shirtModal'),c['oversized-white-shirt'],'oversized-white-shirt');const d=document.getElementById('sxDynModal'),id=d?.dataset?.productId;if(d&&id&&c[id])place(d,c[id],id)}
+ window.STARXV_REFRESH_GPSR=refresh;
+ document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,500));
+ document.addEventListener('click',e=>{if(e.target.closest?.('.product-card,[data-product-id]'))setTimeout(refresh,120)});
+ setInterval(refresh,2000);
+})();
+</script>
 </body>
 </html>
