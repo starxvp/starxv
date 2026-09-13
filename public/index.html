@@ -105,10 +105,10 @@
 /* Keep product variant info visually attached to the product title/fit. */
 .cart-item-main{display:flex!important;flex-direction:column!important;justify-content:flex-start!important}
 .cart-item-head{margin-bottom:0!important}
-.cart-item-titleblock{display:flex!important;flex-direction:column!important;gap:2px!important}
-.cart-item-fit{margin-bottom:0!important}
-.cart-item-meta{
-  margin-top:5px!important;
+.cart-item-titleblock{display:flex!important;flex-direction:column!important;gap:0!important}
+.cart-item-fit{margin-top:4px!important;margin-bottom:0!important}
+.cart-item-titleblock .cart-item-meta{
+  margin-top:6px!important;
   margin-bottom:0!important;
   padding-top:0!important;
   align-self:flex-start!important;
@@ -652,8 +652,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       <input class="cart-check" type="checkbox" ${x.selected?'checked':''} aria-label="Zaznacz ${x.name}, rozmiar ${x.size}">
       <div class="cart-thumb"><img src="${imgFor(x)}" alt="${x.name}"></div>
       <div class="cart-item-main">
-        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div></div><div class="cart-item-side"><strong class="cart-item-price"><span class="sx-cart-current">${money(x.price*x.qty)}</span>${Number(x.discountPercent||0)>0?`<span class="sx-cart-old">${money(Number(x.basePrice||x.price)*x.qty)}</span><span class="sx-cart-discount">-${Number(x.discountPercent)}%</span><span class="sx-cart-save">OSZCZĘDZASZ ${money((Number(x.basePrice||x.price)-Number(x.price))*x.qty)}</span>`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
-        <div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div>
+        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div><div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div></div><div class="cart-item-side"><strong class="cart-item-price"><span class="sx-cart-current">${money(x.price*x.qty)}</span>${Number(x.discountPercent||0)>0?`<span class="sx-cart-old">${money(Number(x.basePrice||x.price)*x.qty)}</span><span class="sx-cart-discount">-${Number(x.discountPercent)}%</span><span class="sx-cart-save">OSZCZĘDZASZ ${money((Number(x.basePrice||x.price)-Number(x.price))*x.qty)}</span>`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
         <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div></div>
       </div></div>`).join('');
     const sxSelectAll=cartItems.querySelector('.sx-select-all-check');
