@@ -1589,3 +1589,76 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
 .sx-inpost-filters{height:42px;padding:0 14px;display:flex;align-items:center;gap:17px;background:#0b0b0b;border-bottom:1px solid rgba(255,255,255,.07);font-size:9px;color:#aaa;letter-spacing:.04em}.sx-inpost-filters label{display:flex;align-items:center;gap:7px;cursor:pointer}.sx-inpost-filters input{accent-color:#fff}.sx-inpost-filters span:last-child{margin-left:auto;color:#666}
 .sx-inpost-map-layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.75fr);height:500px;min-height:0}.sx-inpost-map{height:100%;min-height:430px;position:relative;background:#111}.sx-inpost-map .leaflet-control-attribution{font-size:8px}.sx-inpost-map .leaflet-popup-content-wrapper,.sx-inpost-map .leaflet-popup-tip{background:#0e0e0e;color:#fff}.sx-inpost-map .leaflet-popup-content{margin:13px 14px;min-width:190px}.sx-inpost-popup b{font-size:13px}.sx-inpost-popup small{display:block;color:#9a9a9a;margin:7px 0;line-height:1.4}.sx-inpost-popup button{width:100%;margin-top:10px;border:0;border-radius:9px;background:#fff;color:#050505;padding:10px 8px;font-size:8px;font-weight:900;letter-spacing:.08em;cursor:pointer}
 .sx-inpost-results{height:100%;overflow:auto;background:#0b0b0b;border-left:1px solid rgba(255,255,255,.08);padding:10px}.sx-inpost-result-card{width:100%;text-align:left;background:#111;border:1px solid rgba(255,255,255,.08);border-radius:13px;color:#fff;padding:13px;margin:0 0 8px;cursor:pointer;transition:.18s ease}.sx-inpost-result-card:hover{border-color:rgba(255,255,255,.24);transform:translateY(-1px)}.sx-inpost-result-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.sx-inpost-result-top strong{font-size:12px;letter-spacing:.04em}.sx-inpost-result-top em{font-style:normal;font-size:8px;color:#777}.sx-inpost-result-address{font-size:10px;color:#d3d3d3;margin-top:5px;line-height:1.45}.sx-inpost-result-desc{font-size:8px;color:#747474;margin-top:4px;line-height:1.35}.sx-inpost-result-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.sx-inpost-result-badges span{font-size:7px;border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 6px;color:#999}.sx-inpost-result-choose{display:block;font-size:8px;font-weight:900;letter-spacing:.09em;margin-top:10px}.sx-inpost-empty{padding:22px 14px;color:#777;font-size:10px;line-height:1.6;text-align:center}.sx-inpost-map-foot{padding:9px 14px;background:#090909;border-top:1px solid rgba(255,255,255,.07);font-size:8px;color:#5e5e5e;text-align:right}.sx-inpost-map .inpost-map-loading{position:absolute;inset:0;z-index:1000;background:rgba(5,5,5,.72);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;gap:9px;color:#fff;font-size:10px}.sx-inpost-map .inpost-map-spinner{width:17px;height:17px;border:2px solid rgba(255,255,255,.18);border-top-color:#fff;border-radius:50%;animation:sxInpostSpin .8s linear infinite}@keyframes sxInpostSpin{to{transform:rotate(360deg)}}
+
+/* STARXV InPost selector stability fix — keep search/location controls visible */
+#inpostGeoWidgetHost.sx-inpost-map-shell{
+  display:grid!important;
+  grid-template-rows:auto auto minmax(0,1fr) auto;
+  min-height:590px;
+  overflow:hidden;
+}
+#inpostGeoWidgetHost .sx-inpost-toolbar{
+  position:sticky;
+  top:0;
+  z-index:1600;
+  flex:0 0 auto;
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  min-height:76px;
+  box-sizing:border-box;
+}
+#inpostGeoWidgetHost .sx-inpost-search-wrap,
+#inpostGeoWidgetHost #inpostPointSearch,
+#inpostGeoWidgetHost #inpostPointSearchBtn,
+#inpostGeoWidgetHost #inpostUseLocation{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+#inpostGeoWidgetHost #inpostPointSearch{
+  width:100%;
+}
+#inpostGeoWidgetHost .sx-inpost-filters{
+  position:relative;
+  z-index:1500;
+  flex:0 0 auto;
+}
+#inpostGeoWidgetHost .sx-inpost-map-layout{
+  min-height:0;
+  overflow:hidden;
+}
+#inpostGeoWidgetHost .sx-inpost-map,
+#inpostGeoWidgetHost .sx-inpost-results{
+  min-width:0;
+}
+
+@media (max-width:900px){
+  #inpostGeoWidgetHost.sx-inpost-map-shell{
+    display:flex!important;
+    flex-direction:column;
+    min-height:0;
+    overflow:visible;
+  }
+  #inpostGeoWidgetHost .sx-inpost-toolbar{
+    position:sticky;
+    top:0;
+    z-index:2000;
+    min-height:0;
+    flex-direction:column;
+    background:#0c0c0c;
+  }
+  #inpostGeoWidgetHost .sx-inpost-search-wrap{
+    flex:0 0 46px;
+    width:100%;
+  }
+  #inpostGeoWidgetHost #inpostUseLocation{
+    flex:0 0 42px;
+    width:100%;
+    align-items:center;
+    justify-content:center;
+  }
+  #inpostGeoWidgetHost .sx-inpost-map-layout{
+    overflow:visible;
+  }
+}
