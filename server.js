@@ -821,11 +821,51 @@ function ensureStore(db){
   if(!Array.isArray(db.marketingCampaigns))db.marketingCampaigns=[];
   return db;
 }
-function publicCatalog(db){ensureStore(db);return db.catalog}
+const STARXV_PRICE_WINDOW_MS=30*24*60*60*1000;
+function money2(v){return Math.round((Number(v)||0)*100)/100}
+function effectiveCatalogPrice(p){
+  const base=Math.max(0,Number(p?.price||0));
+  const discount=Math.min(99,Math.max(0,Number(p?.discountPercent||0)));
+  return money2(discount>0?base*(1-discount/100):base);
+}
+function ensureProductPriceTracking(p,now=Date.now()){
+  if(!p||typeof p!=='object')return p;
+  if(!Number.isFinite(Number(p.offeredAt))||Number(p.offeredAt)<=0)p.offeredAt=now;
+  if(!Array.isArray(p.priceHistory))p.priceHistory=[];
+  p.priceHistory=p.priceHistory.map(x=>({at:Number(x?.at||0),price:money2(x?.price)})).filter(x=>x.at>0&&Number.isFinite(x.price)&&x.price>=0).sort((a,b)=>a.at-b.at);
+  if(!p.priceHistory.length)p.priceHistory.push({at:Number(p.offeredAt),price:effectiveCatalogPrice(p)});
+  return p;
+}
+function recordProductPrice(p,price,at=Date.now()){
+  ensureProductPriceTracking(p,at);
+  const v=money2(price),last=p.priceHistory[p.priceHistory.length-1];
+  if(last&&money2(last.price)===v){last.at=Math.max(Number(last.at||0),Number(at||Date.now()));return}
+  p.priceHistory.push({at:Number(at||Date.now()),price:v});
+  if(p.priceHistory.length>500)p.priceHistory=p.priceHistory.slice(-500);
+}
+function setOmnibusReferenceForPromotion(p,now=Date.now()){
+  ensureProductPriceTracking(p,now);
+  const offeredAt=Number(p.offeredAt||now);
+  const from=Math.max(offeredAt,now-STARXV_PRICE_WINDOW_MS);
+  const previous=p.priceHistory.filter(x=>Number(x.at)>=from&&Number(x.at)<now).map(x=>Number(x.price)).filter(Number.isFinite);
+  p.promotionStartedAt=now;
+  p.omnibusReferencePrice=previous.length?money2(Math.min(...previous)):null;
+  p.omnibusReferenceType=(now-offeredAt)<STARXV_PRICE_WINDOW_MS?'since-offer':'30-days';
+}
+function clearOmnibusPromotion(p){p.promotionStartedAt=null;p.omnibusReferencePrice=null;p.omnibusReferenceType=null}
+function publicProduct(p){
+  ensureProductPriceTracking(p);
+  const {priceHistory,...rest}=p;
+  const current=effectiveCatalogPrice(p),ref=Number(p.omnibusReferencePrice);
+  const active=Number(p.discountPercent||0)>0&&Number.isFinite(ref)&&ref>current;
+  const percent=active?Math.max(1,Math.round((1-current/ref)*100)):0;
+  return {...rest,effectivePrice:current,omnibus:{active,referencePrice:active?money2(ref):null,referenceType:active?(p.omnibusReferenceType||'30-days'):null,discountPercent:percent,trackingStartedAt:Number(p.offeredAt||0),promotionStartedAt:Number(p.promotionStartedAt||0)||null}};
+}
+function publicCatalog(db){ensureStore(db);const out={};for(const [id,p] of Object.entries(db.catalog||{}))out[id]=publicProduct(p);return out}
 function safeOrderAddress(a){return {id:String(a?.id||'').slice(0,120),firstName:String(a?.firstName||'').trim().slice(0,80),lastName:String(a?.lastName||'').trim().slice(0,80),email:cleanEmail(a?.email).slice(0,160),phone:String(a?.phone||'').trim().slice(0,40),street:String(a?.street||'').trim().slice(0,160),postal:String(a?.postal||'').trim().slice(0,20),city:String(a?.city||'').trim().slice(0,100)} }
 function normalizeOrderItems(db,items){
   ensureStore(db);if(!Array.isArray(items)||!items.length)throw new Error('Koszyk jest pusty.');if(items.length>30)throw new Error('Za dużo pozycji w koszyku.');
-  return items.map(raw=>{const id=String(raw?.id||''),color=String(raw?.color||''),size=String(raw?.size||'').toUpperCase(),qty=Math.max(1,Math.min(20,Number(raw?.qty||1)|0));const product=db.catalog[id],variant=product?.colors?.[color],stock=Number(variant?.sizes?.[size]);if(!product||!variant||!Number.isFinite(stock))throw new Error('Nieprawidłowy wariant produktu.');if(qty>stock)throw new Error(`Brak wystarczającego stanu: ${product.name} ${variant.label} / ${size}. Dostępne: ${stock} szt.`);return {id,name:product.name,fit:product.fit,color,colorLabel:variant.label,size,qty,price:Number(product.price),stockLimit:stock,image:String(raw?.image||'').slice(0,5_500_000)}})
+  return items.map(raw=>{const id=String(raw?.id||''),color=String(raw?.color||''),size=String(raw?.size||'').toUpperCase(),qty=Math.max(1,Math.min(20,Number(raw?.qty||1)|0));const product=db.catalog[id],variant=product?.colors?.[color],stock=Number(variant?.sizes?.[size]);if(!product||!variant||!Number.isFinite(stock))throw new Error('Nieprawidłowy wariant produktu.');if(qty>stock)throw new Error(`Brak wystarczającego stanu: ${product.name} ${variant.label} / ${size}. Dostępne: ${stock} szt.`);const pub=publicProduct(product);return {id,name:product.name,fit:product.fit,color,colorLabel:variant.label,size,qty,price:Number(pub.effectivePrice),basePrice:Number(product.price),discountPercent:Number(pub.omnibus?.discountPercent||0),omnibusReferencePrice:Number(pub.omnibus?.referencePrice||0)||null,stockLimit:stock,image:String(raw?.image||'').slice(0,5_500_000)}})
 }
 function orderEvent(order,key,title,note='',at=Date.now()){
   if(!Array.isArray(order.timeline))order.timeline=[];
@@ -1346,14 +1386,20 @@ app.post('/api/admin/products',adminOnly,(req,res)=>{
     const price=Number(req.body?.price);
     if(!name)return res.status(400).json({error:'Podaj nazwę produktu.'});
     if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});
-    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,discountPercent,colors:{}};
+    const now=Date.now();
+    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,discountPercent,colors:{},offeredAt:now,priceHistory:[],promotionStartedAt:null,omnibusReferencePrice:null,omnibusReferenceType:null};
+    ensureProductPriceTracking(req.db.catalog[id],now);
+    // A brand-new product has no price before its first announced reduction. Until a genuine prior price exists,
+    // the storefront will show the current selling price without a promotional claim.
     save(req.db);res.status(201).json({ok:true,id,product:req.db.catalog[id]});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu.'})}
 });
 app.put('/api/admin/products/:id',adminOnly,(req,res)=>{
   try{
-    ensureStore(req.db);const id=String(req.params.id||'');const p=req.db.catalog[id];
+    ensureStore(req.db);const id=String(req.params.id||''),p=req.db.catalog[id];
     if(!p)return res.status(404).json({error:'Nie znaleziono produktu.'});
+    const now=Date.now();ensureProductPriceTracking(p,now);
+    const beforePrice=effectiveCatalogPrice(p),beforeDiscount=Number(p.discountPercent||0),beforeBase=Number(p.price||0);
     if(Object.prototype.hasOwnProperty.call(req.body||{},'name')){const name=String(req.body.name||'').trim().slice(0,160);if(!name)return res.status(400).json({error:'Nazwa nie może być pusta.'});p.name=name}
     if(Object.prototype.hasOwnProperty.call(req.body||{},'fit'))p.fit=String(req.body.fit||'').trim().slice(0,80);
     if(Object.prototype.hasOwnProperty.call(req.body||{},'category')){const category=String(req.body.category||'');if(!['hoodies','tshirts','other'].includes(category))return res.status(400).json({error:'Nieprawidłowa kategoria.'});p.category=category}
@@ -1361,7 +1407,14 @@ app.put('/api/admin/products/:id',adminOnly,(req,res)=>{
     if(Object.prototype.hasOwnProperty.call(req.body||{},'composition'))p.composition=String(req.body.composition||'').trim().slice(0,500);
     if(Object.prototype.hasOwnProperty.call(req.body||{},'discountPercent'))p.discountPercent=Math.min(99,Math.max(0,Number(req.body.discountPercent)||0));
     if(Object.prototype.hasOwnProperty.call(req.body||{},'price')){const price=Number(req.body.price);if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});p.price=Math.round(price*100)/100}
-    save(req.db);res.json({ok:true,product:p});
+    const afterPrice=effectiveCatalogPrice(p),afterDiscount=Number(p.discountPercent||0),afterBase=Number(p.price||0);
+    const pricingChanged=beforePrice!==afterPrice||beforeDiscount!==afterDiscount||beforeBase!==afterBase;
+    if(pricingChanged){
+      recordProductPrice(p,beforePrice,now-1);
+      if(afterDiscount>0)setOmnibusReferenceForPromotion(p,now);else clearOmnibusPromotion(p);
+      recordProductPrice(p,afterPrice,now);
+    }
+    save(req.db);res.json({ok:true,product:p,publicProduct:publicProduct(p)});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu.'})}
 });
 app.delete('/api/admin/products/:id',adminOnly,(req,res)=>{
