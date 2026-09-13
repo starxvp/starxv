@@ -1591,15 +1591,18 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 /* STARXV — full-screen cart page */
 .cart-modal{background:#050505!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:hidden}
 .cart-modal.open{background:#050505!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
-.cart-panel{margin:0!important;width:100%!important;max-width:none!important;height:100%!important;border-left:0!important;box-shadow:none!important;background:#050505!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(340px,420px);grid-template-rows:92px minmax(0,1fr);transform:translateY(18px)!important;opacity:0!important;overflow:hidden}
+.cart-panel{margin:0!important;width:100%!important;max-width:none!important;height:100%!important;border-left:0!important;box-shadow:none!important;background:#050505!important;display:grid!important;grid-template-columns:minmax(0,1fr) clamp(430px,34vw,560px);grid-template-rows:92px minmax(0,1fr);transform:translateY(18px)!important;opacity:0!important;overflow:hidden}
 .cart-modal.open .cart-panel{transform:translateY(0)!important;opacity:1!important}
 .cart-header{grid-column:1/-1;height:92px;padding:0 5vw;border-bottom:1px solid var(--line);background:rgba(5,5,5,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
 .cart-title{font-size:24px}.cart-subtitle{font-size:8px;color:#5f5f5f;letter-spacing:.2em}
 .cart-close{width:42px;height:42px;font-size:24px;transition:.2s}.cart-close:hover{background:#fff;color:#000}
-.cart-body{grid-column:1;grid-row:2;overflow:auto;padding:38px clamp(28px,5vw,72px) 54px;scrollbar-width:thin}
-.cart-footer{grid-column:2;grid-row:2;overflow:auto;padding:34px 34px 40px;border-top:0!important;border-left:1px solid var(--line);background:#080808!important}
-.cart-item{max-width:840px;grid-template-columns:28px 112px minmax(0,1fr);gap:18px;padding:18px 0}
+.cart-body{grid-column:1;grid-row:2;overflow:auto;padding:30px 0 54px clamp(28px,4vw,64px);scrollbar-width:thin}
+.cart-footer{grid-column:2;grid-row:2;overflow:auto;padding:42px clamp(34px,3.2vw,52px) 44px;border-top:0!important;border-left:1px solid rgba(255,255,255,.11);background:linear-gradient(180deg,#0a0a0a 0%,#070707 100%)!important;display:flex!important;flex-direction:column;justify-content:flex-start}
+.cart-item{max-width:none;width:100%;grid-template-columns:28px 112px minmax(0,1fr);gap:20px;padding:20px clamp(28px,4vw,64px) 20px 0;border-bottom-color:rgba(255,255,255,.11)!important}
 .cart-thumb{border-radius:12px}.cart-check{width:19px;height:19px}
+.sx-cart-select-all{margin-right:clamp(28px,4vw,64px);padding:0 0 20px!important;border-bottom:1px solid rgba(255,255,255,.16)!important}
+.sx-cart-summary-pro{width:100%;padding:4px 0 20px!important;border-bottom:1px solid rgba(255,255,255,.08)}
+.sx-promo{width:100%}.checkout-btn{width:100%}
 .sx-cart-summary-pro{margin:0 0 18px!important}
 .sx-cart-summary-line{min-height:32px!important}
 .sx-cart-summary-line>span,.sx-cart-summary-line strong{font-size:13px!important;letter-spacing:0!important}
@@ -2108,7 +2111,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     const newCount=cart.reduce((sum,x)=>sum+x.qty,0);if(cartCount.textContent!==String(newCount)){cartCount.textContent=newCount;openCartBtn.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:360,easing:'ease-out'});}else cartCount.textContent=newCount;
     if(!cart.length){
       cartItems.innerHTML='<div class="cart-empty"><div><strong>Koszyk jest pusty.</strong><span>Wybierz rozmiar oraz kolor produktu i dodaj produkt do koszyka.</span></div></div>';
-      cartTotal.textContent='0 PLN';syncPromoUI(0);checkoutBtn.disabled=true;checkoutHint.textContent='Zaznacz co najmniej jeden produkt, aby przejść dalej.';save();return;
+      cartTotal.textContent='0 PLN';syncPromoUI(0);checkoutBtn.disabled=true;save();return;
     }
     const imgFor=x=>x.image||((COLOR_IMAGES[x.color||'black']||COLOR_IMAGES.black).front);
     const allQty=cart.reduce((sum,x)=>sum+x.qty,0);
