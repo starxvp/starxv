@@ -163,3 +163,55 @@
 /* ===== starxv-report-problem-style ===== */
 @media(max-width:700px){.sx-report-box{padding:23px}.sx-report-title{font-size:20px}}
 
+
+/* ===== STARXV mobile navigation polish v2 ===== */
+@media (max-width: 700px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden!important;}
+  nav{
+    height:72px!important;
+    padding:0 max(12px,env(safe-area-inset-left))!important;
+    padding-right:max(12px,env(safe-area-inset-right))!important;
+    gap:10px!important;
+    background:rgba(5,5,5,.94)!important;
+    backdrop-filter:blur(18px)!important;
+    -webkit-backdrop-filter:blur(18px)!important;
+  }
+  .sx-nav-brand{gap:0!important;min-width:0!important;flex:0 0 auto!important;}
+  .sx-nav-brand a{display:flex!important;align-items:center!important;min-width:0!important;}
+  .nav-logo{width:88px!important;max-width:88px!important;height:auto!important;}
+  .sx-test-version{display:none!important;}
+  .nav-links{display:none!important;}
+  .nav-actions{
+    margin-left:auto!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:flex-end!important;
+    gap:6px!important;
+    min-width:0!important;
+    flex:0 1 auto!important;
+  }
+  #sxSearchBtn,#openAccount,#sxFavNav,#openCart,
+  .sx-nav-icon,.account-nav-button,.cart-nav-button{
+    width:42px!important;height:42px!important;
+    min-width:42px!important;max-width:42px!important;
+    flex:0 0 42px!important;
+    border-radius:13px!important;
+  }
+  #sxSearchBtn svg,#openAccount svg,#sxFavNav svg,#openCart svg,
+  .sx-nav-icon svg,.account-icon,.cart-icon{
+    width:21px!important;height:21px!important;
+  }
+  .account-badge{transform:scale(.88);transform-origin:top right;}
+  .cart-count,.sx-badge{transform:scale(.88);transform-origin:top right;}
+  .hero{padding-top:108px!important;}
+}
+
+@media (max-width: 390px){
+  nav{padding-left:10px!important;padding-right:10px!important;gap:7px!important;}
+  .nav-logo{width:78px!important;max-width:78px!important;}
+  .nav-actions{gap:5px!important;}
+  #sxSearchBtn,#openAccount,#sxFavNav,#openCart,
+  .sx-nav-icon,.account-nav-button,.cart-nav-button{
+    width:39px!important;height:39px!important;min-width:39px!important;max-width:39px!important;flex-basis:39px!important;
+  }
+}
