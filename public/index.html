@@ -314,6 +314,62 @@
 }
 </style>
 
+
+<style id="starxv-cart-promo-fix">
+.sx-cart-price-wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  gap:3px;
+  min-width:150px;
+}
+.sx-cart-current-price{
+  font-size:16px;
+  font-weight:950;
+  color:#fff;
+}
+.sx-cart-promo-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:max-content;
+  padding:5px 8px;
+  border-radius:999px;
+  background:#fff;
+  color:#000;
+  font-size:8px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.sx-cart-old-price{
+  font-size:10px;
+  color:#686868;
+  text-decoration:line-through;
+  font-weight:700;
+}
+.sx-cart-save{
+  font-size:8px;
+  color:#a8a8a8;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.sx-cart-omnibus{
+  max-width:210px;
+  font-size:7px;
+  line-height:1.35;
+  color:#5f5f5f;
+  text-align:right;
+}
+@media(max-width:700px){
+  .sx-cart-price-wrap{min-width:120px}
+  .sx-cart-current-price{font-size:14px}
+  .sx-cart-omnibus{max-width:145px}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -2712,6 +2768,71 @@ document.addEventListener('DOMContentLoaded',()=>{
   }else{
     bindCheckoutLegal();
   }
+})();
+</script>
+
+
+<script id="starxv-cart-promo-helper">
+window.STARXV_CART_PRICE_HTML=function(item){
+  const base=Number(item?.basePrice ?? item?.originalPrice ?? item?.price ?? 0);
+  const current=Number(item?.effectivePrice ?? item?.unitPrice ?? item?.price ?? base);
+  const discount=Number(item?.discountPercent ?? item?.discount ?? 0);
+  const omnibus=item?.omnibus||{};
+  const ref=Number(omnibus.referencePrice ?? item?.omnibusReferencePrice ?? 0);
+  const active=discount>0 && current<base;
+  const fmt=n=>Number(n).toFixed(Number(n)%1?2:0);
+  if(!active) return `<div class="sx-cart-price-wrap"><span class="sx-cart-current-price">${fmt(current)} PLN</span></div>`;
+  const label=(omnibus.referenceType||item?.omnibusReferenceType)==='since-offer'
+    ? 'Najniższa cena od wprowadzenia produktu'
+    : 'Najniższa cena z 30 dni przed obniżką';
+  return `<div class="sx-cart-price-wrap">
+    <span class="sx-cart-promo-badge">PROMOCJA −${discount}%</span>
+    <span class="sx-cart-current-price">${fmt(current)} PLN</span>
+    <span class="sx-cart-old-price">było ${fmt(base)} PLN</span>
+    <span class="sx-cart-save">OSZCZĘDZASZ ${fmt(base-current)} PLN</span>
+    ${ref>0?`<span class="sx-cart-omnibus">${label}: ${fmt(ref)} PLN</span>`:''}
+  </div>`;
+};
+</script>
+
+
+<script id="starxv-cart-promo-enhancer">
+(function(){
+  function fmt(n){n=Number(n||0);return n.toFixed(n%1?2:0)}
+  function enhance(){
+    try{
+      const items=(typeof cart!=='undefined'&&Array.isArray(cart))?cart:
+                  (typeof window.cart!=='undefined'&&Array.isArray(window.cart))?window.cart:[];
+      const rows=[...document.querySelectorAll('.cart-item')];
+      rows.forEach((row,i)=>{
+        const item=items[i];
+        if(!item) return;
+        const base=Number(item.basePrice ?? item.originalPrice ?? item.catalogPrice ?? item.price ?? 0);
+        const current=Number(item.effectivePrice ?? item.unitPrice ?? item.price ?? base);
+        const discount=Number(item.discountPercent ?? item.discount ?? 0);
+        if(!(discount>0&&current<base)) return;
+        const priceEl=row.querySelector('.cart-item-price,.cart-price,.price');
+        if(!priceEl) return;
+        const omnibus=item.omnibus||{};
+        const ref=Number(omnibus.referencePrice ?? item.omnibusReferencePrice ?? 0);
+        const lbl=(omnibus.referenceType||item.omnibusReferenceType)==='since-offer'
+          ? 'Najniższa cena od wprowadzenia produktu'
+          : 'Najniższa cena z 30 dni przed obniżką';
+        priceEl.innerHTML=`<div class="sx-cart-price-wrap">
+          <span class="sx-cart-promo-badge">PROMOCJA −${discount}%</span>
+          <span class="sx-cart-current-price">${fmt(current)} PLN</span>
+          <span class="sx-cart-old-price">było ${fmt(base)} PLN</span>
+          <span class="sx-cart-save">OSZCZĘDZASZ ${fmt(base-current)} PLN</span>
+          ${ref>0?`<span class="sx-cart-omnibus">${lbl}: ${fmt(ref)} PLN</span>`:''}
+        </div>`;
+      });
+    }catch(e){}
+  }
+  document.addEventListener('starxv:cart-updated',()=>setTimeout(enhance,0));
+  document.addEventListener('click',()=>setTimeout(enhance,0));
+  new MutationObserver(()=>enhance()).observe(document.body,{childList:true,subtree:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',enhance);
+  else enhance();
 })();
 </script>
 
