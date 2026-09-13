@@ -201,6 +201,107 @@
 }
 </style>
 
+
+<style id="starxv-promo-card-redesign">
+/* Promotion cards: make a real sale visually obvious without changing STARXV's black/white identity. */
+.product-card{position:relative}
+.sx-card-promo-flag{
+  position:absolute;
+  top:18px;
+  right:18px;
+  z-index:4;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 11px;
+  border-radius:999px;
+  background:#fff;
+  color:#000;
+  font-size:9px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  box-shadow:0 6px 22px rgba(0,0,0,.22);
+}
+.price.sx-has-promo{
+  min-width:185px;
+  display:flex!important;
+  flex-direction:column;
+  align-items:flex-end!important;
+  gap:4px;
+  line-height:1.2;
+}
+.price.sx-has-promo .sx-promo-current{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:7px;
+}
+.price.sx-has-promo .sx-card-promo-price{
+  font-size:16px!important;
+  font-weight:950!important;
+  color:#fff!important;
+}
+.price.sx-has-promo .sx-card-old-price{
+  margin:0!important;
+  color:#666!important;
+  font-size:10px!important;
+  font-weight:750!important;
+  text-decoration:line-through!important;
+}
+.price.sx-has-promo .sx-card-save{
+  color:#bdbdbd;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.price.sx-has-promo .sx-omnibus-line{
+  display:block!important;
+  max-width:220px;
+  margin-top:2px;
+  color:#5f5f5f!important;
+  font-size:8px!important;
+  font-weight:650!important;
+  line-height:1.35!important;
+  text-align:right;
+}
+.price.sx-has-promo .sx-card-discount{display:none!important}
+
+/* Product detail: current price first, discount badge beside it, old reference clearly below. */
+.detail-price.sx-has-promo{
+  display:grid!important;
+  grid-template-columns:auto auto;
+  justify-content:start;
+  align-items:center;
+  gap:7px 9px!important;
+}
+.detail-price.sx-has-promo .sx-static-promo-price{
+  font-size:24px!important;
+  font-weight:950!important;
+}
+.detail-price.sx-has-promo .sx-static-discount{
+  margin:0!important;
+}
+.detail-price.sx-has-promo .sx-static-old-price{
+  grid-column:1 / -1;
+  margin:0!important;
+  font-size:12px!important;
+}
+.detail-price.sx-has-promo .sx-omnibus-line{
+  grid-column:1 / -1;
+  margin-top:0!important;
+}
+
+@media(max-width:700px){
+  .sx-card-promo-flag{top:12px;right:12px;padding:7px 9px;font-size:8px}
+  .price.sx-has-promo{min-width:145px}
+  .price.sx-has-promo .sx-card-promo-price{font-size:14px!important}
+  .price.sx-has-promo .sx-omnibus-line{max-width:155px;font-size:7px!important}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -1752,7 +1853,7 @@ const renderCart=()=>{hydrateCartDiscounts();
  function ensureSection(){let sec=document.getElementById('sxDynamicCatalog');if(sec)return sec;const shop=document.getElementById('shop');if(!shop)return null;sec=document.createElement('section');sec.id='sxDynamicCatalog';sec.innerHTML=`<div class="sx-dyn-head"><div><div class="section-kicker">02 / Katalog</div><h2>NOWE<br>PRODUKTY.</h2></div><p>Produkty dodane z panelu administratora pojawiają się tutaj automatycznie.</p></div><div class="products" id="sxDynamicProducts"></div>`;shop.insertAdjacentElement('afterend',sec);return sec}
  function productImage(p,color,side='front'){const imgs=p?.colors?.[color]?.images||{};return String(imgs?.[side]||imgs?.front||p?.image||'').trim()}
  function imgHTML(p,name,color='',side='front'){const src=productImage(p,color,side);return src?`<img src="${esc(src)}" alt="${esc(name)}" onerror="this.outerHTML='${placeholder.replace(/'/g,"\\'")}'">`:placeholder}
- function render(){const sec=ensureSection();if(!sec)return;const grid=document.getElementById('sxDynamicProducts');const entries=Object.entries(catalog).filter(([id])=>!STATIC_IDS.has(id));if(!entries.length){sec.style.display='none';return}sec.style.display='block';grid.innerHTML=entries.map(([id,p])=>`<article class="card product-card sx-dyn-card" role="button" tabindex="0" data-product-id="${esc(id)}" data-category="${esc(inferCategory(p))}" aria-label="Otwórz ${esc(p.name)}"><div class="product-visual">${imgHTML(p,p.name,Object.keys(p.colors||{})[0]||'','front')}</div><div class="card-info"><div><div class="card-name">${esc(p.name)}</div><div class="card-meta">[${esc(p.fit||'STARXV')}]</div></div><div class="price">${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},ref=Number(o.referencePrice||0),active=Boolean(o.active&&ref>cur),d=Number(o.discountPercent||0),lbl=o.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką';return active?`<span class="sx-card-promo-price">${cur.toFixed(cur%1?2:0)} PLN</span><span class="sx-card-old-price">${ref.toFixed(ref%1?2:0)} PLN</span><span class="sx-card-discount">PROMOCJA −${d}%</span><span class="sx-omnibus-line">${lbl}: ${ref.toFixed(ref%1?2:0)} PLN</span>`:`${cur.toFixed(cur%1?2:0)} PLN`})()}</div></div></article>`).join('');grid.querySelectorAll('[data-product-id]').forEach(el=>{const open=()=>openProduct(el.dataset.productId);el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}})}
+ function render(){const sec=ensureSection();if(!sec)return;const grid=document.getElementById('sxDynamicProducts');const entries=Object.entries(catalog).filter(([id])=>!STATIC_IDS.has(id));if(!entries.length){sec.style.display='none';return}sec.style.display='block';grid.innerHTML=entries.map(([id,p])=>`<article class="card product-card sx-dyn-card" role="button" tabindex="0" data-product-id="${esc(id)}" data-category="${esc(inferCategory(p))}" aria-label="Otwórz ${esc(p.name)}">${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},ref=Number(o.referencePrice||0),active=Boolean(o.active&&ref>cur),d=Number(o.discountPercent||0);return active?`<span class="sx-card-promo-flag">PROMOCJA −${d}%</span>`:''})()}<div class="product-visual">${imgHTML(p,p.name,Object.keys(p.colors||{})[0]||'','front')}</div><div class="card-info"><div><div class="card-name">${esc(p.name)}</div><div class="card-meta">[${esc(p.fit||'STARXV')}]</div></div><div class="price ${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},ref=Number(o.referencePrice||0);return Boolean(o.active&&ref>cur)?'sx-has-promo':''})()}">${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},ref=Number(o.referencePrice||0),active=Boolean(o.active&&ref>cur),d=Number(o.discountPercent||0),lbl=o.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką';return active?`<span class="sx-promo-current"><span class="sx-card-promo-price">${cur.toFixed(cur%1?2:0)} PLN</span></span><span class="sx-card-old-price">było ${ref.toFixed(ref%1?2:0)} PLN</span><span class="sx-card-save">OSZCZĘDZASZ ${(ref-cur).toFixed(2).replace(/\.00$/,'')} PLN</span><span class="sx-omnibus-line">${lbl}: ${ref.toFixed(ref%1?2:0)} PLN</span>`:`${cur.toFixed(cur%1?2:0)} PLN`})()}</div></div></article>`).join('');grid.querySelectorAll('[data-product-id]').forEach(el=>{const open=()=>openProduct(el.dataset.productId);el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}})}
  function ensureModal(){let m=document.getElementById('sxDynModal');if(m)return m;m=document.createElement('div');m.id='sxDynModal';m.className='sx-dyn-modal';m.setAttribute('aria-hidden','true');m.innerHTML=`<div class="sx-dyn-box"><button class="sx-dyn-close" type="button">×</button><div class="sx-dyn-media" id="sxDynMedia"></div><div class="sx-dyn-copy"><div class="detail-kicker">STARXV / CATALOG</div><h2 id="sxDynName"></h2><div class="fit-tag" id="sxDynFit"></div><div class="sx-dyn-price" id="sxDynPrice"></div><div class="sx-dyn-price-old" id="sxDynPriceOld" hidden></div><div class="sx-dyn-discount" id="sxDynDiscount" hidden></div><div class="sx-dyn-omnibus" id="sxDynOmnibus" hidden></div><div class="sx-dyn-composition" id="sxDynComposition" hidden></div><div class="size-label">KOLOR</div><div class="sx-dyn-colors" id="sxDynColors"></div><div class="size-label">ROZMIAR</div><div class="sx-dyn-sizes" id="sxDynSizes"></div><div class="sx-dyn-stock" id="sxDynStock"></div><div class="sx-dyn-actions"><button class="sx-dyn-add" id="sxDynAdd">DODAJ DO KOSZYKA →</button><button class="sx-dyn-fav" id="sxDynFav">♡</button></div></div></div>`;document.body.appendChild(m);m.querySelector('.sx-dyn-close').onclick=closeModal;m.onclick=e=>{if(e.target===m)closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&m.classList.contains('open'))closeModal()});return m}
  function closeModal(){const m=document.getElementById('sxDynModal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');document.body.style.overflow=''}}
  function openProduct(id){const p=catalog[id];if(!p)return;const m=ensureModal();m.dataset.productId=id;let color='',size='';const colors=Object.entries(p.colors||{});const media=document.getElementById('sxDynMedia');document.getElementById('sxDynName').textContent=p.name||id;document.getElementById('sxDynFit').textContent=`[${p.fit||'STARXV'}]`;const basePrice=Number(p.price||0);const promoPrice=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):basePrice;const omni=p.omnibus||{},ref=Number(omni.referencePrice||0),promoActive=Boolean(omni.active&&ref>promoPrice),discount=promoActive?Number(omni.discountPercent||0):0;const priceEl=document.getElementById('sxDynPrice');const oldPriceEl=document.getElementById('sxDynPriceOld');const discountEl=document.getElementById('sxDynDiscount');const omnibusEl=document.getElementById('sxDynOmnibus');if(priceEl)priceEl.textContent=`${promoPrice.toFixed(promoPrice%1?2:0)} PLN`;if(oldPriceEl){oldPriceEl.hidden=!promoActive;oldPriceEl.textContent=promoActive?`${ref.toFixed(ref%1?2:0)} PLN`:''}if(discountEl){discountEl.hidden=!promoActive;discountEl.textContent=promoActive?`PROMOCJA −${discount}%`:''}if(omnibusEl){omnibusEl.hidden=!promoActive;omnibusEl.textContent=promoActive?`${omni.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką'}: ${ref.toFixed(ref%1?2:0)} PLN`:''}const comp=document.getElementById('sxDynComposition');if(comp){const txt=String(p.composition||'').trim();comp.hidden=!txt;comp.innerHTML=txt?`<span>SKŁAD</span><b>${esc(txt)}</b>`:''}const cbox=document.getElementById('sxDynColors'),sbox=document.getElementById('sxDynSizes'),stock=document.getElementById('sxDynStock'),add=document.getElementById('sxDynAdd'),fav=document.getElementById('sxDynFav');
@@ -1776,14 +1877,27 @@ const renderCart=()=>{hydrateCartDiscounts();
     try{
       const r=await fetch('/api/store/catalog',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json(),c=j.catalog||{};window.STARXV_CATALOG=c;try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(c))}catch{}
       const effectivePrice=p=>{const base=Number(p?.price||0),price=Number.isFinite(Number(p?.effectivePrice))?Number(p.effectivePrice):base,o=p?.omnibus||{},ref=Number(o.referencePrice||0),active=Boolean(o.active&&ref>price),disc=active?Number(o.discountPercent||0):0;return {base,disc,price,ref,active,referenceType:o.referenceType||'30-days'}};
-      const priceHTML=p=>{const x=effectivePrice(p);const lbl=x.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką';return x.active?`<span class="sx-static-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span><span class="sx-static-old-price">${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span><span class="sx-static-discount">PROMOCJA −${x.disc}%</span><span class="sx-omnibus-line">${lbl}: ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span>`:`${Number(x.price).toFixed(x.price%1?2:0)} PLN`};
+      const priceHTML=p=>{const x=effectivePrice(p);const lbl=x.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką';return x.active?`<span class="sx-static-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span><span class="sx-static-discount">PROMOCJA −${x.disc}%</span><span class="sx-static-old-price">było ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span><span class="sx-omnibus-line">${lbl}: ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span>`:`${Number(x.price).toFixed(x.price%1?2:0)} PLN`};
       const applyStatic=(id,p,cardSel,modalSel,productObj,searchObj)=>{
         if(!p)return;
         const x=effectivePrice(p);
         if(productObj){productObj.price=x.price;productObj.basePrice=x.base;productObj.discountPercent=x.disc;productObj.omnibusReferencePrice=x.ref||0}
         if(searchObj){searchObj.price=x.price;searchObj.basePrice=x.base;searchObj.discountPercent=x.disc;searchObj.omnibusReferencePrice=x.ref||0}
         const cardPrice=document.querySelector(cardSel);
-        if(cardPrice){cardPrice.innerHTML=priceHTML(p);cardPrice.classList.toggle('sx-has-promo',x.disc>0)}
+        if(cardPrice){
+          cardPrice.innerHTML=x.active
+            ? `<span class="sx-promo-current"><span class="sx-card-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span></span><span class="sx-card-old-price">było ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span><span class="sx-card-save">OSZCZĘDZASZ ${(Number(x.ref)-Number(x.price)).toFixed(2).replace(/\.00$/,'')} PLN</span><span class="sx-omnibus-line">${x.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką'}: ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span>`
+            : `${Number(x.price).toFixed(x.price%1?2:0)} PLN`;
+          cardPrice.classList.toggle('sx-has-promo',x.active);
+          const card=cardPrice.closest('.product-card');
+          if(card){
+            let flag=card.querySelector('.sx-card-promo-flag');
+            if(x.active){
+              if(!flag){flag=document.createElement('span');flag.className='sx-card-promo-flag';card.appendChild(flag)}
+              flag.textContent=`PROMOCJA −${x.disc}%`;
+            }else if(flag){flag.remove()}
+          }
+        }
         const modalPrice=document.querySelector(modalSel);
         if(modalPrice){modalPrice.innerHTML=priceHTML(p);modalPrice.classList.toggle('sx-has-promo',x.disc>0)}
       };
