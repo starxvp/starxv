@@ -503,8 +503,33 @@
       const r=await fetch('/api/account/cart',{cache:'no-store'});
       if(!r.ok)return;
       const d=await r.json();
-      const cart=Array.isArray(d.cart)?d.cart:[];
-      localStorage.setItem('starxv-cart',JSON.stringify(cart));
+      let cart=Array.isArray(d.cart)?d.cart:[];
+      let pending=[];
+      try{pending=JSON.parse(localStorage.getItem('starxv-cart-pending-remove')||'[]')}catch{}
+      if(Array.isArray(pending)&&pending.length){
+        const next=cart.map(x=>({...x}));
+        for(const ordered of pending){
+          let qty=Math.max(1,Number(ordered.qty||1));
+          for(let i=0;i<next.length&&qty>0;i++){
+            const item=next[i];
+            if(!item)continue;
+            const same=String(item.id||'')===String(ordered.id||'')
+              && String(item.color||'')===String(ordered.color||'')
+              && String(item.size||'').toUpperCase()===String(ordered.size||'').toUpperCase();
+            if(!same)continue;
+            const have=Math.max(1,Number(item.qty||1));
+            if(have<=qty){qty-=have;next[i]=null}
+            else{item.qty=have-qty;qty=0}
+          }
+        }
+        cart=next.filter(Boolean);
+        localStorage.setItem('starxv-cart',JSON.stringify(cart));
+        const saved=await saveNow(cart);
+        if(saved)localStorage.removeItem('starxv-cart-pending-remove');
+      }else{
+        localStorage.setItem('starxv-cart',JSON.stringify(cart));
+      }
+      window.dispatchEvent(new CustomEvent('starxv:cart-updated',{detail:{cart}}));
     }catch{}finally{loading=false}
   };
 
@@ -856,30 +881,65 @@ const renderCart=()=>{hydrateCartDiscounts();
   $('confirmDelivery').onclick=()=>{const address=getAddresses().find(a=>a.id===selectedAddressId);if(deliveryMethod==='address'&&!address){showStatus('error','Brak adresu','Wróć do etapu 2 i wybierz adres dostawy.');return}if(deliveryMethod==='inpost'&&!selectedLocker){showStatus('error','Wybierz punkt InPost','Wybierz Paczkomat lub PaczkoPunkt bezpośrednio na mapie.');return}const delivery=deliveryMethod==='inpost'?{type:'inpost',locker:selectedLocker}:{type:'address',address};localStorage.setItem('starxv-delivery-choice',JSON.stringify(delivery));setStage(4)};
   document.querySelectorAll('.pay-card').forEach(card=>card.onclick=()=>{document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');paymentPreference=card.dataset.method});
 
-  const removeOrderedItemsFromCart=(orderedItems)=>{
+  const removeOrderedItemsFromCart=async(orderedItems)=>{
     try{
-      let cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
-      if(!Array.isArray(cart))cart=[];
-      const remaining=cart.map(item=>({...item}));
-      for(const ordered of (Array.isArray(orderedItems)?orderedItems:[])){
-        let qty=Math.max(1,Number(ordered.qty||1));
+      const orderedList=(Array.isArray(orderedItems)?orderedItems:[]).map(x=>({
+        id:String(x.id||''),
+        color:String(x.color||''),
+        size:String(x.size||'').toUpperCase(),
+        qty:Math.max(1,Number(x.qty||1))
+      }));
+      if(!orderedList.length)return null;
+
+      // Marker prevents an older server-side cart from restoring ordered items
+      // if account synchronization happens before the empty cart is saved.
+      localStorage.setItem('starxv-cart-pending-remove',JSON.stringify(orderedList));
+
+      let current=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
+      if(!Array.isArray(current))current=[];
+      const remaining=current.map(item=>({...item}));
+
+      for(const ordered of orderedList){
+        let qty=ordered.qty;
         for(let i=0;i<remaining.length&&qty>0;i++){
           const item=remaining[i];
-          const same=String(item.id||'')===String(ordered.id||'')
-            && String(item.color||'')===String(ordered.color||'')
-            && String(item.size||'')===String(ordered.size||'');
+          if(!item)continue;
+          const same=String(item.id||'')===ordered.id
+            && String(item.color||'')===ordered.color
+            && String(item.size||'').toUpperCase()===ordered.size;
           if(!same)continue;
           const have=Math.max(1,Number(item.qty||1));
           if(have<=qty){qty-=have;remaining[i]=null}
           else{item.qty=have-qty;qty=0}
         }
       }
+
       const next=remaining.filter(Boolean);
       localStorage.setItem('starxv-cart',JSON.stringify(next));
-      window.STARXV_CART_PERSIST?.(next);
       window.dispatchEvent(new CustomEvent('starxv:cart-updated',{detail:{cart:next}}));
+
       const count=document.getElementById('cartCount');
-      if(count)count.textContent=next.reduce((sum,x)=>sum+Number(x.qty||1),0);
+      if(count)count.textContent=String(next.reduce((sum,x)=>sum+Number(x.qty||1),0));
+
+      // Save immediately to the user's account instead of waiting for the
+      // normal debounced cart sync. This is important before payment starts.
+      let serverSaved=false;
+      if(window.STARXV_AUTH_USER){
+        try{
+          const r=await fetch('/api/account/cart',{
+            method:'PUT',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({cart:next})
+          });
+          serverSaved=r.ok;
+        }catch{}
+      }else{
+        serverSaved=true;
+      }
+
+      if(serverSaved)localStorage.removeItem('starxv-cart-pending-remove');
+      else window.STARXV_CART_PERSIST?.(next);
+
       return next;
     }catch(e){
       console.warn('STARXV remove ordered cart items:',e);
@@ -892,7 +952,7 @@ const renderCart=()=>{hydrateCartDiscounts();
           summaryTotal.textContent=money(Number(prepared.order.total||0));
           // Zamówienie istnieje już w „Moich zamówieniach”, więc jego pozycje
           // od razu usuwamy z koszyka — również gdy płatność pozostaje nieopłacona.
-          removeOrderedItemsFromCart(prepared.order.items||items);
+          await removeOrderedItemsFromCart(items);
           window.STARXV_SYNC_ORDERS?.();
           window.STARXV_SYNC_CATALOG?.();
         }const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,address,delivery,paymentPreference,orderId:prepared.order?.id})});const data=await res.json().catch(()=>({}));if(!res.ok||!data.url)throw new Error(data.error||'Zamówienie zostało zapisane jako oczekujące, ale płatności nie są jeszcze podłączone.');
@@ -915,7 +975,7 @@ const renderCart=()=>{hydrateCartDiscounts();
           const r=await fetch('/api/orders',{credentials:'same-origin'});
           const d=await r.json().catch(()=>({}));
           const paidOrder=(Array.isArray(d.orders)?d.orders:[]).find(o=>String(o.id)===String(paymentOrderId));
-          if(paidOrder?.items)removeOrderedItemsFromCart(paidOrder.items);
+          if(paidOrder?.items)await removeOrderedItemsFromCart(paidOrder.items);
         }catch(e){}
         showStatus('success','Płatność potwierdzona','Dziękujemy za zakup. Zamówienie jest opłacone i pojawi się w „Moich zamówieniach”.',7000);
       }else{
