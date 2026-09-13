@@ -1498,6 +1498,24 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 .sx-review-variant{display:block;margin-top:3px;color:#8c8c96;font-size:9px;line-height:1.35}.order-review-btn{margin-top:8px;border:1px solid rgba(255,255,255,.14);background:#111;color:#fff;border-radius:10px;padding:8px 10px;font-size:8px;font-weight:900;letter-spacing:.09em;cursor:pointer}.order-review-btn:hover{background:#fff;color:#000}.order-review-btn.done{border-color:rgba(255,255,255,.24);background:rgba(255,255,255,.07)}
 .sx-order-review-modal{position:fixed;inset:0;z-index:10080;background:rgba(0,0,0,.78);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:18px}.sx-order-review-modal.open{display:flex}.sx-order-review-panel{width:min(520px,100%);background:#09090b;border:1px solid rgba(255,255,255,.12);border-radius:22px;padding:22px;box-shadow:0 30px 100px rgba(0,0,0,.55)}.sx-order-review-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.sx-order-review-head small{display:block;color:#777;font-size:8px;letter-spacing:.12em;margin-bottom:6px}.sx-order-review-head h3{margin:0;font-size:18px}.sx-order-review-close{border:0;background:transparent;color:#fff;font-size:24px;cursor:pointer}.sx-order-review-product{margin:14px 0;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:13px;color:#9a9aa4;font-size:10px;line-height:1.55}.sx-order-review-stars{display:flex;gap:5px;margin:10px 0}.sx-order-review-stars button{border:0;background:transparent;color:#555;font-size:29px;cursor:pointer;padding:0}.sx-order-review-stars button.on{color:#fff}.sx-order-review-panel textarea{width:100%;box-sizing:border-box;min-height:110px;resize:vertical;border:1px solid rgba(255,255,255,.12);background:#0d0d10;color:#fff;border-radius:13px;padding:12px;font:inherit;outline:none}.sx-order-review-actions{display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-top:12px}.sx-order-review-actions button{border:1px solid rgba(255,255,255,.13);border-radius:11px;padding:10px 13px;font-size:9px;font-weight:900;cursor:pointer}.sx-order-review-save{background:#fff;color:#000}.sx-order-review-delete{background:#151515;color:#fff}.sx-order-review-status{min-height:17px;margin-top:8px;color:#9a9aa4;font-size:9px}.sx-light-theme .sx-order-review-panel{background:#fff;color:#111;border-color:rgba(0,0,0,.12)}.sx-light-theme .sx-order-review-panel textarea{background:#f5f5f3;color:#111;border-color:rgba(0,0,0,.12)}.sx-light-theme .sx-order-review-close{color:#111}.sx-light-theme .sx-order-review-stars button.on{color:#111}
 </style>
+
+<style id="starxv-suggested-delivery-v1">
+.sx-suggested-delivery{display:flex;align-items:center;justify-content:flex-end;gap:7px;margin-top:7px;color:#777;font-size:9px;line-height:1.35}
+.sx-suggested-delivery strong{color:#a7a7a7;font-size:9px;font-weight:800}
+.sx-suggested-info{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 18px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:transparent;color:#aaa;font:800 10px/1 Arial,sans-serif;cursor:pointer;transition:.18s ease}
+.sx-suggested-info:hover,.sx-suggested-info:focus-visible{border-color:#fff;color:#fff;outline:none}
+.sx-suggested-modal{position:fixed;inset:0;z-index:4100;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);opacity:0;pointer-events:none;transition:.22s ease}
+.sx-suggested-modal.open{opacity:1;pointer-events:auto}
+.sx-suggested-card{width:min(460px,100%);border:1px solid rgba(255,255,255,.14);border-radius:18px;background:#090909;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.65);overflow:hidden;transform:translateY(10px) scale(.985);transition:.22s ease}
+.sx-suggested-modal.open .sx-suggested-card{transform:none}
+.sx-suggested-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.09)}
+.sx-suggested-head small{display:block;color:#666;font-size:8px;letter-spacing:.16em;margin-bottom:5px}.sx-suggested-head b{font-size:13px;letter-spacing:.03em}
+.sx-suggested-close{width:34px;height:34px;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:transparent;color:#fff;font-size:20px;cursor:pointer}
+.sx-suggested-body{padding:20px;color:#8a8a8a;font-size:10px;line-height:1.7}.sx-suggested-body p{margin:0 0 12px}.sx-suggested-body p:last-child{margin-bottom:0}
+.sx-suggested-body strong{color:#fff}.sx-suggested-example{margin:15px 0;padding:13px 14px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:#0d0d0d;color:#aaa}
+@media(max-width:560px){.sx-suggested-delivery{font-size:8px}.sx-suggested-delivery strong{font-size:8px}.sx-suggested-card{border-radius:16px}.sx-suggested-body{font-size:9px}}
+</style>
+
 </head>
 <body>
 <div id="starxvIntro" aria-hidden="true"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img class="starxv-intro-logo" alt="STARXV" src="/assets/a21bc8c9acad5dd8.webp"><div class="intro-loader" aria-hidden="true"><div class="intro-loader-fill"></div></div></div>
@@ -1757,6 +1775,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
       <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
       <div class="cart-summary-row"><span>ZAZNACZONE / RAZEM</span><strong id="cartTotal">0 PLN</strong></div>
+      <div class="sx-suggested-delivery"><button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button><span>Dostawa sugerowana: <strong class="sx-suggested-delivery-price">19,99 PLN</strong></span></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
       <div class="checkout-hint" id="checkoutHint">Zaznacz co najmniej jeden produkt, aby przejść dalej.</div>
     </div>
@@ -1821,6 +1840,7 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
       <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Kod testowy: STARXV10 daje 10% rabatu.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
       <div class="cart-summary-row"><span>ZAZNACZONE / RAZEM</span><strong id="cartTotal">0 PLN</strong></div>
+      <div class="sx-suggested-delivery"><button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button><span>Dostawa sugerowana: <strong class="sx-suggested-delivery-price">19,99 PLN</strong></span></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
       <div class="checkout-hint" id="checkoutHint">Zaznacz co najmniej jeden produkt, aby przejść dalej.</div>
     </div>
@@ -3444,6 +3464,61 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   runVersionLoad();
   setInterval(runVersionLoad, 4200);
+})();
+</script>
+
+
+<div class="sx-suggested-modal" id="sxSuggestedDeliveryModal" aria-hidden="true">
+  <div class="sx-suggested-card" role="dialog" aria-modal="true" aria-labelledby="sxSuggestedDeliveryTitle">
+    <div class="sx-suggested-head"><div><small>STARXV / KOSZYK</small><b id="sxSuggestedDeliveryTitle">Jak działa dostawa sugerowana?</b></div><button class="sx-suggested-close" id="sxSuggestedDeliveryClose" type="button" aria-label="Zamknij">×</button></div>
+    <div class="sx-suggested-body">
+      <p><strong>Dostawa sugerowana</strong> to orientacyjny koszt dostawy pokazany jeszcze przed finalizacją zamówienia.</p>
+      <p>Jeśli wcześniej wybrałeś sposób dostawy, STARXV zapamięta ostatnią zatwierdzoną metodę i na jej podstawie pokaże sugerowaną cenę. Jeśli nie masz jeszcze wcześniejszego wyboru, domyślnie pokazujemy koszt <strong>dostawy na adres</strong>.</p>
+      <div class="sx-suggested-example"><strong>Przykład:</strong> po wybraniu Paczkomatu InPost kolejne otwarcie koszyka zasugeruje koszt InPost. Po wybraniu dostawy na adres — koszt dostawy kurierskiej.</div>
+      <p>To <strong>nie jest jeszcze ostatecznie naliczona opłata</strong>. Finalną metodę i koszt dostawy zobaczysz oraz zatwierdzisz podczas składania zamówienia. Cena może się zmienić po wybraniu innej metody dostawy.</p>
+    </div>
+  </div>
+</div>
+
+
+<script id="starxv-suggested-delivery-script-v1">
+(()=>{
+  const DEFAULT_PRICES={inpost:14.99,address:19.99};
+  let prices={...DEFAULT_PRICES};
+  const money=v=>`${Number(v||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2})} PLN`;
+  const getLastMethod=()=>{
+    try{
+      const saved=JSON.parse(localStorage.getItem('starxv-delivery-choice')||'null');
+      return saved?.type==='inpost'?'inpost':'address';
+    }catch{return 'address'}
+  };
+  const update=()=>{
+    const method=getLastMethod();
+    document.querySelectorAll('.sx-suggested-delivery-price').forEach(el=>el.textContent=money(prices[method]));
+  };
+  const loadPrices=async()=>{
+    try{
+      const r=await fetch('/api/shipping/config',{credentials:'include'});
+      const d=await r.json();
+      if(r.ok){
+        const locker=Number(d.lockerPrice),courier=Number(d.courierPrice);
+        if(Number.isFinite(locker)&&locker>=0)prices.inpost=locker;
+        if(Number.isFinite(courier)&&courier>=0)prices.address=courier;
+      }
+    }catch{}
+    update();
+  };
+  const modal=document.getElementById('sxSuggestedDeliveryModal');
+  const open=()=>{if(!modal)return;modal.classList.add('open');modal.setAttribute('aria-hidden','false')};
+  const close=()=>{if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
+  document.querySelectorAll('.sx-suggested-info').forEach(btn=>btn.addEventListener('click',open));
+  document.getElementById('sxSuggestedDeliveryClose')?.addEventListener('click',close);
+  modal?.addEventListener('click',e=>{if(e.target===modal)close()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal?.classList.contains('open'))close()});
+  document.getElementById('confirmDelivery')?.addEventListener('click',()=>setTimeout(update,0));
+  window.addEventListener('storage',e=>{if(e.key==='starxv-delivery-choice')update()});
+  update();
+  loadPrices();
 })();
 </script>
 
