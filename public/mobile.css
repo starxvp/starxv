@@ -215,3 +215,6 @@
     width:39px!important;height:39px!important;min-width:39px!important;max-width:39px!important;flex-basis:39px!important;
   }
 }
+
+/* InPost manual checkout */
+@media(max-width:700px){.inpost-manual-intro{align-items:stretch;flex-direction:column;padding:15px}.inpost-manual-intro .locker-locate{width:100%;box-sizing:border-box;text-align:center}.locker-manual-grid{grid-template-columns:1fr;padding:15px}.locker-manual-grid .locker-locate{width:100%}}
