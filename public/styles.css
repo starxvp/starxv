@@ -1662,3 +1662,94 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
     overflow:visible;
   }
 }
+
+/* STARXV InPost search controls — typography / spacing fix */
+#inpostGeoWidgetHost .sx-inpost-toolbar{
+  align-items:center;
+  gap:12px;
+}
+
+#inpostGeoWidgetHost .sx-inpost-search-wrap{
+  min-width:0;
+  height:48px;
+}
+
+#inpostGeoWidgetHost #inpostPointSearch{
+  flex:1 1 auto;
+  min-width:0;
+  width:auto!important;
+  padding:0 12px!important;
+  font-size:11px!important;
+  line-height:1.2!important;
+  letter-spacing:0!important;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  overflow:hidden;
+}
+
+#inpostGeoWidgetHost #inpostPointSearch::placeholder{
+  font-size:11px!important;
+  letter-spacing:0!important;
+  color:#777!important;
+  opacity:1;
+}
+
+#inpostGeoWidgetHost #inpostPointSearchBtn{
+  flex:0 0 auto;
+  min-width:92px;
+  height:38px!important;
+  margin:0 5px 0 0!important;
+  padding:0 18px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:9px!important;
+  line-height:1!important;
+  letter-spacing:.08em!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+}
+
+#inpostGeoWidgetHost #inpostUseLocation{
+  flex:0 0 168px;
+  min-width:168px;
+  height:48px!important;
+  padding:0 18px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:9px!important;
+  line-height:1!important;
+  letter-spacing:.06em!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+}
+
+@media (max-width:900px){
+  #inpostGeoWidgetHost .sx-inpost-toolbar{
+    gap:10px;
+  }
+
+  #inpostGeoWidgetHost #inpostPointSearch{
+    font-size:10px!important;
+  }
+
+  #inpostGeoWidgetHost #inpostPointSearch::placeholder{
+    font-size:10px!important;
+  }
+
+  #inpostGeoWidgetHost #inpostPointSearchBtn{
+    min-width:82px;
+    padding:0 14px!important;
+    font-size:8px!important;
+  }
+
+  #inpostGeoWidgetHost #inpostUseLocation{
+    flex:0 0 44px;
+    width:100%!important;
+    min-width:0;
+    height:44px!important;
+    font-size:8px!important;
+  }
+}
+
