@@ -1342,10 +1342,11 @@ app.post('/api/admin/products',adminOnly,(req,res)=>{
     const category=['hoodies','tshirts','other'].includes(String(req.body?.category||''))?String(req.body.category):'other';
     const image=String(req.body?.image||'').trim().slice(0,200000);
     const composition=String(req.body?.composition||'').trim().slice(0,500);
+    const discountPercent=Math.min(99,Math.max(0,Number(req.body?.discountPercent)||0));
     const price=Number(req.body?.price);
     if(!name)return res.status(400).json({error:'Podaj nazwę produktu.'});
     if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});
-    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,colors:{}};
+    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,discountPercent,colors:{}};
     save(req.db);res.status(201).json({ok:true,id,product:req.db.catalog[id]});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu.'})}
 });
@@ -1358,6 +1359,7 @@ app.put('/api/admin/products/:id',adminOnly,(req,res)=>{
     if(Object.prototype.hasOwnProperty.call(req.body||{},'category')){const category=String(req.body.category||'');if(!['hoodies','tshirts','other'].includes(category))return res.status(400).json({error:'Nieprawidłowa kategoria.'});p.category=category}
     if(Object.prototype.hasOwnProperty.call(req.body||{},'image'))p.image=String(req.body.image||'').trim().slice(0,200000);
     if(Object.prototype.hasOwnProperty.call(req.body||{},'composition'))p.composition=String(req.body.composition||'').trim().slice(0,500);
+    if(Object.prototype.hasOwnProperty.call(req.body||{},'discountPercent'))p.discountPercent=Math.min(99,Math.max(0,Number(req.body.discountPercent)||0));
     if(Object.prototype.hasOwnProperty.call(req.body||{},'price')){const price=Number(req.body.price);if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});p.price=Math.round(price*100)/100}
     save(req.db);res.json({ok:true,product:p});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu.'})}
