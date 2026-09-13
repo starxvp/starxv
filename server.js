@@ -3,7 +3,7 @@
 require('dotenv').config();
 const { Resend } = require('resend');
 
-const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');const nodemailer=require('nodemailer');
+const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');const nodemailer=require('nodemailer');const https=require('https');
 const app=express(),PORT=Number(process.env.PORT||3000);
 const DATA_DIR=path.join(__dirname,'data');
 const LEGACY_DATA=path.join(DATA_DIR,'store.json');
@@ -1181,10 +1181,11 @@ function adminOnly(req,res,next){
   });
 }
 
-// --- STARXV InPost shipping — production checkout + official Geowidget V5 -----------
-// Point selection uses the public Geowidget token. Parcel creation can still be handled manually in InPost.
+// --- STARXV InPost shipping — production checkout + proprietary point map -----------
+// Point data comes from InPost's public Points resource (no access token required).
+// Parcel creation / labels can still be handled manually in Manager Paczek.
 function envMoney(name,fallback){const raw=String(process.env[name]??'').trim().replace(',','.');const n=raw===''?fallback:Number(raw);return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:fallback}
-function shippingPublicConfig(){const geowidgetToken=String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim();return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),geowidgetConfigured:Boolean(geowidgetToken),geowidgetToken}}
+function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:true}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 function normalizeAndValidateDelivery(raw,address){
   const type=raw?.type==='address'?'address':'inpost';
@@ -1194,11 +1195,77 @@ function normalizeAndValidateDelivery(raw,address){
   if(!/^[A-Z0-9_-]{3,30}$/.test(code))throw Object.assign(new Error('Wybierz poprawny punkt InPost.'),{status:400});
   if(pointAddress.length<3||pointAddress.length>200)throw Object.assign(new Error('Wybrany punkt InPost nie ma poprawnego adresu.'),{status:400});
   const lat=Number(raw?.locker?.location?.latitude),lng=Number(raw?.locker?.location?.longitude);
-  const locker={id:code,name:code,address:pointAddress,source:String(raw?.locker?.source||'inpost-geowidget')};
+  const locker={id:code,name:code,address:pointAddress,source:String(raw?.locker?.source||'inpost-points-map')};
   if(Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180)locker.location={latitude:lat,longitude:lng};
   return {type:'inpost',locker};
 }
 app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicConfig()}));
+
+// Public proxy for the official InPost Points resource. The upstream endpoint itself
+// does not require authentication; the proxy keeps the frontend same-origin and lets
+// us validate/limit queries used by the checkout map.
+const inpostPointsCache=new Map();
+function inpostPointsRequest(search){
+  const url=`https://api.inpost.pl/v1/points?${search}`;
+  return new Promise((resolve,reject)=>{
+    const request=https.get(url,{headers:{'Accept':'application/json','User-Agent':'STARXV/1.0 (https://starxv.pl)'}},response=>{
+      let body='';
+      response.setEncoding('utf8');
+      response.on('data',chunk=>{body+=chunk;if(body.length>3_000_000)request.destroy(new Error('Odpowiedź InPost jest zbyt duża.'))});
+      response.on('end',()=>{
+        if(response.statusCode<200||response.statusCode>=300)return reject(new Error(`InPost HTTP ${response.statusCode}`));
+        try{resolve(JSON.parse(body))}catch{reject(new Error('Nieprawidłowa odpowiedź InPost.'))}
+      });
+    });
+    request.setTimeout(7000,()=>request.destroy(new Error('Przekroczono czas odpowiedzi InPost.')));
+    request.on('error',reject);
+  });
+}
+app.get('/api/inpost/points',async(req,res)=>{
+  try{
+    const p=new URLSearchParams();
+    p.set('type','parcel_locker');
+    p.set('functions','parcel_collect');
+    p.set('per_page','100');
+    const name=String(req.query.name||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,30);
+    const city=String(req.query.city||'').trim().replace(/[<>]/g,'').slice(0,80);
+    const postCode=String(req.query.post_code||'').trim().slice(0,10);
+    const relative=String(req.query.relative_point||'').trim();
+    if(name)p.set('name',name);
+    else if(/^\d{2}-\d{3}$/.test(postCode)){p.set('relative_post_code',postCode);p.set('sort_by','distance_to_relative_point');p.set('limit','100');}
+    else if(city)p.set('city',city);
+    else if(relative){
+      const m=relative.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
+      if(!m)return res.status(400).json({error:'Nieprawidłowa lokalizacja.'});
+      const lat=Number(m[1]),lng=Number(m[2]);
+      if(!Number.isFinite(lat)||!Number.isFinite(lng)||lat<49||lat>55||lng<14||lng>25)return res.status(400).json({error:'Lokalizacja jest poza obsługiwanym obszarem.'});
+      p.set('relative_point',`${lat},${lng}`);
+      p.set('max_distance',String(Math.min(50000,Math.max(1000,Number(req.query.max_distance)||25000))));
+      p.set('limit',String(Math.min(100,Math.max(10,Number(req.query.limit)||100))));
+      p.set('sort_by','distance_to_relative_point');
+    }else{
+      p.set('relative_point','52.0693,19.4803');
+      p.set('max_distance','50000');p.set('limit','60');p.set('sort_by','distance_to_relative_point');
+    }
+    const key=p.toString(),now=Date.now(),cached=inpostPointsCache.get(key);
+    if(cached&&now-cached.at<5*60*1000)return res.json(cached.data);
+    const data=await inpostPointsRequest(key);
+    const items=(Array.isArray(data.items)?data.items:[]).filter(x=>x&&x.status==='Operating').map(x=>({
+      name:x.name,type:x.type,status:x.status,location:x.location,distance:x.distance,opening_hours:x.opening_hours,
+      location_description:x.location_description,address:x.address,address_details:x.address_details,
+      location_247:Boolean(x.location_247),easy_access_zone:Boolean(x.easy_access_zone),payment_available:Boolean(x.payment_available),image_url:x.image_url
+    }));
+    const out={ok:true,count:items.length,items};
+    inpostPointsCache.set(key,{at:now,data:out});
+    if(inpostPointsCache.size>120){for(const [k,v] of inpostPointsCache){if(now-v.at>5*60*1000)inpostPointsCache.delete(k)}}
+    res.set('Cache-Control','public, max-age=60');
+    res.json(out);
+  }catch(e){
+    console.error('InPost points error:',e.message);
+    res.status(502).json({error:'Nie udało się pobrać punktów InPost. Spróbuj ponownie.'});
+  }
+});
+
 app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{
   ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
   if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
