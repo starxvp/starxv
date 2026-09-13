@@ -370,6 +370,25 @@
 }
 </style>
 
+
+<style id="starxv-cart-promo-final">
+.cart-item-price .sx-cart-discount{
+  order:-1;
+  margin:0 0 3px!important;
+  padding:5px 8px!important;
+  border-radius:999px!important;
+  background:#fff!important;
+  color:#000!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  letter-spacing:.08em!important;
+}
+.cart-item-price .sx-cart-current{font-size:16px!important;font-weight:950!important}
+.cart-item-price .sx-cart-old{margin-top:1px!important}
+.cart-item-price .sx-cart-save{font-size:8px!important;letter-spacing:.06em!important;text-transform:uppercase}
+.cart-item-price .sx-cart-omnibus{max-width:190px!important}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -843,7 +862,7 @@
   const show=n=>{i=(n+2)%2;t.style.transform=`translateX(-${i*100}%)`;dots.forEach((d,x)=>d.classList.toggle('active',x===i));label.textContent=i===0?'FRONT / 01':'BACK / 02'};
   const openProduct=()=>{m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';show(0)};
   const closeProduct=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!cartModal.classList.contains('open'))document.body.style.overflow=''};
-  const openCart=()=>{closeProduct();hydrateCartDiscounts();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));window.STARXV_SYNC_CATALOG?.();};
+  const openCart=()=>{closeProduct();hydrateCartDiscounts();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));const sync=window.STARXV_SYNC_CATALOG?.();if(sync&&typeof sync.then==='function'){sync.then(()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}))}catch{}hydrateCartDiscounts();renderCart()}).catch(()=>{})}};
   const closeCart=()=>{cartModal.classList.remove('open');cartModal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
   window.addEventListener('starxv:cart-updated',()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}));}catch{}renderCart();});
   const promoInput=document.getElementById('sxPromoInput'),promoApply=document.getElementById('sxPromoApply'),promoRemove=document.getElementById('sxPromoRemove'),promoMessage=document.getElementById('sxPromoMessage'),discountRow=document.getElementById('sxDiscountRow'),discountCode=document.getElementById('sxDiscountCode'),discountValue=document.getElementById('sxDiscountValue');
@@ -866,8 +885,8 @@
         const base=Number(p.price||0);
         const effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base;
         const omnibus=p.omnibus||{};
-        const discount=omnibus.active?Number(omnibus.discountPercent||0):0;
-        const ref=omnibus.active?Number(omnibus.referencePrice||0):0;
+        const discount=Number(p.discountPercent??omnibus.discountPercent??0);
+        const ref=Number(omnibus.referencePrice||0);
         if(Number(item.price)!==effective||Number(item.basePrice||0)!==base||Number(item.discountPercent||0)!==discount||Number(item.omnibusReferencePrice||0)!==ref){
           item.price=effective;
           item.basePrice=base;
@@ -917,7 +936,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       <input class="cart-check" type="checkbox" ${x.selected?'checked':''} aria-label="Zaznacz ${x.name}, rozmiar ${x.size}">
       <div class="cart-thumb"><img src="${imgFor(x)}" alt="${x.name}"></div>
       <div class="cart-item-main">
-        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div><div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div></div><div class="cart-item-side"><strong class="cart-item-price"><span class="sx-cart-current">${money(x.price*x.qty)}</span>${Number(x.discountPercent||0)>0&&Number(x.omnibusReferencePrice||0)>Number(x.price)?`<span class="sx-cart-old">${money(Number(x.omnibusReferencePrice)*x.qty)}</span><span class="sx-cart-discount">PROMOCJA −${Number(x.discountPercent)}%</span><span class="sx-cart-save">OSZCZĘDZASZ ${money((Number(x.omnibusReferencePrice)-Number(x.price))*x.qty)}</span><span class="sx-cart-omnibus">Najniższa cena z 30 dni przed obniżką: ${money(Number(x.omnibusReferencePrice)*x.qty)}</span>`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
+        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div><div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div></div><div class="cart-item-side"><strong class="cart-item-price"><span class="sx-cart-current">${money(x.price*x.qty)}</span>${Number(x.discountPercent||0)>0&&Number(x.basePrice||0)>Number(x.price)?`<span class="sx-cart-discount">PROMOCJA −${Number(x.discountPercent)}%</span><span class="sx-cart-old">było ${money(Number(x.basePrice)*x.qty)}</span><span class="sx-cart-save">OSZCZĘDZASZ ${money((Number(x.basePrice)-Number(x.price))*x.qty)}</span>${Number(x.omnibusReferencePrice||0)>0?`<span class="sx-cart-omnibus">Najniższa cena ${Number(x.omnibusReferencePrice||0)===Number(x.basePrice||0)?'z 30 dni przed obniżką':'z okresu wymaganego przepisami'}: ${money(Number(x.omnibusReferencePrice)*x.qty)}</span>`:''}`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
         <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div></div>
       </div></div>`).join('');
     const sxSelectAll=cartItems.querySelector('.sx-select-all-check');
@@ -1932,7 +1951,7 @@ const renderCart=()=>{hydrateCartDiscounts();
    function paintStock(){if(!color){stock.textContent='Wybierz kolor.';return}if(!size){stock.textContent='Wybierz rozmiar.';return}const n=Number(p.colors?.[color]?.sizes?.[size]||0);stock.textContent=n>0?`Dostępne: ${n} szt.`:'Niedostępne'}
    function paintMedia(){const front=productImage(p,color,'front'),back=productImage(p,color,'back');if(!front&&!back){media.innerHTML=placeholder;return}const imgs=[front,back].filter((x,n,a)=>x&&a.indexOf(x)===n);media.innerHTML=`<div class="sx-dyn-gallery">${imgs.map((src,n)=>`<img src="${esc(src)}" alt="${esc(p.name)} ${n===0?'front':'back'}">`).join('')}</div>`}
    function paintColors(){cbox.innerHTML=colors.map(([key,c])=>`<button class="sx-dyn-chip ${color===key?'active':''}" data-color="${esc(key)}">${esc(c.label||key)}</button>`).join('')||'<span class="sx-dyn-stock">Brak kolorów</span>';cbox.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{color=b.dataset.color;size='';paintMedia();paintColors();paintSizes()})}
-   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=productImage(p,color,'front');const colorLabel=p.colors?.[color]?.label||color;if(existing){const base=Number(p.price||0),effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base,omni=p.omnibus||{},disc=omni.active?Number(omni.discountPercent||0):0,ref=omni.active?Number(omni.referencePrice||0):0;existing.qty++;existing.selected=true;existing.stockLimit=limit;existing.price=Math.round(effective*100)/100;existing.basePrice=base;existing.discountPercent=disc;existing.omnibusReferencePrice=ref}else{const base=Number(p.price||0),effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base,omni=p.omnibus||{},disc=omni.active?Number(omni.discountPercent||0):0,ref=omni.active?Number(omni.referencePrice||0):0;cart.push({id,name:p.name,fit:p.fit||'',price:Math.round(effective*100)/100,basePrice:base,discountPercent:disc,omnibusReferencePrice:ref,color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel})}localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
+   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=productImage(p,color,'front');const colorLabel=p.colors?.[color]?.label||color;if(existing){const base=Number(p.price||0),effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base,omni=p.omnibus||{},disc=Number(p.discountPercent??omni.discountPercent??0),ref=Number(omni.referencePrice||0);existing.qty++;existing.selected=true;existing.stockLimit=limit;existing.price=Math.round(effective*100)/100;existing.basePrice=base;existing.discountPercent=disc;existing.omnibusReferencePrice=ref}else{const base=Number(p.price||0),effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base,omni=p.omnibus||{},disc=Number(p.discountPercent??omni.discountPercent??0),ref=Number(omni.referencePrice||0);cart.push({id,name:p.name,fit:p.fit||'',price:Math.round(effective*100)/100,basePrice:base,discountPercent:disc,omnibusReferencePrice:ref,color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel})}localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
    color=colors[0]?.[0]||'';paintMedia();paintColors();paintSizes();m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}
  async function sync(){try{const r=await fetch('/api/store/catalog',{cache:'no-store'});if(!r.ok)return;const j=await r.json();catalog=j.catalog||{};render()}catch(e){console.warn('STARXV dynamic catalog',e)}}
  window.STARXV_RENDER_DYNAMIC_CATALOG=sync;document.addEventListener('DOMContentLoaded',sync);setInterval(sync,15000);
