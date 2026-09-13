@@ -26,8 +26,8 @@ app.use((req,res,next)=>{
   // required. External origins are kept to the services STARXV actually uses.
   res.setHeader('Content-Security-Policy',[
     "default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
     "font-src 'self' https://fonts.gstatic.com data:","img-src 'self' data: blob: https:",
     "connect-src 'self' https://accounts.google.com",
     "frame-src 'self' https://accounts.google.com"
