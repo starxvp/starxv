@@ -1206,34 +1206,37 @@ app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicCon
 // us validate/limit queries used by the checkout map.
 const inpostPointsCache=new Map();
 function inpostPointsRequest(search){
-  const url=`https://api.inpost.pl/v1/points?${search}`;
-  return new Promise((resolve,reject)=>{
-    const request=https.get(url,{headers:{'Accept':'application/json','User-Agent':'STARXV/1.0 (https://starxv.pl)'}},response=>{
+  const hosts=['api.inpost.pl','api-shipx-pl.easypack24.net','api-pl-points.easypack24.net'];
+  const tryHost=(index)=>new Promise((resolve,reject)=>{
+    if(index>=hosts.length)return reject(new Error('Wszystkie źródła punktów InPost są chwilowo niedostępne.'));
+    const url=`https://${hosts[index]}/v1/points?${search}`;
+    const request=https.get(url,{headers:{'Accept':'application/json','User-Agent':'STARXV/1.0','Connection':'close'}},response=>{
       let body='';
       response.setEncoding('utf8');
-      response.on('data',chunk=>{body+=chunk;if(body.length>3_000_000)request.destroy(new Error('Odpowiedź InPost jest zbyt duża.'))});
+      response.on('data',chunk=>{body+=chunk;if(body.length>4_000_000)request.destroy(new Error('Odpowiedź InPost jest zbyt duża.'))});
       response.on('end',()=>{
-        if(response.statusCode<200||response.statusCode>=300)return reject(new Error(`InPost HTTP ${response.statusCode}`));
-        try{resolve(JSON.parse(body))}catch{reject(new Error('Nieprawidłowa odpowiedź InPost.'))}
+        if(response.statusCode>=200&&response.statusCode<300){
+          try{return resolve(JSON.parse(body))}catch{}
+        }
+        tryHost(index+1).then(resolve,reject);
       });
     });
-    request.setTimeout(7000,()=>request.destroy(new Error('Przekroczono czas odpowiedzi InPost.')));
-    request.on('error',reject);
+    request.setTimeout(9000,()=>request.destroy(new Error('Timeout InPost')));
+    request.on('error',()=>tryHost(index+1).then(resolve,reject));
   });
+  return tryHost(0);
 }
 app.get('/api/inpost/points',async(req,res)=>{
   try{
     const p=new URLSearchParams();
     p.set('type','parcel_locker');
-    p.set('functions','parcel_collect');
-    p.set('per_page','100');
     const name=String(req.query.name||'').trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'').slice(0,30);
     const city=String(req.query.city||'').trim().replace(/[<>]/g,'').slice(0,80);
     const postCode=String(req.query.post_code||'').trim().slice(0,10);
     const relative=String(req.query.relative_point||'').trim();
-    if(name)p.set('name',name);
-    else if(/^\d{2}-\d{3}$/.test(postCode)){p.set('relative_post_code',postCode);p.set('sort_by','distance_to_relative_point');p.set('limit','100');}
-    else if(city)p.set('city',city);
+    if(name){p.set('name',name);p.set('per_page','100');}
+    else if(/^\d{2}-\d{3}$/.test(postCode)){p.set('relative_post_code',postCode);p.set('max_distance','25000');p.set('sort_by','distance_to_relative_point');p.set('limit','100');}
+    else if(city){p.set('city',city);p.set('per_page','100');}
     else if(relative){
       const m=relative.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
       if(!m)return res.status(400).json({error:'Nieprawidłowa lokalizacja.'});

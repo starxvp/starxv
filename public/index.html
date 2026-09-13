@@ -61,7 +61,7 @@
 <nav>
 <div class="sx-nav-brand"><a aria-label="STARXV" href="#">
 <img alt="STARXV" class="nav-logo" src="/assets/a21bc8c9acad5dd8.webp">
-</img></a></div>
+</img></a><span class="sx-test-version" data-ghost="">TEST VERSION 0.0</span></div>
 <div class="nav-links">
 <a href="#shop">Shop</a>
 <a href="#story">Brand</a>
@@ -663,14 +663,14 @@
   };
 
   const showStatus=(type,title,text,ms=4200)=>{statusBox.className=`payment-status ${type} show`;statusTitle.textContent=title;statusText.textContent=text;clearTimeout(showStatus.t);showStatus.t=setTimeout(()=>statusBox.classList.remove('show'),ms)};
-  const setStage=n=>{stage=n;stages.forEach(s=>s.classList.toggle('active',+s.dataset.stage===n));steps.forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1)});stageLabel.textContent=`ETAP ${n} Z 4`;window.scrollTo({top:0,behavior:'smooth'})};
+  const setStage=n=>{stage=n;stages.forEach(s=>s.classList.toggle('active',+s.dataset.stage===n));steps.forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1)});stageLabel.textContent=`ETAP ${n} Z 4`;window.scrollTo({top:0,behavior:'smooth'});if(n===3){setTimeout(()=>{if(!inpostMapReady)initInpostMap();else{inpostMap?.invalidateSize(true);loadAroundMap()}},120);setTimeout(()=>inpostMap?.invalidateSize(true),500)}};
   const renderSummary=()=>{const items=selectedItems(),COLOR_META=window.STARXV_COLOR_META||{black:{label:'Czarny'},pink:{label:'Różowy'},blue:{label:'Jasny niebieski'}},COLOR_IMAGES=window.STARXV_COLOR_IMAGES||{};summaryItems.innerHTML=items.map(x=>{const color=x.color||'black',cm=COLOR_META[color]||COLOR_META.black,img=x.image||((COLOR_IMAGES[color]||COLOR_IMAGES.black)||{}).front||'';return `<div class="summary-item"><img src="${img}" alt=""><div><div class="summary-item-name">${x.name}</div><div class="summary-item-meta">${x.fit}<br>Kolor: ${cm.label} • Rozmiar: ${x.size} • Ilość: ${x.qty}<br>${money(x.price*x.qty)}</div></div></div>`}).join('');const base=items.reduce((s,x)=>s+x.price*x.qty,0),afterDiscount=window.STARXV_DISCOUNT_TOTAL?window.STARXV_DISCOUNT_TOTAL(base):base,free=Number(shippingConfig.freeShippingFrom||0)>0&&afterDiscount>=Number(shippingConfig.freeShippingFrom||0),shipping=free?0:Number(deliveryMethod==='inpost'?shippingConfig.lockerPrice:shippingConfig.courierPrice)||0;summarySubtotal.textContent=money(afterDiscount);summaryShipping.textContent=shipping===0?'0 PLN':money(shipping);summaryTotal.textContent=money(Math.round((afterDiscount+shipping)*100)/100);document.querySelectorAll('[data-delivery]').forEach(btn=>{let x=btn.querySelector('.delivery-choice-price');if(!x){x=document.createElement('span');x.className='delivery-choice-price';btn.appendChild(x)}const price=btn.dataset.delivery==='inpost'?Number(shippingConfig.lockerPrice||0):Number(shippingConfig.courierPrice||0);x.textContent=free?'DARMOWA':money(price)})};
   const renderAddresses=()=>{const list=$('addressList'),addresses=getAddresses(),def=getDefaultId();if(!addresses.length){list.innerHTML='<div style="color:#777;font-size:12px">Brak zapisanych adresów. Wróć do poprzedniego etapu i dodaj adres.</div>';return}if(!selectedAddressId)selectedAddressId=def||addresses[0].id;list.innerHTML=addresses.map(a=>`<div class="address-card ${a.id===selectedAddressId?'selected':''}" data-id="${a.id}"><div class="address-radio"></div><strong>${a.firstName} ${a.lastName}</strong><p>${a.street}<br>${a.postal} ${a.city}, Polska<br>${a.email} • ${a.phone}</p>${a.id===def?'<span class="address-default">DOMYŚLNY ADRES</span>':''}</div>`).join('');list.querySelectorAll('.address-card').forEach(el=>el.onclick=()=>{selectedAddressId=el.dataset.id;renderAddresses()})};
   // Etap 3 — własna mapa punktów oparta na oficjalnym, publicznym zasobie InPost Points.
   const renderDeliveryAddress=()=>{const a=getAddresses().find(x=>x.id===selectedAddressId);$('deliveryAddressPreview').innerHTML=a?`<strong>${a.firstName} ${a.lastName}</strong><br>${a.street}<br>${a.postal} ${a.city}, Polska`:'<strong>Brak wybranego adresu.</strong><br>Wróć do etapu 2 i wybierz adres.'};
   const safeTxt=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const pointAddress=point=>{const a=point?.address_details||{},line1=point?.address?.line1||[a.street,a.building_number].filter(Boolean).join(' '),line2=point?.address?.line2||[a.post_code,a.city].filter(Boolean).join(' ');return [line1,line2].filter(Boolean).join(', ')||String(point?.location_description||'').trim()};
-  const renderSelectedLocker=()=>{const box=$('lockerSelected'),change=$('changeInpostPoint');if(!box)return;if(!selectedLocker){box.classList.remove('has-locker');box.innerHTML='<strong>Nie wybrano jeszcze punktu.</strong><br>Wybierz Paczkomat lub PaczkoPunkt bezpośrednio na mapie.';if(change)change.hidden=true;return}box.classList.add('has-locker');const coords=selectedLocker.location&&Number.isFinite(Number(selectedLocker.location.latitude))&&Number.isFinite(Number(selectedLocker.location.longitude))?`<span class="inpost-coords">${Number(selectedLocker.location.latitude).toFixed(5)}, ${Number(selectedLocker.location.longitude).toFixed(5)}</span>`:'';box.innerHTML=`<strong>${safeTxt(selectedLocker.id)}</strong><br>${safeTxt(selectedLocker.address)}${coords?'<br>'+coords:''}<br><span class="inpost-point-saved">Punkt odbioru zapisany do zamówienia</span>`;if(change)change.hidden=false};
+  const renderSelectedLocker=()=>{const box=$('lockerSelected'),change=$('changeInpostPoint');if(!box)return;const currentId=String(selectedLocker?.id||selectedLocker?.name||'').trim().toUpperCase(),currentAddress=String(selectedLocker?.address||'').trim().toLowerCase();if(currentId.startsWith('DEMO')||currentAddress.includes('przykładowa')){selectedLocker=null;localStorage.removeItem('starxv-selected-locker');localStorage.removeItem('starxv-delivery-choice')}if(!selectedLocker){box.classList.remove('has-locker');box.innerHTML='<strong>Nie wybrano jeszcze punktu.</strong><br>Wybierz Paczkomat lub PaczkoPunkt bezpośrednio na mapie.';if(change)change.hidden=true;return}box.classList.add('has-locker');const coords=selectedLocker.location&&Number.isFinite(Number(selectedLocker.location.latitude))&&Number.isFinite(Number(selectedLocker.location.longitude))?`<span class="inpost-coords">${Number(selectedLocker.location.latitude).toFixed(5)}, ${Number(selectedLocker.location.longitude).toFixed(5)}</span>`:'';box.innerHTML=`<strong>${safeTxt(selectedLocker.id)}</strong><br>${safeTxt(selectedLocker.address)}${coords?'<br>'+coords:''}<br><span class="inpost-point-saved">Punkt odbioru zapisany do zamówienia</span>`;if(change)change.hidden=false};
   const setSelectedInpostPoint=point=>{const id=String(point?.name||point?.id||'').trim().toUpperCase(),address=pointAddress(point),loc=point?.location||{};if(!id||!address){showStatus('error','Nie udało się wybrać punktu','Wybierz inny punkt na mapie.');return}selectedLocker={id,name:id,address,location:{latitude:Number(loc.latitude),longitude:Number(loc.longitude)},source:'inpost-points-map'};if(!Number.isFinite(selectedLocker.location.latitude)||!Number.isFinite(selectedLocker.location.longitude))delete selectedLocker.location;localStorage.setItem('starxv-selected-locker',JSON.stringify(selectedLocker));renderSelectedLocker();showStatus('success','Punkt InPost wybrany',`${id} został zapisany do zamówienia.`,2400)};
 
   let inpostMap=null,inpostLayer=null,inpostPoints=[],inpostMapReady=false,inpostMoveTimer=null,inpostAbort=null;
@@ -687,9 +687,22 @@
   $('inpostPointSearchBtn')?.addEventListener('click',searchInpost);$('inpostPointSearch')?.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();searchInpost()}});$('inpostFilter247')?.addEventListener('change',renderInpostPoints);$('inpostFilterEasy')?.addEventListener('change',renderInpostPoints);
   $('inpostUseLocation')?.addEventListener('click',()=>{if(!navigator.geolocation){showStatus('error','Brak lokalizacji','Ta przeglądarka nie udostępnia lokalizacji.');return}const btn=$('inpostUseLocation');btn.disabled=true;btn.textContent='POBIERANIE…';navigator.geolocation.getCurrentPosition(pos=>{btn.disabled=false;btn.textContent='◎ MOJA LOKALIZACJA';const lat=pos.coords.latitude,lng=pos.coords.longitude;if(inpostMap)inpostMap.setView([lat,lng],13);fetchInpostPoints({relative_point:`${lat},${lng}`,max_distance:'25000',limit:'100'},{fit:true})},()=>{btn.disabled=false;btn.textContent='◎ MOJA LOKALIZACJA';showStatus('error','Nie udało się pobrać lokalizacji','Możesz wyszukać miejscowość lub kod pocztowy ręcznie.')},{enableHighAccuracy:false,timeout:8000,maximumAge:300000})});
   $('changeInpostPoint')?.addEventListener('click',()=>{$('inpostCustomMap')?.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>inpostMap?.invalidateSize(),350)});
-  async function loadShippingConfig(){try{const r=await fetch('/api/shipping/config',{credentials:'include'}),d=await r.json();if(r.ok)shippingConfig={...shippingConfig,...d}}catch(e){}renderSummary();initInpostMap()}
-  const setDeliveryMethod=method=>{deliveryMethod=method;document.querySelectorAll('.delivery-choice').forEach(x=>x.classList.toggle('selected',x.dataset.delivery===method));$('inpostDeliveryPanel')?.classList.toggle('active',method==='inpost');$('addressDeliveryPanel')?.classList.toggle('active',method==='address');if(method==='address')renderDeliveryAddress();renderSummary()};
+  async function loadShippingConfig(){try{const r=await fetch('/api/shipping/config',{credentials:'include'}),d=await r.json();if(r.ok)shippingConfig={...shippingConfig,...d}}catch(e){}renderSummary();if(stage===3)initInpostMap()}
+  const setDeliveryMethod=method=>{deliveryMethod=method;document.querySelectorAll('.delivery-choice').forEach(x=>x.classList.toggle('selected',x.dataset.delivery===method));$('inpostDeliveryPanel')?.classList.toggle('active',method==='inpost');$('addressDeliveryPanel')?.classList.toggle('active',method==='address');if(method==='address')renderDeliveryAddress();if(method==='inpost'&&stage===3)setTimeout(()=>{if(!inpostMapReady)initInpostMap();else{inpostMap?.invalidateSize(true);loadAroundMap()}},100);renderSummary()};
   document.querySelectorAll('.delivery-choice').forEach(x=>x.addEventListener('click',()=>setDeliveryMethod(x.dataset.delivery)));
+  // Usuń pozostałości po wcześniejszych danych demonstracyjnych InPost.
+  try{
+    const legacyLocker=JSON.parse(localStorage.getItem('starxv-selected-locker')||'null');
+    const legacyId=String(legacyLocker?.id||legacyLocker?.name||'').trim().toUpperCase();
+    const legacyAddress=String(legacyLocker?.address||'').trim().toLowerCase();
+    if(legacyId.startsWith('DEMO')||legacyAddress.includes('przykładowa')){
+      localStorage.removeItem('starxv-selected-locker');
+      const legacyDelivery=JSON.parse(localStorage.getItem('starxv-delivery-choice')||'null');
+      const dId=String(legacyDelivery?.locker?.id||legacyDelivery?.locker?.name||'').trim().toUpperCase();
+      const dAddress=String(legacyDelivery?.locker?.address||'').trim().toLowerCase();
+      if(dId.startsWith('DEMO')||dAddress.includes('przykładowa')) localStorage.removeItem('starxv-delivery-choice');
+    }
+  }catch{}
   try{selectedLocker=JSON.parse(localStorage.getItem('starxv-selected-locker')||'null')}catch{}
   if(selectedLocker){
     const savedId=String(selectedLocker.id||selectedLocker.name||'').trim().toUpperCase();
@@ -698,7 +711,7 @@
       ? {latitude:Number(selectedLocker.location.latitude),longitude:Number(selectedLocker.location.longitude)}
       : undefined;
     selectedLocker={id:savedId,name:savedId,address:savedAddress,...(savedLocation?{location:savedLocation}:{})};
-    if(!selectedLocker.id||!selectedLocker.address)selectedLocker=null;
+    if(!selectedLocker.id||!selectedLocker.address||selectedLocker.id.startsWith('DEMO')||selectedLocker.address.toLowerCase().includes('przykładowa')){selectedLocker=null;localStorage.removeItem('starxv-selected-locker');localStorage.removeItem('starxv-delivery-choice')}
   }
   renderSelectedLocker();
   loadShippingConfig();
@@ -1894,6 +1907,47 @@ document.addEventListener('DOMContentLoaded',()=>{
   window.addEventListener('storage',e=>{if(e.key==='starxv-delivery-choice')update()});
   update();
   loadPrices();
+})();
+</script>
+
+<script>
+(() => {
+  const el = document.querySelector('.sx-test-version');
+  if (!el) return;
+
+  const target = 'TEST VERSION 0.0';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#<>/_-';
+  const randomChar = () => chars[Math.floor(Math.random() * chars.length)];
+
+  let running = false;
+  function runVersionLoad(){
+    if (running) return;
+    running = true;
+    el.classList.add('is-loading');
+    let frame = 0;
+    const totalFrames = 42;
+    const timer = setInterval(() => {
+      const progress = Math.min(target.length, Math.floor((frame / totalFrames) * (target.length + 1)));
+      let visible = '';
+      for (let i = 0; i < target.length; i++) {
+        const ch = target[i];
+        if (ch === ' ') visible += ' ';
+        else if (i < progress) visible += target[i];
+        else visible += randomChar();
+      }
+      el.textContent = visible;
+      el.setAttribute('data-ghost', visible);
+      frame++;
+      if (frame > totalFrames) {
+        clearInterval(timer);
+        el.textContent = target;
+        el.setAttribute('data-ghost', '');
+        el.classList.remove('is-loading');
+        running = false;
+      }
+    }, 28);
+  }
+  runVersionLoad();
 })();
 </script>
 </body>
