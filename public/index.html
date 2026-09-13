@@ -1586,6 +1586,43 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 
 </style>
 
+
+<style id="sxCartFullscreenV2">
+/* STARXV — full-screen cart page */
+.cart-modal{background:#050505!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;overflow:hidden}
+.cart-modal.open{background:#050505!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+.cart-panel{margin:0!important;width:100%!important;max-width:none!important;height:100%!important;border-left:0!important;box-shadow:none!important;background:#050505!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(340px,420px);grid-template-rows:92px minmax(0,1fr);transform:translateY(18px)!important;opacity:0!important;overflow:hidden}
+.cart-modal.open .cart-panel{transform:translateY(0)!important;opacity:1!important}
+.cart-header{grid-column:1/-1;height:92px;padding:0 5vw;border-bottom:1px solid var(--line);background:rgba(5,5,5,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.cart-title{font-size:24px}.cart-subtitle{font-size:8px;color:#5f5f5f;letter-spacing:.2em}
+.cart-close{width:42px;height:42px;font-size:24px;transition:.2s}.cart-close:hover{background:#fff;color:#000}
+.cart-body{grid-column:1;grid-row:2;overflow:auto;padding:38px clamp(28px,5vw,72px) 54px;scrollbar-width:thin}
+.cart-footer{grid-column:2;grid-row:2;overflow:auto;padding:34px 34px 40px;border-top:0!important;border-left:1px solid var(--line);background:#080808!important}
+.cart-item{max-width:840px;grid-template-columns:28px 112px minmax(0,1fr);gap:18px;padding:18px 0}
+.cart-thumb{border-radius:12px}.cart-check{width:19px;height:19px}
+.sx-cart-summary-pro{margin:0 0 18px!important}
+.sx-cart-summary-line{min-height:32px!important}
+.sx-cart-summary-line>span,.sx-cart-summary-line strong{font-size:13px!important;letter-spacing:0!important}
+.sx-cart-delivery-label{gap:7px!important}.sx-cart-truck{width:18px!important;height:18px!important;flex-basis:18px!important}.sx-suggested-info{width:18px!important;height:18px!important;flex-basis:18px!important;font-size:10px!important;border-width:1px!important}
+.sx-cart-summary-divider{margin:10px 0 13px!important;background:rgba(255,255,255,.12)!important}
+.sx-cart-total-line span{font-size:13px!important;font-weight:750!important;letter-spacing:.02em!important;text-transform:uppercase;color:#8a8a8a!important}
+.sx-cart-total-line strong{font-size:23px!important;font-weight:900!important;letter-spacing:-.035em!important}
+.sx-cart-total-note{margin-top:7px!important;text-align:left!important;color:#5f5f5f!important;font-size:7px!important;line-height:1.5!important;letter-spacing:.045em!important}
+.sx-promo{margin:0 0 15px!important}.sx-promo-row{border-radius:12px!important;padding:4px!important}.sx-promo-input{height:42px!important;font-size:10px!important;padding:0 10px!important}.sx-promo-btn,.sx-promo-remove{height:42px!important;padding:0 14px!important;font-size:8px!important}
+.sx-discount-row{margin:0 0 10px!important;font-size:8px!important}
+.checkout-btn{height:54px!important;border-radius:12px!important;font-size:9px!important;letter-spacing:.12em!important;margin-top:0!important}
+.checkout-hint{display:none!important}
+.cart-empty{min-height:calc(100vh - 190px)}
+.cart-guest-lock{min-height:calc(100vh - 190px)}
+@media(max-width:900px){
+  .cart-panel{grid-template-columns:1fr;grid-template-rows:78px auto auto;overflow:auto!important}
+  .cart-header{grid-column:1;grid-row:1;height:78px;position:sticky;top:0;z-index:3;padding:0 20px}
+  .cart-body{grid-column:1;grid-row:2;overflow:visible;padding:18px 18px 24px}
+  .cart-footer{grid-column:1;grid-row:3;overflow:visible;padding:22px 18px 28px;border-left:0!important;border-top:1px solid var(--line)!important}
+  .cart-item{grid-template-columns:24px 86px minmax(0,1fr);gap:11px;padding:16px 0}.cart-thumb{width:86px;height:108px}
+  .cart-empty,.cart-guest-lock{min-height:360px}
+}
+</style>
 </head>
 <body>
 <div id="starxvIntro" aria-hidden="true"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img class="starxv-intro-logo" alt="STARXV" src="/assets/a21bc8c9acad5dd8.webp"><div class="intro-loader" aria-hidden="true"><div class="intro-loader-fill"></div></div></div>
@@ -1834,39 +1871,6 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   </section>
 </div>
 
-<div class="cart-modal" id="cartModal" aria-hidden="true">
-  <aside class="cart-panel" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
-    <div class="cart-header">
-      <div class="cart-title-wrap"><div><div class="cart-title" id="cartTitle">TWÓJ KOSZYK</div><div class="cart-subtitle">STARXV / SELECT YOUR PRODUCT</div></div></div>
-      <button class="cart-close" id="closeCart" aria-label="Zamknij koszyk">×</button>
-    </div>
-    <div class="cart-body" id="cartItems"></div>
-    <div class="cart-footer">
-      <div class="sx-cart-summary-pro">
-        <div class="sx-cart-summary-line"><span class="sx-cart-products-label">Produkty (0)</span><strong class="sx-cart-products-total">0 PLN</strong></div>
-        <div class="sx-cart-summary-line">
-          <span class="sx-cart-delivery-label"><span class="sx-cart-truck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h11v10H3z"></path><path d="M14 10h3.2L21 13.8V16h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span>Dostawa sugerowana <button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button></span>
-          <strong class="sx-suggested-delivery-price">19,99 PLN</strong>
-        </div>
-        <div class="sx-cart-summary-divider"></div>
-        <div class="sx-cart-total-line"><span>Razem</span><strong id="cartTotal">0 PLN</strong></div>
-        <div class="sx-cart-total-note">Dostawa sugerowana nie jest doliczana do kwoty przed wyborem dostawy.</div>
-      </div>
-      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Kod rabatowy"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
-      <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
-      <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
-      <div class="checkout-hint" id="checkoutHint">Zaznacz co najmniej jeden produkt, aby przejść dalej.</div>
-    </div>
-  </aside>
-</div>
-<div class="cart-toast" id="cartToast" role="status" aria-live="polite"></div>
-<div class="sx-category-browser" id="sxCategoryBrowser" aria-hidden="true">
-  <div class="sx-category-shell">
-    <div class="sx-category-top"><div class="sx-category-brand">STARXV / COLLECTION</div><button class="sx-category-close" id="sxCategoryClose" type="button" aria-label="Zamknij kategorię">×</button></div>
-    <div class="sx-category-hero"><div class="sx-category-kicker" id="sxCategoryKicker">KATEGORIA</div><h2 class="sx-category-title" id="sxCategoryTitle">BLUZY.</h2><p class="sx-category-sub" id="sxCategorySub"></p><span class="sx-category-count" id="sxCategoryCount"></span></div>
-    <div class="sx-category-grid" id="sxCategoryGrid"></div>
-  </div>
-</div>
 <div class="sx-info-modal" id="sxShirtSizeGuide" aria-hidden="true"><div class="sx-info-card" role="dialog" aria-modal="true" aria-labelledby="sxShirtSizeGuideTitle"><div class="sx-info-head"><div><small>STARXV / FIT GUIDE</small><h3 id="sxShirtSizeGuideTitle">Tabela rozmiarów</h3></div><button class="sx-info-close" type="button" data-sx-close="shirtsize" aria-label="Zamknij">×</button></div><div class="sx-info-body"><p class="sx-info-lead">Koszulka ma krój oversized fit. Dokładne wymiary produkcyjne wpiszemy po zatwierdzeniu finalnego blanku, żeby nie podawać klientom wymyślonych wartości.</p><table class="sx-size-table"><thead><tr><th>Rozmiar</th><th>Szerokość A</th><th>Długość B</th><th>Rękaw C</th></tr></thead><tbody><tr><td><b>S</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>M</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>L</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>XL</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr></tbody></table><div class="sx-measure-grid"><div class="sx-measure-card"><b>A — SZEROKOŚĆ</b><span>Mierzona na płasko od pachy do pachy.</span></div><div class="sx-measure-card"><b>B — DŁUGOŚĆ</b><span>Od najwyższego punktu ramienia do dolnej krawędzi.</span></div><div class="sx-measure-card"><b>C — RĘKAW</b><span>Od szwu ramienia do końca mankietu.</span></div></div><div class="sx-size-note">Wymiary odzieży mogą różnić się o około 1–2 cm. Przed uruchomieniem sprzedaży uzupełnij wartości na podstawie rzeczywistej koszulki produkcyjnej.</div></div></div></div>
 
 <div class="account-modal" id="accountModal" aria-hidden="true">
@@ -1923,12 +1927,11 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
         </div>
         <div class="sx-cart-summary-divider"></div>
         <div class="sx-cart-total-line"><span>Razem</span><strong id="cartTotal">0 PLN</strong></div>
-        <div class="sx-cart-total-note">Dostawa sugerowana nie jest doliczana do kwoty przed wyborem dostawy.</div>
+        <div class="sx-cart-total-note">Kwota zawiera sugerowaną dostawę. Ostateczny koszt zależy od wybranej metody.</div>
       </div>
       <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Kod rabatowy"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
-      <div class="checkout-hint" id="checkoutHint">Zaznacz co najmniej jeden produkt, aby przejść dalej.</div>
     </div>
   </aside>
 </div>
@@ -2137,13 +2140,14 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     const selected=cart.filter(x=>x.selected);
     const selectedQty=selected.reduce((s,x)=>s+x.qty,0);
     const total=selected.reduce((sum,x)=>sum+x.price*x.qty,0),finalTotal=discountedTotal(total);
-    cartTotal.textContent=money(finalTotal);syncPromoUI(total);
+    const suggestedDelivery=19.99;
+    const grandTotal=selected.length?finalTotal+suggestedDelivery:0;
+    cartTotal.textContent=money(grandTotal);syncPromoUI(total);
     document.querySelectorAll('.sx-cart-products-label').forEach(el=>el.textContent=`Produkty (${selectedQty})`);
     document.querySelectorAll('.sx-cart-products-total').forEach(el=>el.textContent=money(finalTotal));
     const sxSelectAll=cartItems?.querySelector('.sx-select-all-check');
     if(sxSelectAll){sxSelectAll.checked=cart.length>0&&selected.length===cart.length;sxSelectAll.indeterminate=selected.length>0&&selected.length<cart.length;}
     checkoutBtn.disabled=selected.length===0;
-    checkoutHint.textContent=selected.length?`${selectedQty} szt. zaznaczone • możesz przejść dalej`:'Zaznacz co najmniej jeden produkt, aby przejść dalej.';
   };
   const addToCart=()=>{
     if(!window.STARXV_REQUIRE_AUTH?.())return;
