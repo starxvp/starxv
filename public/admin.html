@@ -153,8 +153,20 @@ async function api(url,opt={}){const r=await fetch(url,{credentials:'same-origin
 function showLogin(text='Zaloguj się kontem administratora.'){$('#app').classList.add('hidden');$('#login').classList.remove('hidden');$('#loginMsg').textContent=text}
 function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden')}
 async function boot(){try{const j=await api('/api/admin/me',{cache:'no-store'});$('#who').textContent=j.user.email;showApp();await load()}catch(e){showLogin(e.status===403?'To konto nie ma uprawnień administratora.':e.status===503?e.message:'Zaloguj się kontem administratora.');window.STARXV_ADMIN_INIT_GOOGLE?.()}}
-async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
+async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(j.catalog||{}))}catch{}render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
 function render(j){shippingConfig=j.shipping||shippingConfig;const s=j.stats||{};$('#sOrders').textContent=s.orders??0;$('#sPending').textContent=s.pending??0;$('#sRevenue').textContent=money(s.revenue);$('#sStock').textContent=s.stock??0;renderProducts(j.catalog||{});renderOrders(j.orders||[])}
+
+async function refreshCatalogCache(){
+  try{
+    const r=await fetch('/api/store/catalog',{credentials:'same-origin',cache:'no-store'});
+    if(!r.ok)return;
+    const j=await r.json();
+    if(j?.catalog&&typeof j.catalog==='object'){
+      localStorage.setItem('starxv-catalog-cache',JSON.stringify(j.catalog));
+    }
+  }catch{}
+}
+
 function renderProducts(catalog){
  $('#products').innerHTML=Object.entries(catalog).map(([pid,p])=>`<div class="card productBox" data-product="${esc(pid)}">
   <div class="productBoxHead">
@@ -181,7 +193,7 @@ function renderProducts(catalog){
  </div>`).join('');
  document.querySelectorAll('[data-save-stock]').forEach(b=>b.onclick=saveStock);document.querySelectorAll('[data-save-color-images]').forEach(b=>b.onclick=saveColorImages);document.querySelectorAll('[data-delete-color]').forEach(b=>b.onclick=deleteColor);document.querySelectorAll('[data-save-product]').forEach(b=>b.onclick=saveProduct);document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=deleteProduct);document.querySelectorAll('[data-add-color]').forEach(b=>b.onclick=addColor);document.querySelectorAll('[data-add-size]').forEach(b=>b.onclick=addSize)
 }
-async function saveProduct(e){const box=e.currentTarget.closest('[data-product]');try{e.currentTarget.disabled=true;await api('/api/admin/products/'+encodeURIComponent(box.dataset.product),{method:'PUT',body:JSON.stringify({name:box.querySelector('[data-pname]').value,price:Number(box.querySelector('[data-pprice]').value),fit:box.querySelector('[data-pfit]').value,category:box.querySelector('[data-pcategory]').value,image:box.querySelector('[data-pimage]').value,composition:box.querySelector('[data-pcomposition]').value,discountPercent:Number(box.querySelector('[data-pdiscount]').value||0)})});$('#msg').textContent='Produkt zapisany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
+async function saveProduct(e){const box=e.currentTarget.closest('[data-product]');try{e.currentTarget.disabled=true;await api('/api/admin/products/'+encodeURIComponent(box.dataset.product),{method:'PUT',body:JSON.stringify({name:box.querySelector('[data-pname]').value,price:Number(box.querySelector('[data-pprice]').value),fit:box.querySelector('[data-pfit]').value,category:box.querySelector('[data-pcategory]').value,image:box.querySelector('[data-pimage]').value,composition:box.querySelector('[data-pcomposition]').value,discountPercent:Number(box.querySelector('[data-pdiscount]').value||0)})});$('#msg').textContent='Produkt zapisany.';await refreshCatalogCache();await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function deleteProduct(e){
  const box=e.currentTarget.closest('[data-product]'), id=box.dataset.product, name=box.querySelector('[data-pname]')?.value||id;
  if(!confirm(`Usunąć produkt „${name}”? Zniknie ze sklepu i z panelu. Tej operacji nie da się cofnąć.`))return;
@@ -216,7 +228,7 @@ async function saveColorImages(e){
 async function saveStock(e){const input=e.currentTarget.previousElementSibling,[productId,color,size]=input.dataset.stock.split('|');try{e.currentTarget.disabled=true;await api('/api/admin/stock',{method:'PUT',body:JSON.stringify({productId,color,size,stock:Number(input.value)})});$('#msg').textContent='Stan zapisany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function addColor(e){const box=e.currentTarget.closest('[data-product]'),id=e.currentTarget.dataset.pid;try{e.currentTarget.disabled=true;await api('/api/admin/products/'+encodeURIComponent(id)+'/colors',{method:'POST',body:JSON.stringify({color:box.querySelector('[data-new-color-id]').value,label:box.querySelector('[data-new-color-label]').value})});$('#msg').textContent='Kolor dodany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function addSize(e){const colorBox=e.currentTarget.closest('.colorBox'),id=e.currentTarget.dataset.pid,color=e.currentTarget.dataset.color;try{e.currentTarget.disabled=true;await api('/api/admin/products/'+encodeURIComponent(id)+'/colors/'+encodeURIComponent(color)+'/sizes',{method:'POST',body:JSON.stringify({size:colorBox.querySelector('[data-new-size]').value,stock:Number(colorBox.querySelector('[data-new-size-stock]').value)})});$('#msg').textContent='Rozmiar dodany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
-$('#addProduct').onclick=async()=>{try{$('#addProduct').disabled=true;await api('/api/admin/products',{method:'POST',body:JSON.stringify({id:$('#newId').value,name:$('#newName').value,price:Number($('#newPrice').value),fit:$('#newFit').value,category:$('#newCategory').value,image:$('#newImage').value,composition:$('#newComposition').value,discountPercent:Number($('#newDiscount').value||0)})});$('#newId').value=$('#newName').value=$('#newPrice').value=$('#newFit').value=$('#newImage').value=$('#newComposition').value=$('#newDiscount').value='';$('#newCategory').value='hoodies';$('#msg').textContent='Nowy produkt dodany.';await load()}catch(e){alert(e.message)}finally{$('#addProduct').disabled=false}};
+$('#addProduct').onclick=async()=>{try{$('#addProduct').disabled=true;await api('/api/admin/products',{method:'POST',body:JSON.stringify({id:$('#newId').value,name:$('#newName').value,price:Number($('#newPrice').value),fit:$('#newFit').value,category:$('#newCategory').value,image:$('#newImage').value,composition:$('#newComposition').value,discountPercent:Number($('#newDiscount').value||0)})});$('#newId').value=$('#newName').value=$('#newPrice').value=$('#newFit').value=$('#newImage').value=$('#newComposition').value=$('#newDiscount').value='';$('#newCategory').value='hoodies';$('#msg').textContent='Nowy produkt dodany.';await refreshCatalogCache();await load()}catch(e){alert(e.message)}finally{$('#addProduct').disabled=false}};
 function renderOrders(orders){
  if(!orders.length){$('#orders').innerHTML='<div class="card meta">Brak zamówień.</div>';return}
  $('#orders').innerHTML=orders.map(o=>{

@@ -90,6 +90,16 @@
 .cart-item-price .sx-cart-save{font-size:9px;color:#888;font-weight:700}
 </style>
 
+
+<script id="starxv-catalog-cache-bootstrap">
+(()=>{
+  try{
+    const cached=JSON.parse(localStorage.getItem('starxv-catalog-cache')||'null');
+    if(cached&&typeof cached==='object')window.STARXV_CATALOG=cached;
+  }catch{}
+})();
+</script>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -530,7 +540,7 @@
   const show=n=>{i=(n+2)%2;t.style.transform=`translateX(-${i*100}%)`;dots.forEach((d,x)=>d.classList.toggle('active',x===i));label.textContent=i===0?'FRONT / 01':'BACK / 02'};
   const openProduct=()=>{m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';show(0)};
   const closeProduct=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!cartModal.classList.contains('open'))document.body.style.overflow=''};
-  const openCart=()=>{closeProduct();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));};
+  const openCart=()=>{closeProduct();hydrateCartDiscounts();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));window.STARXV_SYNC_CATALOG?.();};
   const closeCart=()=>{cartModal.classList.remove('open');cartModal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
   window.addEventListener('starxv:cart-updated',()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}));}catch{}renderCart();});
   const promoInput=document.getElementById('sxPromoInput'),promoApply=document.getElementById('sxPromoApply'),promoRemove=document.getElementById('sxPromoRemove'),promoMessage=document.getElementById('sxPromoMessage'),discountRow=document.getElementById('sxDiscountRow'),discountCode=document.getElementById('sxDiscountCode'),discountValue=document.getElementById('sxDiscountValue');
@@ -542,7 +552,10 @@
   
   const hydrateCartDiscounts=()=>{
     try{
-      const catalog=window.STARXV_CATALOG||{};
+      let catalog=window.STARXV_CATALOG||{};
+      if(!Object.keys(catalog).length){
+        try{catalog=JSON.parse(localStorage.getItem('starxv-catalog-cache')||'{}')||{};window.STARXV_CATALOG=catalog}catch{}
+      }
       let changed=false;
       for(const item of cart){
         const p=catalog[item.id];
@@ -1600,7 +1613,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   const copySizes=(target,source)=>{if(!target||!source)return;for(const [size,n] of Object.entries(source))target[size]=Number(n||0)};
   async function syncCatalog(){
     try{
-      const r=await fetch('/api/store/catalog',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json(),c=j.catalog||{};
+      const r=await fetch('/api/store/catalog',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json(),c=j.catalog||{};window.STARXV_CATALOG=c;try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(c))}catch{}
       const effectivePrice=p=>{const base=Number(p?.price||0),disc=Math.min(99,Math.max(0,Number(p?.discountPercent||0)));return {base,disc,price:disc>0?Math.round(base*(1-disc/100)*100)/100:base}};
       const priceHTML=p=>{const x=effectivePrice(p);return x.disc>0?`<span class="sx-static-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span><span class="sx-static-old-price">${Number(x.base).toFixed(x.base%1?2:0)} PLN</span><span class="sx-static-discount">-${x.disc}%</span>`:`${Number(x.base).toFixed(x.base%1?2:0)} PLN`};
       const applyStatic=(id,p,cardSel,modalSel,productObj,searchObj)=>{
