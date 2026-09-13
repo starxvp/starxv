@@ -706,7 +706,15 @@
   const setDeliveryMethod=method=>{deliveryMethod=method;document.querySelectorAll('.delivery-choice').forEach(x=>x.classList.toggle('selected',x.dataset.delivery===method));$('inpostDeliveryPanel')?.classList.toggle('active',method==='inpost');$('addressDeliveryPanel')?.classList.toggle('active',method==='address');if(method==='address')renderDeliveryAddress();renderSummary()};
   document.querySelectorAll('.delivery-choice').forEach(x=>x.addEventListener('click',()=>setDeliveryMethod(x.dataset.delivery)));
   try{selectedLocker=JSON.parse(localStorage.getItem('starxv-selected-locker')||'null')}catch{}
-  if(selectedLocker){selectedLocker={id:cleanLockerCode(selectedLocker.id||selectedLocker.name),name:cleanLockerCode(selectedLocker.id||selectedLocker.name),address:cleanLockerAddress(selectedLocker.address)};if(!selectedLocker.id||!selectedLocker.address)selectedLocker=null}
+  if(selectedLocker){
+    const savedId=String(selectedLocker.id||selectedLocker.name||'').trim().toUpperCase();
+    const savedAddress=String(selectedLocker.address||'').trim();
+    const savedLocation=selectedLocker.location&&Number.isFinite(Number(selectedLocker.location.latitude))&&Number.isFinite(Number(selectedLocker.location.longitude))
+      ? {latitude:Number(selectedLocker.location.latitude),longitude:Number(selectedLocker.location.longitude)}
+      : undefined;
+    selectedLocker={id:savedId,name:savedId,address:savedAddress,...(savedLocation?{location:savedLocation}:{})};
+    if(!selectedLocker.id||!selectedLocker.address)selectedLocker=null;
+  }
   renderSelectedLocker();
   loadShippingConfig();
   const validate=()=>{let ok=true;fields.forEach(id=>{const el=$(id),val=el.value.trim();let valid=!!val;if(id==='email')valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);if(id==='postal')valid=/^\d{2}-\d{3}$/.test(val);el.classList.toggle('invalid',!valid);if(!valid)ok=false});return ok};
