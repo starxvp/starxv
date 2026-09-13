@@ -1514,6 +1514,76 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
 .sx-suggested-body{padding:20px;color:#8a8a8a;font-size:10px;line-height:1.7}.sx-suggested-body p{margin:0 0 12px}.sx-suggested-body p:last-child{margin-bottom:0}
 .sx-suggested-body strong{color:#fff}.sx-suggested-example{margin:15px 0;padding:13px 14px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:#0d0d0d;color:#aaa}
 @media(max-width:560px){.sx-suggested-delivery{font-size:8px}.sx-suggested-delivery strong{font-size:19px}.sx-suggested-card{border-radius:16px}.sx-suggested-body{font-size:9px}}
+
+/* STARXV cart visual refresh v2 — mockup-inspired, keeps product selection */
+.cart-panel{width:min(690px,100%)}
+.cart-body{padding:24px 32px 28px}
+.cart-item{position:relative;grid-template-columns:30px 120px minmax(0,1fr);gap:18px;padding:20px 0 26px;align-items:center}
+.cart-check{width:22px;height:22px;border:1.5px solid rgba(255,255,255,.72);border-radius:6px;background:#0a0a0a}
+.cart-check:checked:after{font-size:14px}
+.cart-thumb{width:120px;height:140px;border-radius:14px;border-color:rgba(255,255,255,.12);background:#0c0c0c}
+.cart-item-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+.cart-item-titleblock{min-width:0;flex:1}
+.cart-item-name{font-size:16px;font-weight:850;line-height:1.28;letter-spacing:-.015em}
+.cart-item-fit{margin-top:5px;color:#fff;font-size:11px;letter-spacing:.02em;font-weight:750}
+.cart-item-side{display:flex;align-items:flex-start;gap:12px;flex:0 0 auto}
+.cart-item-price{font-size:18px;font-weight:850;white-space:nowrap;color:#fff}
+.remove-item{width:28px;height:28px;padding:0;display:grid;place-items:center;border:0;background:transparent;color:#777;font-size:24px;line-height:1;letter-spacing:0;font-weight:300;cursor:pointer}
+.remove-item:hover{color:#fff}
+.cart-item-meta{gap:8px;margin-top:12px;font-size:13px;color:#777;letter-spacing:0}
+.cart-item-meta span{display:inline-flex;gap:4px}
+.cart-item-meta b{color:#8b8b8b;font-weight:600}
+.cart-row-bottom{justify-content:flex-end;margin-top:18px}
+.qty{height:38px;border-color:rgba(255,255,255,.14);border-radius:9px;overflow:hidden}
+.qty button{width:38px;height:36px;font-size:20px}.qty span{min-width:34px;font-size:13px}
+
+.sx-cart-select-all{display:flex;align-items:center;gap:14px;padding:4px 0 22px;margin-bottom:2px;border-bottom:1px solid rgba(255,255,255,.12);color:#fff}
+.sx-cart-select-all .sx-select-all-check{appearance:none;width:24px;height:24px;flex:0 0 24px;border:1.5px solid rgba(255,255,255,.82);border-radius:6px;background:#0a0a0a;cursor:pointer;display:grid;place-items:center}
+.sx-cart-select-all .sx-select-all-check:checked{background:#fff;border-color:#fff}.sx-cart-select-all .sx-select-all-check:checked:after{content:'✓';color:#000;font-size:15px;font-weight:900}
+.sx-cart-select-all .sx-select-all-check:indeterminate{background:linear-gradient(#fff,#fff) center/11px 2px no-repeat #0a0a0a;border-color:#fff}
+.sx-cart-select-all label{font-size:14px;font-weight:650;cursor:pointer;color:#fff}
+
+.cart-footer{padding:24px 32px 30px;background:#080808}
+.sx-cart-summary-pro{margin:0 0 24px}
+.sx-cart-summary-line,.sx-cart-total-line{display:flex;align-items:center;justify-content:space-between;gap:18px;color:#fff}
+.sx-cart-summary-line{min-height:42px;font-size:19px}
+.sx-cart-summary-line>span{display:flex;align-items:center;gap:10px;font-size:19px;font-weight:650;letter-spacing:-.02em;color:#fff}
+.sx-cart-summary-line strong{font-size:19px;font-weight:760;color:#fff;white-space:nowrap}
+.sx-cart-delivery-label{display:flex;align-items:center;gap:10px;min-width:0}
+.sx-cart-truck{width:23px;height:23px;flex:0 0 23px;color:#fff}
+.sx-cart-truck svg{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.sx-suggested-info{width:22px;height:22px;flex:0 0 22px;border:1.5px solid rgba(255,255,255,.7);border-radius:50%;background:transparent;color:#fff;font:inherit;font-size:13px;font-weight:800;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0;text-transform:none}
+.sx-suggested-info:hover{background:#fff;color:#000}
+.sx-cart-summary-divider{height:1px;background:rgba(255,255,255,.18);margin:14px 0 18px}
+.sx-cart-total-line span,.sx-cart-total-line strong{font-size:25px;font-weight:900;letter-spacing:-.035em;color:#fff}
+.sx-cart-total-note{margin-top:6px;text-align:right;color:#666;font-size:8px;font-weight:700;letter-spacing:.06em}
+
+.sx-promo{margin:0 0 22px;padding:0;border:0;background:transparent;border-radius:0}
+.sx-promo-label,.sx-promo-message{display:none}
+.sx-promo-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:0;border:1px solid rgba(255,255,255,.28);border-radius:16px;padding:5px;background:#090909;overflow:hidden}
+.sx-promo-input{height:52px;border:0!important;border-radius:12px;background:transparent;color:#fff;padding:0 14px;font-size:13px;text-transform:none}
+.sx-promo-input::placeholder{color:#666}
+.sx-promo-btn,.sx-promo-remove{height:52px;border:1px solid rgba(255,255,255,.16);border-radius:999px;background:#171717;color:#fff;padding:0 22px;font-size:10px;font-weight:850;letter-spacing:.04em}
+.sx-promo-remove{margin-left:6px}
+.sx-discount-row{margin:0 0 14px;font-size:10px}
+.checkout-btn{height:68px;border-radius:999px;font-size:13px;letter-spacing:.045em;font-weight:900;margin-top:2px}
+.checkout-btn:not(:disabled):hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(255,255,255,.08)}
+.checkout-hint{margin-top:12px;font-size:9px}
+
+/* Old one-line suggested-delivery row is replaced by .sx-cart-summary-pro */
+.sx-suggested-delivery{display:none!important}
+
+@media(max-width:600px){
+  .cart-body{padding:16px 18px 22px}.cart-footer{padding:20px 18px 24px}
+  .cart-item{grid-template-columns:24px 82px minmax(0,1fr);gap:11px;padding:16px 0 20px}
+  .cart-thumb{width:82px;height:104px;border-radius:11px}.cart-check{width:20px;height:20px}
+  .cart-item-name{font-size:12px}.cart-item-fit{font-size:9px}.cart-item-price{font-size:13px}.remove-item{font-size:20px;width:22px;height:22px}
+  .cart-item-meta{font-size:10px;margin-top:8px}.cart-row-bottom{margin-top:11px}.qty{height:32px}.qty button{width:30px;height:30px;font-size:17px}.qty span{min-width:25px;font-size:10px}
+  .sx-cart-select-all{gap:11px;padding-bottom:17px}.sx-cart-select-all .sx-select-all-check{width:22px;height:22px;flex-basis:22px}.sx-cart-select-all label{font-size:12px}
+  .sx-cart-summary-line{min-height:36px}.sx-cart-summary-line>span,.sx-cart-summary-line strong{font-size:16px}.sx-cart-truck{width:20px;height:20px;flex-basis:20px}.sx-suggested-info{width:19px;height:19px;flex-basis:19px;font-size:11px}
+  .sx-cart-total-line span,.sx-cart-total-line strong{font-size:22px}.sx-promo-input{height:48px;font-size:12px}.sx-promo-btn,.sx-promo-remove{height:48px;padding:0 16px;font-size:9px}.checkout-btn{height:62px;font-size:11px}
+}
+
 </style>
 
 </head>
@@ -1772,10 +1842,18 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     </div>
     <div class="cart-body" id="cartItems"></div>
     <div class="cart-footer">
-      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
+      <div class="sx-cart-summary-pro">
+        <div class="sx-cart-summary-line"><span class="sx-cart-products-label">Produkty (0)</span><strong class="sx-cart-products-total">0 PLN</strong></div>
+        <div class="sx-cart-summary-line">
+          <span class="sx-cart-delivery-label"><span class="sx-cart-truck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h11v10H3z"></path><path d="M14 10h3.2L21 13.8V16h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span>Dostawa sugerowana <button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button></span>
+          <strong class="sx-suggested-delivery-price">19,99 PLN</strong>
+        </div>
+        <div class="sx-cart-summary-divider"></div>
+        <div class="sx-cart-total-line"><span>Razem</span><strong id="cartTotal">0 PLN</strong></div>
+        <div class="sx-cart-total-note">Dostawa sugerowana nie jest doliczana do kwoty przed wyborem dostawy.</div>
+      </div>
+      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Kod rabatowy"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
-      <div class="cart-summary-row"><span>ZAZNACZONE / RAZEM</span><strong id="cartTotal">0 PLN</strong></div>
-      <div class="sx-suggested-delivery"><button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button><span>Dostawa sugerowana: <strong class="sx-suggested-delivery-price">19,99 PLN</strong></span></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
       <div class="checkout-hint" id="checkoutHint">Zaznacz co najmniej jeden produkt, aby przejść dalej.</div>
     </div>
@@ -1837,10 +1915,18 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
     </div>
     <div class="cart-body" id="cartItems"></div>
     <div class="cart-footer">
-      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Wpisz kod"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Kod testowy: STARXV10 daje 10% rabatu.</div></div>
+      <div class="sx-cart-summary-pro">
+        <div class="sx-cart-summary-line"><span class="sx-cart-products-label">Produkty (0)</span><strong class="sx-cart-products-total">0 PLN</strong></div>
+        <div class="sx-cart-summary-line">
+          <span class="sx-cart-delivery-label"><span class="sx-cart-truck" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 6h11v10H3z"></path><path d="M14 10h3.2L21 13.8V16h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span>Dostawa sugerowana <button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button></span>
+          <strong class="sx-suggested-delivery-price">19,99 PLN</strong>
+        </div>
+        <div class="sx-cart-summary-divider"></div>
+        <div class="sx-cart-total-line"><span>Razem</span><strong id="cartTotal">0 PLN</strong></div>
+        <div class="sx-cart-total-note">Dostawa sugerowana nie jest doliczana do kwoty przed wyborem dostawy.</div>
+      </div>
+      <div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Kod rabatowy"><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button class="sx-promo-remove" id="sxPromoRemove" type="button" aria-label="Usuń kod rabatowy">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
       <div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
-      <div class="cart-summary-row"><span>ZAZNACZONE / RAZEM</span><strong id="cartTotal">0 PLN</strong></div>
-      <div class="sx-suggested-delivery"><button class="sx-suggested-info" type="button" aria-label="Jak działa dostawa sugerowana?" title="Jak działa dostawa sugerowana?">i</button><span>Dostawa sugerowana: <strong class="sx-suggested-delivery-price">19,99 PLN</strong></span></div>
       <button class="checkout-btn" id="checkoutBtn" type="button" disabled>SFINALIZUJ ZAMÓWIENIE →</button>
       <div class="checkout-hint" id="checkoutHint">Zaznacz co najmniej jeden produkt, aby przejść dalej.</div>
     </div>
@@ -2022,14 +2108,22 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
       cartTotal.textContent='0 PLN';syncPromoUI(0);checkoutBtn.disabled=true;checkoutHint.textContent='Zaznacz co najmniej jeden produkt, aby przejść dalej.';save();return;
     }
     const imgFor=x=>x.image||((COLOR_IMAGES[x.color||'black']||COLOR_IMAGES.black).front);
-    cartItems.innerHTML=cart.map((x,idx)=>`<div class="cart-item" data-index="${idx}">
+    const allQty=cart.reduce((sum,x)=>sum+x.qty,0);
+    const allSelected=cart.length>0&&cart.every(x=>x.selected);
+    cartItems.innerHTML=`<div class="sx-cart-select-all"><input class="sx-select-all-check" id="sxSelectAllCart" type="checkbox" ${allSelected?'checked':''} aria-label="Zaznacz wszystkie produkty"><label for="sxSelectAllCart">Zaznacz wszystkie (${allQty})</label></div>`+cart.map((x,idx)=>`<div class="cart-item" data-index="${idx}">
       <input class="cart-check" type="checkbox" ${x.selected?'checked':''} aria-label="Zaznacz ${x.name}, rozmiar ${x.size}">
       <div class="cart-thumb"><img src="${imgFor(x)}" alt="${x.name}"></div>
       <div class="cart-item-main">
-        <div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div>
-        <div class="cart-item-meta"><span>KOLOR <b>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</b></span><span>ROZMIAR <b>${x.size}</b></span><span>CENA <b>${money(x.price)}</b></span></div>
-        <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div><button class="remove-item">USUŃ</button></div>
+        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div></div><div class="cart-item-side"><strong class="cart-item-price">${money(x.price*x.qty)}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
+        <div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div>
+        <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div></div>
       </div></div>`).join('');
+    const sxSelectAll=cartItems.querySelector('.sx-select-all-check');
+    if(sxSelectAll){
+      const selectedCount=cart.filter(x=>x.selected).length;
+      sxSelectAll.indeterminate=selectedCount>0&&selectedCount<cart.length;
+      sxSelectAll.onchange=e=>{cart.forEach(x=>x.selected=e.target.checked);save();renderCart()};
+    }
     cartItems.querySelectorAll('.cart-item').forEach(row=>{
       const idx=+row.dataset.index;
       row.querySelector('.cart-check').onchange=e=>{cart[idx].selected=e.target.checked;save();updateSummary()};
@@ -2041,10 +2135,15 @@ body.sx-light-theme .sx-theme-inline-color.active{border-color:#111!important;bo
   };
   const updateSummary=()=>{
     const selected=cart.filter(x=>x.selected);
+    const selectedQty=selected.reduce((s,x)=>s+x.qty,0);
     const total=selected.reduce((sum,x)=>sum+x.price*x.qty,0),finalTotal=discountedTotal(total);
     cartTotal.textContent=money(finalTotal);syncPromoUI(total);
+    document.querySelectorAll('.sx-cart-products-label').forEach(el=>el.textContent=`Produkty (${selectedQty})`);
+    document.querySelectorAll('.sx-cart-products-total').forEach(el=>el.textContent=money(finalTotal));
+    const sxSelectAll=cartItems?.querySelector('.sx-select-all-check');
+    if(sxSelectAll){sxSelectAll.checked=cart.length>0&&selected.length===cart.length;sxSelectAll.indeterminate=selected.length>0&&selected.length<cart.length;}
     checkoutBtn.disabled=selected.length===0;
-    checkoutHint.textContent=selected.length?`${selected.reduce((s,x)=>s+x.qty,0)} szt. zaznaczone • możesz przejść dalej`:'Zaznacz co najmniej jeden produkt, aby przejść dalej.';
+    checkoutHint.textContent=selected.length?`${selectedQty} szt. zaznaczone • możesz przejść dalej`:'Zaznacz co najmniej jeden produkt, aby przejść dalej.';
   };
   const addToCart=()=>{
     if(!window.STARXV_REQUIRE_AUTH?.())return;
