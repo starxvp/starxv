@@ -1369,7 +1369,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
     const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
-    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>DOSTAWA I ZWROTY</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
+    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();},0);
   }
@@ -1425,44 +1425,31 @@ const renderCart=()=>{hydrateCartDiscounts();
 <script id="starxv-shipping-returns-script">
 (function(){
   function ensureShippingReturns(){
-    var profile=document.getElementById('accountProfile');
-    if(!profile) return;
     var dash=document.getElementById('sxAccountDashboard');
     if(!dash) return;
-    var links=dash.querySelector('.sx-account-links');
-    if(!links) return;
-    if(!document.getElementById('sxShippingReturnsBtn')){
-      var btn=document.createElement('button');
-      btn.className='sx-shipreturn-btn';
+
+    var btn=document.getElementById('sxShippingReturnsBtn');
+    if(!btn){
+      var links=dash.querySelector('.sx-account-links');
+      if(!links) return;
+      btn=document.createElement('button');
+      btn.className='sx-shipreturn-btn sx-profile-link-card';
       btn.id='sxShippingReturnsBtn';
       btn.type='button';
-      btn.textContent='DOSTAWA I ZWROTY →';
+      btn.innerHTML='<span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span>';
       links.appendChild(btn);
     }
-    if(!document.getElementById('sxShippingReturnsView')){
-      var view=document.createElement('div');
-      view.className='sx-shipreturn-view';
-      view.id='sxShippingReturnsView';
-      view.innerHTML=`
-        <div class="sx-shipreturn-head"><h3>Dostawa i zwroty</h3><button class="sx-shipreturn-close" id="sxShippingReturnsClose" type="button" aria-label="Zamknij">×</button></div>
-        <div class="sx-shipreturn-section"><div class="sx-shipreturn-kicker">DOSTAWA</div><b>Jak wysyłamy zamówienia?</b><p>Podczas składania zamówienia wybierasz dostawę do Paczkomatu InPost albo na wskazany adres. Wybrana metoda i miejsce dostawy pojawią się w podsumowaniu zamówienia.</p></div>
-        <div class="sx-shipreturn-section"><div class="sx-shipreturn-kicker">CZAS REALIZACJI</div><b>Przygotowanie i wysyłka</b><p>Szacowany czas dostawy to zwykle 2–5 dni roboczych od potwierdzenia płatności. Przy premierach i większej liczbie zamówień czas może się wydłużyć.</p></div>
-        <div class="sx-shipreturn-section"><div class="sx-shipreturn-kicker">ŚLEDZENIE</div><b>Status zamówienia</b><p>Po zalogowaniu możesz sprawdzić swoje zamówienia w zakładce „Moje zamówienia”. Tam zobaczysz aktualny etap realizacji i wybraną metodę dostawy.</p></div>
-        <div class="sx-shipreturn-section"><div class="sx-shipreturn-kicker">ZWROTY</div><b>Chcesz zwrócić produkt?</b><p>Jeżeli chcesz zrezygnować z zakupu, skontaktuj się ze sklepem i podaj numer zamówienia. Produkt powinien być nieużywany, czysty i w stanie pozwalającym na ponowną sprzedaż.</p><ul class="sx-shipreturn-list"><li>nie usuwaj metek przed decyzją o zatrzymaniu produktu,</li><li>zabezpiecz bluzę przed wysyłką zwrotną,</li><li>dołącz numer zamówienia lub dane pozwalające je odnaleźć.</li></ul></div>
-        <div class="sx-shipreturn-section"><div class="sx-shipreturn-kicker">PROBLEM Z ZAMÓWIENIEM</div><b>Uszkodzenie lub zły produkt</b><p>Jeśli paczka dotarła uszkodzona albo otrzymałeś nieprawidłowy produkt, skontaktuj się ze sklepem możliwie szybko i opisz problem. Warto zachować opakowanie oraz zrobić zdjęcia paczki i produktu.</p></div>
-        <div class="sx-shipreturn-note">Ta sekcja ma charakter informacyjny. Przed uruchomieniem prawdziwej sprzedaży warto dopasować zasady dostawy i zwrotów do faktycznego regulaminu sklepu, przewoźnika i sposobu realizacji zamówień.</div>`;
-      dash.appendChild(view);
+
+    if(!btn.dataset.bound){
+      btn.dataset.bound='1';
+      btn.addEventListener('click',function(){
+        window.location.href='/returns.html';
+      });
     }
-    var btn=document.getElementById('sxShippingReturnsBtn');
-    var view=document.getElementById('sxShippingReturnsView');
-    var close=document.getElementById('sxShippingReturnsClose');
-    if(btn && !btn.dataset.bound){btn.dataset.bound='1';btn.addEventListener('click',function(){view.classList.add('open');view.scrollIntoView({behavior:'smooth',block:'nearest'});});}
-    if(close && !close.dataset.bound){close.dataset.bound='1';close.addEventListener('click',function(){view.classList.remove('open');});}
   }
+
   window.STARXV_ENSURE_SHIPPING_RETURNS=ensureShippingReturns;
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){setTimeout(ensureShippingReturns,80)}); else setTimeout(ensureShippingReturns,80);
-  var obs=new MutationObserver(function(){ensureShippingReturns()});
-  obs.observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(ensureShippingReturns,0);
 })();
 </script>
 <script id="starxv-store-upgrades-script-v1">
