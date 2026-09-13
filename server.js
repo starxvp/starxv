@@ -293,34 +293,18 @@ for(const sig of ['SIGTERM','SIGINT']){
   });
 }
 
-let stripeClient=null;
-function getStripe(){
-  const key=String(process.env.STRIPE_SECRET_KEY||'').trim();
-  if(!key)return null;
-  if(!stripeClient){
-    try{stripeClient=require('stripe')(key)}catch(e){
-      console.error('Stripe package error:',e.message);
-      return null;
-    }
-  }
-  return stripeClient;
-}
-
-// Stripe requires the untouched/raw request body for webhook signature verification.
-// Keep this route BEFORE express.json().
-app.post('/api/stripe/webhook',express.raw({type:'application/json'}),handleStripeWebhook);
+// Przelewy24 uses JSON requests, so the normal JSON parser can handle both checkout and callbacks.
 app.use(express.json({limit:'5mb'}));
 
 // Browser CSRF protection: unsafe API calls must come from this site. Requests
-// without Origin (server-to-server tools) are still allowed; Stripe has its own
-// signed webhook route above this middleware.
+// without Origin are blocked in production except authenticated server-to-server callbacks.
 app.use('/api',(req,res,next)=>{
   if(!['POST','PUT','PATCH','DELETE'].includes(req.method))return next();
   const origin=String(req.headers.origin||'').trim();
   // Browser state-changing requests must carry a same-site Origin. The InPost
   // webhook is server-to-server and authenticates separately below.
   if(!origin){
-    if(req.path==='/inpost/webhook')return next();
+    if(req.path==='/inpost/webhook'||req.path==='/p24/status')return next();
     if(process.env.NODE_ENV==='production')return res.status(403).json({error:'Brak nagłówka Origin.'});
     return next();
   }
@@ -348,6 +332,7 @@ app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000
 app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
 app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
 app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
+app.use('/api/p24/status',rateLimit('p24-status',120,10*60*1000));
 function cleanEmail(v){return String(v||'').trim().toLowerCase()}function publicUser(u){return {id:u.id,firstName:u.firstName,lastName:u.lastName,email:u.email,createdAt:u.createdAt,avatarData:u.avatarData||''}}
 function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(password,salt,64).toString('hex');return `${salt}:${hash}`}
 function checkPassword(password,stored){try{const [salt,hex]=stored.split(':');const a=Buffer.from(hex,'hex'),b=crypto.scryptSync(password,salt,64);return a.length===b.length&&crypto.timingSafeEqual(a,b)}catch{return false}}
@@ -1010,18 +995,39 @@ function markOrderPaid(db,order){
 }
 
 
-function stripeBaseUrl(req){
+function paymentBaseUrl(req){
   const configured=String(process.env.PUBLIC_URL||'').trim().replace(/\/$/,'');
   return configured||`${req.protocol}://${req.get('host')}`;
 }
-function stripeMethods(preference){
+function p24Config(){
+  const merchantId=Number(process.env.P24_MERCHANT_ID||0);
+  const posId=Number(process.env.P24_POS_ID||merchantId||0);
+  const apiKey=String(process.env.P24_API_KEY||'').trim();
+  const crc=String(process.env.P24_CRC||'').trim();
+  const sandbox=String(process.env.P24_SANDBOX||'true').toLowerCase()!=='false';
+  return {merchantId,posId,apiKey,crc,sandbox,apiBase:sandbox?'https://sandbox.przelewy24.pl/api/v1':'https://secure.przelewy24.pl/api/v1',payBase:sandbox?'https://sandbox.przelewy24.pl/trnRequest':'https://secure.przelewy24.pl/trnRequest'};
+}
+function p24Configured(){const c=p24Config();return Boolean(c.merchantId&&c.posId&&c.apiKey&&c.crc)}
+function p24Sign(obj){return crypto.createHash('sha384').update(JSON.stringify(obj)).digest('hex')}
+function p24Auth(c){return 'Basic '+Buffer.from(`${c.posId}:${c.apiKey}`).toString('base64')}
+function p24Channel(preference){
+  // P24 bitmask: 1 = cards + Apple Pay + Google Pay, 2 = bank transfers, 8192 = BLIK.
+  // Wallet visibility still depends on the customer's device/browser and services enabled on the P24 account.
   const p=String(preference||'auto');
-  if(p==='blik')return ['blik'];
-  if(p==='p24')return ['p24'];
-  if(p==='card')return ['card'];
-  if(p==='wallet')return ['card']; // Apple Pay / Google Pay are exposed through eligible card wallets.
-  if(p==='link')return ['card','link'];
-  return null;
+  if(p==='blik')return 8192;
+  if(p==='card'||p==='wallet')return 1;
+  if(p==='p24')return 2;
+  return 8195; // cards/wallets + transfers + BLIK
+}
+async function p24Request(path,options={}){
+  const c=p24Config();
+  const response=await fetch(c.apiBase+path,{...options,headers:{'Authorization':p24Auth(c),'Content-Type':'application/json','Accept':'application/json',...(options.headers||{})}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||Number(data?.responseCode||0)!==0){
+    const msg=data?.error||data?.data?.error||`Przelewy24 HTTP ${response.status}`;
+    const e=new Error(typeof msg==='string'?msg:'Przelewy24 odrzuciło żądanie.');e.status=response.status;throw e;
+  }
+  return data;
 }
 async function sendPaidOrderEmail(db,order){
   try{
@@ -1055,130 +1061,58 @@ async function sendOrderUpdateEmail(db,order,eventKey,opts={}){
     const to=cleanEmail(order.address?.email||u?.email);
     if(!to)return false;
     const tracking=String(order.trackingNumber||'').trim();
-    const t={
-      created:['Zamówienie zostało utworzone','Otrzymaliśmy Twoje zamówienie. Oczekujemy na potwierdzenie płatności.'],
-      paid:['Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.'],
-      preparing:['Przygotowujemy zamówienie','Twoje produkty są przygotowywane do wysyłki.'],
-      shipped:['Paczka została nadana',tracking?`Przesyłka została nadana. Numer InPost: ${tracking}`:'Przesyłka została nadana przewoźnikowi.'],
-      transit:['Paczka jest w drodze',tracking?`Przesyłka jest w drodze. Numer InPost: ${tracking}`:'Przesyłka jest w drodze.'],
-      delivered:['Zamówienie dostarczone','Przesyłka została oznaczona jako dostarczona. Dziękujemy za zakupy w STARXV.'],
-      tracking:['Numer przesyłki InPost',tracking?`Twój numer przesyłki InPost: ${tracking}`:'Do zamówienia został dodany numer przesyłki.'],
-      cancelled:['Zamówienie anulowane','Zamówienie zostało anulowane i nie będzie dalej realizowane.']
-    };
+    const t={created:['Zamówienie zostało utworzone','Otrzymaliśmy Twoje zamówienie. Oczekujemy na potwierdzenie płatności.'],paid:['Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.'],preparing:['Przygotowujemy zamówienie','Twoje produkty są przygotowywane do wysyłki.'],shipped:['Paczka została nadana',tracking?`Przesyłka została nadana. Numer InPost: ${tracking}`:'Przesyłka została nadana przewoźnikowi.'],transit:['Paczka jest w drodze',tracking?`Przesyłka jest w drodze. Numer InPost: ${tracking}`:'Przesyłka jest w drodze.'],delivered:['Zamówienie dostarczone','Przesyłka została oznaczona jako dostarczona. Dziękujemy za zakupy w STARXV.'],tracking:['Numer przesyłki InPost',tracking?`Twój numer przesyłki InPost: ${tracking}`:'Do zamówienia został dodany numer przesyłki.'],cancelled:['Zamówienie anulowane','Zamówienie zostało anulowane i nie będzie dalej realizowane.']};
     const [title,body]=t[eventKey]||['Aktualizacja zamówienia','Status Twojego zamówienia został zaktualizowany.'];
     const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const base=String(process.env.PUBLIC_URL||'https://starxv.pl').replace(/\/+$/,'');
     const resend=new Resend(key);
-    const {error}=await resend.emails.send({
-      from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,
-      subject:`STARXV — ${title} #${order.orderNo}`,
-      text:`STARXV\n\n${title}\nZamówienie #${order.orderNo}\n\n${body}${tracking?`\n\nInPost: ${tracking}`:''}\n\nStatus zamówienia: ${base}`,
-      html:`<div style="background:#090909;color:#fff;font-family:Arial,sans-serif;padding:36px 20px"><div style="max-width:560px;margin:auto"><div style="font-size:25px;font-weight:900;letter-spacing:5px;margin-bottom:30px">STARXV</div><div style="font-size:10px;color:#777;letter-spacing:2px">ZAMÓWIENIE #${esc(order.orderNo)}</div><h1 style="font-size:22px;margin:10px 0 14px">${esc(title)}</h1><p style="font-size:14px;line-height:1.7;color:#bbb">${esc(body)}</p>${tracking?`<div style="border:1px solid #292929;padding:14px;margin:22px 0"><span style="font-size:10px;color:#777">INPOST</span><br><b>${esc(tracking)}</b></div>`:''}<a href="${esc(base)}" style="display:inline-block;background:#fff;color:#000;text-decoration:none;padding:12px 18px;font-size:11px;font-weight:900;margin-top:12px">SPRAWDŹ ZAMÓWIENIE →</a><div style="font-size:10px;color:#555;margin-top:30px">STARXV • kontakt@starxv.pl</div></div></div>`
-    });
+    const {error}=await resend.emails.send({from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,subject:`STARXV — ${title} #${order.orderNo}`,text:`STARXV\n\n${title}\nZamówienie #${order.orderNo}\n\n${body}${tracking?`\n\nInPost: ${tracking}`:''}\n\nStatus zamówienia: ${base}`,html:`<div style="background:#090909;color:#fff;font-family:Arial,sans-serif;padding:36px 20px"><div style="max-width:560px;margin:auto"><div style="font-size:25px;font-weight:900;letter-spacing:5px;margin-bottom:30px">STARXV</div><div style="font-size:10px;color:#777;letter-spacing:2px">ZAMÓWIENIE #${esc(order.orderNo)}</div><h1 style="font-size:22px;margin:10px 0 14px">${esc(title)}</h1><p style="font-size:14px;line-height:1.7;color:#bbb">${esc(body)}</p>${tracking?`<div style="border:1px solid #292929;padding:14px;margin:22px 0"><span style="font-size:10px;color:#777">INPOST</span><br><b>${esc(tracking)}</b></div>`:''}<a href="${esc(base)}" style="display:inline-block;background:#fff;color:#000;text-decoration:none;padding:12px 18px;font-size:11px;font-weight:900;margin-top:12px">SPRAWDŹ ZAMÓWIENIE →</a><div style="font-size:10px;color:#555;margin-top:30px">STARXV • kontakt@starxv.pl</div></div></div>`});
     if(error){console.error('Resend order update error:',error);return false}
     order.mailEvents[dedupe]=Date.now();save(db);return true;
   }catch(e){console.error('Order update email error:',e.message);return false}
 }
 
-
-app.get('/api/payments/config',(req,res)=>{
-  res.json({ok:true,stripeConfigured:Boolean(process.env.STRIPE_SECRET_KEY&&process.env.STRIPE_WEBHOOK_SECRET),currency:'pln'});
-});
+app.get('/api/payments/config',(req,res)=>{const c=p24Config();res.json({ok:true,provider:'przelewy24',configured:p24Configured(),sandbox:c.sandbox,currency:'PLN',methods:['blik','card','apple_pay','google_pay','bank_transfer']})});
 
 app.post('/api/create-checkout-session',auth,async(req,res)=>{
   try{
-    const stripe=getStripe();
-    if(!stripe)return res.status(503).json({error:'Stripe nie jest jeszcze skonfigurowany na serwerze.'});
+    if(!p24Configured())return res.status(503).json({error:'Przelewy24 nie jest jeszcze skonfigurowane na serwerze.'});
     ensureStore(req.db);
     const orderId=String(req.body?.orderId||'');
     const order=req.db.orders.find(o=>o.id===orderId&&o.userId===req.user.id);
     if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
     if(order.paymentStatus==='paid')return res.status(409).json({error:'To zamówienie jest już opłacone.'});
     if(order.paymentStatus==='cancelled')return res.status(409).json({error:'To zamówienie zostało anulowane.'});
-    if(!Number.isFinite(Number(order.total))||Number(order.total)<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
-
-    // Reserve stock for this checkout so two customers cannot pay for the same last item.
-    if(order.paymentStatus==='failed')order.paymentStatus='pending';
-    reserveStockForOrder(req.db,order);
-    save(req.db);
-
-    const base=stripeBaseUrl(req);
-    const methods=stripeMethods(order.paymentPreference);
-    const params={
-      mode:'payment',
-      success_url:`${base}/?payment=success&order=${encodeURIComponent(order.id)}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url:`${base}/?payment=cancelled&order=${encodeURIComponent(order.id)}`,
-      customer_email:cleanEmail(order.address?.email||req.user.email)||undefined,
-      line_items:[{
-        quantity:1,
-        price_data:{
-          currency:'pln',
-          unit_amount:Math.round(Number(order.total)*100),
-          product_data:{name:`STARXV — zamówienie #${order.orderNo}`,description:`${(order.items||[]).length} ${(order.items||[]).length===1?'produkt':'produkty'} • płatność za całe zamówienie`}
-        }
-      }],
-      metadata:{orderId:order.id,orderNo:String(order.orderNo),userId:String(order.userId),paymentPreference:String(order.paymentPreference||'auto')},
-      payment_intent_data:{metadata:{orderId:order.id,orderNo:String(order.orderNo),userId:String(order.userId)}},
-      locale:'pl',
-      expires_at:Math.floor(Date.now()/1000)+30*60
-    };
-    if(methods)params.payment_method_types=methods;else params.automatic_payment_methods={enabled:true};
-    let session;
-    try{
-      session=await stripe.checkout.sessions.create(params,{idempotencyKey:`starxv-${order.id}-${Math.floor(Date.now()/60000)}`});
-    }catch(e){
-      releaseStockReservation(req.db,order);save(req.db);throw e;
-    }
-    order.stripeSessionId=session.id;
-    order.stripeSessionCreatedAt=Date.now();
-    order.updatedAt=Date.now();
-    save(req.db);
-    res.json({ok:true,url:session.url,sessionId:session.id,orderId:order.id});
-  }catch(e){
-    console.error('Stripe Checkout error:',e);
-    res.status(400).json({error:e?.message||'Nie udało się uruchomić płatności.'});
-  }
+    const amount=Math.round(Number(order.total)*100);if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
+    if(order.paymentStatus==='failed')order.paymentStatus='pending';reserveStockForOrder(req.db,order);
+    const c=p24Config(),sessionId=`starxv-${order.id}-${Date.now()}`.slice(0,100),currency='PLN',base=paymentBaseUrl(req);
+    const sign=p24Sign({sessionId,merchantId:c.merchantId,amount,currency,crc:c.crc});
+    const a=order.address||{};
+    const payload={merchantId:c.merchantId,posId:c.posId,sessionId,amount,currency,description:`STARXV zamówienie ${order.orderNo}`,email:cleanEmail(a.email||req.user.email).slice(0,50),client:`${a.firstName||''} ${a.lastName||''}`.trim().slice(0,40),address:String(a.street||'').slice(0,80),zip:String(a.postal||'').slice(0,10),city:String(a.city||'').slice(0,50),country:'PL',language:'pl',urlReturn:`${base}/?payment=return&order=${encodeURIComponent(order.id)}`,urlStatus:`${base}/api/p24/status`,timeLimit:30,channel:p24Channel(order.paymentPreference),waitForResult:true,shipping:Math.round(Number(order.shippingCost||0)*100),sign};
+    let data;try{data=await p24Request('/transaction/register',{method:'POST',body:JSON.stringify(payload)})}catch(e){releaseStockReservation(req.db,order);save(req.db);throw e}
+    const token=String(data?.data?.token||'');if(!token){releaseStockReservation(req.db,order);save(req.db);throw new Error('Przelewy24 nie zwróciło tokenu płatności.')}
+    order.p24SessionId=sessionId;order.p24Token=token;order.p24Amount=amount;order.p24Currency=currency;order.p24CreatedAt=Date.now();order.paymentProvider='przelewy24';order.updatedAt=Date.now();save(req.db);
+    res.json({ok:true,url:`${c.payBase}/${encodeURIComponent(token)}`,token,orderId:order.id,provider:'przelewy24'});
+  }catch(e){console.error('Przelewy24 checkout error:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e?.message||'Nie udało się uruchomić płatności.'})}
 });
 
-app.get('/api/orders/:id/payment-status',auth,(req,res)=>{
-  ensureStore(req.db);
-  const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
-  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
-  res.json({ok:true,order:orderForUser(order),confirmed:order.paymentStatus==='paid'});
-});
-
-async function handleStripeWebhook(req,res){
-  const stripe=getStripe(),secret=String(process.env.STRIPE_WEBHOOK_SECRET||'').trim();
-  if(!stripe||!secret)return res.status(503).send('Stripe webhook is not configured.');
-  let event;
-  try{event=stripe.webhooks.constructEvent(req.body,req.headers['stripe-signature'],secret)}
-  catch(e){console.error('Stripe webhook signature error:',e.message);return res.status(400).send('Invalid signature.');}
+app.post('/api/p24/status',async(req,res)=>{
   try{
-    const session=event.data.object;
-    const orderId=String(session?.metadata?.orderId||'');
-    if(orderId){
-      const db=load();ensureStore(db);const order=db.orders.find(o=>o.id===orderId);
-      if(order){
-        if(event.type==='checkout.session.completed'||event.type==='checkout.session.async_payment_succeeded'){
-          if(session.payment_status==='paid'||event.type==='checkout.session.async_payment_succeeded'){
-            const wasPaid=order.paymentStatus==='paid';
-            markOrderPaid(db,order);
-            order.stripeSessionId=session.id||order.stripeSessionId;
-            order.stripePaymentIntentId=typeof session.payment_intent==='string'?session.payment_intent:'';
-            order.updatedAt=Date.now();save(db);
-            if(!wasPaid)await sendPaidOrderEmail(db,order);
-          }
-        }else if(event.type==='checkout.session.async_payment_failed'){
-          if(order.paymentStatus!=='paid'){releaseStockReservation(db,order);order.paymentStatus='failed';order.updatedAt=Date.now();save(db)}
-        }else if(event.type==='checkout.session.expired'){
-          if(order.paymentStatus==='pending'){releaseStockReservation(db,order);order.paymentStatus='cancelled';order.updatedAt=Date.now();save(db)}
-        }
-      }
-    }
-    res.json({received:true});
-  }catch(e){console.error('Stripe webhook processing error:',e);res.status(500).send('Webhook processing failed.');}
-}
+    if(!p24Configured())return res.status(503).json({error:'P24 not configured'});
+    const b=req.body||{},sessionId=String(b.sessionId||''),p24OrderId=Number(b.orderId),amount=Number(b.amount),currency=String(b.currency||'');
+    if(!sessionId||!Number.isInteger(p24OrderId)||!Number.isInteger(amount)||currency!=='PLN')return res.status(400).json({error:'Invalid notification'});
+    const db=load();ensureStore(db);const order=db.orders.find(o=>String(o.p24SessionId||'')===sessionId);
+    if(!order)return res.status(404).json({error:'Order not found'});
+    if(Number(order.p24Amount)!==amount||String(order.p24Currency)!==currency)return res.status(400).json({error:'Transaction mismatch'});
+    const c=p24Config(),verifySign=p24Sign({sessionId,orderId:p24OrderId,amount,currency,crc:c.crc});
+    await p24Request('/transaction/verify',{method:'PUT',body:JSON.stringify({merchantId:c.merchantId,posId:c.posId,sessionId,amount,currency,orderId:p24OrderId,sign:verifySign})});
+    const wasPaid=order.paymentStatus==='paid';markOrderPaid(db,order);order.p24OrderId=p24OrderId;order.p24VerifiedAt=Date.now();order.updatedAt=Date.now();save(db);
+    if(!wasPaid)await sendPaidOrderEmail(db,order);
+    res.json({ok:true});
+  }catch(e){console.error('Przelewy24 status error:',e);res.status(400).json({error:'Verification failed'})}
+});
 
+app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});res.json({ok:true,order:orderForUser(order),confirmed:order.paymentStatus==='paid'})});
 
 
 // --- STARXV marketing/news campaigns -----------------------------------------
