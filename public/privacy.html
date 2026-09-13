@@ -4,38 +4,290 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="index,follow">
-  <title>Polityka prywatności | STARXV</title>
-  <meta name="description" content="Polityka prywatności serwisu STARXV i informacje o danych wykorzystywanych podczas logowania przez Google.">
+  <meta name="theme-color" content="#050505">
+  <title>Polityka prywatności i RODO — STARXV</title>
+  <meta name="description" content="Polityka prywatności i informacje RODO sklepu internetowego STARXV.">
   <style>
-    :root{color-scheme:dark;--bg:#090909;--card:#111;--line:#252525;--txt:#f7f7f7;--muted:#a8a8a8;--accent:#fff}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--txt);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.65}
-    a{color:inherit}.wrap{width:min(920px,calc(100% - 36px));margin:0 auto}.top{position:sticky;top:0;z-index:2;background:rgba(9,9,9,.9);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-    .topin{height:72px;display:flex;align-items:center;justify-content:space-between}.brand{font-weight:800;letter-spacing:.28em;font-size:15px;text-decoration:none}.back{font-size:14px;color:#d7d7d7;text-decoration:none;border:1px solid #2e2e2e;border-radius:999px;padding:9px 14px}
-    main{padding:64px 0 84px}.eyebrow{text-transform:uppercase;letter-spacing:.2em;font-size:12px;color:var(--muted);margin-bottom:12px}h1{font-size:clamp(36px,7vw,64px);line-height:1.02;margin:0 0 18px;letter-spacing:-.04em}.lead{font-size:18px;color:#c8c8c8;max-width:760px;margin:0 0 38px}.meta{color:var(--muted);font-size:13px;margin-bottom:28px}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:clamp(22px,4vw,38px);box-shadow:0 18px 60px rgba(0,0,0,.28)}section+section{border-top:1px solid var(--line);margin-top:28px;padding-top:28px}h2{font-size:20px;margin:0 0 10px}p,li{color:#c8c8c8}ul{padding-left:22px;margin:10px 0 0}.contact{display:inline-block;margin-top:6px;color:#fff}.note{margin-top:34px;padding:18px 20px;border:1px solid var(--line);border-radius:16px;color:#aaa;font-size:13px}.footer{padding:28px 0 45px;color:#777;font-size:12px;text-align:center}
+    :root{color-scheme:dark}
+    *{box-sizing:border-box}
+    html{background:#050505}
+    body{
+      margin:0;background:#050505;color:#f6f6f6;
+      font-family:Arial,Helvetica,sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit}
+    .top{
+      position:sticky;top:0;z-index:10;
+      display:flex;align-items:center;justify-content:space-between;
+      padding:18px 28px;border-bottom:1px solid #1b1b1b;
+      background:rgba(5,5,5,.94);backdrop-filter:blur(12px)
+    }
+    .brand{font-size:17px;font-weight:950;letter-spacing:.08em;text-decoration:none}
+    .back{
+      border:1px solid #2a2a2a;border-radius:999px;padding:10px 14px;
+      font-size:10px;font-weight:900;letter-spacing:.1em;text-decoration:none
+    }
+    main{max-width:980px;margin:0 auto;padding:72px 24px 96px}
+    .kicker{font-size:10px;font-weight:900;letter-spacing:.22em;color:#777;margin-bottom:16px}
+    h1{font-size:clamp(38px,7vw,82px);line-height:.92;margin:0 0 22px;letter-spacing:-.055em}
+    .lead{max-width:790px;color:#aaa;line-height:1.7;font-size:14px;margin-bottom:20px}
+    .updated{font-size:11px;color:#666;margin-bottom:42px}
+    .notice{
+      border:1px solid #2b2b2b;background:#0c0c0c;border-radius:18px;
+      padding:18px 20px;color:#bbb;line-height:1.65;font-size:13px;margin:0 0 34px
+    }
+    .notice b{color:#fff}
+    section{border-top:1px solid #1c1c1c;padding:30px 0}
+    h2{font-size:18px;margin:0 0 15px;letter-spacing:-.02em}
+    h3{font-size:13px;margin:20px 0 8px;color:#e7e7e7}
+    p,li{font-size:13px;line-height:1.75;color:#b8b8b8}
+    ul{padding-left:20px}
+    .data{
+      padding:14px 16px;border:1px dashed #3a3a3a;background:#0a0a0a;
+      border-radius:12px;margin-top:12px
+    }
+    .placeholder{color:#fff;font-weight:800}
+    .table-wrap{overflow:auto;margin-top:14px}
+    table{width:100%;border-collapse:collapse;min-width:720px}
+    th,td{border:1px solid #242424;padding:13px;text-align:left;vertical-align:top;font-size:12px;line-height:1.55}
+    th{background:#0d0d0d;color:#fff}
+    td{color:#aaa}
+    .mini{font-size:11px;color:#747474}
+    footer{border-top:1px solid #1b1b1b;padding:28px 24px;text-align:center;color:#666;font-size:10px;letter-spacing:.08em}
+    @media(max-width:650px){.top{padding:14px 16px}main{padding:48px 18px 72px}}
   </style>
 </head>
 <body>
-  <header class="top"><div class="wrap topin"><a class="brand" href="/">STARXV</a><a class="back" href="/">Wróć do sklepu</a></div></header>
-  <main class="wrap">
-    <div class="eyebrow">STARXV / Prywatność</div>
-    <h1>Polityka prywatności</h1>
-    <p class="lead">Poniżej wyjaśniamy, jakie dane mogą być przetwarzane podczas korzystania ze starxv.pl, w tym podczas logowania za pomocą konta Google.</p>
-    <div class="meta">Ostatnia aktualizacja: 12 września 2026 r.</div>
-    <article class="card">
-      <section><h2>1. Serwis i kontakt</h2><p>Niniejsza polityka dotyczy serwisu <strong>starxv.pl</strong> oraz funkcji konta STARXV. W sprawach dotyczących prywatności możesz skontaktować się pod adresem <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>.</p></section>
-      <section><h2>2. Jakie dane mogą być przetwarzane</h2><p>W zależności od używanych funkcji możemy przetwarzać dane potrzebne do utworzenia i obsługi konta, realizacji zamówienia oraz działania sklepu, np. adres e-mail, nazwę profilu, dane kontaktowe i dostawy, zawartość koszyka, ulubione, ustawienia konta, historię zamówień oraz informacje techniczne związane z sesją.</p></section>
-      <section><h2>3. Logowanie przez Google</h2><p>Jeśli wybierzesz logowanie przez Google, STARXV otrzymuje od Google tylko dane udostępnione w ramach procesu uwierzytelniania potrzebne do rozpoznania konta, w szczególności identyfikator konta, adres e-mail, nazwę profilu i – jeśli jest dostępne – zdjęcie profilowe. Nie otrzymujemy hasła do Twojego konta Google.</p><p>Dane z logowania Google są wykorzystywane do utworzenia lub odnalezienia konta STARXV i zalogowania użytkownika. Nie wykorzystujemy tych danych do uzyskiwania dostępu do poczty, Dysku Google ani innych prywatnych usług Google.</p></section>
-      <section><h2>4. Cel przetwarzania danych</h2><p>Dane są wykorzystywane przede wszystkim do zapewnienia logowania i działania konta, zapamiętywania ustawień, obsługi koszyka i zamówień, kontaktu w sprawach obsługi klienta, bezpieczeństwa serwisu oraz zapobiegania nadużyciom.</p></section>
-      <section><h2>5. Dostawcy usług</h2><p>Do działania serwisu mogą być wykorzystywani zewnętrzni dostawcy infrastruktury i usług, w szczególności Google w zakresie logowania oraz dostawca hostingu aplikacji i bazy danych. Dostawcy mogą przetwarzać dane wyłącznie w zakresie potrzebnym do świadczenia swoich usług zgodnie z własnymi zasadami prywatności i zawartymi umowami.</p></section>
-      <section><h2>6. Cookies, sesje i pamięć lokalna</h2><p>Serwis może korzystać z cookies, tokenów sesyjnych oraz pamięci lokalnej przeglądarki, aby utrzymać zalogowanie, zachować ustawienia i umożliwić prawidłowe działanie funkcji sklepu.</p></section>
-      <section><h2>7. Okres przechowywania</h2><p>Dane przechowujemy przez okres potrzebny do działania konta i realizacji funkcji, z których korzystasz, a w przypadku danych związanych z zamówieniami także przez okres wymagany do obsługi zamówienia, reklamacji lub obowiązków prawnych. Dane techniczne i sesyjne mogą być usuwane wcześniej.</p></section>
-      <section><h2>8. Twoje prawa</h2><p>Możesz skontaktować się z nami w sprawie dostępu do swoich danych, ich poprawienia lub usunięcia oraz w innych sprawach dotyczących prywatności. Zakres poszczególnych praw zależy od podstawy i celu przetwarzania danych.</p></section>
-      <section><h2>9. Bezpieczeństwo</h2><p>Stosujemy środki techniczne służące ochronie kont i danych, takie jak szyfrowane połączenie HTTPS, sesje uwierzytelniające oraz ograniczenia dostępu do funkcji administracyjnych. Żadna metoda przesyłania lub przechowywania danych nie zapewnia jednak całkowitego wyeliminowania ryzyka.</p></section>
-      <section><h2>10. Zmiany polityki</h2><p>Polityka może być aktualizowana wraz z rozwojem STARXV, np. po dodaniu nowych form płatności, dostawy, analityki lub innych integracji. Aktualna wersja będzie publikowana pod tym adresem.</p></section>
-    </article>
-    <div class="note">Ta strona opisuje obecną funkcjonalność serwisu. Przed rozpoczęciem rzeczywistej sprzedaży dokumenty prawne sklepu powinny zostać uzupełnione o pełne dane podmiotu prowadzącego sprzedaż i dostosowane do faktycznie używanych usług.</div>
-  </main>
-  <footer class="footer">© 2026 STARXV. Wszelkie prawa zastrzeżone.</footer>
+<header class="top">
+  <a class="brand" href="/">STARXV</a>
+  <a class="back" href="/">← WRÓĆ DO SKLEPU</a>
+</header>
+
+<main>
+  <div class="kicker">STARXV / PRYWATNOŚĆ / RODO</div>
+  <h1>POLITYKA<br>PRYWATNOŚCI.</h1>
+  <p class="lead">
+    Tutaj wyjaśniamy, jakie dane osobowe mogą być przetwarzane podczas korzystania ze starxv.pl,
+    zakładania konta, składania zamówień, wyboru dostawy, płatności oraz korzystania z pozostałych
+    funkcji sklepu STARXV.
+  </p>
+  <div class="updated">Ostatnia aktualizacja: 13 września 2026 r.</div>
+
+  <div class="notice">
+    <b>Przed uruchomieniem sprzedaży uzupełnij pola [DO UZUPEŁNIENIA].</b>
+    Szczególnie ważne są dane administratora, adres kontaktowy oraz ostateczna lista dostawców
+    hostingu, płatności, poczty i innych usług używanych produkcyjnie.
+  </div>
+
+  <section>
+    <h2>1. Administrator danych osobowych</h2>
+    <p>Administratorem danych osobowych przetwarzanych w związku ze sklepem STARXV jest:</p>
+    <div class="data">
+      <p><span class="placeholder">[IMIĘ I NAZWISKO]</span></p>
+      <p>adres: <span class="placeholder">[ADRES DO KORESPONDENCJI / ADRES DZIAŁALNOŚCI]</span></p>
+      <p>e-mail do spraw prywatności: <span class="placeholder">[E-MAIL, NP. kontakt@starxv.pl]</span></p>
+      <p>telefon: <span class="placeholder">[NUMER TELEFONU]</span></p>
+    </div>
+    <p>W dalszej części dokumentu administrator jest nazywany „STARXV” lub „Administratorem”.</p>
+  </section>
+
+  <section>
+    <h2>2. Jakie dane możemy przetwarzać</h2>
+    <p>Zakres danych zależy od funkcji, z której korzystasz. Może obejmować w szczególności:</p>
+    <ul>
+      <li>dane konta: imię, nazwisko, adres e-mail, identyfikator konta, dane związane z logowaniem oraz zdjęcie profilowe, jeżeli jest dostępne;</li>
+      <li>dane potrzebne do zamówienia i dostawy: imię, nazwisko, e-mail, numer telefonu, adres, kod pocztowy, miejscowość oraz wybrany punkt InPost;</li>
+      <li>dane dotyczące zamówienia: produkty, warianty, rozmiary, ilości, ceny, status płatności, status realizacji i numer przesyłki;</li>
+      <li>dane konta i preferencji: zapisane adresy, koszyk, ulubione, ustawienia konta oraz zgoda lub rezygnacja z komunikacji marketingowej;</li>
+      <li>dane techniczne: informacje o sesji, przeglądarce, urządzeniu, adresie IP, żądaniach do serwera oraz informacje potrzebne do bezpieczeństwa serwisu;</li>
+      <li>dane lokalizacyjne przekazane przez przeglądarkę wyłącznie wtedy, gdy samodzielnie zezwolisz stronie na użycie lokalizacji w celu wyszukania punktów InPost w pobliżu.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>3. Cele i podstawy prawne przetwarzania</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Cel</th><th>Przykładowe dane</th><th>Podstawa</th><th>Jak długo</th></tr></thead>
+        <tbody>
+          <tr><td>Utworzenie i obsługa konta STARXV</td><td>e-mail, imię, nazwisko, dane logowania, identyfikator konta</td><td>wykonanie umowy o świadczenie usługi konta lub działania na żądanie użytkownika przed jej zawarciem</td><td>do usunięcia konta, a następnie przez okres niezbędny do obsługi ewentualnych roszczeń lub obowiązków prawnych</td></tr>
+          <tr><td>Przyjęcie i realizacja zamówienia</td><td>dane kontaktowe, adres, produkty, dostawa, płatność</td><td>wykonanie umowy sprzedaży lub działania przed jej zawarciem</td><td>przez czas realizacji umowy, a następnie przez okres wymagany przepisami i niezbędny do obrony lub dochodzenia roszczeń</td></tr>
+          <tr><td>Rozliczenia i obowiązki prawne</td><td>dane zamówienia i płatności, dane wymagane dokumentami rozliczeniowymi</td><td>obowiązek prawny ciążący na Administratorze</td><td>przez okres wynikający z właściwych przepisów</td></tr>
+          <tr><td>Reklamacje, zwroty i kontakt posprzedażowy</td><td>dane kontaktowe, numer zamówienia, korespondencja, informacje o produkcie</td><td>wykonanie obowiązków związanych z umową i przepisami konsumenckimi; w odpowiednich przypadkach prawnie uzasadniony interes Administratora</td><td>przez czas obsługi sprawy i okres przedawnienia związanych z nią roszczeń</td></tr>
+          <tr><td>Bezpieczeństwo sklepu i zapobieganie nadużyciom</td><td>IP, dane sesji, logi techniczne, informacje o żądaniach</td><td>prawnie uzasadniony interes Administratora polegający na ochronie serwisu, kont użytkowników i ustalaniu ewentualnych roszczeń</td><td>przez okres niezbędny do realizacji tego celu</td></tr>
+          <tr><td>Newsletter / marketing elektroniczny</td><td>e-mail, ustawienie zgody marketingowej</td><td>zgoda — jeżeli komunikacja jest prowadzona na jej podstawie</td><td>do wycofania zgody lub zakończenia danej formy komunikacji, z możliwością zachowania informacji potrzebnej do wykazania udzielonej lub wycofanej zgody</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. Logowanie przez Google</h2>
+    <p>
+      Jeżeli wybierzesz logowanie przez Google, STARXV otrzymuje dane przekazane w ramach procesu
+      uwierzytelniania potrzebne do rozpoznania lub utworzenia konta, w szczególności identyfikator konta,
+      adres e-mail, nazwę profilu i — jeśli Google ją udostępni — fotografię profilową.
+    </p>
+    <p>
+      STARXV nie otrzymuje hasła do Twojego konta Google i samo użycie funkcji logowania nie daje STARXV
+      dostępu do Twojej poczty, Dysku Google ani innych prywatnych usług Google.
+    </p>
+    <p>
+      Google przetwarza dane również zgodnie ze swoimi zasadami i warunkami dotyczącymi usług uwierzytelniania.
+    </p>
+  </section>
+
+  <section>
+    <h2>5. Zamówienia, płatności i dostawa</h2>
+    <p>
+      Dane niezbędne do realizacji zamówienia mogą być udostępniane podmiotom, które pomagają nam wykonać umowę,
+      np. operatorowi płatności oraz przewoźnikowi lub operatorowi punktów odbioru.
+    </p>
+    <p>
+      Planowany operator płatności: <span class="placeholder">[PRZELEWY24 — POTWIERDŹ PRZED URUCHOMIENIEM]</span>.
+      Planowany operator dostawy: <b>InPost</b>.
+    </p>
+    <p>
+      Operator płatności otrzymuje dane w zakresie potrzebnym do obsługi transakcji. STARXV nie zapisuje
+      pełnych danych karty płatniczej, jeżeli są one podawane bezpośrednio operatorowi płatności.
+    </p>
+    <p>
+      W przypadku dostawy do punktu odbioru przechowujemy informacje niezbędne do identyfikacji wybranego punktu
+      oraz realizacji przesyłki.
+    </p>
+  </section>
+
+  <section>
+    <h2>6. Lokalizacja przy wyborze punktu InPost</h2>
+    <p>
+      Funkcja „Moja lokalizacja” działa wyłącznie po wyrażeniu przez Ciebie zgody w przeglądarce.
+      Współrzędne mogą zostać wykorzystane technicznie do wyszukania punktów InPost znajdujących się w pobliżu.
+    </p>
+    <p>
+      Brak zgody na lokalizację nie blokuje zakupów — punkt można wyszukać ręcznie po miejscowości, kodzie pocztowym
+      lub oznaczeniu punktu.
+    </p>
+  </section>
+
+  <section>
+    <h2>7. Odbiorcy danych</h2>
+    <p>W zależności od używanych funkcji odbiorcami danych mogą być:</p>
+    <ul>
+      <li>Google — w zakresie logowania kontem Google;</li>
+      <li>InPost — w zakresie dostawy i obsługi wybranego punktu odbioru;</li>
+      <li><span class="placeholder">[OPERATOR PŁATNOŚCI]</span> — w zakresie płatności;</li>
+      <li><span class="placeholder">[DOSTAWCA HOSTINGU / SERWERA]</span> — w zakresie infrastruktury sklepu;</li>
+      <li><span class="placeholder">[DOSTAWCA E-MAIL]</span> — jeżeli uczestniczy w wysyłce wiadomości transakcyjnych lub marketingowych;</li>
+      <li>podmioty świadczące usługi IT, księgowe, prawne lub inne usługi pomocnicze, jeżeli są rzeczywiście wykorzystywane i dostęp do danych jest potrzebny do wykonania tych usług;</li>
+      <li>uprawnione organy publiczne — gdy obowiązek przekazania danych wynika z prawa.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>8. Przekazywanie danych poza EOG</h2>
+    <p>
+      Niektórzy dostawcy technologiczni mogą działać globalnie i w określonych sytuacjach dane mogą być
+      przetwarzane poza Europejskim Obszarem Gospodarczym. Jeżeli dochodzi do takiego transferu,
+      Administrator powinien korzystać z mechanizmów przewidzianych przez RODO, takich jak decyzja Komisji
+      Europejskiej stwierdzająca odpowiedni stopień ochrony lub standardowe klauzule umowne — zależnie od dostawcy
+      i miejsca przetwarzania.
+    </p>
+    <p class="mini">Przed startem sprzedaży należy zweryfikować faktyczne lokalizacje przetwarzania danych u wszystkich dostawców.</p>
+  </section>
+
+  <section>
+    <h2>9. Cookies, sesja i pamięć lokalna</h2>
+    <p>
+      STARXV może korzystać z cookies, mechanizmów sesyjnych oraz pamięci lokalnej przeglądarki w celu
+      utrzymania zalogowania, działania koszyka, zapamiętywania wybranych ustawień, bezpieczeństwa i prawidłowego
+      działania podstawowych funkcji strony.
+    </p>
+    <p>
+      Jeżeli w przyszłości zostaną uruchomione narzędzia analityczne, reklamowe lub inne mechanizmy,
+      które wymagają zgody użytkownika, będą one uruchamiane dopiero zgodnie z odpowiednimi zasadami dotyczącymi zgody.
+    </p>
+  </section>
+
+  <section>
+    <h2>10. Newsletter i marketing</h2>
+    <p>
+      Zapis do newslettera lub włączenie informacji marketingowych jest dobrowolne i nie jest warunkiem zakupu.
+      Zgodę można wycofać w dowolnym momencie, bez wpływu na zgodność z prawem działań wykonanych przed jej wycofaniem.
+    </p>
+  </section>
+
+  <section>
+    <h2>11. Czy podanie danych jest obowiązkowe?</h2>
+    <p>
+      Podanie danych wymaganych do realizacji zamówienia lub utworzenia konta jest dobrowolne,
+      ale bez części z nich nie będziemy mogli wykonać wybranej usługi, np. założyć konta, przyjąć zamówienia
+      albo dostarczyć przesyłki.
+    </p>
+    <p>
+      Zgoda na marketing i zgoda przeglądarki na lokalizację są dobrowolne i nie są konieczne do dokonania zakupu.
+    </p>
+  </section>
+
+  <section>
+    <h2>12. Twoje prawa</h2>
+    <p>W zależności od podstawy i okoliczności przetwarzania możesz mieć prawo do:</p>
+    <ul>
+      <li>dostępu do danych i otrzymania ich kopii;</li>
+      <li>sprostowania nieprawidłowych danych;</li>
+      <li>usunięcia danych;</li>
+      <li>ograniczenia przetwarzania;</li>
+      <li>przenoszenia danych;</li>
+      <li>wniesienia sprzeciwu wobec przetwarzania opartego na prawnie uzasadnionym interesie;</li>
+      <li>wycofania zgody w dowolnym momencie, jeżeli podstawą przetwarzania jest zgoda.</li>
+    </ul>
+    <p>
+      Żądania dotyczące danych można kierować na:
+      <span class="placeholder">[E-MAIL DO SPRAW PRYWATNOŚCI]</span>.
+    </p>
+    <p>
+      Masz również prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych,
+      jeżeli uważasz, że dane są przetwarzane niezgodnie z przepisami.
+    </p>
+  </section>
+
+  <section>
+    <h2>13. Usunięcie konta a dane o zamówieniach</h2>
+    <p>
+      Usunięcie konta STARXV nie zawsze oznacza natychmiastowe usunięcie wszystkich danych.
+      Dane, które muszą być dalej przechowywane w celu wykonania obowiązków prawnych, obsługi reklamacji,
+      rozliczeń albo obrony lub dochodzenia roszczeń, mogą być przechowywane przez wymagany okres.
+    </p>
+  </section>
+
+  <section>
+    <h2>14. Zautomatyzowane decyzje i profilowanie</h2>
+    <p>
+      <span class="placeholder">[POTWIERDŹ PRZED STARTEM]</span> — na obecnym etapie STARXV nie przewiduje
+      podejmowania wobec klientów decyzji wywołujących skutki prawne lub w podobny sposób istotnie na nich
+      wpływających wyłącznie w sposób zautomatyzowany.
+    </p>
+  </section>
+
+  <section>
+    <h2>15. Bezpieczeństwo</h2>
+    <p>
+      Stosujemy środki techniczne i organizacyjne odpowiednie do charakteru serwisu, w tym szyfrowane połączenie HTTPS,
+      mechanizmy sesji i ograniczenie dostępu do funkcji administracyjnych. Środki bezpieczeństwa są dostosowywane
+      wraz z rozwojem sklepu i zmianami używanej infrastruktury.
+    </p>
+  </section>
+
+  <section>
+    <h2>16. Zmiany Polityki prywatności</h2>
+    <p>
+      Dokument może być aktualizowany, w szczególności w przypadku zmiany funkcji sklepu, dostawców usług,
+      metod płatności lub dostawy albo wymogów prawnych. Aktualna wersja będzie publikowana pod adresem
+      starxv.pl/privacy.html.
+    </p>
+  </section>
+</main>
+
+<footer>© 2026 STARXV — ALL RIGHTS RESERVED</footer>
 </body>
 </html>
