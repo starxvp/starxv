@@ -26,11 +26,13 @@ app.use((req,res,next)=>{
   // required. External origins are kept to the services STARXV actually uses.
   res.setHeader('Content-Security-Policy',[
     "default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com https://geowidget.inpost.pl",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://geowidget.inpost.pl",
-    "font-src 'self' https://fonts.gstatic.com data:","img-src 'self' data: blob: https:",
-    "connect-src 'self' https://accounts.google.com https://geowidget.inpost.pl https://api.inpost.pl https://api-pl-points.easypack24.net https://api-shipx-pl.easypack24.net",
-    "frame-src 'self' https://accounts.google.com https://geowidget.inpost.pl"
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com https://geowidget.inpost.pl https://*.inpost.pl https://*.inpost-group.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://geowidget.inpost.pl https://*.inpost.pl https://*.inpost-group.com",
+    "font-src 'self' https://fonts.gstatic.com data: https://*.inpost.pl https://*.inpost-group.com",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self' https://accounts.google.com https://*.inpost.pl https://*.inpost-group.com https://api-pl-points.easypack24.net https://api-shipx-pl.easypack24.net wss://*.inpost.pl wss://*.inpost-group.com",
+    "frame-src 'self' https://accounts.google.com https://*.inpost.pl https://*.inpost-group.com",
+    "worker-src 'self' blob:"
   ].join('; '));
   if(process.env.NODE_ENV==='production')res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
   next();
