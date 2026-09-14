@@ -233,3 +233,16 @@
   .sx-inpost-map-shell{min-height:0;border-radius:16px}.sx-inpost-toolbar{padding:10px;flex-direction:column}.sx-inpost-search-wrap{width:100%;height:46px}.sx-inpost-location-btn{width:100%;height:42px}.sx-inpost-filters{height:auto;min-height:42px;padding:9px 11px;gap:11px;flex-wrap:wrap}.sx-inpost-filters span:last-child{width:100%;margin:0;text-align:right}.sx-inpost-map-layout{display:flex;flex-direction:column;height:auto}.sx-inpost-map{height:52vh;min-height:360px;max-height:530px}.sx-inpost-results{height:auto;max-height:330px;border-left:0;border-top:1px solid rgba(255,255,255,.08);padding:8px}.sx-inpost-result-card{padding:12px}.sx-inpost-map-foot{text-align:left;line-height:1.4}.inpost-production-layout{grid-template-columns:1fr!important}.inpost-select-card{position:static!important}
 }
 @media (max-width:480px){.sx-inpost-map{height:48vh;min-height:330px}.sx-inpost-search-wrap input{font-size:11px}.sx-inpost-search-wrap button{padding:0 12px}.sx-inpost-result-address{font-size:9px}}
+
+
+/* ===== STARXV official InPost Geowidget v5 ===== */
+@media(max-width:700px){
+ .sx-inpost-official{border-radius:14px}
+ .sx-inpost-official-head{padding:15px;align-items:flex-start}
+ .inpost-geowidget-host{min-height:510px}
+ .inpost-geowidget-host inpost-geowidget{height:510px;min-height:510px}
+}
+@media(max-width:460px){
+ .inpost-geowidget-host{min-height:470px}
+ .inpost-geowidget-host inpost-geowidget{height:470px;min-height:470px}
+}

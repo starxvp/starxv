@@ -1753,3 +1753,17 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
   }
 }
 
+
+
+/* ===== STARXV official InPost Geowidget v5 ===== */
+.sx-inpost-official{overflow:hidden;border:1px solid #222;background:#070707;border-radius:18px}
+.sx-inpost-official-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 20px;border-bottom:1px solid #202020;background:linear-gradient(135deg,#0d0d0d,#080808)}
+.sx-inpost-official-head>div{display:flex;flex-direction:column;gap:5px}.sx-inpost-official-head strong{font-size:13px}.sx-inpost-official-head small{color:#777;font-size:9px;line-height:1.45}
+.sx-inpost-kicker{font-size:8px;font-weight:900;letter-spacing:.13em;color:#ffcd00}
+.inpost-geowidget-host{position:relative;min-height:560px;background:#f5f5f5;overflow:hidden}
+.inpost-geowidget-host inpost-geowidget{display:block;width:100%;height:560px;min-height:560px}
+.inpost-geowidget-host .inpost-map-loading{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:12px;background:#0b0b0b;color:#aaa;font-size:10px}
+.sx-inpost-widget-error{min-height:360px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:8px;padding:30px;background:#0a0a0a;color:#fff}
+.sx-inpost-widget-error strong{font-size:13px}.sx-inpost-widget-error span{max-width:460px;color:#777;font-size:10px;line-height:1.6}
+.sx-inpost-official .inpost-select-card{border-top:1px solid #202020;background:#080808}
+.shippingGrid select[data-parcel-template]{min-width:210px}

@@ -26,11 +26,11 @@ app.use((req,res,next)=>{
   // required. External origins are kept to the services STARXV actually uses.
   res.setHeader('Content-Security-Policy',[
     "default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com",
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com https://geowidget.inpost.pl",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://geowidget.inpost.pl",
     "font-src 'self' https://fonts.gstatic.com data:","img-src 'self' data: blob: https:",
-    "connect-src 'self' https://accounts.google.com",
-    "frame-src 'self' https://accounts.google.com"
+    "connect-src 'self' https://accounts.google.com https://geowidget.inpost.pl https://api.inpost.pl https://api-pl-points.easypack24.net https://api-shipx-pl.easypack24.net",
+    "frame-src 'self' https://accounts.google.com https://geowidget.inpost.pl"
   ].join('; '));
   if(process.env.NODE_ENV==='production')res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
   next();
@@ -889,7 +889,7 @@ function ensureOrderTimeline(order){
   }
   return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
 }
-function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
+function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,inpostStatus:String(o.inpostStatus||''),inpostParcelTemplate:String(o.inpostParcelTemplate||''),trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
 function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
 function reserveStockForOrder(db,order){
   if(order.stockCommitted||order.stockReserved)return;
@@ -1221,11 +1221,16 @@ function adminOnly(req,res,next){
   });
 }
 
-// --- STARXV InPost shipping — production checkout + proprietary point map -----------
-// Point data comes from InPost's public Points resource (no access token required).
-// Parcel creation / labels can still be handled manually in Manager Paczek.
+// --- STARXV InPost shipping — production ShipX + official Geowidget v5 ------------
+// ShipX uses the production token generated in Manager Paczek. The Geowidget token
+// is public by design and domain-restricted in Manager Paczek; the ShipX token never
+// leaves the server.
 function envMoney(name,fallback){const raw=String(process.env[name]??'').trim().replace(',','.');const n=raw===''?fallback:Number(raw);return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:fallback}
-function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:true}}
+function inpostShipxToken(){return String(process.env.INPOST_SHIPX_TOKEN||process.env.INPOST_TOKEN||'').trim()}
+function inpostOrganizationId(){return String(process.env.INPOST_ORGANIZATION_ID||'').trim()}
+function inpostGeowidgetToken(){return String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim()}
+function inpostConfigured(){return Boolean(inpostShipxToken()&&/^\d+$/.test(inpostOrganizationId()))}
+function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured()}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 function normalizeAndValidateDelivery(raw,address){
   const type=raw?.type==='address'?'address':'inpost';
@@ -1240,6 +1245,12 @@ function normalizeAndValidateDelivery(raw,address){
   return {type:'inpost',locker};
 }
 app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicConfig()}));
+app.get('/api/inpost/geowidget-config',(req,res)=>{
+  const token=inpostGeowidgetToken();
+  res.set('Cache-Control','private, max-age=300');
+  if(!token)return res.status(503).json({error:'Geowidget InPost nie jest jeszcze skonfigurowany.'});
+  res.json({ok:true,token,language:'pl',config:'parcelCollect'});
+});
 
 // Public proxy for the official InPost Points resource. The upstream endpoint itself
 // does not require authentication; the proxy keeps the frontend same-origin and lets
@@ -1308,6 +1319,121 @@ app.get('/api/inpost/points',async(req,res)=>{
     res.status(502).json({error:'Nie udało się pobrać punktów InPost. Spróbuj ponownie.'});
   }
 });
+
+
+
+// --- ShipX API (Manager Paczek production token) ------------------------------------
+const INPOST_SHIPX_HOST='api-shipx-pl.easypack24.net';
+function shipxErrorMessage(payload,status){
+  const raw=payload&&typeof payload==='object'?(payload.message||payload.error||payload.details):'';
+  if(Array.isArray(raw))return raw.map(x=>typeof x==='string'?x:(x?.message||JSON.stringify(x))).join(' · ').slice(0,700);
+  if(raw&&typeof raw==='object')return JSON.stringify(raw).slice(0,700);
+  if(String(raw||'').trim())return String(raw).slice(0,700);
+  return `InPost ShipX zwrócił błąd HTTP ${status}.`;
+}
+function shipxRequest(method,pathName,{json=null,accept='application/json'}={}){
+  return new Promise((resolve,reject)=>{
+    if(!inpostConfigured())return reject(Object.assign(new Error('Brak konfiguracji InPost ShipX w Render Environment.'),{status:503}));
+    const body=json===null?null:Buffer.from(JSON.stringify(json),'utf8');
+    const req=https.request({hostname:INPOST_SHIPX_HOST,port:443,path:pathName,method,headers:{
+      'Authorization':`Bearer ${inpostShipxToken()}`,
+      'Accept':accept,
+      ...(body?{'Content-Type':'application/json','Content-Length':String(body.length)}:{})
+    }},r=>{
+      const chunks=[];let size=0;
+      r.on('data',chunk=>{size+=chunk.length;if(size>12_000_000){req.destroy(new Error('Odpowiedź InPost jest zbyt duża.'));return}chunks.push(chunk)});
+      r.on('end',()=>{
+        const buffer=Buffer.concat(chunks),contentType=String(r.headers['content-type']||'');
+        let parsed=null;
+        if(contentType.includes('json')||buffer[0]===123||buffer[0]===91){try{parsed=JSON.parse(buffer.toString('utf8'))}catch{}}
+        if(r.statusCode>=200&&r.statusCode<300)return resolve({status:r.statusCode,headers:r.headers,buffer,json:parsed});
+        const err=new Error(shipxErrorMessage(parsed,r.statusCode));err.status=r.statusCode;err.payload=parsed;reject(err);
+      });
+    });
+    req.setTimeout(15000,()=>req.destroy(new Error('Przekroczono czas oczekiwania na InPost ShipX.')));
+    req.on('error',reject);if(body)req.write(body);req.end();
+  });
+}
+function cleanInpostPhone(v){
+  let n=String(v||'').replace(/[^0-9+]/g,'');
+  if(n.startsWith('+48'))n=n.slice(3);else if(n.startsWith('0048'))n=n.slice(4);
+  return n.replace(/\D/g,'').slice(-9);
+}
+function inpostStageFromStatus(status,current=0){
+  const s=String(status||'').toLowerCase();
+  if(s==='delivered')return 4;
+  if(['adopted_at_source_branch','sent_from_source_branch','adopted_at_sorting_center','sent_from_sorting_center','adopted_at_target_branch','out_for_delivery','ready_to_pickup','pickup_reminder_sent','ready_to_pickup_from_pok','ready_to_pickup_from_pok_registered','out_for_delivery_to_address','delay_in_delivery'].includes(s))return Math.max(3,Number(current||0));
+  if(['dispatched_by_sender','dispatched_by_sender_to_pok','taken_by_courier','taken_by_courier_from_pok','collected_from_sender'].includes(s))return Math.max(2,Number(current||0));
+  if(['created','offers_prepared','offer_selected','confirmed'].includes(s))return Math.max(1,Number(current||0));
+  return Number(current||0);
+}
+function inpostStatusLabel(status){
+  const map={created:'Utworzona w InPost',offers_prepared:'Oferta przygotowana',offer_selected:'Oferta wybrana',confirmed:'Etykieta gotowa',dispatched_by_sender:'Nadana przez nadawcę',dispatched_by_sender_to_pok:'Nadana w punkcie',taken_by_courier:'Odebrana przez kuriera',taken_by_courier_from_pok:'Odebrana z punktu',collected_from_sender:'Odebrana od nadawcy',adopted_at_source_branch:'Przyjęta w oddziale nadawczym',sent_from_source_branch:'Wysłana z oddziału nadawczego',adopted_at_sorting_center:'W sortowni',sent_from_sorting_center:'Wysłana z sortowni',adopted_at_target_branch:'W oddziale docelowym',out_for_delivery:'W doręczeniu',ready_to_pickup:'Gotowa do odbioru',pickup_reminder_sent:'Przypomnienie o odbiorze',delivered:'Dostarczona',returned_to_sender:'Zwrot do nadawcy',canceled:'Anulowana'};
+  return map[String(status||'').toLowerCase()]||String(status||'Aktualizacja InPost').replace(/_/g,' ');
+}
+async function syncOrderFromShipx(db,order,{email=true}={}){
+  if(!order?.inpostShipmentId)throw Object.assign(new Error('To zamówienie nie ma przesyłki ShipX.'),{status:400});
+  const response=await shipxRequest('GET',`/v1/shipments/${encodeURIComponent(String(order.inpostShipmentId))}`);
+  const data=response.json||{};
+  const previousTracking=String(order.trackingNumber||''),previousStatus=String(order.inpostStatus||''),previousStage=Number(order.shippingStage||0);
+  const tracking=String(data.tracking_number||data.parcels?.find?.(p=>p?.tracking_number)?.tracking_number||'').trim();
+  const status=String(data.status||'').trim();
+  if(tracking)order.trackingNumber=tracking;
+  order.carrier='InPost';order.inpostStatus=status||order.inpostStatus||'';order.carrierStatus=inpostStatusLabel(status||order.inpostStatus);
+  order.shippingStage=inpostStageFromStatus(status,order.shippingStage);order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();
+  if(status&&status!==previousStatus)orderEvent(order,`inpost_${status}`,inpostStatusLabel(status),tracking?`InPost • ${tracking}`:'Aktualizacja statusu przesyłki InPost.',order.updatedAt);
+  save(db);
+  if(email&&tracking&&tracking!==previousTracking)sendOrderUpdateEmail(db,order,'tracking',{dedupeKey:`tracking_${tracking}`});
+  if(email&&order.shippingStage>previousStage){
+    const type=order.shippingStage>=4?'delivered':order.shippingStage>=2?'shipped':'status';
+    sendOrderUpdateEmail(db,order,type,{dedupeKey:`shipping_${order.shippingStage}_${status||'shipx'}`});
+  }
+  return data;
+}
+
+app.post('/api/admin/orders/:id/shipment/create',rateLimit('inpost-create',30,60*60*1000),adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
+  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  if(order.paymentStatus!=='paid')return res.status(400).json({error:'Przesyłkę InPost utwórz dopiero po potwierdzeniu płatności.'});
+  if(order.delivery?.type!=='inpost'||!order.delivery?.locker?.id)return res.status(400).json({error:'To zamówienie nie ma dostawy do punktu InPost.'});
+  if(order.inpostShipmentId)return res.status(409).json({error:'Przesyłka InPost dla tego zamówienia już istnieje.'});
+  const parcelTemplate=['small','medium','large'].includes(String(req.body?.parcelTemplate||''))?String(req.body.parcelTemplate):'small';
+  const u=(req.db.users||[]).find(x=>x.id===order.userId);const a=order.address||{};
+  const email=cleanEmail(a.email||u?.email);const phone=cleanInpostPhone(a.phone);
+  if(!email||!phone||phone.length!==9)return res.status(400).json({error:'Do utworzenia przesyłki InPost potrzebny jest poprawny e-mail i 9-cyfrowy numer telefonu odbiorcy.'});
+  const payload={receiver:{first_name:String(a.firstName||u?.firstName||'').trim().slice(0,80),last_name:String(a.lastName||u?.lastName||'').trim().slice(0,80),email,phone},parcels:{template:parcelTemplate},service:'inpost_locker_standard',reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`,custom_attributes:{target_point:String(order.delivery.locker.id).trim().toUpperCase()}};
+  const created=(await shipxRequest('POST',`/v1/organizations/${encodeURIComponent(inpostOrganizationId())}/shipments`,{json:payload})).json||{};
+  if(!created.id)throw new Error('InPost nie zwrócił identyfikatora utworzonej przesyłki.');
+  order.inpostShipmentId=created.id;order.inpostParcelTemplate=parcelTemplate;order.inpostStatus=String(created.status||'created');order.carrier='InPost';order.carrierStatus=inpostStatusLabel(order.inpostStatus);order.shippingStage=Math.max(1,Number(order.shippingStage||0));order.updatedAt=Date.now();order.trackingUpdatedAt=Date.now();
+  if(created.tracking_number)order.trackingNumber=String(created.tracking_number);
+  orderEvent(order,'inpost_created','Przesyłka utworzona w InPost',`Gabaryt: ${parcelTemplate==='small'?'A':parcelTemplate==='medium'?'B':'C'} • punkt ${order.delivery.locker.id}`,order.updatedAt);save(req.db);
+  // ShipX confirms purchases asynchronously. A short delayed read often returns the tracking number,
+  // while the webhook / manual refresh remains the source of later status updates.
+  try{await new Promise(r=>setTimeout(r,900));await syncOrderFromShipx(req.db,order,{email:true})}catch(e){console.warn('ShipX initial sync:',e.message)}
+  res.json({ok:true,order:adminOrder(req.db,order)});
+}catch(e){console.error('ShipX create error:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:502).json({error:e.message||'Nie udało się utworzyć przesyłki InPost.'})}});
+
+app.post('/api/admin/orders/:id/shipment/sync',rateLimit('inpost-sync',120,60*60*1000),adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  await syncOrderFromShipx(req.db,order,{email:true});res.json({ok:true,order:adminOrder(req.db,order)});
+}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:502).json({error:e.message||'Nie udało się odświeżyć przesyłki InPost.'})}});
+
+app.get('/api/admin/orders/:id/shipment/label',adminOnly,async(req,res)=>{try{
+  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);if(!order)return res.status(404).send('Nie znaleziono zamówienia.');
+  if(!order.inpostShipmentId)return res.status(400).send('Brak przesyłki InPost.');
+  const out=await shipxRequest('GET',`/v1/shipments/${encodeURIComponent(String(order.inpostShipmentId))}/label?format=pdf&type=A6`,{accept:'application/pdf'});
+  res.setHeader('Content-Type',String(out.headers['content-type']||'application/pdf'));res.setHeader('Content-Disposition',`inline; filename="STARXV-${String(order.orderNo||'inpost').replace(/[^A-Za-z0-9_-]/g,'')}.pdf"`);res.setHeader('Cache-Control','private, no-store');res.send(out.buffer);
+}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:502).send(e.message||'Nie udało się pobrać etykiety InPost.')}});
+
+// Manager Paczek / legacy ShipX webhook. We never trust webhook status blindly: the shipment
+// is fetched from ShipX with the private token before the order is changed.
+app.post('/api/inpost/webhook',rateLimit('inpost-webhook',300,10*60*1000),async(req,res)=>{try{
+  const org=String(req.body?.organization_id||'');if(!inpostConfigured())return res.status(503).json({error:'InPost nie jest skonfigurowany.'});
+  if(org&&org!==inpostOrganizationId())return res.status(403).json({error:'Nieprawidłowa organizacja InPost.'});
+  const shipmentId=String(req.body?.payload?.shipment_id||req.body?.shipment_id||'').trim();if(!shipmentId)return res.status(200).json({ok:true,ignored:true});
+  const db=load();ensureStore(db);const order=db.orders.find(o=>String(o.inpostShipmentId||'')===shipmentId);if(!order)return res.status(200).json({ok:true,ignored:true});
+  await syncOrderFromShipx(db,order,{email:true});res.status(200).json({ok:true});
+}catch(e){console.error('InPost webhook error:',e.message);res.status(500).json({error:'Nie udało się przetworzyć webhooka InPost.'})}});
 
 app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{
   ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
