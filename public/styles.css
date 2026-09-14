@@ -1767,3 +1767,20 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
 .sx-inpost-widget-error strong{font-size:13px}.sx-inpost-widget-error span{max-width:460px;color:#777;font-size:10px;line-height:1.6}
 .sx-inpost-official .inpost-select-card{border-top:1px solid #202020;background:#080808}
 .shippingGrid select[data-parcel-template]{min-width:210px}
+
+
+/* ===== STARXV production address autocomplete ===== */
+.sx-phone-control{display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px}
+.sx-phone-control select,.sx-phone-control input{width:100%;min-width:0}
+.sx-phone-control select{cursor:pointer}
+.sx-field-hint{display:block;margin-top:7px;color:#646464;font-size:8px;line-height:1.45;letter-spacing:.03em}
+.sx-autocomplete-field{position:relative}
+.sx-address-suggestions{position:absolute;left:0;right:0;top:calc(100% - 1px);z-index:60;display:none;max-height:310px;overflow:auto;border:1px solid rgba(255,255,255,.14);background:#0b0b0b;box-shadow:0 20px 55px rgba(0,0,0,.48)}
+.sx-address-suggestions.open{display:block}
+.sx-address-suggestion{width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:5px;padding:12px 14px;border:0;border-bottom:1px solid rgba(255,255,255,.07);background:#0b0b0b;color:#fff;text-align:left;cursor:pointer;font:inherit}
+.sx-address-suggestion:last-child{border-bottom:0}
+.sx-address-suggestion:hover,.sx-address-suggestion:focus{background:#151515;outline:none}
+.sx-address-suggestion span{font-size:10px;font-weight:850;line-height:1.35}
+.sx-address-suggestion small{color:#777;font-size:8px;line-height:1.35}
+.sx-address-searching{padding:12px 14px;color:#777;font-size:9px}
+.field input.invalid,.sx-phone-control:has(input.invalid){border-color:#c55353!important}

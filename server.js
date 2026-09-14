@@ -1244,6 +1244,84 @@ function normalizeAndValidateDelivery(raw,address){
   if(Number.isFinite(lat)&&Number.isFinite(lng)&&lat>=-90&&lat<=90&&lng>=-180&&lng<=180)locker.location={latitude:lat,longitude:lng};
   return {type:'inpost',locker};
 }
+
+// --- Production address autocomplete (Geoapify, server-side API key) -------------------
+const addressAutocompleteCache=new Map();
+function geoapifyKey(){return String(process.env.GEOAPIFY_API_KEY||'').trim()}
+function normalizeAddressQuery(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,120)}
+function pruneAddressCache(){
+  const now=Date.now();
+  for(const [k,v] of addressAutocompleteCache)if(v.expires<=now)addressAutocompleteCache.delete(k);
+}
+setInterval(pruneAddressCache,10*60*1000).unref?.();
+
+app.get('/api/address/autocomplete',rateLimit('address-autocomplete',180,10*60*1000),async(req,res)=>{
+  try{
+    const key=geoapifyKey();
+    if(!key)return res.status(503).json({error:'Autouzupełnianie adresu nie jest jeszcze skonfigurowane.'});
+    const mode=String(req.query?.type||'').toLowerCase();
+    const q=normalizeAddressQuery(req.query?.q);
+    const city=normalizeAddressQuery(req.query?.city);
+    if(!['city','address'].includes(mode))return res.status(400).json({error:'Nieprawidłowy typ wyszukiwania.'});
+    if(q.length<1)return res.json({ok:true,results:[]});
+
+    const cacheKey=[mode,q.toLowerCase(),city.toLowerCase()].join('|');
+    const cached=addressAutocompleteCache.get(cacheKey);
+    if(cached&&cached.expires>Date.now())return res.json({ok:true,results:cached.results});
+
+    const params=new URLSearchParams({
+      text:mode==='city'?q:[q,city].filter(Boolean).join(', '),
+      format:'json',
+      lang:'pl',
+      filter:'countrycode:pl',
+      limit:'8',
+      apiKey:key
+    });
+    if(mode==='city')params.set('type','city');
+
+    const upstream=await fetch('https://api.geoapify.com/v1/geocode/autocomplete?'+params.toString(),{
+      headers:{'Accept':'application/json','User-Agent':'STARXV/1.0 (+https://starxv.pl)'},
+      signal:AbortSignal.timeout(7000)
+    });
+    const payload=await upstream.json().catch(()=>({}));
+    if(!upstream.ok)throw Object.assign(new Error('Usługa podpowiedzi adresów jest chwilowo niedostępna.'),{status:502});
+
+    let results=(Array.isArray(payload?.results)?payload.results:[]).map(x=>({
+      id:String(x.place_id||x.datasource?.raw?.place_id||x.formatted||crypto.randomUUID()).slice(0,300),
+      label:String(mode==='city'?(x.city||x.name||x.formatted):(x.address_line1||x.formatted||x.name)||'').trim().slice(0,300),
+      formatted:String(x.formatted||'').trim().slice(0,400),
+      city:String(x.city||x.town||x.village||x.municipality||'').trim().slice(0,120),
+      postcode:String(x.postcode||'').trim().slice(0,20),
+      street:String(x.street||'').trim().slice(0,180),
+      housenumber:String(x.housenumber||'').trim().slice(0,40),
+      state:String(x.state||'').trim().slice(0,120),
+      resultType:String(x.result_type||'').trim().slice(0,40)
+    })).filter(x=>x.label||x.formatted);
+
+    if(mode==='city'){
+      const seen=new Set();
+      results=results.filter(x=>{
+        const k=(x.city||x.label).toLowerCase()+'|'+x.state.toLowerCase();
+        if(seen.has(k))return false;seen.add(k);return true;
+      });
+    }else if(city){
+      const wanted=city.toLocaleLowerCase('pl-PL');
+      const exact=results.filter(x=>(x.city||'').toLocaleLowerCase('pl-PL')===wanted);
+      if(exact.length)results=exact;
+    }
+
+    results=results.slice(0,8);
+    addressAutocompleteCache.set(cacheKey,{results,expires:Date.now()+10*60*1000});
+    if(addressAutocompleteCache.size>500)pruneAddressCache();
+    res.setHeader('Cache-Control','private, max-age=60');
+    res.json({ok:true,results});
+  }catch(e){
+    console.error('Address autocomplete error:',e?.message||e);
+    const status=Number(e?.status)||502;
+    res.status(status>=400&&status<600?status:502).json({error:'Nie udało się pobrać podpowiedzi adresu. Możesz wpisać adres ręcznie.'});
+  }
+});
+
 app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicConfig()}));
 app.get('/api/inpost/geowidget-config',(req,res)=>{
   const token=inpostGeowidgetToken();

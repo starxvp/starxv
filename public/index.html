@@ -744,7 +744,7 @@
 </div>
 <div aria-hidden="true" class="confirm-overlay" id="confirmCheckout"><div aria-labelledby="confirmTitle" aria-modal="true" class="confirm-box" role="dialog"><div class="confirm-kicker">STARXV / CHECKOUT</div><h3 id="confirmTitle">Sfinalizować zakup?</h3><p>Do płatności przejdą tylko zaznaczone produkty z koszyka. Przed płatnością podasz dane kontaktowe i wybierzesz adres dostawy.</p><div class="confirm-actions"><button class="confirm-no" id="confirmNo">NIE</button><button class="confirm-yes" id="confirmYes">TAK, DALEJ</button></div></div></div>
 <div aria-hidden="true" class="checkout-overlay" id="checkoutOverlay"><div class="checkout-shell"><div class="checkout-top"><div><div class="checkout-kicker">SECURE CHECKOUT</div><div class="checkout-brand">STARXV</div></div><button aria-label="Zamknij checkout" class="checkout-close" id="checkoutClose">×</button></div><div class="checkout-main"><div><div class="checkout-kicker" id="stageLabel">ETAP 1 Z 4</div><div class="checkout-steps"><div class="checkout-step-dot active"></div><div class="checkout-step-dot"></div><div class="checkout-step-dot"></div><div class="checkout-step-dot"></div></div>
-<section class="checkout-stage active" data-stage="1"><h2>Dane i dostawa.</h2><p>Wybierz zapisany adres albo dodaj nowy. Dane możesz poprawić przed zapisaniem.</p><div class="stage1-address-picker"><div class="stage1-address-head"><strong>ZAPISANE ADRESY</strong><button class="stage1-new-address" id="stage1NewAddress" type="button">+ DODAJ NOWY</button></div><div class="stage1-saved-list" id="stage1SavedAddresses"></div></div><div class="stage1-address-mode" id="stage1AddressMode"><b>NOWY ADRES</b> — uzupełnij dane poniżej.</div><div class="form-grid"><div class="field"><label>Imię</label><input autocomplete="given-name" id="firstName" required=""/></div><div class="field"><label>Nazwisko</label><input autocomplete="family-name" id="lastName" required=""/></div><div class="field"><label>E-mail</label><input autocomplete="email" id="email" required="" type="email"/></div><div class="field"><label>Telefon</label><input autocomplete="tel" id="phone" placeholder="+48 ..." required="" type="tel"/></div><div class="field full"><label>Ulica i numer</label><input autocomplete="street-address" id="street" required=""/></div><div class="field"><label>Kod pocztowy</label><input autocomplete="postal-code" id="postal" placeholder="00-000" required=""/></div><div class="field"><label>Miasto</label><input autocomplete="address-level2" id="city" required=""/></div><div class="field full"><label>Kraj</label><select id="country"><option value="PL">Polska</option></select></div></div><div class="stage-actions"><button class="stage-next" id="saveAddressNext">ZAPISZ ADRES →</button></div></section>
+<section class="checkout-stage active" data-stage="1"><h2>Dane i dostawa.</h2><p>Wybierz zapisany adres albo dodaj nowy. Dane możesz poprawić przed zapisaniem.</p><div class="stage1-address-picker"><div class="stage1-address-head"><strong>ZAPISANE ADRESY</strong><button class="stage1-new-address" id="stage1NewAddress" type="button">+ DODAJ NOWY</button></div><div class="stage1-saved-list" id="stage1SavedAddresses"></div></div><div class="stage1-address-mode" id="stage1AddressMode"><b>NOWY ADRES</b> — uzupełnij dane poniżej.</div><div class="form-grid"><div class="field"><label>Imię</label><input autocomplete="given-name" id="firstName" required=""/></div><div class="field"><label>Nazwisko</label><input autocomplete="family-name" id="lastName" required=""/></div><div class="field"><label>E-mail</label><input autocomplete="email" id="email" required="" type="email"/></div><div class="field"><label>Telefon</label><div class="sx-phone-control"><select aria-label="Kierunkowy kraju" id="phonePrefix"><option value="+48">🇵🇱 +48</option></select><input autocomplete="tel-national" id="phone" inputmode="numeric" maxlength="11" placeholder="123 456 789" required="" type="tel"/></div><small class="sx-field-hint">Numer zostanie zapisany w formacie +48 123 456 789.</small></div><div class="field full sx-autocomplete-field"><label>Ulica i numer</label><input autocomplete="off" id="street" placeholder="Zacznij wpisywać ulicę lub adres…" required=""/><div aria-live="polite" class="sx-address-suggestions" id="streetSuggestions"></div><small class="sx-field-hint">Sugestie są zawężane do wybranego miasta.</small></div><div class="field"><label>Kod pocztowy</label><input autocomplete="postal-code" id="postal" inputmode="numeric" maxlength="6" placeholder="00-000" required=""/><small class="sx-field-hint">Myślnik doda się automatycznie.</small></div><div class="field sx-autocomplete-field"><label>Miasto</label><input autocomplete="off" id="city" placeholder="Zacznij wpisywać miasto…" required=""/><div aria-live="polite" class="sx-address-suggestions" id="citySuggestions"></div></div><div class="field full"><label>Kraj</label><select id="country"><option value="PL">Polska</option></select></div></div><div class="stage-actions"><button class="stage-next" id="saveAddressNext">ZAPISZ ADRES →</button></div></section>
 <section class="checkout-stage" data-stage="2"><h2>Wybierz adres.</h2><p>Możesz mieć zapisanych kilka adresów. Ten, który zaznaczysz i potwierdzisz, stanie się domyślnym adresem dostawy.</p><div class="address-list" id="addressList"></div><div class="stage-actions"><button class="stage-back" data-back="1">← WRÓĆ</button><button class="stage-next" id="confirmAddress">USTAW DOMYŚLNY →</button></div></section>
 <section class="checkout-stage" data-stage="3"><h2>Sposób dostawy.</h2><p>Wybierz Paczkomat® lub PaczkoPunkt InPost albo dostawę na adres.</p><div class="delivery-choice-grid"><button class="delivery-choice selected" data-delivery="inpost" type="button"><b>📦 PACZKOMAT® / PACZKOPUNKT</b><span>Oficjalna mapa InPost. Wybrany punkt zapisze się bezpośrednio do zamówienia.</span></button><button class="delivery-choice" data-delivery="address" type="button"><b>🏠 DOSTAWA NA ADRES</b><span>Wyślemy zamówienie na adres zatwierdzony w etapie 2.</span></button></div><div class="delivery-panel active" id="inpostDeliveryPanel"><div class="sx-inpost-official"><div class="sx-inpost-official-head"><div><span class="sx-inpost-kicker">OFICJALNY GEOWIDGET INPOST</span><strong>Wybierz punkt odbioru</strong><small>Mapa i lista punktów są dostarczane bezpośrednio przez InPost.</small></div><span class="locker-status-pill">INPOST</span></div><div id="inpostGeoWidgetHost" class="inpost-geowidget-host"><div class="inpost-map-loading" id="inpostMapLoading"><span class="inpost-map-spinner"></span><strong>Ładowanie oficjalnej mapy InPost…</strong></div></div><div class="inpost-select-card"><div class="inpost-select-heading"><span class="inpost-step-dot">✓</span><div><strong>Wybrany punkt odbioru</strong><span>Po wybraniu punktu na mapie jego kod i adres zostaną zapisane do zamówienia.</span></div></div><div class="locker-selected" id="lockerSelected"><strong>Nie wybrano jeszcze punktu.</strong><br/>Wybierz Paczkomat® lub PaczkoPunkt na mapie InPost.</div><button class="inpost-change-point" id="changeInpostPoint" type="button" hidden>Zmień punkt</button><div class="inpost-security-note">STARXV zapisuje wyłącznie dane wybranego punktu potrzebne do realizacji dostawy.</div></div></div></div><div class="delivery-panel" id="addressDeliveryPanel"><div class="delivery-current-address" id="deliveryAddressPreview"></div></div><div class="stage-actions"><button class="stage-back" data-back="2">← WRÓĆ</button><button class="stage-next" id="confirmDelivery">ZATWIERDŹ DOSTAWĘ →</button></div></section><section class="checkout-stage" data-stage="4"><h2>Płatność.</h2><p>Wybierz preferowaną metodę. Płatność zostanie bezpiecznie obsłużona przez Przelewy24.</p><div class="payment-grid" id="paymentGrid"><div class="pay-card selected" data-method="auto"><div><b>Wszystkie metody</b><span>BLIK, karta, portfele i szybkie przelewy</span></div><span class="pay-badge">POLECANE</span></div><div class="pay-card" data-method="blik"><div><b>BLIK</b><span>Kod z aplikacji banku</span></div><span class="pay-badge">PLN</span></div><div class="pay-card" data-method="card"><div><b>Karta</b><span>Visa / Mastercard</span></div><span class="pay-badge">3D SECURE</span></div><div class="pay-card" data-method="p24"><div><b>Szybki przelew</b><span>Bankowość online przez Przelewy24</span></div><span class="pay-badge">BANK</span></div><div class="pay-card" data-method="wallet"><div><b>Apple Pay / Google Pay</b><span>Jeśli portfel jest dostępny na urządzeniu</span></div><span class="pay-badge">WALLET</span></div></div><div class="stripe-note"><strong>Bezpieczna płatność:</strong> po kliknięciu przycisku STARXV utworzy transakcję i przekieruje Cię do zabezpieczonego panelu Przelewy24. STARXV nie zapisuje danych Twojej karty.</div><div class="secure-mark">🔒 PRZELEWY24 • SZYFROWANE POŁĄCZENIE</div>
 <div class="sx-checkout-legal">
@@ -1047,7 +1047,9 @@ const renderCart=()=>{hydrateCartDiscounts();
   const addressText=a=>`${a.street||''}, ${a.postal||''} ${a.city||''}`.replace(/^,\s*/, '');
   const fillAddressForm=a=>{
     if(!a)return;
-    ['firstName','lastName','email','phone','street','postal','city'].forEach(k=>{if($(k))$(k).value=a[k]||''});
+    ['firstName','lastName','email','street','postal','city'].forEach(k=>{if($(k))$(k).value=a[k]||''});
+    if($('phone'))$('phone').value=formatPolishPhone(a.phone||'');
+    if($('phonePrefix'))$('phonePrefix').value='+48';
     stage1EditingAddressId=a.id;
     selectedAddressId=a.id;
     const mode=$('stage1AddressMode');if(mode)mode.innerHTML=`<b>WYBRANY ZAPISANY ADRES</b> — możesz go poprawić przed przejściem dalej.`;
@@ -1055,6 +1057,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   };
   const clearAddressForm=()=>{
     ['firstName','lastName','email','phone','street','postal','city'].forEach(k=>{if($(k))$(k).value=''});
+    if($('phonePrefix'))$('phonePrefix').value='+48';
     stage1EditingAddressId=null;
     const mode=$('stage1AddressMode');if(mode)mode.innerHTML='<b>NOWY ADRES</b> — uzupełnij dane poniżej.';
     renderStage1Addresses();
@@ -1128,8 +1131,121 @@ const renderCart=()=>{hydrateCartDiscounts();
   }
   renderSelectedLocker();
   loadShippingConfig();
-  const validate=()=>{let ok=true;fields.forEach(id=>{const el=$(id),val=el.value.trim();let valid=!!val;if(id==='email')valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);if(id==='postal')valid=/^\d{2}-\d{3}$/.test(val);el.classList.toggle('invalid',!valid);if(!valid)ok=false});return ok};
-  const saveCurrentAddress=()=>{if(!validate()){showStatus('error','Sprawdź dane','Uzupełnij wymagane pola i popraw format e-maila lub kodu pocztowego.');return false}const address={id:stage1EditingAddressId||('addr_'+Date.now()),firstName:$('firstName').value.trim(),lastName:$('lastName').value.trim(),email:$('email').value.trim(),phone:$('phone').value.trim(),street:$('street').value.trim(),postal:$('postal').value.trim(),city:$('city').value.trim(),country:'PL'};let addresses=getAddresses();if(stage1EditingAddressId){const i=addresses.findIndex(a=>a.id===stage1EditingAddressId);if(i>=0)addresses[i]=address;else addresses.push(address);selectedAddressId=address.id}else{const dupe=addresses.find(a=>a.street===address.street&&a.postal===address.postal&&a.city===address.city&&a.email===address.email);if(dupe){selectedAddressId=dupe.id}else{addresses.push(address);selectedAddressId=address.id}}saveAddresses(addresses);stage1EditingAddressId=selectedAddressId;renderAddresses();renderStage1Addresses();return true};
+
+  const onlyDigits=v=>String(v||'').replace(/\D/g,'');
+  const formatPolishPhone=v=>{
+    let d=onlyDigits(v);
+    if(d.startsWith('48')&&d.length>9)d=d.slice(2);
+    d=d.slice(0,9);
+    return d.replace(/(\d{3})(?=\d)/g,'$1 ').trim();
+  };
+  const normalizePhoneForSave=()=>`${$('phonePrefix')?.value||'+48'} ${formatPolishPhone($('phone')?.value||'')}`.trim();
+  const formatPostalCode=v=>{
+    const d=onlyDigits(v).slice(0,5);
+    return d.length<=2?d:`${d.slice(0,2)}-${d.slice(2)}`;
+  };
+
+  $('phone')?.addEventListener('input',e=>{
+    const pos=e.target.selectionStart||0;
+    e.target.value=formatPolishPhone(e.target.value);
+    try{e.target.setSelectionRange(e.target.value.length,e.target.value.length)}catch{}
+  });
+  $('phone')?.addEventListener('paste',()=>setTimeout(()=>{$('phone').value=formatPolishPhone($('phone').value)},0));
+  $('postal')?.addEventListener('input',e=>{e.target.value=formatPostalCode(e.target.value)});
+  $('postal')?.addEventListener('paste',()=>setTimeout(()=>{$('postal').value=formatPostalCode($('postal').value)},0));
+
+  const sxAddressAutocomplete={
+    timers:new Map(),
+    controllers:new Map(),
+    selectedCity:'',
+    hide(list){if(list){list.classList.remove('open');list.innerHTML=''}},
+    escape(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))},
+    async search(kind,q,city=''){
+      const key=kind;
+      clearTimeout(this.timers.get(key));
+      this.controllers.get(key)?.abort?.();
+      return new Promise(resolve=>{
+        this.timers.set(key,setTimeout(async()=>{
+          const ctl=new AbortController();this.controllers.set(key,ctl);
+          try{
+            const url=new URL('/api/address/autocomplete',location.origin);
+            url.searchParams.set('type',kind);url.searchParams.set('q',q);
+            if(city)url.searchParams.set('city',city);
+            const r=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:ctl.signal});
+            const j=await r.json().catch(()=>({}));
+            if(!r.ok)throw new Error(j.error||'Brak podpowiedzi.');
+            resolve(Array.isArray(j.results)?j.results:[]);
+          }catch(e){if(e.name!=='AbortError')resolve([])}
+        },220));
+      });
+    },
+    render(list,results,onPick){
+      if(!list)return;
+      if(!results.length){this.hide(list);return}
+      list.innerHTML=results.map((r,i)=>{
+        const primary=this.escape(r.label||r.formatted||'');
+        const secondary=this.escape([r.postcode,r.city,r.state].filter(Boolean).join(' · '));
+        return `<button type="button" class="sx-address-suggestion" data-i="${i}" role="option"><span>${primary}</span>${secondary?`<small>${secondary}</small>`:''}</button>`;
+      }).join('');
+      list.classList.add('open');
+      list.querySelectorAll('.sx-address-suggestion').forEach(btn=>btn.addEventListener('mousedown',e=>{e.preventDefault();onPick(results[Number(btn.dataset.i)])}));
+    }
+  };
+
+  const cityInput=$('city'),cityList=$('citySuggestions'),streetInput=$('street'),streetList=$('streetSuggestions');
+  cityInput?.addEventListener('input',async()=>{
+    const q=cityInput.value.trim();
+    sxAddressAutocomplete.selectedCity='';
+    if(q.length<1){sxAddressAutocomplete.hide(cityList);return}
+    cityList.innerHTML='<div class="sx-address-searching">Szukam miast…</div>';cityList.classList.add('open');
+    const results=await sxAddressAutocomplete.search('city',q);
+    if(cityInput.value.trim()!==q)return;
+    sxAddressAutocomplete.render(cityList,results,r=>{
+      const city=(r.city||r.label||'').trim();
+      cityInput.value=city;
+      sxAddressAutocomplete.selectedCity=city;
+      cityInput.dataset.addressVerified='1';
+      if(r.postcode&&!$('postal').value)$('postal').value=formatPostalCode(r.postcode);
+      sxAddressAutocomplete.hide(cityList);
+      streetInput?.focus();
+    });
+  });
+  cityInput?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&cityList?.classList.contains('open')){
+      const first=cityList.querySelector('.sx-address-suggestion');if(first){e.preventDefault();first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}
+    }else if(e.key==='Escape')sxAddressAutocomplete.hide(cityList);
+  });
+
+  streetInput?.addEventListener('input',async()=>{
+    const q=streetInput.value.trim(),city=cityInput?.value.trim()||'';
+    streetInput.dataset.addressVerified='';
+    if(q.length<1||city.length<1){sxAddressAutocomplete.hide(streetList);return}
+    streetList.innerHTML='<div class="sx-address-searching">Szukam ulic i adresów…</div>';streetList.classList.add('open');
+    const results=await sxAddressAutocomplete.search('address',q,city);
+    if(streetInput.value.trim()!==q)return;
+    sxAddressAutocomplete.render(streetList,results,r=>{
+      const street=[r.street,r.housenumber].filter(Boolean).join(' ').trim()||r.label||r.formatted||'';
+      streetInput.value=street;
+      streetInput.dataset.addressVerified='1';
+      if(r.city)cityInput.value=r.city;
+      if(r.city){sxAddressAutocomplete.selectedCity=r.city;cityInput.dataset.addressVerified='1'}
+      if(r.postcode)$('postal').value=formatPostalCode(r.postcode);
+      sxAddressAutocomplete.hide(streetList);
+    });
+  });
+  streetInput?.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&streetList?.classList.contains('open')){
+      const first=streetList.querySelector('.sx-address-suggestion');if(first){e.preventDefault();first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}
+    }else if(e.key==='Escape')sxAddressAutocomplete.hide(streetList);
+  });
+  document.addEventListener('mousedown',e=>{
+    if(!e.target.closest('.sx-autocomplete-field')){
+      sxAddressAutocomplete.hide(cityList);sxAddressAutocomplete.hide(streetList);
+    }
+  });
+
+  const validate=()=>{let ok=true;fields.forEach(id=>{const el=$(id),val=el.value.trim();let valid=!!val;if(id==='email')valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);if(id==='postal')valid=/^\d{2}-\d{3}$/.test(val);if(id==='phone')valid=onlyDigits(val).length===9;el.classList.toggle('invalid',!valid);if(!valid)ok=false});return ok};
+  const saveCurrentAddress=()=>{if(!validate()){showStatus('error','Sprawdź dane','Uzupełnij wymagane pola. Telefon musi mieć 9 cyfr, e-mail poprawny format, a kod pocztowy format 00-000.');return false}const address={id:stage1EditingAddressId||('addr_'+Date.now()),firstName:$('firstName').value.trim(),lastName:$('lastName').value.trim(),email:$('email').value.trim(),phone:normalizePhoneForSave(),street:$('street').value.trim(),postal:$('postal').value.trim(),city:$('city').value.trim(),country:'PL'};let addresses=getAddresses();if(stage1EditingAddressId){const i=addresses.findIndex(a=>a.id===stage1EditingAddressId);if(i>=0)addresses[i]=address;else addresses.push(address);selectedAddressId=address.id}else{const dupe=addresses.find(a=>a.street===address.street&&a.postal===address.postal&&a.city===address.city&&a.email===address.email);if(dupe){selectedAddressId=dupe.id}else{addresses.push(address);selectedAddressId=address.id}}saveAddresses(addresses);stage1EditingAddressId=selectedAddressId;renderAddresses();renderStage1Addresses();return true};
   const openCheckout=()=>{confirmBox.classList.remove('open');confirmBox.setAttribute('aria-hidden','true');document.getElementById('cartModal')?.classList.remove('open');checkout.setAttribute('aria-hidden','false');renderSummary();renderDeliveryAddress();setDeliveryMethod(deliveryMethod);setStage(1);requestAnimationFrame(()=>checkout.classList.add('open'));document.body.style.overflow='hidden'};
   window.STARXV_OPEN_CHECKOUT=openCheckout;
   const closeCheckout=()=>{checkout.classList.remove('open');checkout.setAttribute('aria-hidden','true');document.body.style.overflow=''};
