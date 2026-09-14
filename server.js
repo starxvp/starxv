@@ -26,13 +26,11 @@ app.use((req,res,next)=>{
   // required. External origins are kept to the services STARXV actually uses.
   res.setHeader('Content-Security-Policy',[
     "default-src 'self'","base-uri 'self'","object-src 'none'","frame-ancestors 'none'","form-action 'self'",
-    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com https://geowidget.inpost.pl https://*.inpost.pl https://*.inpost-group.com",
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://geowidget.inpost.pl https://*.inpost.pl https://*.inpost-group.com",
-    "font-src 'self' https://fonts.gstatic.com data: https://*.inpost.pl https://*.inpost-group.com",
-    "img-src 'self' data: blob: https:",
-    "connect-src 'self' https://accounts.google.com https://*.inpost.pl https://*.inpost-group.com https://api-pl-points.easypack24.net https://api-shipx-pl.easypack24.net wss://*.inpost.pl wss://*.inpost-group.com",
-    "frame-src 'self' https://accounts.google.com https://*.inpost.pl https://*.inpost-group.com",
-    "worker-src 'self' blob:"
+    "script-src 'self' 'unsafe-inline' https://accounts.google.com https://unpkg.com https://geowidget.inpost.pl",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com https://geowidget.inpost.pl",
+    "font-src 'self' https://fonts.gstatic.com data:","img-src 'self' data: blob: https:",
+    "connect-src 'self' https://accounts.google.com https://geowidget.inpost.pl https://api.inpost.pl https://api-pl-points.easypack24.net https://api-shipx-pl.easypack24.net",
+    "frame-src 'self' https://accounts.google.com https://geowidget.inpost.pl"
   ].join('; '));
   if(process.env.NODE_ENV==='production')res.setHeader('Strict-Transport-Security','max-age=31536000; includeSubDomains');
   next();
@@ -1337,23 +1335,33 @@ function shipxRequest(method,pathName,{json=null,accept='application/json'}={}){
   return new Promise((resolve,reject)=>{
     if(!inpostConfigured())return reject(Object.assign(new Error('Brak konfiguracji InPost ShipX w Render Environment.'),{status:503}));
     const body=json===null?null:Buffer.from(JSON.stringify(json),'utf8');
+    let settled=false;
+    const finish=(fn,value)=>{if(settled)return;settled=true;clearTimeout(hardTimer);fn(value)};
+    const timeoutError=()=>Object.assign(new Error('InPost ShipX nie odpowiedział w wymaganym czasie. Spróbuj odświeżyć zamówienie za chwilę; nie twórz od razu drugiej przesyłki.'),{status:504});
     const req=https.request({hostname:INPOST_SHIPX_HOST,port:443,path:pathName,method,headers:{
       'Authorization':`Bearer ${inpostShipxToken()}`,
       'Accept':accept,
+      'User-Agent':'STARXV/1.0',
+      'Connection':'close',
       ...(body?{'Content-Type':'application/json','Content-Length':String(body.length)}:{})
     }},r=>{
       const chunks=[];let size=0;
-      r.on('data',chunk=>{size+=chunk.length;if(size>12_000_000){req.destroy(new Error('Odpowiedź InPost jest zbyt duża.'));return}chunks.push(chunk)});
+      r.on('data',chunk=>{size+=chunk.length;if(size>12_000_000){req.destroy(Object.assign(new Error('Odpowiedź InPost jest zbyt duża.'),{status:502}));return}chunks.push(chunk)});
       r.on('end',()=>{
         const buffer=Buffer.concat(chunks),contentType=String(r.headers['content-type']||'');
         let parsed=null;
         if(contentType.includes('json')||buffer[0]===123||buffer[0]===91){try{parsed=JSON.parse(buffer.toString('utf8'))}catch{}}
-        if(r.statusCode>=200&&r.statusCode<300)return resolve({status:r.statusCode,headers:r.headers,buffer,json:parsed});
-        const err=new Error(shipxErrorMessage(parsed,r.statusCode));err.status=r.statusCode;err.payload=parsed;reject(err);
+        if(r.statusCode>=200&&r.statusCode<300)return finish(resolve,{status:r.statusCode,headers:r.headers,buffer,json:parsed});
+        const err=new Error(shipxErrorMessage(parsed,r.statusCode));err.status=r.statusCode;err.payload=parsed;finish(reject,err);
       });
     });
-    req.setTimeout(15000,()=>req.destroy(new Error('Przekroczono czas oczekiwania na InPost ShipX.')));
-    req.on('error',reject);if(body)req.write(body);req.end();
+    // Socket timeout plus an absolute timer. The absolute timer also covers DNS/TLS
+    // connection stalls, so the admin button can never remain in TWORZENIE forever.
+    req.setTimeout(12000,()=>req.destroy(timeoutError()));
+    const hardTimer=setTimeout(()=>req.destroy(timeoutError()),18000);
+    req.on('error',err=>finish(reject,err));
+    if(body)req.write(body);
+    req.end();
   });
 }
 function cleanInpostPhone(v){
@@ -1403,16 +1411,22 @@ app.post('/api/admin/orders/:id/shipment/create',rateLimit('inpost-create',30,60
   const u=(req.db.users||[]).find(x=>x.id===order.userId);const a=order.address||{};
   const email=cleanEmail(a.email||u?.email);const phone=cleanInpostPhone(a.phone);
   if(!email||!phone||phone.length!==9)return res.status(400).json({error:'Do utworzenia przesyłki InPost potrzebny jest poprawny e-mail i 9-cyfrowy numer telefonu odbiorcy.'});
-  const payload={receiver:{first_name:String(a.firstName||u?.firstName||'').trim().slice(0,80),last_name:String(a.lastName||u?.lastName||'').trim().slice(0,80),email,phone},parcels:{template:parcelTemplate},service:'inpost_locker_standard',reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`,custom_attributes:{target_point:String(order.delivery.locker.id).trim().toUpperCase()}};
+  const payload={receiver:{first_name:String(a.firstName||u?.firstName||'').trim().slice(0,80),last_name:String(a.lastName||u?.lastName||'').trim().slice(0,80),email,phone},parcels:{template:parcelTemplate},service:'inpost_locker_standard',reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`,custom_attributes:{sending_method:'parcel_locker',target_point:String(order.delivery.locker.id).trim().toUpperCase()}};
   const created=(await shipxRequest('POST',`/v1/organizations/${encodeURIComponent(inpostOrganizationId())}/shipments`,{json:payload})).json||{};
   if(!created.id)throw new Error('InPost nie zwrócił identyfikatora utworzonej przesyłki.');
   order.inpostShipmentId=created.id;order.inpostParcelTemplate=parcelTemplate;order.inpostStatus=String(created.status||'created');order.carrier='InPost';order.carrierStatus=inpostStatusLabel(order.inpostStatus);order.shippingStage=Math.max(1,Number(order.shippingStage||0));order.updatedAt=Date.now();order.trackingUpdatedAt=Date.now();
   if(created.tracking_number)order.trackingNumber=String(created.tracking_number);
   orderEvent(order,'inpost_created','Przesyłka utworzona w InPost',`Gabaryt: ${parcelTemplate==='small'?'A':parcelTemplate==='medium'?'B':'C'} • punkt ${order.delivery.locker.id}`,order.updatedAt);save(req.db);
-  // ShipX confirms purchases asynchronously. A short delayed read often returns the tracking number,
-  // while the webhook / manual refresh remains the source of later status updates.
-  try{await new Promise(r=>setTimeout(r,900));await syncOrderFromShipx(req.db,order,{email:true})}catch(e){console.warn('ShipX initial sync:',e.message)}
+  // ShipX purchase/confirmation is asynchronous. Return to the admin immediately after
+  // creation, then refresh the shipment in the background. Webhook remains authoritative.
   res.json({ok:true,order:adminOrder(req.db,order)});
+  setTimeout(async()=>{
+    try{
+      const db=load();ensureStore(db);
+      const fresh=db.orders.find(o=>o.id===order.id);
+      if(fresh?.inpostShipmentId)await syncOrderFromShipx(db,fresh,{email:true});
+    }catch(e){console.warn('ShipX background sync:',e.message)}
+  },1500).unref?.();
 }catch(e){console.error('ShipX create error:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:502).json({error:e.message||'Nie udało się utworzyć przesyłki InPost.'})}});
 
 app.post('/api/admin/orders/:id/shipment/sync',rateLimit('inpost-sync',120,60*60*1000),adminOnly,async(req,res)=>{try{
