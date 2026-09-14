@@ -1231,8 +1231,10 @@ function envMoney(name,fallback){const raw=String(process.env[name]??'').trim().
 function inpostShipxToken(){return String(process.env.INPOST_SHIPX_TOKEN||process.env.INPOST_TOKEN||'').trim()}
 function inpostOrganizationId(){return String(process.env.INPOST_ORGANIZATION_ID||'').trim()}
 function inpostGeowidgetToken(){return String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim()}
+// TEMPORARY SAFETY SWITCH: while true, admin shipment creation never calls ShipX.
+const INPOST_ADMIN_TEST_MODE=true;
 function inpostConfigured(){return Boolean(inpostShipxToken()&&/^\d+$/.test(inpostOrganizationId()))}
-function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured()}}
+function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured(),inpostTestMode:INPOST_ADMIN_TEST_MODE}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 function normalizeAndValidateDelivery(raw,address){
   const type=raw?.type==='address'?'address':'inpost';
@@ -1491,6 +1493,10 @@ app.post('/api/admin/orders/:id/shipment/create',rateLimit('inpost-create',30,60
   const u=(req.db.users||[]).find(x=>x.id===order.userId);const a=order.address||{};
   const email=cleanEmail(a.email||u?.email);const phone=cleanInpostPhone(a.phone);
   if(!email||!phone||phone.length!==9)return res.status(400).json({error:'Do utworzenia przesyłki InPost potrzebny jest poprawny e-mail i 9-cyfrowy numer telefonu odbiorcy.'});
+  // TEST MODE: validate everything above, but stop before any production ShipX request.
+  if(INPOST_ADMIN_TEST_MODE){
+    return res.json({ok:true,testMode:true,simulated:true,message:'TRYB TESTOWY — dane przesyłki są poprawne. Nic nie zostało wysłane do InPost.'});
+  }
   const payload={receiver:{first_name:String(a.firstName||u?.firstName||'').trim().slice(0,80),last_name:String(a.lastName||u?.lastName||'').trim().slice(0,80),email,phone},parcels:{template:parcelTemplate},service:'inpost_locker_standard',reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`,custom_attributes:{sending_method:'parcel_locker',target_point:String(order.delivery.locker.id).trim().toUpperCase()}};
   const created=(await shipxRequest('POST',`/v1/organizations/${encodeURIComponent(inpostOrganizationId())}/shipments`,{json:payload})).json||{};
   if(!created.id)throw new Error('InPost nie zwrócił identyfikatora utworzonej przesyłki.');
