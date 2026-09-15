@@ -258,9 +258,14 @@ function addColorImage(e){
  const row=document.createElement('div');row.className='colorImageRow';row.setAttribute('data-image-row','');row.innerHTML=`<input class="colorImageUrl" data-color-image placeholder="Zdjęcie ${rows.length+1} — URL / data:image..."><label class="colorImageIcon" title="Dodaj plik z komputera">▣<input class="colorImageFile" data-color-file type="file" accept="image/*"></label><button class="colorImageIcon remove" type="button" data-remove-color-image title="Usuń to zdjęcie">−</button>`;grid.appendChild(row);row.querySelector('[data-remove-color-image]').onclick=removeColorImage;row.querySelector('[data-color-file]').onchange=loadColorImageFile;refreshColorImageControls(box);row.querySelector('[data-color-image]').focus();
 }
 function removeColorImage(e){const box=e.currentTarget.closest('[data-color-box]');e.currentTarget.closest('[data-image-row]')?.remove();refreshColorImageControls(box)}
-function loadColorImageFile(e){
- const file=e.currentTarget.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return alert('Wybierz plik graficzny.');if(file.size>5*1024*1024)return alert('Zdjęcie jest za duże. Maksymalnie 5 MB na plik.');
- const row=e.currentTarget.closest('[data-image-row]'),reader=new FileReader();reader.onload=()=>{row.querySelector('[data-color-image]').value=String(reader.result||'')};reader.onerror=()=>alert('Nie udało się wczytać zdjęcia.');reader.readAsDataURL(file);
+async function loadColorImageFile(e){
+ const file=e.currentTarget.files?.[0];if(!file)return;if(!file.type.startsWith('image/'))return alert('Wybierz plik graficzny.');if(file.size>15*1024*1024)return alert('Zdjęcie jest za duże. Maksymalnie 15 MB na plik.');
+ const row=e.currentTarget.closest('[data-image-row]'),input=row.querySelector('[data-color-image]');
+ try{
+  if(file.size<=4*1024*1024){const reader=new FileReader();reader.onload=()=>{input.value=String(reader.result||'')};reader.onerror=()=>alert('Nie udało się wczytać zdjęcia.');reader.readAsDataURL(file);return}
+  const src=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=reject;r.readAsDataURL(file)}),img=await new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>resolve(im);im.onerror=reject;im.src=src});
+  const maxSide=2400,scale=Math.min(1,maxSide/Math.max(img.naturalWidth,img.naturalHeight)),canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);input.value=canvas.toDataURL('image/jpeg',.9);
+ }catch{alert('Nie udało się przygotować zdjęcia.')}
 }
 async function saveColorImages(e){
  const b=e.currentTarget,box=b.closest('[data-color-box]'),id=b.dataset.pid,color=b.dataset.color;const images=[...box.querySelectorAll('[data-color-image]')].map(i=>i.value.trim()).filter(Boolean).slice(0,10);
