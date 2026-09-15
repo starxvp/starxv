@@ -116,51 +116,38 @@ document.addEventListener('input',e=>{
 .gpsrStatus.ready{background:#fff;color:#000}.gpsrStatus.warn{border:1px solid #59462d;color:#d7b47f;background:#15110c}
 </style>
 
-<style id="sx-pa-layout-final-fix">
-/* Discount admin: stable, compact layout */
+<style id="sx-pa-final-clean-layout">
 .sx-pa .sx-pa-form{
-  display:grid!important;
-  grid-template-columns:1.35fr .9fr .9fr .9fr .9fr 1.05fr!important;
-  gap:8px!important;
-  align-items:start!important;
-  width:100%!important;
+ display:grid!important;
+ grid-template-columns:1.35fr .9fr .9fr .9fr .9fr 1.05fr!important;
+ gap:8px!important;align-items:start!important;width:100%!important
 }
 .sx-pa .sx-pa-form>input,.sx-pa .sx-pa-form>select{height:40px!important;min-width:0!important}
-.sx-pa .sx-pa-target-compact{position:relative;min-width:0}
-.sx-pa .sx-pa-target-toggle{
-  width:100%;height:40px;border:1px solid #333;border-radius:10px;background:#101010;color:#fff;
-  padding:6px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left
-}
-.sx-pa .sx-pa-target-toggle span{min-width:0;display:flex;flex-direction:column;gap:2px}
-.sx-pa .sx-pa-target-toggle small{font-size:7px;color:#666;font-weight:900;letter-spacing:.11em}
-.sx-pa .sx-pa-target-toggle b{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sx-pa .sx-pa-target-toggle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;flex:0 0 auto}
-.sx-pa .sx-pa-target-dropdown{
-  display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:120;width:min(520px,92vw);
-  padding:11px;border:1px solid #303030;border-radius:14px;background:#090909;box-shadow:0 20px 55px rgba(0,0,0,.65)
-}
-.sx-pa .sx-pa-target-dropdown.open{display:block}
-.sx-pa .sx-pa-target-dropdown .sx-pa-target{grid-column:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
-.sx-pa .sx-pa-target-dropdown .sx-pa-user-results{max-height:230px!important;overflow-y:auto!important}
-.sx-pa .sx-pa-create{display:inline-flex!important;width:auto!important;min-width:190px!important;height:42px!important;align-items:center!important;justify-content:center!important;margin:10px 0 18px!important;padding:0 20px!important}
-.sx-pa #sxPaMsg{margin:0 0 12px!important}
+.sx-pa-target-compact{position:relative;min-width:0}
+.sx-pa-target-toggle{width:100%;height:40px;border:1px solid #333;border-radius:10px;background:#101010;color:#fff;padding:6px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left}
+.sx-pa-target-toggle span{min-width:0;display:flex;flex-direction:column;gap:2px}.sx-pa-target-toggle small{font-size:7px;color:#666;font-weight:900;letter-spacing:.11em}.sx-pa-target-toggle b{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sx-pa-target-toggle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}
+.sx-pa-target-dropdown{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:120;width:min(520px,92vw);padding:11px;border:1px solid #303030;border-radius:14px;background:#090909;box-shadow:0 20px 55px rgba(0,0,0,.65)}
+.sx-pa-target-dropdown.open{display:block}.sx-pa-target-dropdown .sx-pa-target{grid-column:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}.sx-pa-target-dropdown .sx-pa-user-results{max-height:230px!important;overflow-y:auto!important}
+.sx-pa .sx-pa-create{display:inline-flex!important;width:auto!important;min-width:190px!important;height:42px!important;align-items:center!important;justify-content:center!important;margin:10px 0 8px!important;padding:0 20px!important}
+.sx-pa #sxPaMsg{display:block!important;width:100%!important;margin:0 0 16px!important}
 .sx-pa #sxPromoAdminList{
-  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;
-  width:100%!important;max-width:none!important;margin:0!important
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(320px,1fr))!important;
+ gap:12px!important;
+ width:100%!important;
+ max-width:none!important;
+ margin:0!important;
+ clear:both!important
 }
-.sx-pa #sxPromoAdminList .sx-pa-card{width:100%!important;max-width:none!important;margin:0!important}
-@media(max-width:1100px){
- .sx-pa .sx-pa-form{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.sx-pa #sxPromoAdminList .sx-pa-card{
+ width:100%!important;max-width:none!important;min-width:0!important;margin:0!important;
+ padding:16px!important;box-sizing:border-box!important
 }
-@media(max-width:760px){
- .sx-pa .sx-pa-form{grid-template-columns:1fr 1fr!important}
- .sx-pa #sxPromoAdminList{grid-template-columns:1fr!important}
-}
-@media(max-width:520px){
- .sx-pa .sx-pa-form{grid-template-columns:1fr!important}
- .sx-pa .sx-pa-target-dropdown{left:0;right:auto;width:min(520px,calc(100vw - 44px))}
- .sx-pa .sx-pa-create{width:100%!important}
-}
+.sx-pa #sxPromoAdminList .sx-pa-code-line{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap!important}
+.sx-pa #sxPromoAdminList .sx-pa-meta{margin-top:7px!important;line-height:1.55!important}
+@media(max-width:1100px){.sx-pa .sx-pa-form{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:760px){.sx-pa .sx-pa-form{grid-template-columns:1fr 1fr!important}.sx-pa #sxPromoAdminList{grid-template-columns:1fr!important}}
+@media(max-width:520px){.sx-pa .sx-pa-form{grid-template-columns:1fr!important}.sx-pa-target-dropdown{left:0;right:auto;width:min(520px,calc(100vw - 44px))}.sx-pa .sx-pa-create{width:100%!important}}
 </style>
 
 </head>
@@ -439,7 +426,13 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 .sx-pa{margin:28px 0;padding:22px;border:1px solid #292929;background:#0b0b0b;color:#fff}.sx-pa h2{margin:0 0 5px}.sx-pa-sub{color:#777;font-size:12px;margin-bottom:16px}.sx-pa-form{display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr .8fr;gap:8px;margin-bottom:14px}.sx-pa input,.sx-pa select{background:#111;color:#fff;border:1px solid #333;padding:10px;box-sizing:border-box;width:100%}.sx-pa-target{grid-column:1/-1;margin-top:5px;border:1px solid #292929;background:#090909;border-radius:14px;padding:14px}.sx-pa-target-title{font-size:10px;font-weight:900;letter-spacing:.11em;color:#aaa;margin-bottom:10px}.sx-pa-target-all{display:flex;align-items:center;gap:11px;width:100%;padding:12px 13px;border:1px solid #3a3a3a;background:#111;color:#fff;border-radius:10px;cursor:pointer;text-align:left;font-weight:850}.sx-pa-target-all:hover,.sx-pa-target-all.active{border-color:#fff;background:#171717}.sx-pa-target-check{width:17px;height:17px;border:1px solid #666;border-radius:50%;display:grid;place-items:center;flex:0 0 auto}.sx-pa-target-all.active .sx-pa-target-check:after{content:'';width:7px;height:7px;border-radius:50%;background:#fff}.sx-pa-target-divider{display:flex;align-items:center;gap:10px;color:#5f5f5f;font-size:9px;font-weight:900;letter-spacing:.09em;margin:13px 0}.sx-pa-target-divider:before,.sx-pa-target-divider:after{content:'';height:1px;background:#242424;flex:1}.sx-pa-user-search-wrap{position:relative}.sx-pa-user-search{padding-left:36px!important}.sx-pa-search-icon{position:absolute;left:12px;top:12px;width:15px;height:15px;fill:none;stroke:#777;stroke-width:1.8;pointer-events:none}.sx-pa-user-results{display:block;margin-top:7px;max-height:245px;overflow-y:auto;overflow-x:hidden;border:1px solid #292929;background:#0d0d0d;border-radius:11px;padding:5px;scrollbar-width:thin;scrollbar-color:#555 #111}.sx-pa-user-results::-webkit-scrollbar{width:6px}.sx-pa-user-results::-webkit-scrollbar-track{background:#111;border-radius:999px}.sx-pa-user-results::-webkit-scrollbar-thumb{background:#555;border-radius:999px}.sx-pa-user-results::-webkit-scrollbar-thumb:hover{background:#777}.sx-pa-user-results.open{display:block}.sx-pa-user-option{width:100%;display:block;border:0;background:transparent;color:#fff;padding:10px 11px;border-radius:8px;cursor:pointer;text-align:left}.sx-pa-user-option:hover{background:#1b1b1b}.sx-pa-user-option b{display:block;font-size:11px}.sx-pa-user-option span{display:block;color:#777;font-size:10px;margin-top:3px;overflow-wrap:anywhere}.sx-pa-user-empty{padding:12px;color:#777;font-size:10px;text-align:center}.sx-pa-selected-user{display:none;margin-top:8px;padding:10px 12px;border:1px solid #3b3b3b;background:#121212;border-radius:9px;font-size:10px;color:#aaa}.sx-pa-selected-user.show{display:flex;align-items:center;justify-content:space-between;gap:10px}.sx-pa-selected-user b{color:#fff}.sx-pa-clear-user{border:0;background:transparent;color:#888;cursor:pointer;font-size:16px;padding:0 2px}.sx-pa-create{background:#fff;color:#000;border:0;padding:11px 14px;font-weight:900;cursor:pointer}.sx-pa-card{border:1px solid #292929;padding:14px;margin:9px 0;display:grid;grid-template-columns:1fr auto;gap:12px}.sx-pa-meta{font-size:11px;color:#888;margin-top:5px}.sx-pa-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.sx-pa-actions button{background:#151515;color:#fff;border:1px solid #333;padding:8px 10px;font-size:10px;font-weight:800;cursor:pointer}.sx-pa-code-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.sx-pa-copy{width:30px;height:30px;padding:0!important;display:inline-flex;align-items:center;justify-content:center;border-radius:8px!important;transition:.16s ease}.sx-pa-copy:hover{background:#222!important;border-color:#555!important;transform:translateY(-1px)}.sx-pa-copy svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8}.sx-pa-copy.copied{background:#fff!important;color:#000!important;border-color:#fff!important}.sx-pa-badge{font-size:10px;font-weight:900}.sx-pa-empty{color:#777;font-size:12px}@media(max-width:800px){.sx-pa-form{grid-template-columns:1fr 1fr}.sx-pa-card{grid-template-columns:1fr}}@media(max-width:520px){.sx-pa-form{grid-template-columns:1fr}.sx-pa-target{grid-column:auto}}
 </style>
 <section class="sx-pa admin-panel" data-admin-panel="promos"><h2>KODY RABATOWE</h2><div class="sx-pa-sub">Twórz i zarządzaj kodami używanymi w koszyku STARXV.</div>
-<div class="sx-pa-form"><input id="sxPaCode" maxlength="24" placeholder="KOD np. DROP20"><select id="sxPaType"><option value="percent">Procent %</option><option value="fixed">Kwota PLN</option></select><input id="sxPaValue" type="number" min="0.01" step="0.01" placeholder="Wartość"><input id="sxPaMin" type="number" min="0" step="0.01" placeholder="Min. koszyk"><input id="sxPaLimit" type="number" min="1" step="1" placeholder="Limit użyć"><div class="sx-pa-target-compact"><button id="sxPaTargetToggle" class="sx-pa-target-toggle" type="button" aria-expanded="false"><span><small>DLA KOGO?</small><b id="sxPaTargetLabel">Dla każdego konta</b></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"></path></svg></button><div id="sxPaTargetDropdown" class="sx-pa-target-dropdown"><div class="sx-pa-target"><div class="sx-pa-target-title">DLA KOGO MA BYĆ TEN KOD?</div><button class="sx-pa-target-all active" id="sxPaTargetAll" type="button"><span class="sx-pa-target-check"></span><span>Dla każdego konta <small style="display:block;color:#777;font-weight:600;margin-top:3px">Każde konto może wykorzystać kod jeden raz.</small></span></button><div class="sx-pa-target-divider">LUB WYBIERZ KONKRETNE KONTO</div><div class="sx-pa-user-search-wrap"><svg class="sx-pa-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><input id="sxPaUserSearch" class="sx-pa-user-search" autocomplete="off" placeholder="Szukaj po imieniu, nazwisku lub e-mailu…"><div id="sxPaUserResults" class="sx-pa-user-results"></div></div><input id="sxPaUser" type="hidden" value=""><div id="sxPaSelectedUser" class="sx-pa-selected-user"></div></div></div></div>
+<div class="sx-pa-form"><input id="sxPaCode" maxlength="24" placeholder="KOD np. DROP20"><select id="sxPaType"><option value="percent">Procent %</option><option value="fixed">Kwota PLN</option></select><input id="sxPaValue" type="number" min="0.01" step="0.01" placeholder="Wartość"><input id="sxPaMin" type="number" min="0" step="0.01" placeholder="Min. koszyk"><input id="sxPaLimit" type="number" min="1" step="1" placeholder="Limit użyć"><div class="sx-pa-target-compact">
+<button id="sxPaTargetToggle" class="sx-pa-target-toggle" type="button" aria-expanded="false">
+<span><small>DLA KOGO?</small><b id="sxPaTargetLabel">Dla każdego konta</b></span>
+<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5"></path></svg>
+</button>
+<div id="sxPaTargetDropdown" class="sx-pa-target-dropdown"><div class="sx-pa-target"><div class="sx-pa-target-title">DLA KOGO MA BYĆ TEN KOD?</div><button class="sx-pa-target-all active" id="sxPaTargetAll" type="button"><span class="sx-pa-target-check"></span><span>Dla każdego konta <small style="display:block;color:#777;font-weight:600;margin-top:3px">Każde konto może wykorzystać kod jeden raz.</small></span></button><div class="sx-pa-target-divider">LUB WYBIERZ KONKRETNE KONTO</div><div class="sx-pa-user-search-wrap"><svg class="sx-pa-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><input id="sxPaUserSearch" class="sx-pa-user-search" autocomplete="off" placeholder="Szukaj po imieniu, nazwisku lub e-mailu…"><div id="sxPaUserResults" class="sx-pa-user-results"></div></div><input id="sxPaUser" type="hidden" value=""><div id="sxPaSelectedUser" class="sx-pa-selected-user"></div></div>
+</div></div>
 <button class="sx-pa-create" id="sxPaCreate">UTWÓRZ KOD →</button><div id="sxPaMsg" class="sx-pa-sub" style="margin-top:8px"></div><div id="sxPromoAdminList"><div class="sx-pa-empty">Ładowanie…</div></div></section>
 <script id="sx-promo-admin-script">
 (()=>{
@@ -599,29 +592,17 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 </script>
 
 
-<script id="sx-pa-layout-final-script">
+<script id="sx-pa-final-clean-script">
 document.addEventListener('DOMContentLoaded',()=>{
- const toggle=document.getElementById('sxPaTargetToggle');
- const drop=document.getElementById('sxPaTargetDropdown');
- const label=document.getElementById('sxPaTargetLabel');
- if(!toggle||!drop)return;
- const setOpen=v=>{drop.classList.toggle('open',v);toggle.setAttribute('aria-expanded',String(v))};
- const refresh=()=>{
-   const id=document.getElementById('sxPaUser')?.value||'';
-   const box=document.getElementById('sxPaSelectedUser');
-   const raw=(box?.textContent||'').replace(/^Wybrane konto:\s*/,'').trim();
-   if(label)label.textContent=id&&raw?raw:'Dla każdego konta';
- };
- toggle.addEventListener('click',e=>{e.stopPropagation();setOpen(!drop.classList.contains('open'))});
- drop.addEventListener('click',e=>e.stopPropagation());
- document.addEventListener('click',()=>setOpen(false));
+ const t=document.getElementById('sxPaTargetToggle'),d=document.getElementById('sxPaTargetDropdown'),l=document.getElementById('sxPaTargetLabel');
+ if(!t||!d)return;
+ const setOpen=v=>{d.classList.toggle('open',v);t.setAttribute('aria-expanded',String(v))};
+ const refresh=()=>{const id=document.getElementById('sxPaUser')?.value||'',s=(document.getElementById('sxPaSelectedUser')?.textContent||'').replace(/^Wybrane konto:\s*/,'').trim();if(l)l.textContent=id&&s?s:'Dla każdego konta'};
+ t.addEventListener('click',e=>{e.stopPropagation();setOpen(!d.classList.contains('open'))});
+ d.addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',()=>setOpen(false));
  document.getElementById('sxPaTargetAll')?.addEventListener('click',()=>setTimeout(refresh,0));
- document.getElementById('sxPaUserResults')?.addEventListener('click',e=>{
-   if(e.target.closest('[data-pa-user]'))setTimeout(()=>{refresh();setOpen(false)},0);
- });
- const selected=document.getElementById('sxPaSelectedUser');
- if(selected)new MutationObserver(refresh).observe(selected,{childList:true,subtree:true,characterData:true});
- refresh();
+ document.getElementById('sxPaUserResults')?.addEventListener('click',e=>{if(e.target.closest('[data-pa-user]'))setTimeout(()=>{refresh();setOpen(false)},0)});
+ const s=document.getElementById('sxPaSelectedUser');if(s)new MutationObserver(refresh).observe(s,{childList:true,subtree:true,characterData:true});refresh();
 });
 </script>
 
