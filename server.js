@@ -295,7 +295,7 @@ for(const sig of ['SIGTERM','SIGINT']){
   });
 }
 
-// Przelewy24 uses JSON requests, so the normal JSON parser can handle both checkout and callbacks.
+// JSON API parser for checkout, account actions and server-to-server callbacks.
 app.use(express.json({limit:'5mb'}));
 
 // Browser CSRF protection: unsafe API calls must come from this site. Requests
@@ -306,7 +306,7 @@ app.use('/api',(req,res,next)=>{
   // Browser state-changing requests must carry a same-site Origin. The InPost
   // webhook is server-to-server and authenticates separately below.
   if(!origin){
-    if(req.path==='/inpost/webhook'||req.path==='/p24/status'||req.path==='/simpay/ipn')return next();
+    if(req.path==='/inpost/webhook'||req.path==='/simpay/ipn')return next();
     if(process.env.NODE_ENV==='production')return res.status(403).json({error:'Brak nagłówka Origin.'});
     return next();
   }
@@ -334,7 +334,6 @@ app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000
 app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
 app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
 app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
-app.use('/api/p24/status',rateLimit('p24-status',120,10*60*1000));
 function cleanEmail(v){return String(v||'').trim().toLowerCase()}function publicUser(u){return {id:u.id,firstName:u.firstName,lastName:u.lastName,email:u.email,createdAt:u.createdAt,avatarData:u.avatarData||''}}
 function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(password,salt,64).toString('hex');return `${salt}:${hash}`}
 function checkPassword(password,stored){try{const [salt,hex]=stored.split(':');const a=Buffer.from(hex,'hex'),b=crypto.scryptSync(password,salt,64);return a.length===b.length&&crypto.timingSafeEqual(a,b)}catch{return false}}
@@ -1041,36 +1040,6 @@ function paymentBaseUrl(req){
   const configured=String(process.env.PUBLIC_URL||'').trim().replace(/\/$/,'');
   return configured||`${req.protocol}://${req.get('host')}`;
 }
-function p24Config(){
-  const merchantId=Number(process.env.P24_MERCHANT_ID||0);
-  const posId=Number(process.env.P24_POS_ID||merchantId||0);
-  const apiKey=String(process.env.P24_API_KEY||'').trim();
-  const crc=String(process.env.P24_CRC||'').trim();
-  const sandbox=String(process.env.P24_SANDBOX||'true').toLowerCase()!=='false';
-  return {merchantId,posId,apiKey,crc,sandbox,apiBase:sandbox?'https://sandbox.przelewy24.pl/api/v1':'https://secure.przelewy24.pl/api/v1',payBase:sandbox?'https://sandbox.przelewy24.pl/trnRequest':'https://secure.przelewy24.pl/trnRequest'};
-}
-function p24Configured(){const c=p24Config();return Boolean(c.merchantId&&c.posId&&c.apiKey&&c.crc)}
-function p24Sign(obj){return crypto.createHash('sha384').update(JSON.stringify(obj)).digest('hex')}
-function p24Auth(c){return 'Basic '+Buffer.from(`${c.posId}:${c.apiKey}`).toString('base64')}
-function p24Channel(preference){
-  // P24 bitmask: 1 = cards + Apple Pay + Google Pay, 2 = bank transfers, 8192 = BLIK.
-  // Wallet visibility still depends on the customer's device/browser and services enabled on the P24 account.
-  const p=String(preference||'auto');
-  if(p==='blik')return 8192;
-  if(p==='card'||p==='wallet')return 1;
-  if(p==='p24')return 2;
-  return 8195; // cards/wallets + transfers + BLIK
-}
-async function p24Request(path,options={}){
-  const c=p24Config();
-  const response=await fetch(c.apiBase+path,{...options,headers:{'Authorization':p24Auth(c),'Content-Type':'application/json','Accept':'application/json',...(options.headers||{})}});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok||Number(data?.responseCode||0)!==0){
-    const msg=data?.error||data?.data?.error||`Przelewy24 HTTP ${response.status}`;
-    const e=new Error(typeof msg==='string'?msg:'Przelewy24 odrzuciło żądanie.');e.status=response.status;throw e;
-  }
-  return data;
-}
 async function sendPaidOrderEmail(db,order){
   try{
     const key=String(process.env.RESEND_API_KEY||'').trim();
@@ -1251,21 +1220,6 @@ app.post('/api/simpay/ipn',async(req,res)=>{
   }
 });
 
-app.post('/api/p24/status',async(req,res)=>{
-  try{
-    if(!p24Configured())return res.status(503).json({error:'P24 not configured'});
-    const b=req.body||{},sessionId=String(b.sessionId||''),p24OrderId=Number(b.orderId),amount=Number(b.amount),currency=String(b.currency||'');
-    if(!sessionId||!Number.isInteger(p24OrderId)||!Number.isInteger(amount)||currency!=='PLN')return res.status(400).json({error:'Invalid notification'});
-    const db=load();ensureStore(db);const order=db.orders.find(o=>String(o.p24SessionId||'')===sessionId);
-    if(!order)return res.status(404).json({error:'Order not found'});
-    if(Number(order.p24Amount)!==amount||String(order.p24Currency)!==currency)return res.status(400).json({error:'Transaction mismatch'});
-    const c=p24Config(),verifySign=p24Sign({sessionId,orderId:p24OrderId,amount,currency,crc:c.crc});
-    await p24Request('/transaction/verify',{method:'PUT',body:JSON.stringify({merchantId:c.merchantId,posId:c.posId,sessionId,amount,currency,orderId:p24OrderId,sign:verifySign})});
-    const wasPaid=order.paymentStatus==='paid';markOrderPaid(db,order);order.p24OrderId=p24OrderId;order.p24VerifiedAt=Date.now();order.updatedAt=Date.now();save(db);
-    if(!wasPaid)await sendPaidOrderEmail(db,order);
-    res.json({ok:true});
-  }catch(e){console.error('Przelewy24 status error:',e);res.status(400).json({error:'Verification failed'})}
-});
 
 app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});res.json({ok:true,order:orderForUser(order),confirmed:order.paymentStatus==='paid'})});
 
