@@ -1305,7 +1305,7 @@ function inpostShipxToken(){return String(process.env.INPOST_SHIPX_TOKEN||proces
 function inpostOrganizationId(){return String(process.env.INPOST_ORGANIZATION_ID||'').trim()}
 function inpostGeowidgetToken(){return String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim()}
 // TEMPORARY SAFETY SWITCH: while true, admin shipment creation never calls ShipX.
-const INPOST_ADMIN_TEST_MODE=true;
+const INPOST_ADMIN_TEST_MODE=false;
 function inpostConfigured(){return Boolean(inpostShipxToken()&&/^\d+$/.test(inpostOrganizationId()))}
 function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured(),inpostTestMode:INPOST_ADMIN_TEST_MODE}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
