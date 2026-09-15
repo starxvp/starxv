@@ -858,7 +858,7 @@
 <script>
 (()=>{
   const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',fit:'[RELAXED FIT]',price:129};window.STARXV_HOODIE_PRODUCT=PRODUCT;
-  const m=document.getElementById('productModal'),c=document.querySelector('.product-card'),t=document.getElementById('galleryTrack'),dots=[...document.querySelectorAll('.dot')],label=document.getElementById('viewLabel');
+  const m=document.getElementById('productModal'),c=document.querySelector('.product-card'),t=document.getElementById('galleryTrack');let dots=[...document.querySelectorAll('.dot')];const label=document.getElementById('viewLabel');
   const cartModal=document.getElementById('cartModal'),openCartBtn=document.getElementById('openCart'),closeCartBtn=document.getElementById('closeCart'),cartItems=document.getElementById('cartItems'),cartCount=document.getElementById('cartCount'),cartTotal=document.getElementById('cartTotal'),checkoutBtn=document.getElementById('checkoutBtn'),checkoutHint=document.getElementById('checkoutHint'),toast=document.getElementById('cartToast'),cartFooter=cartModal?.querySelector('.cart-footer');
   const addBtn=document.querySelector('.add-btn'),sizeButtons=[...document.querySelectorAll('.sizes button')];
   let i=0,selectedSize='',selectedColor='black',cart=[];
@@ -876,7 +876,7 @@
   window.STARXV_GET_PROMO=getPromo;window.STARXV_DISCOUNT_TOTAL=discountedTotal;
   const showToast=msg=>{toast.textContent=msg;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),1800)};
 
-  const show=n=>{i=(n+2)%2;t.style.transform=`translateX(-${i*100}%)`;dots.forEach((d,x)=>d.classList.toggle('active',x===i));label.textContent=i===0?'FRONT / 01':'BACK / 02'};
+  const show=n=>{const count=Math.max(1,t.querySelectorAll('.gallery-slide').length);i=(n+count)%count;t.style.transform=`translateX(-${i*100}%)`;dots.forEach((d,x)=>d.classList.toggle('active',x===i));label.textContent=`${i===0?'FRONT':i===1?'BACK':'PHOTO'} / ${String(i+1).padStart(2,'0')}`;document.querySelectorAll('.sx-thumb').forEach((b,x)=>b.classList.toggle('active',x===i))};
   const openProduct=()=>{m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';show(0)};
   const closeProduct=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!cartModal.classList.contains('open'))document.body.style.overflow=''};
   const openCart=()=>{closeProduct();hydrateCartDiscounts();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));const sync=window.STARXV_SYNC_CATALOG?.();if(sync&&typeof sync.then==='function'){sync.then(()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}))}catch{}hydrateCartDiscounts();renderCart()}).catch(()=>{})}};
@@ -1007,7 +1007,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     const picker=document.createElement('div');picker.id='sxColorPicker';picker.className='sx-color-picker';
     picker.innerHTML='<button class="sx-color-dot active" data-color="black" aria-label="Czarny" title="Czarny"></button><button class="sx-color-dot" data-color="pink" aria-label="Różowy" title="Różowy"></button><button class="sx-color-dot" data-color="blue" aria-label="Jasny niebieski" title="Jasny niebieski"></button>';
     gallery.appendChild(picker);
-    const applyColor=color=>{selectedColor=color;window.STARXV_SELECTED_COLOR=color;const meta=COLOR_META[color]||COLOR_META.black;const imgs=COLOR_IMAGES[color]||COLOR_IMAGES.black;const galleryImgs=[...document.querySelectorAll('#galleryTrack img')];if(galleryImgs[0])galleryImgs[0].src=imgs.front;if(galleryImgs[1])galleryImgs[1].src=imgs.back;const thumbImgs=[...document.querySelectorAll('.sx-thumb img')];if(thumbImgs[0])thumbImgs[0].src=imgs.front;if(thumbImgs[1])thumbImgs[1].src=imgs.back;document.querySelectorAll('.sx-color-dot').forEach(b=>b.classList.toggle('active',b.dataset.color===color));const h=document.querySelector('.product-copy h2');if(h)h.textContent=meta.name;const cardImg=document.querySelector('.product-card .product-visual img');if(cardImg&&color==='black')cardImg.src=COLOR_IMAGES.black.front;if(typeof window.STARXV_REFRESH_STOCK==='function')window.STARXV_REFRESH_STOCK();};
+    const applyColor=color=>{selectedColor=color;window.STARXV_SELECTED_COLOR=color;const meta=COLOR_META[color]||COLOR_META.black;const imgs=COLOR_IMAGES[color]||COLOR_IMAGES.black;const gallery=(Array.isArray(imgs.gallery)?imgs.gallery:[]).filter(Boolean);const sources=(gallery.length?gallery:[imgs.front,imgs.back]).filter((x,n,a)=>x&&a.indexOf(x)===n).slice(0,10);if(sources.length){t.innerHTML=sources.map((src,n)=>`<div class="gallery-slide"><img alt="${meta.name} — zdjęcie ${n+1}" src="${src}"/></div>`).join('');const dotsBox=document.querySelector('#productModal .gallery-dots');if(dotsBox){dotsBox.innerHTML=sources.map((_,n)=>`<button aria-label="Zdjęcie ${n+1}" class="dot${n===0?' active':''}" data-slide="${n}"></button>`).join('');dots=[...dotsBox.querySelectorAll('.dot')];dots.forEach(d=>d.onclick=()=>show(+d.dataset.slide))}const galleryEl=document.querySelector('#productModal .gallery');const oldThumbs=galleryEl?.querySelector('.sx-thumbs');if(oldThumbs)oldThumbs.remove();if(galleryEl){const thumbs=document.createElement('div');thumbs.className='sx-thumbs';sources.forEach((src,n)=>{const b=document.createElement('button');b.className='sx-thumb'+(n===0?' active':'');b.innerHTML=`<img src="${src}" alt="Miniatura ${n+1}">`;b.onclick=e=>{e.stopPropagation();show(n)};thumbs.appendChild(b)});galleryEl.appendChild(thumbs)}show(0)}document.querySelectorAll('.sx-color-dot').forEach(b=>b.classList.toggle('active',b.dataset.color===color));const h=document.querySelector('.product-copy h2');if(h)h.textContent=meta.name;const cardImg=document.querySelector('.product-card .product-visual img');if(cardImg&&color==='black'&&sources[0])cardImg.src=sources[0];if(typeof window.STARXV_REFRESH_STOCK==='function')window.STARXV_REFRESH_STOCK();};
     picker.querySelectorAll('.sx-color-dot').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();applyColor(b.dataset.color)}));
     window.STARXV_APPLY_COLOR=applyColor;applyColor('black');
   };
@@ -2095,6 +2095,7 @@ const renderCart=()=>{hydrateCartDiscounts();
             const back=String(gallery[1]||saved.back||'').trim();
             if(front)window.STARXV_COLOR_IMAGES[color].front=front;
             if(back)window.STARXV_COLOR_IMAGES[color].back=back;
+            window.STARXV_COLOR_IMAGES[color].gallery=gallery.length?gallery:[front,back].filter(Boolean);
           }
           const active=window.STARXV_SELECTED_COLOR||'black';
           window.STARXV_APPLY_COLOR?.(active);
