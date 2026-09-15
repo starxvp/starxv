@@ -1688,11 +1688,10 @@ app.post('/api/admin/products/:id/colors',adminOnly,(req,res)=>{
 
 app.put('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
   try{
-    ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||''),c=req.db.catalog?.[id]?.colors?.[color];
+    ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
     if(!c)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
-    const cleanImageUrl=v=>{const url=String(v||'').trim();if(!url)return '';if(url.length>2048)throw new Error('URL zdjęcia jest za długi.');if(!/^https:\/\//i.test(url))throw new Error('Zdjęcie musi mieć adres URL zaczynający się od https://');return url};
-    const incoming=Array.isArray(req.body?.images)?req.body.images.slice(0,10).map(cleanImageUrl).filter(Boolean):[req.body?.front,req.body?.back].map(cleanImageUrl).filter(Boolean);
-    c.images={front:incoming[0]||'',back:incoming[1]||'',gallery:incoming};
+    const cleanImage=v=>String(v||'').trim().slice(0,5_500_000);
+    c.images={front:cleanImage(req.body?.front),back:cleanImage(req.body?.back)};
     save(req.db);res.json({ok:true,color,variant:c});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać zdjęć koloru.'})}
 });

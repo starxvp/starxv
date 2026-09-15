@@ -73,12 +73,9 @@
 <style id="sx-color-gallery-admin-style">
 .colorGallery{margin:10px 0 14px;padding:12px;border:1px solid #252525;border-radius:12px;background:#0d0d0d}
 .colorGalleryTitle{font-size:9px;font-weight:900;letter-spacing:.12em;color:#777;margin-bottom:8px}
-.colorGalleryGrid{display:grid;gap:7px}
-.colorGalleryRow{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:center}
+.colorGalleryGrid{display:grid;grid-template-columns:1fr 1fr auto;gap:7px}
 .colorGallery input{min-width:0}
-.colorGalleryActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}
-.colorGalleryActions .btn{min-width:120px}
-@media(max-width:760px){.colorGalleryRow{grid-template-columns:1fr auto}.colorGalleryActions{flex-direction:column}.colorGalleryActions .btn{width:100%}}
+@media(max-width:760px){.colorGalleryGrid{grid-template-columns:1fr}.colorGalleryGrid .btn{width:100%}}
 </style>
 
 
@@ -181,7 +178,7 @@ document.addEventListener('input',e=>{
    <div class="adminField span6"><label>E-mail producenta</label><input id="newGpsrManufacturerEmail" type="email" placeholder="np. kontakt@starxv.pl"></div>
    <div class="adminField span6"><label>Identyfikator produktu</label><input id="newGpsrProductId" placeholder="np. STARXV-HOODIE-001"></div>
    <div class="adminField full"><label>Informacje / ostrzeżenia bezpieczeństwa</label><input id="newGpsrSafety" placeholder="Informacje bezpieczeństwa właściwe dla produktu"><small>Wpisuj tylko informacje, które rzeczywiście dotyczą produktu.</small></div>
-   <div class="adminField span8"><label>Zdjęcie główne</label><input id="newImage" placeholder="URL zdjęcia https://... (opcjonalnie)"></div>
+   <div class="adminField span8"><label>Zdjęcie główne</label><input id="newImage" placeholder="URL lub data:image/... (opcjonalnie)"></div>
    <div class="adminFormActions"><div class="hint">Po dodaniu produkt automatycznie pojawi się w sklepie.</div><button id="addProduct" class="btn primary">DODAJ PRODUKT</button></div>
   </div>
  </div>
@@ -234,15 +231,15 @@ function renderProducts(catalog){
     <div class="adminField span6"><label>E-mail producenta</label><input data-pgpsr-email type="email" value="${esc(p.gpsrManufacturerEmail||'')}" placeholder="np. kontakt@starxv.pl"></div>
     <div class="adminField span6"><label>Identyfikator produktu</label><input data-pgpsr-id value="${esc(p.gpsrProductId||pid)}" placeholder="np. STARXV-HOODIE-001"></div>
     <div class="adminField full"><label>Informacje / ostrzeżenia bezpieczeństwa</label><input data-pgpsr-safety value="${esc(p.gpsrSafety||'')}" placeholder="Informacje bezpieczeństwa właściwe dla produktu"></div>
-    <div class="adminField full"><label>Zdjęcie główne produktu</label><input data-pimage value="${esc(p.image||'')}" placeholder="URL zdjęcia https://..."></div>
+    <div class="adminField full"><label>Zdjęcie główne produktu</label><input data-pimage value="${esc(p.image||'')}" placeholder="URL zdjęcia / data:image..."></div>
     <div class="productActions"><button class="btn primary" data-save-product>ZAPISZ PRODUKT</button><button class="btn danger" data-delete-product>USUŃ PRODUKT</button></div>
    </div>
    <div class="productSectionLabel">Kolory, zdjęcia i stany magazynowe</div>
-   ${Object.entries(p.colors||{}).map(([color,c])=>`<div class="colorBox" data-color-box="${esc(color)}"><div class="colorHead"><div><b>${esc(c.label)}</b><div class="meta">ID koloru: ${esc(color)}</div></div><button class="btn danger colorDeleteBtn" type="button" data-delete-color data-pid="${esc(pid)}" data-color="${esc(color)}">USUŃ KOLOR</button></div><div class="colorGallery"><div class="colorGalleryTitle">ZDJĘCIA TEGO KOLORU · TYLKO URL · MAX 10</div><div class="colorGalleryGrid" data-color-gallery>${(()=>{const imgs=Array.isArray(c.images?.gallery)&&c.images.gallery.length?c.images.gallery:[c.images?.front,c.images?.back].filter(Boolean);const list=imgs.length?imgs:[''];return list.slice(0,10).map((url,idx)=>`<div class="colorGalleryRow"><input data-color-image-url value="${esc(url||'')}" placeholder="ZDJĘCIE ${idx+1} — https://..."><button class="btn danger" type="button" data-remove-color-image aria-label="Usuń zdjęcie">−</button></div>`).join('')})()}</div><div class="colorGalleryActions"><button class="btn" type="button" data-add-color-image>+ ZDJĘCIE</button><button class="btn primary" data-save-color-images data-pid="${esc(pid)}" data-color="${esc(color)}">ZAPISZ ZDJĘCIA</button></div></div>${Object.entries(c.sizes||{}).map(([size,stock])=>`<div class="variant"><span>Rozmiar <b>${esc(size)}</b></span><input min="0" max="9999" step="1" type="number" value="${Number(stock||0)}" data-stock="${esc(pid)}|${esc(color)}|${esc(size)}"><button class="btn" data-save-stock>Zapisz</button></div>`).join('')}<div class="addSize"><input data-new-size placeholder="Nowy rozmiar, np. XXL"><input data-new-size-stock type="number" min="0" max="9999" step="1" value="0" placeholder="Stan"><button class="btn" data-add-size data-pid="${esc(pid)}" data-color="${esc(color)}">+ ROZMIAR</button></div></div>`).join('')}
+   ${Object.entries(p.colors||{}).map(([color,c])=>`<div class="colorBox" data-color-box="${esc(color)}"><div class="colorHead"><div><b>${esc(c.label)}</b><div class="meta">ID koloru: ${esc(color)}</div></div><button class="btn danger colorDeleteBtn" type="button" data-delete-color data-pid="${esc(pid)}" data-color="${esc(color)}">USUŃ KOLOR</button></div><div class="colorGallery"><div class="colorGalleryTitle">ZDJĘCIA TEGO KOLORU</div><div class="colorGalleryGrid"><input data-color-front value="${esc(c.images?.front||'')}" placeholder="FRONT — URL / data:image..."><input data-color-back value="${esc(c.images?.back||'')}" placeholder="BACK — URL / data:image..."><button class="btn" data-save-color-images data-pid="${esc(pid)}" data-color="${esc(color)}">ZAPISZ ZDJĘCIA</button></div></div>${Object.entries(c.sizes||{}).map(([size,stock])=>`<div class="variant"><span>Rozmiar <b>${esc(size)}</b></span><input min="0" max="9999" step="1" type="number" value="${Number(stock||0)}" data-stock="${esc(pid)}|${esc(color)}|${esc(size)}"><button class="btn" data-save-stock>Zapisz</button></div>`).join('')}<div class="addSize"><input data-new-size placeholder="Nowy rozmiar, np. XXL"><input data-new-size-stock type="number" min="0" max="9999" step="1" value="0" placeholder="Stan"><button class="btn" data-add-size data-pid="${esc(pid)}" data-color="${esc(color)}">+ ROZMIAR</button></div></div>`).join('')}
    <div class="addLine"><input data-new-color-id placeholder="ID koloru, np. red"><input data-new-color-label placeholder="Nazwa koloru, np. Czerwony"><button class="btn" data-add-color data-pid="${esc(pid)}">+ KOLOR</button></div>
   </div>
  </div>`).join('');
- document.querySelectorAll('[data-save-stock]').forEach(b=>b.onclick=saveStock);document.querySelectorAll('[data-save-color-images]').forEach(b=>b.onclick=saveColorImages);document.querySelectorAll('[data-add-color-image]').forEach(b=>b.onclick=addColorImageField);document.querySelectorAll('[data-remove-color-image]').forEach(b=>b.onclick=removeColorImageField);document.querySelectorAll('[data-delete-color]').forEach(b=>b.onclick=deleteColor);document.querySelectorAll('[data-save-product]').forEach(b=>b.onclick=saveProduct);document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=deleteProduct);document.querySelectorAll('[data-add-color]').forEach(b=>b.onclick=addColor);document.querySelectorAll('[data-add-size]').forEach(b=>b.onclick=addSize)
+ document.querySelectorAll('[data-save-stock]').forEach(b=>b.onclick=saveStock);document.querySelectorAll('[data-save-color-images]').forEach(b=>b.onclick=saveColorImages);document.querySelectorAll('[data-delete-color]').forEach(b=>b.onclick=deleteColor);document.querySelectorAll('[data-save-product]').forEach(b=>b.onclick=saveProduct);document.querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=deleteProduct);document.querySelectorAll('[data-add-color]').forEach(b=>b.onclick=addColor);document.querySelectorAll('[data-add-size]').forEach(b=>b.onclick=addSize)
 }
 async function saveProduct(e){const box=e.currentTarget.closest('[data-product]');try{e.currentTarget.disabled=true;await api('/api/admin/products/'+encodeURIComponent(box.dataset.product),{method:'PUT',body:JSON.stringify({name:box.querySelector('[data-pname]').value,price:Number(box.querySelector('[data-pprice]').value),fit:box.querySelector('[data-pfit]').value,category:box.querySelector('[data-pcategory]').value,image:box.querySelector('[data-pimage]').value,composition:box.querySelector('[data-pcomposition]').value,gpsrManufacturer:box.querySelector('[data-pgpsr-manufacturer]').value,gpsrManufacturerAddress:box.querySelector('[data-pgpsr-address]').value,gpsrManufacturerEmail:box.querySelector('[data-pgpsr-email]').value,gpsrProductId:box.querySelector('[data-pgpsr-id]').value,gpsrSafety:box.querySelector('[data-pgpsr-safety]').value,discountPercent:Number(box.querySelector('[data-pdiscount]').value||0)})});$('#msg').textContent='Produkt zapisany.';await refreshCatalogCache();await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function deleteProduct(e){
@@ -271,26 +268,9 @@ async function deleteColor(e){
  }
 }
 
-function renumberColorImageFields(box){
- const rows=[...box.querySelectorAll('.colorGalleryRow')];
- rows.forEach((row,idx)=>{const input=row.querySelector('[data-color-image-url]');if(input)input.placeholder=`ZDJĘCIE ${idx+1} — https://...`});
-}
-function addColorImageField(e){
- const box=e.currentTarget.closest('[data-color-box]'),grid=box?.querySelector('[data-color-gallery]');if(!grid)return;
- const rows=[...grid.querySelectorAll('.colorGalleryRow')];if(rows.length>=10){alert('Możesz dodać maksymalnie 10 zdjęć dla jednego koloru.');return}
- const row=document.createElement('div');row.className='colorGalleryRow';row.innerHTML='<input data-color-image-url placeholder="ZDJĘCIE — https://..."><button class="btn danger" type="button" data-remove-color-image aria-label="Usuń zdjęcie">−</button>';
- row.querySelector('[data-remove-color-image]').onclick=removeColorImageField;grid.appendChild(row);renumberColorImageFields(box);row.querySelector('input')?.focus();
-}
-function removeColorImageField(e){
- const box=e.currentTarget.closest('[data-color-box]'),grid=box?.querySelector('[data-color-gallery]'),row=e.currentTarget.closest('.colorGalleryRow');if(!grid||!row)return;
- const rows=[...grid.querySelectorAll('.colorGalleryRow')];if(rows.length<=1){const input=row.querySelector('[data-color-image-url]');if(input)input.value='';return}
- row.remove();renumberColorImageFields(box);
-}
 async function saveColorImages(e){
  const b=e.currentTarget,box=b.closest('[data-color-box]'),id=b.dataset.pid,color=b.dataset.color;
- const images=[...box.querySelectorAll('[data-color-image-url]')].map(i=>i.value.trim()).filter(Boolean).slice(0,10);
- if(images.some(url=>!/^https:\/\//i.test(url))){alert('Zdjęcia muszą mieć adres URL zaczynający się od https://');return}
- try{b.disabled=true;await api('/api/admin/products/'+encodeURIComponent(id)+'/colors/'+encodeURIComponent(color),{method:'PUT',body:JSON.stringify({images})});$('#msg').textContent='Zdjęcia koloru zapisane.';await refreshCatalogCache();await load()}catch(err){alert(err.message)}finally{b.disabled=false}
+ try{b.disabled=true;await api('/api/admin/products/'+encodeURIComponent(id)+'/colors/'+encodeURIComponent(color),{method:'PUT',body:JSON.stringify({front:box.querySelector('[data-color-front]').value,back:box.querySelector('[data-color-back]').value})});$('#msg').textContent='Zdjęcia koloru zapisane.';await load()}catch(err){alert(err.message)}finally{b.disabled=false}
 }
 
 async function saveStock(e){const input=e.currentTarget.previousElementSibling,[productId,color,size]=input.dataset.stock.split('|');try{e.currentTarget.disabled=true;await api('/api/admin/stock',{method:'PUT',body:JSON.stringify({productId,color,size,stock:Number(input.value)})});$('#msg').textContent='Stan zapisany.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
