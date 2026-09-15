@@ -975,7 +975,10 @@ const renderCart=()=>{hydrateCartDiscounts();
     const selected=cart.filter(x=>x.selected);
     const selectedQty=selected.reduce((s,x)=>s+x.qty,0);
     const total=selected.reduce((sum,x)=>sum+x.price*x.qty,0),finalTotal=discountedTotal(total);
-    const suggestedDelivery=19.99;
+    let suggestedMethod='address';
+    try{const saved=JSON.parse(localStorage.getItem('starxv-delivery-choice')||'null');suggestedMethod=saved?.type==='inpost'?'inpost':'address'}catch{}
+    const suggestedPrices=window.STARXV_SUGGESTED_DELIVERY_PRICES||{inpost:14.99,address:19.99};
+    const suggestedDelivery=Number(suggestedPrices[suggestedMethod]??19.99);
     const grandTotal=selected.length?finalTotal+suggestedDelivery:0;
     cartTotal.textContent=money(grandTotal);syncPromoUI(total);
     document.querySelectorAll('.sx-cart-products-label').forEach(el=>el.textContent=`Produkty (${selectedQty})`);
@@ -984,6 +987,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(sxSelectAll){sxSelectAll.checked=cart.length>0&&selected.length===cart.length;sxSelectAll.indeterminate=selected.length>0&&selected.length<cart.length;}
     checkoutBtn.disabled=selected.length===0;
   };
+  window.addEventListener('starxv:suggested-delivery-updated',()=>updateSummary());
   const addToCart=()=>{
     if(!window.STARXV_REQUIRE_AUTH?.())return;
     if(!selectedSize){showToast('Najpierw wybierz rozmiar');sizeButtons[0]?.focus();return}
@@ -2544,6 +2548,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 (()=>{
   const DEFAULT_PRICES={inpost:14.99,address:19.99};
   let prices={...DEFAULT_PRICES};
+  window.STARXV_SUGGESTED_DELIVERY_PRICES=prices;
   const money=v=>`${Number(v||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2})} PLN`;
   const getLastMethod=()=>{
     try{
@@ -2553,7 +2558,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   };
   const update=()=>{
     const method=getLastMethod();
+    window.STARXV_SUGGESTED_DELIVERY_PRICES={...prices};
     document.querySelectorAll('.sx-suggested-delivery-price').forEach(el=>el.textContent=money(prices[method]));
+    window.dispatchEvent(new Event('starxv:suggested-delivery-updated'));
   };
   const loadPrices=async()=>{
     try{
