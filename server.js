@@ -295,7 +295,7 @@ for(const sig of ['SIGTERM','SIGINT']){
   });
 }
 
-// JSON API parser for checkout, account actions and server-to-server callbacks.
+// Przelewy24 uses JSON requests, so the normal JSON parser can handle both checkout and callbacks.
 app.use(express.json({limit:'5mb'}));
 
 // Browser CSRF protection: unsafe API calls must come from this site. Requests
@@ -306,7 +306,7 @@ app.use('/api',(req,res,next)=>{
   // Browser state-changing requests must carry a same-site Origin. The InPost
   // webhook is server-to-server and authenticates separately below.
   if(!origin){
-    if(req.path==='/inpost/webhook'||req.path==='/simpay/ipn')return next();
+    if(req.path==='/inpost/webhook'||req.path==='/p24/status')return next();
     if(process.env.NODE_ENV==='production')return res.status(403).json({error:'Brak nagłówka Origin.'});
     return next();
   }
@@ -334,6 +334,7 @@ app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000
 app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
 app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
 app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
+app.use('/api/p24/status',rateLimit('p24-status',120,10*60*1000));
 function cleanEmail(v){return String(v||'').trim().toLowerCase()}function publicUser(u){return {id:u.id,firstName:u.firstName,lastName:u.lastName,email:u.email,createdAt:u.createdAt,avatarData:u.avatarData||''}}
 function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(password,salt,64).toString('hex');return `${salt}:${hash}`}
 function checkPassword(password,stored){try{const [salt,hex]=stored.split(':');const a=Buffer.from(hex,'hex'),b=crypto.scryptSync(password,salt,64);return a.length===b.length&&crypto.timingSafeEqual(a,b)}catch{return false}}
@@ -956,34 +957,28 @@ app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,ord
 function ensurePromoCodes(db){
   if(!Array.isArray(db.promoCodes))db.promoCodes=[];
   if(!db.promoCodes.some(p=>String(p.code||'').toUpperCase()==='STARXV10')){
-    db.promoCodes.push({id:crypto.randomUUID(),code:'STARXV10',type:'percent',value:10,minSubtotal:0,usageLimit:null,usedCount:0,usedByUserIds:[],assignedUserId:null,active:true,startsAt:null,endsAt:null,createdAt:Date.now(),updatedAt:Date.now()});
-  }
-  for(const p of db.promoCodes){
-    if(!Array.isArray(p.usedByUserIds))p.usedByUserIds=[];
-    if(!Object.prototype.hasOwnProperty.call(p,'assignedUserId'))p.assignedUserId=null;
+    db.promoCodes.push({id:crypto.randomUUID(),code:'STARXV10',type:'percent',value:10,minSubtotal:0,usageLimit:null,usedCount:0,active:true,startsAt:null,endsAt:null,createdAt:Date.now(),updatedAt:Date.now()});
   }
   return db.promoCodes;
 }
-function promoPublic(p){return {id:p.id,code:p.code,type:p.type,value:Number(p.value||0),minSubtotal:Number(p.minSubtotal||0),usageLimit:p.usageLimit==null?null:Number(p.usageLimit),usedCount:Number(p.usedCount||0),usedByCount:Array.isArray(p.usedByUserIds)?p.usedByUserIds.length:0,assignedUserId:p.assignedUserId||null,active:Boolean(p.active),startsAt:p.startsAt||null,endsAt:p.endsAt||null,createdAt:p.createdAt,updatedAt:p.updatedAt}}
-function validatePromo(db,rawCode,subtotal,userId=''){
+function promoPublic(p){return {id:p.id,code:p.code,type:p.type,value:Number(p.value||0),minSubtotal:Number(p.minSubtotal||0),usageLimit:p.usageLimit==null?null:Number(p.usageLimit),usedCount:Number(p.usedCount||0),active:Boolean(p.active),startsAt:p.startsAt||null,endsAt:p.endsAt||null,createdAt:p.createdAt,updatedAt:p.updatedAt}}
+function validatePromo(db,rawCode,subtotal){
   ensurePromoCodes(db);
-  const code=String(rawCode||'').trim().toUpperCase(),base=Math.max(0,Number(subtotal||0)),uid=String(userId||'');
+  const code=String(rawCode||'').trim().toUpperCase(),base=Math.max(0,Number(subtotal||0));
   if(!code)return {ok:false,error:'Wpisz kod rabatowy.'};
   const p=db.promoCodes.find(x=>String(x.code||'').toUpperCase()===code);
   if(!p||!p.active)return {ok:false,error:'Ten kod jest nieprawidłowy lub nieaktywny.'};
-  if(p.assignedUserId&&String(p.assignedUserId)!==uid)return {ok:false,error:'Ten kod rabatowy jest przypisany do innego konta.'};
-  if(uid&&Array.isArray(p.usedByUserIds)&&p.usedByUserIds.some(id=>String(id)===uid))return {ok:false,error:'Ten kod rabatowy został już wykorzystany na tym koncie.',errorCode:'PROMO_ALREADY_USED'};
   const now=Date.now(),start=p.startsAt?new Date(p.startsAt).getTime():0,end=p.endsAt?new Date(p.endsAt).getTime():0;
   if(start&&now<start)return {ok:false,error:'Ten kod nie jest jeszcze aktywny.'};
   if(end&&now>end)return {ok:false,error:'Ten kod wygasł.'};
   if(p.usageLimit!=null&&Number(p.usedCount||0)>=Number(p.usageLimit))return {ok:false,error:'Limit użyć tego kodu został wyczerpany.'};
-  if(base<Number(p.minSubtotal||0))return {ok:false,error:`Ten rabat można użyć od ${Number(p.minSubtotal||0).toFixed(2)} PLN wartości zamówienia.`,errorCode:'PROMO_MIN_SUBTOTAL',minSubtotal:Number(p.minSubtotal||0)};
+  if(base<Number(p.minSubtotal||0))return {ok:false,error:`Minimalna wartość koszyka dla tego kodu to ${Number(p.minSubtotal||0).toFixed(2)} PLN.`};
   let discount=p.type==='fixed'?Number(p.value||0):base*(Number(p.value||0)/100);
   discount=Math.max(0,Math.min(base,Math.round(discount*100)/100));
   return {ok:true,promo:promoPublic(p),discount,total:Math.max(0,Math.round((base-discount)*100)/100)};
 }
-app.get('/api/promos/validate',auth,(req,res)=>{
-  ensurePromoCodes(req.db);const result=validatePromo(req.db,req.query?.code,req.query?.subtotal,req.user.id);save(req.db);
+app.get('/api/promos/validate',(req,res)=>{
+  const db=load();ensurePromoCodes(db);const result=validatePromo(db,req.query?.code,req.query?.subtotal);save(db);
   if(!result.ok)return res.status(400).json(result);res.json(result);
 });
 
@@ -1030,14 +1025,14 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   save(req.db);sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,async(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal,req.user.id);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+app.post('/api/orders/prepare',auth,async(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
   if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
   else decrementStockForOrder(db,order);
   order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now();
-  if(order.promo?.code&&!order.promoCounted){ensurePromoCodes(db);const pc=db.promoCodes.find(p=>String(p.code||'').toUpperCase()===String(order.promo.code||'').toUpperCase());if(pc){pc.usedCount=Number(pc.usedCount||0)+1;if(!Array.isArray(pc.usedByUserIds))pc.usedByUserIds=[];if(order.userId&&!pc.usedByUserIds.some(id=>String(id)===String(order.userId)))pc.usedByUserIds.push(order.userId);pc.updatedAt=Date.now()}order.promoCounted=true;}
+  if(order.promo?.code&&!order.promoCounted){ensurePromoCodes(db);const pc=db.promoCodes.find(p=>String(p.code||'').toUpperCase()===String(order.promo.code||'').toUpperCase());if(pc){pc.usedCount=Number(pc.usedCount||0)+1;pc.updatedAt=Date.now()}order.promoCounted=true;}
   orderEvent(order,'paid','Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.',order.updatedAt);
 }
 
@@ -1045,6 +1040,36 @@ function markOrderPaid(db,order){
 function paymentBaseUrl(req){
   const configured=String(process.env.PUBLIC_URL||'').trim().replace(/\/$/,'');
   return configured||`${req.protocol}://${req.get('host')}`;
+}
+function p24Config(){
+  const merchantId=Number(process.env.P24_MERCHANT_ID||0);
+  const posId=Number(process.env.P24_POS_ID||merchantId||0);
+  const apiKey=String(process.env.P24_API_KEY||'').trim();
+  const crc=String(process.env.P24_CRC||'').trim();
+  const sandbox=String(process.env.P24_SANDBOX||'true').toLowerCase()!=='false';
+  return {merchantId,posId,apiKey,crc,sandbox,apiBase:sandbox?'https://sandbox.przelewy24.pl/api/v1':'https://secure.przelewy24.pl/api/v1',payBase:sandbox?'https://sandbox.przelewy24.pl/trnRequest':'https://secure.przelewy24.pl/trnRequest'};
+}
+function p24Configured(){const c=p24Config();return Boolean(c.merchantId&&c.posId&&c.apiKey&&c.crc)}
+function p24Sign(obj){return crypto.createHash('sha384').update(JSON.stringify(obj)).digest('hex')}
+function p24Auth(c){return 'Basic '+Buffer.from(`${c.posId}:${c.apiKey}`).toString('base64')}
+function p24Channel(preference){
+  // P24 bitmask: 1 = cards + Apple Pay + Google Pay, 2 = bank transfers, 8192 = BLIK.
+  // Wallet visibility still depends on the customer's device/browser and services enabled on the P24 account.
+  const p=String(preference||'auto');
+  if(p==='blik')return 8192;
+  if(p==='card'||p==='wallet')return 1;
+  if(p==='p24')return 2;
+  return 8195; // cards/wallets + transfers + BLIK
+}
+async function p24Request(path,options={}){
+  const c=p24Config();
+  const response=await fetch(c.apiBase+path,{...options,headers:{'Authorization':p24Auth(c),'Content-Type':'application/json','Accept':'application/json',...(options.headers||{})}});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok||Number(data?.responseCode||0)!==0){
+    const msg=data?.error||data?.data?.error||`Przelewy24 HTTP ${response.status}`;
+    const e=new Error(typeof msg==='string'?msg:'Przelewy24 odrzuciło żądanie.');e.status=response.status;throw e;
+  }
+  return data;
 }
 async function sendPaidOrderEmail(db,order){
   try{
@@ -1089,143 +1114,45 @@ async function sendOrderUpdateEmail(db,order,eventKey,opts={}){
   }catch(e){console.error('Order update email error:',e.message);return false}
 }
 
-function simpayConfig(){
-  return {
-    serviceId:String(process.env.SIMPAY_SERVICE_ID||'fa2a4d63').trim(),
-    apiToken:String(process.env.SIMPAY_API_TOKEN||'').trim(),
-    ipnKey:String(process.env.SIMPAY_IPN_KEY||'').trim(),
-    apiBase:'https://api.simpay.pl'
-  };
-}
-function simpayConfigured(){const c=simpayConfig();return /^[0-9a-f]{8}$/i.test(c.serviceId)&&Boolean(c.apiToken&&c.ipnKey)}
-async function simpayRequest(pathName,options={}){
-  const c=simpayConfig();
-  const response=await fetch(c.apiBase+pathName,{...options,headers:{'Authorization':'Bearer '+c.apiToken,'Accept':'application/json','Content-Type':'application/json',...(options.headers||{})}});
-  const data=await response.json().catch(()=>({}));
-  if(!response.ok||data?.success===false){
-    const msg=data?.message||data?.error||data?.errors||('SimPay HTTP '+response.status);
-    const e=new Error(typeof msg==='string'?msg:JSON.stringify(msg));e.status=response.status;throw e;
-  }
-  return data;
-}
-function simpayFlattenValues(value,out=[]){
-  if(value===null||value===undefined){out.push('');return out}
-  if(Array.isArray(value)){for(const x of value)simpayFlattenValues(x,out);return out}
-  if(typeof value==='object'){for(const k of Object.keys(value))simpayFlattenValues(value[k],out);return out}
-  out.push(String(value));return out;
-}
-function simpayValidSignature(payload,key){
-  if(!payload||typeof payload!=='object'||!key||typeof payload.signature!=='string')return false;
-  const copy={};
-  for(const k of Object.keys(payload))if(k!=='signature')copy[k]=payload[k];
-  const values=simpayFlattenValues(copy,[]);
-  values.push(key);
-  const expected=crypto.createHash('sha256').update(values.join('|')).digest('hex');
-  const got=String(payload.signature||'').toLowerCase();
-  if(!/^[0-9a-f]{64}$/.test(got))return false;
-  return crypto.timingSafeEqual(Buffer.from(expected,'hex'),Buffer.from(got,'hex'));
-}
-function simpayAmountMatches(order,data){
-  const amount=data?.amount||{};
-  const value=Number(amount.final_value??amount.value??amount.original_value);
-  const currency=String(amount.final_currency??amount.currency??amount.original_currency??'');
-  return Number.isFinite(value)&&Math.abs(value-Number(order.total||0))<0.005&&currency==='PLN';
-}
-
-app.get('/api/payments/config',(req,res)=>res.json({ok:true,provider:'simpay',configured:simpayConfigured(),currency:'PLN',methods:['simpay']}));
+app.get('/api/payments/config',(req,res)=>{const c=p24Config();res.json({ok:true,provider:'przelewy24',configured:p24Configured(),sandbox:c.sandbox,currency:'PLN',methods:['blik','card','apple_pay','google_pay','bank_transfer']})});
 
 app.post('/api/create-checkout-session',auth,async(req,res)=>{
   try{
-    if(!simpayConfigured())return res.status(503).json({error:'SimPay nie jest jeszcze skonfigurowany na serwerze.'});
+    if(!p24Configured())return res.status(503).json({error:'Przelewy24 nie jest jeszcze skonfigurowane na serwerze.'});
     ensureStore(req.db);
     const orderId=String(req.body?.orderId||'');
     const order=req.db.orders.find(o=>o.id===orderId&&o.userId===req.user.id);
     if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
     if(order.paymentStatus==='paid')return res.status(409).json({error:'To zamówienie jest już opłacone.'});
     if(order.paymentStatus==='cancelled')return res.status(409).json({error:'To zamówienie zostało anulowane.'});
-    const amount=Math.round(Number(order.total)*100)/100;
-    if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
-    if(order.paymentStatus==='failed')order.paymentStatus='pending';
-    reserveStockForOrder(req.db,order);
-    const c=simpayConfig(),base=paymentBaseUrl(req);
-    const payload={
-      amount,
-      currency:'PLN',
-      control:order.id,
-      description:('STARXV zamówienie '+order.orderNo).slice(0,128),
-      returns:{
-        success:base+'/?payment=return&order='+encodeURIComponent(order.id),
-        failure:base+'/?payment=failed&order='+encodeURIComponent(order.id)
-      }
-    };
-    let data;
-    try{data=await simpayRequest('/payment/'+encodeURIComponent(c.serviceId)+'/transactions',{method:'POST',body:JSON.stringify(payload)})}
-    catch(e){releaseStockReservation(req.db,order);save(req.db);throw e}
-    const transactionId=String(data?.data?.transactionId||'');
-    const redirectUrl=String(data?.data?.redirectUrl||'');
-    if(!transactionId||!/^https:\/\//i.test(redirectUrl)){releaseStockReservation(req.db,order);save(req.db);throw new Error('SimPay nie zwrócił poprawnego linku płatności.')}
-    order.simpayTransactionId=transactionId;
-    order.simpayCreatedAt=Date.now();
-    order.paymentProvider='simpay';
-    order.updatedAt=Date.now();
-    save(req.db);
-    res.json({ok:true,url:redirectUrl,transactionId,orderId:order.id,provider:'simpay'});
-  }catch(e){
-    console.error('SimPay checkout error:',e);
-    res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e?.message||'Nie udało się uruchomić płatności.'});
-  }
+    const amount=Math.round(Number(order.total)*100);if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
+    if(order.paymentStatus==='failed')order.paymentStatus='pending';reserveStockForOrder(req.db,order);
+    const c=p24Config(),sessionId=`starxv-${order.id}-${Date.now()}`.slice(0,100),currency='PLN',base=paymentBaseUrl(req);
+    const sign=p24Sign({sessionId,merchantId:c.merchantId,amount,currency,crc:c.crc});
+    const a=order.address||{};
+    const payload={merchantId:c.merchantId,posId:c.posId,sessionId,amount,currency,description:`STARXV zamówienie ${order.orderNo}`,email:cleanEmail(a.email||req.user.email).slice(0,50),client:`${a.firstName||''} ${a.lastName||''}`.trim().slice(0,40),address:String(a.street||'').slice(0,80),zip:String(a.postal||'').slice(0,10),city:String(a.city||'').slice(0,50),country:'PL',language:'pl',urlReturn:`${base}/?payment=return&order=${encodeURIComponent(order.id)}`,urlStatus:`${base}/api/p24/status`,timeLimit:30,channel:p24Channel(order.paymentPreference),waitForResult:true,shipping:Math.round(Number(order.shippingCost||0)*100),sign};
+    let data;try{data=await p24Request('/transaction/register',{method:'POST',body:JSON.stringify(payload)})}catch(e){releaseStockReservation(req.db,order);save(req.db);throw e}
+    const token=String(data?.data?.token||'');if(!token){releaseStockReservation(req.db,order);save(req.db);throw new Error('Przelewy24 nie zwróciło tokenu płatności.')}
+    order.p24SessionId=sessionId;order.p24Token=token;order.p24Amount=amount;order.p24Currency=currency;order.p24CreatedAt=Date.now();order.paymentProvider='przelewy24';order.updatedAt=Date.now();save(req.db);
+    res.json({ok:true,url:`${c.payBase}/${encodeURIComponent(token)}`,token,orderId:order.id,provider:'przelewy24'});
+  }catch(e){console.error('Przelewy24 checkout error:',e);res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e?.message||'Nie udało się uruchomić płatności.'})}
 });
 
-app.post('/api/simpay/ipn',async(req,res)=>{
+app.post('/api/p24/status',async(req,res)=>{
   try{
-    const c=simpayConfig();
-    if(!c.ipnKey)return res.status(503).type('text/plain').send('NOT_CONFIGURED');
-    const payload=req.body||{};
-    if(!simpayValidSignature(payload,c.ipnKey))return res.status(403).type('text/plain').send('INVALID_SIGNATURE');
-    if(String(payload.type||'')==='ipn:test')return res.status(200).type('text/plain').send('OK');
-    if(String(payload.type||'')!=='transaction:status_changed')return res.status(200).type('text/plain').send('OK');
-    const data=payload.data||{};
-    if(String(data.service_id||'')!==c.serviceId)return res.status(403).type('text/plain').send('INVALID_SERVICE');
-    const notificationId=String(payload.notification_id||'');
-    const transactionId=String(data.id||'');
-    const control=String(data.control||'');
-    if(!notificationId||!transactionId||!control)return res.status(400).type('text/plain').send('INVALID_NOTIFICATION');
-
-    const db=load();ensureStore(db);
-    if(!Array.isArray(db.simpayNotifications))db.simpayNotifications=[];
-    if(db.simpayNotifications.some(x=>x.id===notificationId))return res.status(200).type('text/plain').send('OK');
-
-    const order=db.orders.find(o=>String(o.id)===control);
-    if(!order)return res.status(404).type('text/plain').send('ORDER_NOT_FOUND');
-    if(order.simpayTransactionId&&String(order.simpayTransactionId)!==transactionId)return res.status(409).type('text/plain').send('TRANSACTION_MISMATCH');
-    if(!simpayAmountMatches(order,data))return res.status(409).type('text/plain').send('AMOUNT_MISMATCH');
-
-    const status=String(data.status||'');
-    const wasPaid=order.paymentStatus==='paid';
-    if(status==='transaction_paid'){
-      markOrderPaid(db,order);
-      order.simpayPaidAt=Date.now();
-    }else if(['transaction_failure','transaction_cancelled','transaction_expired'].includes(status)){
-      if(order.paymentStatus!=='paid'){
-        releaseStockReservation(db,order);
-        order.paymentStatus='failed';
-      }
-    }
-    order.simpayStatus=status;
-    order.simpayLastNotificationId=notificationId;
-    order.simpayUpdatedAt=Date.now();
-    order.updatedAt=Date.now();
-    db.simpayNotifications.push({id:notificationId,transactionId,orderId:order.id,status,at:Date.now()});
-    if(db.simpayNotifications.length>5000)db.simpayNotifications=db.simpayNotifications.slice(-3000);
-    save(db);
-    if(status==='transaction_paid'&&!wasPaid)await sendPaidOrderEmail(db,order);
-    return res.status(200).type('text/plain').send('OK');
-  }catch(e){
-    console.error('SimPay IPN error:',e);
-    return res.status(500).type('text/plain').send('ERROR');
-  }
+    if(!p24Configured())return res.status(503).json({error:'P24 not configured'});
+    const b=req.body||{},sessionId=String(b.sessionId||''),p24OrderId=Number(b.orderId),amount=Number(b.amount),currency=String(b.currency||'');
+    if(!sessionId||!Number.isInteger(p24OrderId)||!Number.isInteger(amount)||currency!=='PLN')return res.status(400).json({error:'Invalid notification'});
+    const db=load();ensureStore(db);const order=db.orders.find(o=>String(o.p24SessionId||'')===sessionId);
+    if(!order)return res.status(404).json({error:'Order not found'});
+    if(Number(order.p24Amount)!==amount||String(order.p24Currency)!==currency)return res.status(400).json({error:'Transaction mismatch'});
+    const c=p24Config(),verifySign=p24Sign({sessionId,orderId:p24OrderId,amount,currency,crc:c.crc});
+    await p24Request('/transaction/verify',{method:'PUT',body:JSON.stringify({merchantId:c.merchantId,posId:c.posId,sessionId,amount,currency,orderId:p24OrderId,sign:verifySign})});
+    const wasPaid=order.paymentStatus==='paid';markOrderPaid(db,order);order.p24OrderId=p24OrderId;order.p24VerifiedAt=Date.now();order.updatedAt=Date.now();save(db);
+    if(!wasPaid)await sendPaidOrderEmail(db,order);
+    res.json({ok:true});
+  }catch(e){console.error('Przelewy24 status error:',e);res.status(400).json({error:'Verification failed'})}
 });
-
 
 app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});res.json({ok:true,order:orderForUser(order),confirmed:order.paymentStatus==='paid'})});
 
@@ -1304,10 +1231,8 @@ function envMoney(name,fallback){const raw=String(process.env[name]??'').trim().
 function inpostShipxToken(){return String(process.env.INPOST_SHIPX_TOKEN||process.env.INPOST_TOKEN||'').trim()}
 function inpostOrganizationId(){return String(process.env.INPOST_ORGANIZATION_ID||'').trim()}
 function inpostGeowidgetToken(){return String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim()}
-// TEMPORARY SAFETY SWITCH: while true, admin shipment creation never calls ShipX.
-const INPOST_ADMIN_TEST_MODE=true;
 function inpostConfigured(){return Boolean(inpostShipxToken()&&/^\d+$/.test(inpostOrganizationId()))}
-function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured(),inpostTestMode:INPOST_ADMIN_TEST_MODE}}
+function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured(),inpostTestMode:false}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 function normalizeAndValidateDelivery(raw,address){
   const type=raw?.type==='address'?'address':'inpost';
@@ -1566,10 +1491,6 @@ app.post('/api/admin/orders/:id/shipment/create',rateLimit('inpost-create',30,60
   const u=(req.db.users||[]).find(x=>x.id===order.userId);const a=order.address||{};
   const email=cleanEmail(a.email||u?.email);const phone=cleanInpostPhone(a.phone);
   if(!email||!phone||phone.length!==9)return res.status(400).json({error:'Do utworzenia przesyłki InPost potrzebny jest poprawny e-mail i 9-cyfrowy numer telefonu odbiorcy.'});
-  // TEST MODE: validate everything above, but stop before any production ShipX request.
-  if(INPOST_ADMIN_TEST_MODE){
-    return res.json({ok:true,testMode:true,simulated:true,message:'TRYB TESTOWY — dane przesyłki są poprawne. Nic nie zostało wysłane do InPost.'});
-  }
   const payload={receiver:{first_name:String(a.firstName||u?.firstName||'').trim().slice(0,80),last_name:String(a.lastName||u?.lastName||'').trim().slice(0,80),email,phone},parcels:{template:parcelTemplate},service:'inpost_locker_standard',reference:`STARXV-${String(order.orderNo||order.id).slice(0,40)}`,custom_attributes:{sending_method:'parcel_locker',target_point:String(order.delivery.locker.id).trim().toUpperCase()}};
   const created=(await shipxRequest('POST',`/v1/organizations/${encodeURIComponent(inpostOrganizationId())}/shipments`,{json:payload})).json||{};
   if(!created.id)throw new Error('InPost nie zwrócił identyfikatora utworzonej przesyłki.');
@@ -1882,7 +1803,6 @@ app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?
 // STARXV admin — zgłoszenia problemów
 
 
-app.get('/api/admin/promo-users',adminOnly,(req,res)=>{const users=(req.db.users||[]).map(u=>({id:u.id,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||''})).sort((a,b)=>String(a.email).localeCompare(String(b.email)));res.json({ok:true,users})});
 app.get('/api/admin/promos',adminOnly,(req,res)=>{ensurePromoCodes(req.db);save(req.db);res.json({ok:true,promos:req.db.promoCodes.map(promoPublic).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))})});
 app.post('/api/admin/promos',adminOnly,(req,res)=>{
   ensurePromoCodes(req.db);
@@ -1892,8 +1812,7 @@ app.post('/api/admin/promos',adminOnly,(req,res)=>{
   if(!/^[A-Z0-9_-]{3,24}$/.test(code))return res.status(400).json({error:'Kod może mieć 3–24 znaki: litery, cyfry, _ lub -.'});
   if(req.db.promoCodes.some(p=>String(p.code||'').toUpperCase()===code))return res.status(409).json({error:'Taki kod już istnieje.'});
   if(!['percent','fixed'].includes(type)||!Number.isFinite(value)||value<=0||(type==='percent'&&value>100))return res.status(400).json({error:'Nieprawidłowa wartość rabatu.'});
-  const assignedUserId=String(req.body?.assignedUserId||'').trim()||null;if(assignedUserId&&!req.db.users.some(u=>String(u.id)===assignedUserId))return res.status(400).json({error:'Nie znaleziono wybranego konta klienta.'});
-  const p={id:crypto.randomUUID(),code,type,value:Math.round(value*100)/100,minSubtotal:Math.round(minSubtotal*100)/100,usageLimit,usedCount:0,usedByUserIds:[],assignedUserId,active:req.body?.active!==false,startsAt:req.body?.startsAt||null,endsAt:req.body?.endsAt||null,createdAt:Date.now(),updatedAt:Date.now()};
+  const p={id:crypto.randomUUID(),code,type,value:Math.round(value*100)/100,minSubtotal:Math.round(minSubtotal*100)/100,usageLimit,usedCount:0,active:req.body?.active!==false,startsAt:req.body?.startsAt||null,endsAt:req.body?.endsAt||null,createdAt:Date.now(),updatedAt:Date.now()};
   req.db.promoCodes.push(p);save(req.db);res.json({ok:true,promo:promoPublic(p)});
 });
 app.patch('/api/admin/promos/:id',adminOnly,(req,res)=>{
