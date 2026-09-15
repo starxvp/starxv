@@ -956,17 +956,23 @@ app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,ord
 function ensurePromoCodes(db){
   if(!Array.isArray(db.promoCodes))db.promoCodes=[];
   if(!db.promoCodes.some(p=>String(p.code||'').toUpperCase()==='STARXV10')){
-    db.promoCodes.push({id:crypto.randomUUID(),code:'STARXV10',type:'percent',value:10,minSubtotal:0,usageLimit:null,usedCount:0,active:true,startsAt:null,endsAt:null,createdAt:Date.now(),updatedAt:Date.now()});
+    db.promoCodes.push({id:crypto.randomUUID(),code:'STARXV10',type:'percent',value:10,minSubtotal:0,usageLimit:null,usedCount:0,usedByUserIds:[],assignedUserId:null,active:true,startsAt:null,endsAt:null,createdAt:Date.now(),updatedAt:Date.now()});
+  }
+  for(const p of db.promoCodes){
+    if(!Array.isArray(p.usedByUserIds))p.usedByUserIds=[];
+    if(!Object.prototype.hasOwnProperty.call(p,'assignedUserId'))p.assignedUserId=null;
   }
   return db.promoCodes;
 }
-function promoPublic(p){return {id:p.id,code:p.code,type:p.type,value:Number(p.value||0),minSubtotal:Number(p.minSubtotal||0),usageLimit:p.usageLimit==null?null:Number(p.usageLimit),usedCount:Number(p.usedCount||0),active:Boolean(p.active),startsAt:p.startsAt||null,endsAt:p.endsAt||null,createdAt:p.createdAt,updatedAt:p.updatedAt}}
-function validatePromo(db,rawCode,subtotal){
+function promoPublic(p){return {id:p.id,code:p.code,type:p.type,value:Number(p.value||0),minSubtotal:Number(p.minSubtotal||0),usageLimit:p.usageLimit==null?null:Number(p.usageLimit),usedCount:Number(p.usedCount||0),usedByCount:Array.isArray(p.usedByUserIds)?p.usedByUserIds.length:0,assignedUserId:p.assignedUserId||null,active:Boolean(p.active),startsAt:p.startsAt||null,endsAt:p.endsAt||null,createdAt:p.createdAt,updatedAt:p.updatedAt}}
+function validatePromo(db,rawCode,subtotal,userId=''){
   ensurePromoCodes(db);
-  const code=String(rawCode||'').trim().toUpperCase(),base=Math.max(0,Number(subtotal||0));
+  const code=String(rawCode||'').trim().toUpperCase(),base=Math.max(0,Number(subtotal||0)),uid=String(userId||'');
   if(!code)return {ok:false,error:'Wpisz kod rabatowy.'};
   const p=db.promoCodes.find(x=>String(x.code||'').toUpperCase()===code);
   if(!p||!p.active)return {ok:false,error:'Ten kod jest nieprawidłowy lub nieaktywny.'};
+  if(p.assignedUserId&&String(p.assignedUserId)!==uid)return {ok:false,error:'Ten kod rabatowy jest przypisany do innego konta.'};
+  if(uid&&Array.isArray(p.usedByUserIds)&&p.usedByUserIds.some(id=>String(id)===uid))return {ok:false,error:'Ten kod rabatowy został już wykorzystany na tym koncie.'};
   const now=Date.now(),start=p.startsAt?new Date(p.startsAt).getTime():0,end=p.endsAt?new Date(p.endsAt).getTime():0;
   if(start&&now<start)return {ok:false,error:'Ten kod nie jest jeszcze aktywny.'};
   if(end&&now>end)return {ok:false,error:'Ten kod wygasł.'};
@@ -976,8 +982,8 @@ function validatePromo(db,rawCode,subtotal){
   discount=Math.max(0,Math.min(base,Math.round(discount*100)/100));
   return {ok:true,promo:promoPublic(p),discount,total:Math.max(0,Math.round((base-discount)*100)/100)};
 }
-app.get('/api/promos/validate',(req,res)=>{
-  const db=load();ensurePromoCodes(db);const result=validatePromo(db,req.query?.code,req.query?.subtotal);save(db);
+app.get('/api/promos/validate',auth,(req,res)=>{
+  ensurePromoCodes(req.db);const result=validatePromo(req.db,req.query?.code,req.query?.subtotal,req.user.id);save(req.db);
   if(!result.ok)return res.status(400).json(result);res.json(result);
 });
 
@@ -1024,14 +1030,14 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   save(req.db);sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,async(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+app.post('/api/orders/prepare',auth,async(req,res)=>{try{ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal,req.user.id);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
   if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
   else decrementStockForOrder(db,order);
   order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now();
-  if(order.promo?.code&&!order.promoCounted){ensurePromoCodes(db);const pc=db.promoCodes.find(p=>String(p.code||'').toUpperCase()===String(order.promo.code||'').toUpperCase());if(pc){pc.usedCount=Number(pc.usedCount||0)+1;pc.updatedAt=Date.now()}order.promoCounted=true;}
+  if(order.promo?.code&&!order.promoCounted){ensurePromoCodes(db);const pc=db.promoCodes.find(p=>String(p.code||'').toUpperCase()===String(order.promo.code||'').toUpperCase());if(pc){pc.usedCount=Number(pc.usedCount||0)+1;if(!Array.isArray(pc.usedByUserIds))pc.usedByUserIds=[];if(order.userId&&!pc.usedByUserIds.some(id=>String(id)===String(order.userId)))pc.usedByUserIds.push(order.userId);pc.updatedAt=Date.now()}order.promoCounted=true;}
   orderEvent(order,'paid','Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.',order.updatedAt);
 }
 
@@ -1876,6 +1882,7 @@ app.put('/api/account/avatar',auth,(req,res)=>{const avatarData=String(req.body?
 // STARXV admin — zgłoszenia problemów
 
 
+app.get('/api/admin/promo-users',adminOnly,(req,res)=>{const users=(req.db.users||[]).map(u=>({id:u.id,firstName:u.firstName||'',lastName:u.lastName||'',email:u.email||''})).sort((a,b)=>String(a.email).localeCompare(String(b.email)));res.json({ok:true,users})});
 app.get('/api/admin/promos',adminOnly,(req,res)=>{ensurePromoCodes(req.db);save(req.db);res.json({ok:true,promos:req.db.promoCodes.map(promoPublic).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))})});
 app.post('/api/admin/promos',adminOnly,(req,res)=>{
   ensurePromoCodes(req.db);
@@ -1885,7 +1892,8 @@ app.post('/api/admin/promos',adminOnly,(req,res)=>{
   if(!/^[A-Z0-9_-]{3,24}$/.test(code))return res.status(400).json({error:'Kod może mieć 3–24 znaki: litery, cyfry, _ lub -.'});
   if(req.db.promoCodes.some(p=>String(p.code||'').toUpperCase()===code))return res.status(409).json({error:'Taki kod już istnieje.'});
   if(!['percent','fixed'].includes(type)||!Number.isFinite(value)||value<=0||(type==='percent'&&value>100))return res.status(400).json({error:'Nieprawidłowa wartość rabatu.'});
-  const p={id:crypto.randomUUID(),code,type,value:Math.round(value*100)/100,minSubtotal:Math.round(minSubtotal*100)/100,usageLimit,usedCount:0,active:req.body?.active!==false,startsAt:req.body?.startsAt||null,endsAt:req.body?.endsAt||null,createdAt:Date.now(),updatedAt:Date.now()};
+  const assignedUserId=String(req.body?.assignedUserId||'').trim()||null;if(assignedUserId&&!req.db.users.some(u=>String(u.id)===assignedUserId))return res.status(400).json({error:'Nie znaleziono wybranego konta klienta.'});
+  const p={id:crypto.randomUUID(),code,type,value:Math.round(value*100)/100,minSubtotal:Math.round(minSubtotal*100)/100,usageLimit,usedCount:0,usedByUserIds:[],assignedUserId,active:req.body?.active!==false,startsAt:req.body?.startsAt||null,endsAt:req.body?.endsAt||null,createdAt:Date.now(),updatedAt:Date.now()};
   req.db.promoCodes.push(p);save(req.db);res.json({ok:true,promo:promoPublic(p)});
 });
 app.patch('/api/admin/promos/:id',adminOnly,(req,res)=>{
