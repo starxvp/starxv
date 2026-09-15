@@ -1356,7 +1356,19 @@ const renderCart=()=>{hydrateCartDiscounts();
           const paidOrder=(Array.isArray(d.orders)?d.orders:[]).find(o=>String(o.id)===String(paymentOrderId));
           if(paidOrder?.items)await removeOrderedItemsFromCart(paidOrder.items);
         }catch(e){}
-        showStatus('success','Płatność potwierdzona','Dziękujemy za zakup. Zamówienie jest opłacone i pojawi się w „Moich zamówieniach”.',7000);
+        showStatus('success','Płatność potwierdzona','Dziękujemy za zakup. Otwieramy „Moje zamówienia”…',2600);
+        try{
+          sessionStorage.removeItem('starxv-active-view-v2');
+          document.getElementById('checkoutOverlay')?.classList.remove('open');
+          document.getElementById('checkoutOverlay')?.setAttribute('aria-hidden','true');
+          document.body.style.overflow='';
+          await window.STARXV_SYNC_ORDERS?.();
+          setTimeout(()=>{
+            const ordersBtn=document.getElementById('openOrders');
+            if(ordersBtn)ordersBtn.click();
+            else if(typeof window.STARXV_OPEN_ORDERS==='function')window.STARXV_OPEN_ORDERS();
+          },180);
+        }catch(e){console.warn('STARXV payment return:',e)}
       }else{
         showStatus('success','Płatność jest weryfikowana','SimPay weryfikuje transakcję. Status zamówienia zaktualizuje się po potwierdzeniu płatności.',7000);
       }
