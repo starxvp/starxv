@@ -1232,7 +1232,7 @@ function inpostShipxToken(){return String(process.env.INPOST_SHIPX_TOKEN||proces
 function inpostOrganizationId(){return String(process.env.INPOST_ORGANIZATION_ID||'').trim()}
 function inpostGeowidgetToken(){return String(process.env.INPOST_GEOWIDGET_TOKEN||'').trim()}
 function inpostConfigured(){return Boolean(inpostShipxToken()&&/^\d+$/.test(inpostOrganizationId()))}
-function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured(),inpostTestMode:false}}
+function shippingPublicConfig(){return {carrier:'InPost',currency:'PLN',lockerPrice:envMoney('INPOST_LOCKER_PRICE',14.99),courierPrice:envMoney('INPOST_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0),pointsMap:false,officialGeowidget:true,geowidgetEnabled:Boolean(inpostGeowidgetToken()),inpostConfigured:inpostConfigured()}}
 function shippingCostFor(delivery,discountedSubtotal){const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;return delivery?.type==='inpost'?c.lockerPrice:c.courierPrice}
 function normalizeAndValidateDelivery(raw,address){
   const type=raw?.type==='address'?'address':'inpost';
@@ -1691,7 +1691,8 @@ app.put('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
     ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
     if(!c)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
     const cleanImage=v=>String(v||'').trim().slice(0,5_500_000);
-    c.images={front:cleanImage(req.body?.front),back:cleanImage(req.body?.back)};
+    const incoming=Array.isArray(req.body?.images)?req.body.images.slice(0,10).map(cleanImage).filter(Boolean):[cleanImage(req.body?.front),cleanImage(req.body?.back)].filter(Boolean);
+    c.images={front:incoming[0]||'',back:incoming[1]||'',gallery:incoming};
     save(req.db);res.json({ok:true,color,variant:c});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać zdjęć koloru.'})}
 });
