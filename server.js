@@ -972,12 +972,12 @@ function validatePromo(db,rawCode,subtotal,userId=''){
   const p=db.promoCodes.find(x=>String(x.code||'').toUpperCase()===code);
   if(!p||!p.active)return {ok:false,error:'Ten kod jest nieprawidłowy lub nieaktywny.'};
   if(p.assignedUserId&&String(p.assignedUserId)!==uid)return {ok:false,error:'Ten kod rabatowy jest przypisany do innego konta.'};
-  if(uid&&Array.isArray(p.usedByUserIds)&&p.usedByUserIds.some(id=>String(id)===uid))return {ok:false,error:'Ten kod rabatowy został już wykorzystany na tym koncie.'};
+  if(uid&&Array.isArray(p.usedByUserIds)&&p.usedByUserIds.some(id=>String(id)===uid))return {ok:false,error:'Ten kod rabatowy został już wykorzystany na tym koncie.',errorCode:'PROMO_ALREADY_USED'};
   const now=Date.now(),start=p.startsAt?new Date(p.startsAt).getTime():0,end=p.endsAt?new Date(p.endsAt).getTime():0;
   if(start&&now<start)return {ok:false,error:'Ten kod nie jest jeszcze aktywny.'};
   if(end&&now>end)return {ok:false,error:'Ten kod wygasł.'};
   if(p.usageLimit!=null&&Number(p.usedCount||0)>=Number(p.usageLimit))return {ok:false,error:'Limit użyć tego kodu został wyczerpany.'};
-  if(base<Number(p.minSubtotal||0))return {ok:false,error:`Minimalna wartość koszyka dla tego kodu to ${Number(p.minSubtotal||0).toFixed(2)} PLN.`};
+  if(base<Number(p.minSubtotal||0))return {ok:false,error:`Ten rabat można użyć od ${Number(p.minSubtotal||0).toFixed(2)} PLN wartości zamówienia.`,errorCode:'PROMO_MIN_SUBTOTAL',minSubtotal:Number(p.minSubtotal||0)};
   let discount=p.type==='fixed'?Number(p.value||0):base*(Number(p.value||0)/100);
   discount=Math.max(0,Math.min(base,Math.round(discount*100)/100));
   return {ok:true,promo:promoPublic(p),discount,total:Math.max(0,Math.round((base-discount)*100)/100)};
