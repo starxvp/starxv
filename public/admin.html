@@ -116,18 +116,53 @@ document.addEventListener('input',e=>{
 .gpsrStatus.ready{background:#fff;color:#000}.gpsrStatus.warn{border:1px solid #59462d;color:#d7b47f;background:#15110c}
 </style>
 
-<style id="sx-pa-target-compact-style">
-.sx-pa-target-compact{position:relative;min-width:0}
-.sx-pa-target-toggle{width:100%;height:40px;border:1px solid #333;border-radius:10px;background:#101010;color:#fff;padding:6px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left}
-.sx-pa-target-toggle:hover,.sx-pa-target-toggle.open{border-color:#555;background:#141414}
-.sx-pa-target-toggle span{min-width:0;display:flex;flex-direction:column;gap:2px}.sx-pa-target-toggle small{font-size:7px;color:#666;font-weight:900;letter-spacing:.11em}.sx-pa-target-toggle b{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sx-pa-target-toggle svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.8;flex:0 0 auto;transition:.18s}.sx-pa-target-toggle.open svg{transform:rotate(180deg)}
-.sx-pa-target-dropdown{display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:100;width:min(520px,92vw);padding:10px;border:1px solid #303030;border-radius:14px;background:#090909;box-shadow:0 20px 55px rgba(0,0,0,.65)}
-.sx-pa-target-dropdown.open{display:block}
-.sx-pa-target-dropdown .sx-pa-target{grid-column:auto!important;border:0!important;padding:0!important;background:transparent!important}
-.sx-pa-target-dropdown .sx-pa-user-results{max-height:230px}
-@media(max-width:650px){.sx-pa-target-dropdown{left:0;right:auto;width:min(520px,calc(100vw - 52px))}}
+<style id="sx-pa-layout-final-fix">
+/* Discount admin: stable, compact layout */
+.sx-pa .sx-pa-form{
+  display:grid!important;
+  grid-template-columns:1.35fr .9fr .9fr .9fr .9fr 1.05fr!important;
+  gap:8px!important;
+  align-items:start!important;
+  width:100%!important;
+}
+.sx-pa .sx-pa-form>input,.sx-pa .sx-pa-form>select{height:40px!important;min-width:0!important}
+.sx-pa .sx-pa-target-compact{position:relative;min-width:0}
+.sx-pa .sx-pa-target-toggle{
+  width:100%;height:40px;border:1px solid #333;border-radius:10px;background:#101010;color:#fff;
+  padding:6px 11px;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer;text-align:left
+}
+.sx-pa .sx-pa-target-toggle span{min-width:0;display:flex;flex-direction:column;gap:2px}
+.sx-pa .sx-pa-target-toggle small{font-size:7px;color:#666;font-weight:900;letter-spacing:.11em}
+.sx-pa .sx-pa-target-toggle b{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sx-pa .sx-pa-target-toggle svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;flex:0 0 auto}
+.sx-pa .sx-pa-target-dropdown{
+  display:none;position:absolute;right:0;top:calc(100% + 7px);z-index:120;width:min(520px,92vw);
+  padding:11px;border:1px solid #303030;border-radius:14px;background:#090909;box-shadow:0 20px 55px rgba(0,0,0,.65)
+}
+.sx-pa .sx-pa-target-dropdown.open{display:block}
+.sx-pa .sx-pa-target-dropdown .sx-pa-target{grid-column:auto!important;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+.sx-pa .sx-pa-target-dropdown .sx-pa-user-results{max-height:230px!important;overflow-y:auto!important}
+.sx-pa .sx-pa-create{display:inline-flex!important;width:auto!important;min-width:190px!important;height:42px!important;align-items:center!important;justify-content:center!important;margin:10px 0 18px!important;padding:0 20px!important}
+.sx-pa #sxPaMsg{margin:0 0 12px!important}
+.sx-pa #sxPromoAdminList{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;
+  width:100%!important;max-width:none!important;margin:0!important
+}
+.sx-pa #sxPromoAdminList .sx-pa-card{width:100%!important;max-width:none!important;margin:0!important}
+@media(max-width:1100px){
+ .sx-pa .sx-pa-form{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:760px){
+ .sx-pa .sx-pa-form{grid-template-columns:1fr 1fr!important}
+ .sx-pa #sxPromoAdminList{grid-template-columns:1fr!important}
+}
+@media(max-width:520px){
+ .sx-pa .sx-pa-form{grid-template-columns:1fr!important}
+ .sx-pa .sx-pa-target-dropdown{left:0;right:auto;width:min(520px,calc(100vw - 44px))}
+ .sx-pa .sx-pa-create{width:100%!important}
+}
 </style>
+
 </head>
 <body>
 <div id="login" class="login hidden"><div class="brand">STARXV</div><p class="sub">panel administratora</p><div id="loginMsg" class="msg">Zaloguj się kontem administratora.</div><button id="adminGoogleBtn" class="btn primary" style="width:100%;margin:10px 0 14px" disabled>KONTYNUUJ Z GOOGLE</button><div style="display:flex;align-items:center;gap:10px;color:#666;font-size:10px;margin:2px 0 12px"><span style="height:1px;background:#292929;flex:1"></span><span>LUB E-MAIL</span><span style="height:1px;background:#292929;flex:1"></span></div><input id="email" type="email" autocomplete="email" placeholder="E-mail"><input id="password" type="password" autocomplete="current-password" placeholder="Hasło"><button id="loginBtn" class="btn" style="width:100%;margin-top:8px">ZALOGUJ E-MAILEM</button></div>
@@ -563,7 +598,31 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 })();
 </script>
 
-<script id="sx-pa-target-dropdown-script">
-document.addEventListener('DOMContentLoaded',()=>{const t=document.getElementById('sxPaTargetToggle'),d=document.getElementById('sxPaTargetDropdown'),l=document.getElementById('sxPaTargetLabel');if(!t||!d)return;const open=v=>{d.classList.toggle('open',v);t.classList.toggle('open',v);t.setAttribute('aria-expanded',String(v))};const label=()=>{const id=document.getElementById('sxPaUser')?.value||'',s=document.getElementById('sxPaSelectedUser')?.textContent?.replace(/^Wybrane konto:\s*/,'').trim();if(l)l.textContent=id&&s?s:'Dla każdego konta'};t.addEventListener('click',e=>{e.stopPropagation();open(!d.classList.contains('open'))});d.addEventListener('click',e=>e.stopPropagation());document.addEventListener('click',()=>open(false));document.getElementById('sxPaTargetAll')?.addEventListener('click',()=>setTimeout(label,0));document.getElementById('sxPaUserResults')?.addEventListener('click',e=>{if(e.target.closest('[data-pa-user]'))setTimeout(()=>{label();open(false)},0)});const s=document.getElementById('sxPaSelectedUser');if(s)new MutationObserver(label).observe(s,{childList:true,subtree:true,characterData:true});label()});
+
+<script id="sx-pa-layout-final-script">
+document.addEventListener('DOMContentLoaded',()=>{
+ const toggle=document.getElementById('sxPaTargetToggle');
+ const drop=document.getElementById('sxPaTargetDropdown');
+ const label=document.getElementById('sxPaTargetLabel');
+ if(!toggle||!drop)return;
+ const setOpen=v=>{drop.classList.toggle('open',v);toggle.setAttribute('aria-expanded',String(v))};
+ const refresh=()=>{
+   const id=document.getElementById('sxPaUser')?.value||'';
+   const box=document.getElementById('sxPaSelectedUser');
+   const raw=(box?.textContent||'').replace(/^Wybrane konto:\s*/,'').trim();
+   if(label)label.textContent=id&&raw?raw:'Dla każdego konta';
+ };
+ toggle.addEventListener('click',e=>{e.stopPropagation();setOpen(!drop.classList.contains('open'))});
+ drop.addEventListener('click',e=>e.stopPropagation());
+ document.addEventListener('click',()=>setOpen(false));
+ document.getElementById('sxPaTargetAll')?.addEventListener('click',()=>setTimeout(refresh,0));
+ document.getElementById('sxPaUserResults')?.addEventListener('click',e=>{
+   if(e.target.closest('[data-pa-user]'))setTimeout(()=>{refresh();setOpen(false)},0);
+ });
+ const selected=document.getElementById('sxPaSelectedUser');
+ if(selected)new MutationObserver(refresh).observe(selected,{childList:true,subtree:true,characterData:true});
+ refresh();
+});
 </script>
+
 </body></html>
