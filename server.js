@@ -1170,7 +1170,7 @@ function digitalFilePath(p){
 function getDigitalProduct(db,id){ensureStore(db);return db.digitalProducts?.[String(id||'')];}
 function publicDigitalProduct(p,db){
   const file=digitalFilePath(p);
-  const purchaseCount=db?(db.orders||[]).filter(o=>o.orderType==='digital'&&String(o.digitalProductId||'')===String(p.id||'')&&o.paymentStatus==='paid').length:0;
+  const purchaseCount=db?new Set((db.orders||[]).filter(o=>o.orderType==='digital'&&String(o.digitalProductId||'')===String(p.id||'')&&o.paymentStatus==='paid'&&o.userId).map(o=>String(o.userId))).size:0;
   return {id:p.id,name:p.name,subtitle:p.subtitle||'',description:p.description||'',price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file),purchaseCount};
 }
 app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.setHeader('Cache-Control','no-store');res.json({ok:true,products:Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(p=>publicDigitalProduct(p,db))});});
