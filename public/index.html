@@ -453,7 +453,8 @@
 <img alt="STARXV" class="nav-logo" src="/assets/a21bc8c9acad5dd8.webp">
 </img></a><span class="sx-test-version" data-ghost="">TEST VERSION 0.0</span></div>
 <div class="nav-links">
-<a href="#shop">Shop</a>
+<a href="#shop">Clothing</a>
+<a href="/?section=digital" id="sxNavDigital">Digital</a>
 <a href="#story">Brand</a>
 <a href="#contact">Contact</a>
 </div>
@@ -3019,7 +3020,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
  let product=null;
  function showGate(){gate.classList.add('open');gate.setAttribute('aria-hidden','false')}
  function hideGate(){gate.classList.remove('open');gate.setAttribute('aria-hidden','true')}
- function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=isDigital;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){history.replaceState(null,'','/?section=digital');loadDigital()}}
+ function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=isDigital;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
  async function loadDigital(){try{const r=await fetch('/api/digital/products',{cache:'no-store'}),j=await r.json();product=j.products?.find(x=>x.id==='zero-to-first-sale');if(!product)return;price.textContent=product.price>0?`${product.price.toFixed(2).replace('.',',')} PLN`:'CENA WKRÓTCE';buy.disabled=!product.available;buy.textContent=product.available?'KUP E-BOOK →':'SPRZEDAŻ WKRÓTCE';await checkOrders()}catch{status.textContent='Nie udało się wczytać produktu.'}}
  async function checkOrders(){try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json();const o=(j.orders||[]).find(x=>x.orderType==='digital'&&x.digitalProductId==='zero-to-first-sale'&&x.paymentStatus==='paid');if(o){owned.hidden=false;buy.textContent='JUŻ KUPIONO ✓';buy.disabled=true;status.textContent='Produkt jest przypisany do Twojego konta.'}}catch{}}
  async function purchase(){status.textContent='';if(!consent.checked){status.textContent='Zaznacz zgodę dotyczącą natychmiastowego dostępu do treści cyfrowej.';return}buy.disabled=true;buy.textContent='PRZYGOTOWYWANIE...';try{let r=await fetch('/api/digital/orders/prepare',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:'zero-to-first-sale',digitalConsent:true})});if(r.status===401){status.textContent='Najpierw zaloguj się na konto STARXV. Kliknij CLOTHING, a następnie ikonę profilu.';buy.disabled=false;buy.textContent='KUP E-BOOK →';return}let j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się utworzyć zamówienia.');if(j.alreadyOwned){owned.hidden=false;status.textContent='Ten e-book jest już na Twoim koncie.';return}r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:j.order.id})});j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić płatności.');location.href=j.url}catch(e){status.textContent=e.message;buy.disabled=false;buy.textContent='KUP E-BOOK →'}}
