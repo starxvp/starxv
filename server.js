@@ -817,6 +817,11 @@ const DEFAULT_CATALOG={
 function ensureStore(db){
   // Seed the starter catalog only once. Do not recreate products that an admin deliberately deleted.
   if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
+  if(!db.digitalProducts||typeof db.digitalProducts!=='object'){
+    db.digitalProducts={
+      'zero-to-first-sale':{id:'zero-to-first-sale',name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/zero-to-first-sale-3d.png',gallery:['/assets/zero-to-first-sale-3d.png','/assets/zero-to-first-sale-cover.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
+    };
+  }
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.reviews))db.reviews=[];
   if(!Array.isArray(db.marketingCampaigns))db.marketingCampaigns=[];
@@ -1057,7 +1062,7 @@ async function sendPaidOrderEmail(db,order){
     if(!to)return;
     const resend=new Resend(key);
     if(order.orderType==='digital'){
-      const product=DIGITAL_PRODUCTS[String(order.digitalProductId||'')];
+      const dbForDigital=load();ensureStore(dbForDigital);const product=getDigitalProduct(dbForDigital,order.digitalProductId);
       const base=String(process.env.PUBLIC_URL||'https://starxv.pl').replace(/\/$/,'');
       const access=base+'/?section=digital&order='+encodeURIComponent(order.id);
       const total=Number(order.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1145,24 +1150,23 @@ function simpayAmountMatches(order,data){
 
 
 // --- STARXV DIGITAL ------------------------------------------------------------
-// Digital files live outside /public, so they cannot be downloaded by guessing a URL.
-const DIGITAL_PRODUCTS={
-  'zero-to-first-sale':{
-    id:'zero-to-first-sale',
-    name:'ZERO TO FIRST SALE',
-    subtitle:'Od pomysłu do pierwszej sprzedaży',
-    price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||0)),
-    file:path.join(__dirname,'digital','ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf'),
-    downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf'
-  }
-};
-function publicDigitalProduct(p){return {id:p.id,name:p.name,subtitle:p.subtitle,price:Number(p.price||0),available:Number(p.price||0)>0&&fs.existsSync(p.file)}}
-app.get('/api/digital/products',(req,res)=>res.json({ok:true,products:Object.values(DIGITAL_PRODUCTS).map(publicDigitalProduct)}));
+// Metadata is managed from Admin and persisted in the same database as the physical catalog.
+// PDF files stay outside /public, so they cannot be downloaded by guessing a URL.
+function digitalFilePath(p){
+  const fileName=path.basename(String(p?.fileName||''));
+  return fileName?path.join(__dirname,'digital',fileName):'';
+}
+function getDigitalProduct(db,id){ensureStore(db);return db.digitalProducts?.[String(id||'')];}
+function publicDigitalProduct(p){
+  const file=digitalFilePath(p);
+  return {id:p.id,name:p.name,subtitle:p.subtitle||'',description:p.description||'',price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file)};
+}
+app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.json({ok:true,products:Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(publicDigitalProduct)});});
 app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60*1000),(req,res)=>{
   try{
     ensureStore(req.db);
-    const product=DIGITAL_PRODUCTS[String(req.body?.productId||'')];
-    if(!product||!fs.existsSync(product.file))return res.status(404).json({error:'Produkt cyfrowy nie jest jeszcze dostępny.'});
+    const product=getDigitalProduct(req.db,req.body?.productId);
+    if(!product||product.active===false||!fs.existsSync(digitalFilePath(product)))return res.status(404).json({error:'Produkt cyfrowy nie jest jeszcze dostępny.'});
     if(!(Number(product.price)>0))return res.status(409).json({error:'Cena produktu cyfrowego nie została jeszcze ustawiona.'});
     if(req.body?.digitalConsent!==true)return res.status(400).json({error:'Aby otrzymać e-book od razu po płatności, zaznacz zgodę na rozpoczęcie dostarczania treści cyfrowej i przyjęcie do wiadomości utraty prawa odstąpienia po rozpoczęciu świadczenia.'});
     const existing=(req.db.orders||[]).find(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
@@ -1176,13 +1180,13 @@ app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60
 });
 app.get('/api/digital/download/:productId',auth,rateLimit('digital-download',40,10*60*1000),(req,res)=>{
   ensureStore(req.db);
-  const product=DIGITAL_PRODUCTS[String(req.params.productId||'')];
-  if(!product||!fs.existsSync(product.file))return res.status(404).send('Nie znaleziono pliku.');
+  const product=getDigitalProduct(req.db,req.params.productId);
+  if(!product||product.active===false||!fs.existsSync(digitalFilePath(product)))return res.status(404).send('Nie znaleziono pliku.');
   const owned=(req.db.orders||[]).some(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
   if(!owned)return res.status(403).send('Ten plik jest dostępny tylko dla konta, które kupiło produkt.');
   res.setHeader('Cache-Control','private, no-store');
   res.setHeader('X-Content-Type-Options','nosniff');
-  res.download(product.file,product.downloadName);
+  res.download(digitalFilePath(product),product.downloadName||product.fileName||'STARXV_DIGITAL.pdf');
 });
 
 app.get('/api/payments/config',(req,res)=>res.json({ok:true,provider:'simpay',configured:simpayConfigured(),currency:'PLN',methods:['simpay']}));
@@ -1713,7 +1717,7 @@ app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
   const variants=[];
   for(const [productId,p] of Object.entries(req.db.catalog))for(const [color,c] of Object.entries(p.colors||{}))for(const [size,stock] of Object.entries(c.sizes||{}))variants.push({productId,productName:p.name,color,colorLabel:c.label,size,stock:Number(stock||0)});
   const paid=orders.filter(o=>o.paymentStatus==='paid');
-  res.json({ok:true,catalog:req.db.catalog,orders,shipping:shippingPublicConfig(),stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
+  res.json({ok:true,catalog:req.db.catalog,digitalProducts:req.db.digitalProducts||{},orders,shipping:shippingPublicConfig(),stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
 });
 
 function cleanSlug(v,label='ID'){
@@ -1726,6 +1730,27 @@ function cleanSize(v){
   if(!/^[A-Z0-9+\-]{1,20}$/.test(s))throw new Error('Rozmiar może zawierać litery, cyfry, + i -.');
   return s;
 }
+
+function cleanDigitalPayload(body={},existing=null){
+  const id=cleanSlug(body.id??existing?.id,'ID produktu cyfrowego');
+  const name=String(body.name??existing?.name??'').trim().slice(0,160);
+  const subtitle=String(body.subtitle??existing?.subtitle??'').trim().slice(0,220);
+  const description=String(body.description??existing?.description??'').trim().slice(0,2000);
+  const price=Number(body.price??existing?.price??0);
+  const image=String(body.image??existing?.image??'').trim().slice(0,200000);
+  const gallery=(Array.isArray(body.gallery)?body.gallery:(existing?.gallery||[])).map(x=>String(x||'').trim().slice(0,200000)).filter(Boolean).slice(0,10);
+  const fileName=path.basename(String(body.fileName??existing?.fileName??'').trim()).slice(0,180);
+  const downloadName=path.basename(String(body.downloadName??existing?.downloadName??fileName).trim()).slice(0,180);
+  const active=Object.prototype.hasOwnProperty.call(body,'active')?body.active!==false:existing?.active!==false;
+  if(!name)throw new Error('Podaj nazwę produktu cyfrowego.');
+  if(!Number.isFinite(price)||price<0||price>100000)throw new Error('Podaj prawidłową cenę.');
+  if(fileName&&!/\.pdf$/i.test(fileName))throw new Error('Plik produktu cyfrowego musi być plikiem PDF.');
+  return {id,name,subtitle,description,price:money2(price),image,gallery,fileName,downloadName:downloadName||fileName,active};
+}
+app.post('/api/admin/digital-products',adminOnly,(req,res)=>{try{ensureStore(req.db);const data=cleanDigitalPayload(req.body||{});if(req.db.digitalProducts[data.id])return res.status(409).json({error:'Produkt cyfrowy o takim ID już istnieje.'});req.db.digitalProducts[data.id]=data;save(req.db);res.status(201).json({ok:true,product:publicDigitalProduct(data)})}catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu cyfrowego.'})}});
+app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{ensureStore(req.db);const id=String(req.params.id||''),current=req.db.digitalProducts[id];if(!current)return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const data=cleanDigitalPayload({...req.body,id},current);req.db.digitalProducts[id]=data;save(req.db);res.json({ok:true,product:publicDigitalProduct(data)})}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu cyfrowego.'})}});
+app.delete('/api/admin/digital-products/:id',adminOnly,(req,res)=>{ensureStore(req.db);const id=String(req.params.id||'');if(!req.db.digitalProducts[id])return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const blocking=(req.db.orders||[]).some(o=>o.orderType==='digital'&&o.digitalProductId===id&&o.paymentStatus==='pending');if(blocking)return res.status(409).json({error:'Nie można usunąć produktu z oczekującym zamówieniem.'});delete req.db.digitalProducts[id];save(req.db);res.json({ok:true})});
+
 app.post('/api/admin/products',adminOnly,(req,res)=>{
   try{
     ensureStore(req.db);
