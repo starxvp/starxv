@@ -459,6 +459,28 @@
 }
 </style>
 
+
+<style id="starxv-order-type-tabs">
+.orders-type-tabs{display:flex;gap:8px;margin:26px 0 18px;padding:6px;width:max-content;max-width:100%;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:#080808}
+.orders-type-tab{appearance:none;border:1px solid transparent;background:transparent;color:#777;border-radius:10px;padding:11px 15px;cursor:pointer;font:900 9px/1 Arial,sans-serif;letter-spacing:.09em;white-space:nowrap;transition:.18s}
+.orders-type-tab:hover{color:#fff;background:#111}
+.orders-type-tab.active{background:#fff;color:#050505;border-color:#fff}
+.order-card.digital-order .order-main-grid{grid-template-columns:minmax(0,1fr) minmax(285px,360px)}
+.order-card.digital-order .order-thumb{object-fit:contain;background:#111}
+.digital-order-meta{margin-top:6px;color:#777;font-size:9px;font-weight:800;letter-spacing:.06em}
+.digital-access-box{margin-top:18px;padding:18px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:#0b0b0b}
+.digital-access-kicker{font-size:8px;font-weight:900;letter-spacing:.14em;color:#666}
+.digital-access-title{margin-top:7px;color:#fff;font-size:15px;font-weight:950}
+.digital-access-note{margin-top:5px;color:#858585;font-size:9px;line-height:1.55}
+.digital-download-btn{display:flex;align-items:center;justify-content:center;width:100%;margin-top:14px;padding:13px 14px;border:0;border-radius:10px;background:#fff;color:#050505;text-decoration:none;font-size:9px;font-weight:950;letter-spacing:.08em}
+.digital-download-btn:hover{opacity:.88}
+.digital-payment-wait{margin-top:14px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#888;font-size:9px;line-height:1.5}
+@media(max-width:760px){
+  .orders-type-tabs{width:100%}.orders-type-tab{flex:1;padding:11px 8px;font-size:8px}
+  .order-card.digital-order .order-main-grid{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -688,6 +710,10 @@
 <div class="orders-page-kicker">STARXV / ACCOUNT / ORDERS</div>
 <h1 class="orders-page-title" id="ordersTitle">MOJE<br/>ZAMÓWIENIA.</h1>
 <p class="orders-page-lead">Historia zakupów, płatności i aktualny etap realizacji przesyłki w jednym miejscu.</p>
+<div class="orders-type-tabs" id="ordersTypeTabs" role="tablist" aria-label="Rodzaj zamówień">
+<button class="orders-type-tab active" data-order-type="physical" type="button">PRODUKTY FIZYCZNE</button>
+<button class="orders-type-tab" data-order-type="digital" type="button">PRODUKTY CYFROWE</button>
+</div>
 <div class="orders-overview">
 <div class="orders-stat"><span>WSZYSTKIE</span><strong id="ordersStatAll">0</strong></div>
 <div class="orders-stat"><span>OPŁACONE</span><strong id="ordersStatPaid">0</strong></div>
@@ -1450,7 +1476,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   const KEY='starxv-orders',PENDING='starxv-pending-order';
   const COLOR_META=window.STARXV_COLOR_META||{black:{label:'Czarny'},pink:{label:'Różowy'},blue:{label:'Jasny niebieski'}};
   const COLOR_IMAGES=window.STARXV_COLOR_IMAGES||{};
-  let orders=[],activeFilter='all';
+  let orders=[],activeFilter='all',activeType='physical';
   const money=n=>`${Number(n||0).toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2})} PLN`;
   const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localLoad=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
@@ -1482,20 +1508,40 @@ const renderCart=()=>{hydrateCartDiscounts();
     }catch(e){}
     orders=localLoad();
   }
-  function filtered(){return orders.filter(o=>activeFilter==='all'?true:activeFilter==='other'?['failed','cancelled'].includes(o.paymentStatus):o.paymentStatus===activeFilter)}
+  function typedOrders(){return orders.filter(o=>(o.orderType||'physical')===activeType)}
+  function filtered(){return typedOrders().filter(o=>activeFilter==='all'?true:activeFilter==='other'?['failed','cancelled'].includes(o.paymentStatus):o.paymentStatus===activeFilter)}
   function updateStats(){
-    const paid=orders.filter(o=>o.paymentStatus==='paid');
-    document.getElementById('ordersStatAll').textContent=orders.length;
+    const current=typedOrders(),paid=current.filter(o=>o.paymentStatus==='paid');
+    document.getElementById('ordersStatAll').textContent=current.length;
     document.getElementById('ordersStatPaid').textContent=paid.length;
-    document.getElementById('ordersStatPending').textContent=orders.filter(o=>o.paymentStatus==='pending').length;
+    document.getElementById('ordersStatPending').textContent=current.filter(o=>o.paymentStatus==='pending').length;
     document.getElementById('ordersStatSpent').textContent=money(paid.reduce((s,o)=>s+Number(o.total||0),0));
-    if(count)count.textContent=orders.length;
+    if(count)count.textContent=current.length;
   }
   function render(){
     updateStats();
+    const current=typedOrders();
     const list=filtered().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    if(!list.length){body.innerHTML=`<div class="orders-empty"><div><strong>${orders.length?'Brak zamówień w tej kategorii.':'Nie masz jeszcze zamówień.'}</strong><span>${orders.length?'Wybierz inny filtr, aby zobaczyć pozostałe zamówienia.':'Gdy złożysz zamówienie w STARXV, pojawi się tutaj razem ze statusem płatności i przesyłki.'}</span></div></div>`;return}
+    if(!list.length){
+      const typeName=activeType==='digital'?'produktów cyfrowych':'produktów fizycznych';
+      body.innerHTML=`<div class="orders-empty"><div><strong>${current.length?'Brak zamówień w tej kategorii.':`Nie masz jeszcze ${typeName}.`}</strong><span>${current.length?'Wybierz inny filtr, aby zobaczyć pozostałe zamówienia.':activeType==='digital'?'Kupione e-booki pojawią się tutaj i po opłaceniu będzie można je pobrać.':'Gdy złożysz zamówienie na odzież STARXV, pojawi się tutaj razem ze statusem płatności i przesyłki.'}</span></div></div>`;
+      return;
+    }
     body.innerHTML=list.map(o=>{
+      const isDigital=(o.orderType||'physical')==='digital';
+      if(isDigital){
+        const x=(o.items||[])[0]||{};
+        const img=x.image||'/assets/zero-to-first-sale-3d.png';
+        const productId=o.digitalProductId||x.id||'zero-to-first-sale';
+        const paid=o.paymentStatus==='paid';
+        const canCancel=['pending','failed'].includes(o.paymentStatus);
+        const digitalState=paid?'OPŁACONO':o.paymentStatus==='failed'?'PŁATNOŚĆ NIEUDANA':o.paymentStatus==='cancelled'?'ANULOWANO':'OCZEKUJE NA PŁATNOŚĆ';
+        const access=paid
+          ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a></div>`
+          : `<div class="digital-payment-wait">${o.paymentStatus==='pending'?'Dostęp do pliku pojawi się automatycznie po potwierdzeniu płatności.':'Plik nie jest dostępny, ponieważ płatność nie została potwierdzona.'}</div>`;
+        return `<article class="order-card digital-order"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${digitalState}</div></div><div class="order-main-grid"><div class="order-items"><div class="order-item"><img class="order-thumb" src="${safe(img)}" alt=""><div><div class="order-item-name">${safe(x.name||'ZERO TO FIRST SALE')}</div><div class="digital-order-meta">STARXV DIGITAL • PDF • PRODUKT CYFROWY</div></div><div class="order-item-price">${money(Number(x.price||o.total||0)*Number(x.qty||1))}</div></div></div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div><div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa cyfrowa: 0 PLN</div>${access}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}</article>`;
+      }
+
       const idx=stageIndex(o),paid=o.paymentStatus==='paid';
       const canReview=paid&&Number(o.shippingStage||0)>=4;
       const items=(o.items||[]).map(x=>{const color=x.color||'black',cm=COLOR_META[color]||{label:x.colorLabel||color},img=x.image||((COLOR_IMAGES[color]||COLOR_IMAGES.black||{}).front)||'',existingReview=reviewLookup(o,x);return `<div class="order-item">${img?`<img class="order-thumb" src="${safe(img)}" alt="">`:'<div class="order-thumb"></div>'}<div><div class="order-item-name">${safe(x.name||'STARXV PRODUCT')}</div><div class="order-item-meta">${safe(x.fit||'')}<br>Kolor: ${safe(x.colorLabel||cm.label||color)} • Rozmiar: ${safe(x.size)} • Ilość: ${Number(x.qty||1)}</div>${canReview?`<button class="order-review-btn ${existingReview?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id)}" data-review-color="${safe(x.color||'')}" data-review-size="${safe(x.size||'')}">${existingReview?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button>`:''}</div><div class="order-item-price">${money(Number(x.price||0)*Number(x.qty||1))}</div></div>`}).join('');
@@ -1503,7 +1549,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       const shipNote=paid?(idx===0?'Zamówienie zostało przyjęte do realizacji.':idx===1?'Produkty są przygotowywane do wysyłki.':idx===2?'Przesyłka została nadana.':idx===3?'Przesyłka jest w drodze.':'Zamówienie zostało dostarczone.'):(o.paymentStatus==='cancelled'?'To zamówienie nie będzie realizowane.':o.paymentStatus==='failed'?'Płatność nie została potwierdzona.':'Realizacja rozpocznie się po potwierdzeniu płatności.');
       const delivery=o.delivery?.type==='inpost'&&o.delivery?.locker?`<div class="order-address"><b>PACZKOMAT INPOST</b><br>${safe(o.delivery.locker.name||'')} • ${safe(o.delivery.locker.address||'')} ${o.delivery.locker.id?'• '+safe(o.delivery.locker.id):''}</div>`:(a.street?`<div class="order-address"><b>ADRES DOSTAWY</b><br>${safe(a.firstName||'')} ${safe(a.lastName||'')} • ${safe(a.street)}, ${safe(a.postal)} ${safe(a.city)}</div>`:'');
       const canCancel=['pending','failed'].includes(o.paymentStatus);
-      return `<article class="order-card"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${statusText(o.paymentStatus)}</div></div><div class="order-main-grid"><div class="order-items">${items||'<div class="order-item-meta">Brak pozycji.</div>'}</div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div>${Number(o.shippingCost||0)>=0?`<div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa: ${money(o.shippingCost||0)}</div>`:''}<div class="shipment"><div class="shipment-label">STATUS REALIZACJI</div><div class="shipment-current">${shipTitle}</div><div class="shipment-note">${shipNote}</div>${o.trackingNumber?`<div style="margin-top:10px;padding:10px 11px;border:1px solid rgba(255,255,255,.08);border-radius:11px;font-size:8px;line-height:1.55;color:#8a8a8a"><b style="color:#fff">INPOST • ${safe(o.trackingNumber)}</b>${o.carrierStatus?`<br>Status: ${safe(o.carrierStatus)}`:''}<br><a href="https://inpost.pl/sledzenie-przesylek?number=${encodeURIComponent(o.trackingNumber)}" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline">Śledź przesyłkę →</a></div>`:''}<div class="tracking">${stages.map((x,i)=>`<div class="track-step ${i<=idx?'done':''}">${x}</div>`).join('')}</div><div class="order-history"><div class="order-history-title">HISTORIA ZAMÓWIENIA</div><div class="order-history-list">${(Array.isArray(o.timeline)?o.timeline:[]).slice().reverse().map(ev=>`<div class="order-history-event"><div class="order-history-event-title">${safe(ev.title||'Aktualizacja')}</div>${ev.note?`<div class="order-history-event-note">${safe(ev.note)}</div>`:''}<div class="order-history-event-date">${new Date(Number(ev.at)||Date.now()).toLocaleString('pl-PL')}</div></div>`).join('')||`<div class="order-history-event"><div class="order-history-event-title">Zamówienie utworzone</div><div class="order-history-event-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div>`}</div><div class="order-last-update">OSTATNIA AKTUALIZACJA: ${new Date(o.updatedAt||o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div></div>${delivery}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}${o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4?`<div class="order-actions"><button class="return-btn" type="button" data-return-order="${encodeURIComponent(JSON.stringify(o))}">ZGŁOŚ ZWROT / REKLAMACJĘ</button></div>`:''}</article>`
+      return `<article class="order-card"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${statusText(o.paymentStatus)}</div></div><div class="order-main-grid"><div class="order-items">${items||'<div class="order-item-meta">Brak pozycji.</div>'}</div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div>${Number(o.shippingCost||0)>=0?`<div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa: ${money(o.shippingCost||0)}</div>`:''}<div class="shipment"><div class="shipment-label">STATUS REALIZACJI</div><div class="shipment-current">${shipTitle}</div><div class="shipment-note">${shipNote}</div>${o.trackingNumber?`<div style="margin-top:10px;padding:10px 11px;border:1px solid rgba(255,255,255,.08);border-radius:11px;font-size:8px;line-height:1.55;color:#8a8a8a"><b style="color:#fff">INPOST • ${safe(o.trackingNumber)}</b>${o.carrierStatus?`<br>Status: ${safe(o.carrierStatus)}`:''}<br><a href="https://inpost.pl/sledzenie-przesylek?number=${encodeURIComponent(o.trackingNumber)}" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline">Śledź przesyłkę →</a></div>`:''}<div class="tracking">${stages.map((x,i)=>`<div class="track-step ${i<=idx?'done':''}">${x}</div>`).join('')}</div><div class="order-history"><div class="order-history-title">HISTORIA ZAMÓWIENIA</div><div class="order-history-list">${(Array.isArray(o.timeline)?o.timeline:[]).slice().reverse().map(ev=>`<div class="order-history-event"><div class="order-history-event-title">${safe(ev.title||'Aktualizacja')}</div>${ev.note?`<div class="order-history-event-note">${safe(ev.note)}</div>`:''}<div class="order-history-event-date">${new Date(Number(ev.at)||Date.now()).toLocaleString('pl-PL')}</div></div>`).join('')||`<div class="order-history-event"><div class="order-history-event-title">Zamówienie utworzone</div><div class="order-history-event-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div>`}</div><div class="order-last-update">OSTATNIA AKTUALIZACJA: ${new Date(o.updatedAt||o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div></div>${delivery}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}${o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4?`<div class="order-actions"><button class="return-btn" type="button" data-return-order="${encodeURIComponent(JSON.stringify(o))}">ZGŁOŚ ZWROT / REKLAMACJĘ</button></div>`:''}</article>`;
     }).join('');
   }
   async function open(){
@@ -1517,6 +1563,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.STARXV_OPEN_ORDERS=open;
   closeBtn?.addEventListener('click',close);
   refresh?.addEventListener('click',async()=>{await fetchOrders();render()});
+  document.getElementById('ordersTypeTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-type]');if(!b)return;activeType=b.dataset.orderType==='digital'?'digital':'physical';document.querySelectorAll('.orders-type-tab').forEach(x=>x.classList.toggle('active',x===b));activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));render()});
   document.getElementById('ordersFilters')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-filter]');if(!b)return;activeFilter=b.dataset.orderFilter;document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x===b));render()});
   body.addEventListener('click',async e=>{
     const reviewBtn=e.target.closest('[data-review-order]');
