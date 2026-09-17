@@ -259,3 +259,30 @@
 @media(max-width:760px){.sx-world-gate{padding:18px}.sx-world-grid{grid-template-columns:1fr;min-height:820px}.sx-world-card{padding:26px;min-height:390px}.sx-world-card strong{font-size:48px}.sx-digital-top{padding:0 16px}.sx-digital-hero{grid-template-columns:1fr;min-height:0}.sx-digital-copy{padding:90px 22px 55px}.sx-digital-copy h1{font-size:56px}.sx-digital-art{padding:55px 25px}.sx-digital-strip{grid-template-columns:1fr 1fr}.sx-digital-product{grid-template-columns:1fr;padding:70px 22px;gap:50px}.sx-digital-product-cover{text-align:center}.sx-digital-product-info h2{font-size:54px}.sx-digital-points{grid-template-columns:1fr}.sx-digital-buy{align-items:flex-start;flex-direction:column}.sx-digital-buy button{width:100%}.sx-digital-owned{margin:0 22px 70px;padding:28px}.sx-digital-owned h2{font-size:32px}}
 
 @media(max-width:760px){.sxd-header{height:64px;padding:0 16px;grid-template-columns:1fr auto}.sxd-label{display:none}.sxd-switch{gap:18px}.sxd-switch span{padding:24px 0}.sxd-wrap{padding:0 14px 70px}.sxd-breadcrumb{padding:18px 2px}.sxd-product{grid-template-columns:1fr;gap:28px;padding-bottom:55px}.sxd-gallery{grid-template-columns:1fr;display:flex;flex-direction:column-reverse}.sxd-thumbs{flex-direction:row}.sxd-thumbs button{width:64px;height:74px}.sxd-main-image{aspect-ratio:1/1}.sxd-info{padding:0 3px}.sxd-info h1{font-size:52px}.sxd-features{grid-template-columns:1fr 1fr}.sxd-delivery{grid-template-columns:1fr;gap:16px}.sxd-about{grid-template-columns:1fr;gap:15px;padding:65px 3px 45px}.sxd-about p{align-self:auto}.sxd-cards{grid-template-columns:1fr 1fr}.sxd-cards article{min-height:140px;padding:22px 16px}}
+
+@media(max-width:760px){
+  .sxd-header{height:64px;padding:0 14px}
+  .sxd-brand{font-size:15px}
+  .sxd-switch{gap:16px}
+  .sxd-switch button,.sxd-switch span{font-size:8px}
+  .sxd-wrap{padding:0 13px 70px}
+  .sxd-breadcrumb{font-size:7px;padding:18px 1px}
+  .sxd-breadcrumb i{padding:0 7px}
+  .sxd-product{display:block;padding-bottom:42px}
+  .sxd-gallery{display:flex;flex-direction:column-reverse;gap:10px}
+  .sxd-main-image{width:100%;aspect-ratio:1/1}
+  .sxd-main-image img{object-fit:contain}
+  .sxd-thumbs{display:flex;flex-direction:row;gap:8px}
+  .sxd-thumbs button{width:66px;height:78px}
+  .sxd-info{padding-top:30px}
+  .sxd-info h1{font-size:48px}
+  .sxd-info h2{font-size:11px;line-height:1.5}
+  .sxd-desc{font-size:11px}
+  .sxd-price strong{font-size:27px}
+  .sxd-benefits{grid-template-columns:1fr 1fr}
+  .sxd-benefits div{min-height:82px;border-bottom:1px solid #222}
+  .sxd-benefits div:nth-child(2){border-right:0}
+  .sxd-benefits div:nth-last-child(-n+2){border-bottom:0}
+  .sxd-about{padding:55px 2px 42px}
+  .sxd-cards{grid-template-columns:1fr 1fr}
+}
