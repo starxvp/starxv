@@ -1537,7 +1537,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       const isDigital=(o.orderType||'physical')==='digital';
       if(isDigital){
         const x=(o.items||[])[0]||{};
-        const img=(o.digitalProductId==='zero-to-first-sale'||x.id==='zero-to-first-sale')?'/assets/zero-to-first-sale-3d.png':(x.image||'/assets/zero-to-first-sale-3d.png');
+        const img=String(x.image||'/assets/zero-to-first-sale-cover.png');
         const productId=o.digitalProductId||x.id||'zero-to-first-sale';
         const paid=o.paymentStatus==='paid';
         const canCancel=['pending','failed'].includes(o.paymentStatus);
