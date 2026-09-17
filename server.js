@@ -912,33 +912,44 @@ app.get('/api/store/catalog',(req,res)=>{const db=load();ensureStore(db);save(db
 
 // --- Product reviews: shared backend storage ---------------------------------
 const REVIEW_PRODUCTS=new Set(['black-hoodie-graffiti','oversized-white-shirt']);
-function reviewProductId(v){const id=String(v||'').trim();return REVIEW_PRODUCTS.has(id)?id:''}
+function reviewProductId(v,db){const id=String(v||'').trim();if(REVIEW_PRODUCTS.has(id))return id;return db?.digitalProducts?.[id]?id:''}
+function isDigitalReviewProduct(db,id){return Boolean(db?.digitalProducts?.[String(id||'')])}
 function cleanReviewText(v){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,500)}
 function reviewAuthor(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return u?cleanName(u.firstName||'Klient').slice(0,30)||'Klient':'Klient'}
-function deliveredOrderForUser(db,userId,orderId){return (db.orders||[]).find(o=>String(o.id)===String(orderId)&&o.userId===userId&&o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4)}
+function deliveredOrderForUser(db,userId,orderId,productId){
+  return (db.orders||[]).find(o=>{
+    if(String(o.id)!==String(orderId)||o.userId!==userId||o.paymentStatus!=='paid')return false;
+    if(isDigitalReviewProduct(db,productId))return o.orderType==='digital'&&String(o.digitalProductId||'')===String(productId||'');
+    return (o.orderType||'physical')!=='digital'&&Number(o.shippingStage||0)>=4;
+  });
+}
 function reviewPurchaseItem(order,productId,color,size){return (order?.items||[]).find(i=>String(i.id)===String(productId)&&String(i.color||'')===String(color||'')&&String(i.size||'').toUpperCase()===String(size||'').toUpperCase())}
 function reviewKey(r){return [String(r.orderId||''),String(r.productId||''),String(r.color||''),String(r.size||'').toUpperCase()].join('|')}
-function reviewIsVerified(db,r){const order=(db.orders||[]).find(o=>String(o.id)===String(r.orderId||'')&&o.userId===r.userId&&o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4);return Boolean(order&&reviewPurchaseItem(order,r.productId,r.color,r.size))}
-function publicReview(db,r){return {id:r.id,productId:r.productId,orderId:r.orderId||'',name:reviewAuthor(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
+function reviewIsVerified(db,r){
+  const digital=isDigitalReviewProduct(db,r.productId);
+  const order=(db.orders||[]).find(o=>String(o.id)===String(r.orderId||'')&&o.userId===r.userId&&o.paymentStatus==='paid'&&(digital?(o.orderType==='digital'&&String(o.digitalProductId||'')===String(r.productId||'')):Number(o.shippingStage||0)>=4));
+  return Boolean(order&&reviewPurchaseItem(order,r.productId,r.color,r.size));
+}
+function publicReview(db,r){return {id:r.id,productId:r.productId,productType:isDigitalReviewProduct(db,r.productId)?'digital':'physical',orderId:r.orderId||'',name:reviewAuthor(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
 function orderReviewsForUser(db,order){return (db.reviews||[]).filter(r=>r.userId===order.userId&&String(r.orderId||'')===String(order.id)).map(r=>publicReview(db,r))}
 
 app.get('/api/reviews/:productId',(req,res)=>{
-  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
-  const db=load();ensureStore(db);
+  const db=load();ensureStore(db);const productId=reviewProductId(req.params.productId,db);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
   const reviews=db.reviews.filter(r=>r.productId===productId&&r.visible!==false).sort((a,b)=>Number(b.updatedAt||b.createdAt)-Number(a.updatedAt||a.createdAt)).map(r=>publicReview(db,r));
   const average=reviews.length?reviews.reduce((sum,r)=>sum+r.rating,0)/reviews.length:0;
   res.setHeader('Cache-Control','no-store');res.json({ok:true,reviews,average:Math.round(average*10)/10,count:reviews.length});
 });
 app.get('/api/reviews/:productId/mine',auth,(req,res)=>{
-  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
+  ensureStore(req.db);const productId=reviewProductId(req.params.productId,req.db);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
   const reviews=req.db.reviews.filter(x=>x.productId===productId&&x.userId===req.user.id).map(r=>publicReview(req.db,r));res.json({ok:true,reviews,review:reviews[0]||null});
 });
 app.post('/api/reviews/:productId',rateLimit('review-write',15,15*60*1000),auth,(req,res)=>{
-  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
+  ensureStore(req.db);const productId=reviewProductId(req.params.productId,req.db);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
   const text=cleanReviewText(req.body?.text),rating=Number(req.body?.rating),orderId=String(req.body?.orderId||''),color=String(req.body?.color||''),size=String(req.body?.size||'').toUpperCase();
   if(text.length<3)return res.status(400).json({error:'Opinia musi mieć co najmniej 3 znaki.'});
   if(!Number.isInteger(rating)||rating<1||rating>5)return res.status(400).json({error:'Wybierz ocenę od 1 do 5.'});
-  const order=deliveredOrderForUser(req.db,req.user.id,orderId);if(!order)return res.status(403).json({error:'Opinię możesz dodać dopiero po dostarczeniu opłaconego zamówienia.'});
+  const digital=isDigitalReviewProduct(req.db,productId);
+  const order=deliveredOrderForUser(req.db,req.user.id,orderId,productId);if(!order)return res.status(403).json({error:digital?'Opinię o produkcie cyfrowym możesz dodać po opłaceniu zamówienia i otrzymaniu dostępu.':'Opinię możesz dodać dopiero po dostarczeniu opłaconego zamówienia.'});
   const item=reviewPurchaseItem(order,productId,color,size);if(!item)return res.status(400).json({error:'Nie znaleziono tego wariantu produktu w zamówieniu.'});
   const now=Date.now();let r=req.db.reviews.find(x=>x.userId===req.user.id&&String(x.orderId||'')===orderId&&x.productId===productId&&String(x.color||'')===String(item.color||'')&&String(x.size||'').toUpperCase()===String(item.size||'').toUpperCase());
   if(r){r.text=text;r.rating=rating;r.updatedAt=now;r.visible=true;r.color=String(item.color||'');r.colorLabel=String(item.colorLabel||item.color||'');r.size=String(item.size||'').toUpperCase()}
@@ -950,7 +961,7 @@ app.delete('/api/reviews/by-id/:id',auth,(req,res)=>{
   req.db.reviews=req.db.reviews.filter(x=>x.id!==r.id);save(req.db);res.json({ok:true});
 });
 app.delete('/api/reviews/:productId',auth,(req,res)=>{
-  const productId=reviewProductId(req.params.productId);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});ensureStore(req.db);
+  ensureStore(req.db);const productId=reviewProductId(req.params.productId,req.db);if(!productId)return res.status(404).json({error:'Nie znaleziono produktu.'});
   const orderId=String(req.query?.orderId||''),color=String(req.query?.color||''),size=String(req.query?.size||'').toUpperCase();
   const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(r=>!(r.productId===productId&&r.userId===req.user.id&&(!orderId||String(r.orderId||'')===orderId)&&(!color||String(r.color||'')===color)&&(!size||String(r.size||'').toUpperCase()===size)));
   if(req.db.reviews.length===before)return res.status(404).json({error:'Nie masz opinii dla tego produktu.'});save(req.db);res.json({ok:true});
@@ -1157,11 +1168,12 @@ function digitalFilePath(p){
   return fileName?path.join(__dirname,'digital',fileName):'';
 }
 function getDigitalProduct(db,id){ensureStore(db);return db.digitalProducts?.[String(id||'')];}
-function publicDigitalProduct(p){
+function publicDigitalProduct(p,db){
   const file=digitalFilePath(p);
-  return {id:p.id,name:p.name,subtitle:p.subtitle||'',description:p.description||'',price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file)};
+  const purchaseCount=db?(db.orders||[]).filter(o=>o.orderType==='digital'&&String(o.digitalProductId||'')===String(p.id||'')&&o.paymentStatus==='paid').length:0;
+  return {id:p.id,name:p.name,subtitle:p.subtitle||'',description:p.description||'',price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file),purchaseCount};
 }
-app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.json({ok:true,products:Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(publicDigitalProduct)});});
+app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.setHeader('Cache-Control','no-store');res.json({ok:true,products:Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(p=>publicDigitalProduct(p,db))});});
 app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60*1000),(req,res)=>{
   try{
     ensureStore(req.db);
