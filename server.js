@@ -890,7 +890,7 @@ function ensureOrderTimeline(order){
   }
   return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
 }
-function orderForUser(o){return {id:o.id,orderNo:o.orderNo,createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,inpostStatus:String(o.inpostStatus||''),inpostParcelTemplate:String(o.inpostParcelTemplate||''),trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
+function orderForUser(o){return {id:o.id,orderNo:o.orderNo,orderType:o.orderType||'physical',createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items:o.items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),digitalProductId:String(o.digitalProductId||''),digitalAccess:o.orderType==='digital'&&o.paymentStatus==='paid',trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),inpostShipmentId:o.inpostShipmentId||null,inpostStatus:String(o.inpostStatus||''),inpostParcelTemplate:String(o.inpostParcelTemplate||''),trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
 function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
 function reserveStockForOrder(db,order){
   if(order.stockCommitted||order.stockReserved)return;
@@ -1034,8 +1034,10 @@ app.post('/api/orders/prepare',auth,async(req,res)=>{try{ensureStore(req.db);con
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
-  if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
-  else decrementStockForOrder(db,order);
+  if(order.orderType!=='digital'){
+    if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
+    else decrementStockForOrder(db,order);
+  }
   order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now();
   if(order.promo?.code&&!order.promoCounted){ensurePromoCodes(db);const pc=db.promoCodes.find(p=>String(p.code||'').toUpperCase()===String(order.promo.code||'').toUpperCase());if(pc){pc.usedCount=Number(pc.usedCount||0)+1;if(!Array.isArray(pc.usedByUserIds))pc.usedByUserIds=[];if(order.userId&&!pc.usedByUserIds.some(id=>String(id)===String(order.userId)))pc.usedByUserIds.push(order.userId);pc.updatedAt=Date.now()}order.promoCounted=true;}
   orderEvent(order,'paid','Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.',order.updatedAt);
@@ -1054,6 +1056,15 @@ async function sendPaidOrderEmail(db,order){
     const to=cleanEmail(order.address?.email||u?.email);
     if(!to)return;
     const resend=new Resend(key);
+    if(order.orderType==='digital'){
+      const product=DIGITAL_PRODUCTS[String(order.digitalProductId||'')];
+      const base=String(process.env.PUBLIC_URL||'https://starxv.pl').replace(/\/$/,'');
+      const access=base+'/?section=digital&order='+encodeURIComponent(order.id);
+      const total=Number(order.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
+      const {error}=await resend.emails.send({from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,subject:`STARXV DIGITAL — Twój ${product?.name||'e-book'} jest gotowy`,text:`Płatność za zamówienie #${order.orderNo} została potwierdzona.\n\nTwój produkt cyfrowy jest gotowy. Zaloguj się na konto STARXV i pobierz go tutaj:\n${access}\n\nRazem: ${total} PLN`,html:`<div style=\"background:#0a0a0a;color:#fff;font-family:Arial,sans-serif;padding:40px 20px\"><div style=\"max-width:560px;margin:auto\"><div style=\"font-size:24px;font-weight:900;letter-spacing:5px\">STARXV / DIGITAL</div><div style=\"margin:34px 0 8px;font-size:11px;color:#c9a227;letter-spacing:2px\">PŁATNOŚĆ POTWIERDZONA</div><h1 style=\"font-size:28px;margin:0 0 14px\">${product?.name||'Twój e-book'} jest gotowy.</h1><p style=\"color:#aaa;line-height:1.7\">Dziękujemy za zakup. Plik jest przypisany do Twojego konta STARXV i możesz pobrać go po zalogowaniu.</p><a href=\"${access}\" style=\"display:inline-block;margin-top:20px;background:#f1e7cf;color:#111;text-decoration:none;padding:14px 20px;font-size:12px;font-weight:900\">OTWÓRZ I POBIERZ →</a><div style=\"font-size:10px;color:#555;margin-top:34px\">STARXV DIGITAL • kontakt@starxv.pl</div></div></div>`});
+      if(error)console.error('Resend digital confirmation error:',error);
+      return;
+    }
     const itemLines=(order.items||[]).map(x=>`${x.name} — ${x.colorLabel||x.color} / ${x.size} × ${x.qty}`).join('\n');
     const total=Number(order.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
     const shipping=Number(order.shippingCost||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -1132,6 +1143,48 @@ function simpayAmountMatches(order,data){
   return Number.isFinite(value)&&Math.abs(value-Number(order.total||0))<0.005&&currency==='PLN';
 }
 
+
+// --- STARXV DIGITAL ------------------------------------------------------------
+// Digital files live outside /public, so they cannot be downloaded by guessing a URL.
+const DIGITAL_PRODUCTS={
+  'zero-to-first-sale':{
+    id:'zero-to-first-sale',
+    name:'ZERO TO FIRST SALE',
+    subtitle:'Od pomysłu do pierwszej sprzedaży',
+    price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||0)),
+    file:path.join(__dirname,'digital','ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf'),
+    downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf'
+  }
+};
+function publicDigitalProduct(p){return {id:p.id,name:p.name,subtitle:p.subtitle,price:Number(p.price||0),available:Number(p.price||0)>0&&fs.existsSync(p.file)}}
+app.get('/api/digital/products',(req,res)=>res.json({ok:true,products:Object.values(DIGITAL_PRODUCTS).map(publicDigitalProduct)}));
+app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60*1000),(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const product=DIGITAL_PRODUCTS[String(req.body?.productId||'')];
+    if(!product||!fs.existsSync(product.file))return res.status(404).json({error:'Produkt cyfrowy nie jest jeszcze dostępny.'});
+    if(!(Number(product.price)>0))return res.status(409).json({error:'Cena produktu cyfrowego nie została jeszcze ustawiona.'});
+    if(req.body?.digitalConsent!==true)return res.status(400).json({error:'Aby otrzymać e-book od razu po płatności, zaznacz zgodę na rozpoczęcie dostarczania treści cyfrowej i przyjęcie do wiadomości utraty prawa odstąpienia po rozpoczęciu świadczenia.'});
+    const existing=(req.db.orders||[]).find(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
+    if(existing)return res.json({ok:true,alreadyOwned:true,order:orderForUser(existing)});
+    const now=Date.now();
+    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:Number(product.price)}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:null,subtotal:Number(product.price),shippingCost:0,total:Number(product.price),paymentStatus:'pending',shippingStage:0,stockCommitted:true,digitalConsentAt:now,timeline:[]};
+    orderEvent(order,'created','Zamówienie cyfrowe utworzone','Po potwierdzeniu płatności e-book będzie dostępny natychmiast.',now);
+    req.db.orders.push(order);save(req.db);
+    res.json({ok:true,order:orderForUser(order)});
+  }catch(e){console.error('Digital prepare error:',e);res.status(400).json({error:e.message||'Nie udało się przygotować zamówienia cyfrowego.'})}
+});
+app.get('/api/digital/download/:productId',auth,rateLimit('digital-download',40,10*60*1000),(req,res)=>{
+  ensureStore(req.db);
+  const product=DIGITAL_PRODUCTS[String(req.params.productId||'')];
+  if(!product||!fs.existsSync(product.file))return res.status(404).send('Nie znaleziono pliku.');
+  const owned=(req.db.orders||[]).some(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
+  if(!owned)return res.status(403).send('Ten plik jest dostępny tylko dla konta, które kupiło produkt.');
+  res.setHeader('Cache-Control','private, no-store');
+  res.setHeader('X-Content-Type-Options','nosniff');
+  res.download(product.file,product.downloadName);
+});
+
 app.get('/api/payments/config',(req,res)=>res.json({ok:true,provider:'simpay',configured:simpayConfigured(),currency:'PLN',methods:['simpay']}));
 
 app.post('/api/create-checkout-session',auth,async(req,res)=>{
@@ -1146,7 +1199,7 @@ app.post('/api/create-checkout-session',auth,async(req,res)=>{
     const amount=Math.round(Number(order.total)*100)/100;
     if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
     if(order.paymentStatus==='failed')order.paymentStatus='pending';
-    reserveStockForOrder(req.db,order);
+    if(order.orderType!=='digital')reserveStockForOrder(req.db,order);
     const c=simpayConfig(),base=paymentBaseUrl(req);
     const payload={
       amount,
@@ -1154,16 +1207,16 @@ app.post('/api/create-checkout-session',auth,async(req,res)=>{
       control:order.id,
       description:('STARXV zamówienie '+order.orderNo).slice(0,128),
       returns:{
-        success:base+'/?payment=return&order='+encodeURIComponent(order.id),
-        failure:base+'/?payment=failed&order='+encodeURIComponent(order.id)
+        success:base+'/?'+(order.orderType==='digital'?'section=digital&':'')+'payment=return&order='+encodeURIComponent(order.id),
+        failure:base+'/?'+(order.orderType==='digital'?'section=digital&':'')+'payment=failed&order='+encodeURIComponent(order.id)
       }
     };
     let data;
     try{data=await simpayRequest('/payment/'+encodeURIComponent(c.serviceId)+'/transactions',{method:'POST',body:JSON.stringify(payload)})}
-    catch(e){releaseStockReservation(req.db,order);save(req.db);throw e}
+    catch(e){if(order.orderType!=='digital')releaseStockReservation(req.db,order);save(req.db);throw e}
     const transactionId=String(data?.data?.transactionId||'');
     const redirectUrl=String(data?.data?.redirectUrl||'');
-    if(!transactionId||!/^https:\/\//i.test(redirectUrl)){releaseStockReservation(req.db,order);save(req.db);throw new Error('SimPay nie zwrócił poprawnego linku płatności.')}
+    if(!transactionId||!/^https:\/\//i.test(redirectUrl)){if(order.orderType!=='digital')releaseStockReservation(req.db,order);save(req.db);throw new Error('SimPay nie zwrócił poprawnego linku płatności.')}
     order.simpayTransactionId=transactionId;
     order.simpayCreatedAt=Date.now();
     order.paymentProvider='simpay';
