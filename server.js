@@ -1151,7 +1151,7 @@ const DIGITAL_PRODUCTS={
     id:'zero-to-first-sale',
     name:'ZERO TO FIRST SALE',
     subtitle:'Od pomysłu do pierwszej sprzedaży',
-    price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||0)),
+    price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),
     file:path.join(__dirname,'digital','ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf'),
     downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf'
   }

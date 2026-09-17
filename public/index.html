@@ -435,17 +435,40 @@
   </div>
 </div>
 <section class="sx-digital-page" id="sxDigitalPage" hidden>
-  <div class="sx-digital-top"><button type="button" id="sxBackWorlds">← STARXV</button><span>STARXV® / DIGITAL</span><button type="button" id="sxGoClothing">CLOTHING ↗</button></div>
-  <div class="sx-digital-hero">
-    <div class="sx-digital-copy"><span class="sx-digital-kicker">STARXV DIGITAL / E-BOOK 01</span><h1>IDEAS INTO<br><i>SOMETHING REAL.</i></h1><p>Praktyczna wiedza dla osób, które chcą przejść od pomysłu do działania — bez zbędnego lania wody.</p><a href="#sxDigitalProduct">DISCOVER E-BOOK →</a></div>
-    <div class="sx-digital-art"><img src="/assets/zero-to-first-sale-cover.png" alt="ZERO TO FIRST SALE — okładka e-booka"><span>A STARXV DIGITAL PRODUCT</span></div>
-  </div>
-  <div class="sx-digital-strip"><span>20 ROZDZIAŁÓW</span><span>CHECKLISTY</span><span>30-DNIOWY PLAN</span><span>PDF / DIGITAL</span></div>
-  <div class="sx-digital-product" id="sxDigitalProduct">
-    <div class="sx-digital-product-cover"><img src="/assets/zero-to-first-sale-cover.png" alt="ZERO TO FIRST SALE"></div>
-    <div class="sx-digital-product-info"><span>01 / BUSINESS • MARKETING • SALES</span><h2>ZERO TO<br>FIRST SALE</h2><h3>Od pomysłu do pierwszej sprzedaży.</h3><p>Przewodnik prowadzący przez walidację pomysłu, MVP, wycenę, branding, launch, sprzedaż i pracę z pierwszymi klientami. Każdy etap kończy się praktyczną checklistą.</p><div class="sx-digital-points"><b>20 praktycznych rozdziałów</b><b>Checklisty po każdym etapie</b><b>Plan działania na pierwsze 30 dni</b><b>Dostęp po potwierdzeniu płatności</b></div><div class="sx-digital-buy"><strong id="sxDigitalPrice">— PLN</strong><button id="sxDigitalBuy" type="button">KUP E-BOOK →</button></div><label class="sx-digital-consent"><input id="sxDigitalConsent" type="checkbox"><span>Chcę otrzymać treść cyfrową od razu po zapłacie i przyjmuję do wiadomości, że po rozpoczęciu jej dostarczania utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.</span></label><div class="sx-digital-status" id="sxDigitalStatus"></div></div>
-  </div>
-  <div class="sx-digital-owned" id="sxDigitalOwned" hidden><span>YOUR DIGITAL LIBRARY</span><h2>Twój e-book jest gotowy.</h2><p>Płatność została potwierdzona. Plik pozostaje przypisany do Twojego konta STARXV.</p><a href="/api/digital/download/zero-to-first-sale" id="sxDigitalDownload">POBIERZ ZERO TO FIRST SALE ↓</a></div>
+  <header class="sxd-header">
+    <button class="sxd-brand" type="button" id="sxBackWorlds">STARXV<sup>®</sup></button>
+    <nav class="sxd-switch" aria-label="Sekcje STARXV"><button type="button" id="sxGoClothing">CLOTHING</button><span>DIGITAL</span></nav>
+    <span class="sxd-label">A STARXV DIGITAL PRODUCT</span>
+  </header>
+
+  <main class="sxd-wrap">
+    <div class="sxd-breadcrumb">DIGITAL / E-BOOK 01 / <b>ZERO TO FIRST SALE</b></div>
+    <section class="sxd-product" id="sxDigitalProduct">
+      <div class="sxd-gallery">
+        <div class="sxd-thumbs" aria-label="Galeria produktu">
+          <button class="active" type="button" data-sxd-image="/assets/zero-to-first-sale-3d.png"><img src="/assets/zero-to-first-sale-3d.png" alt="Mockup e-booka"></button>
+          <button type="button" data-sxd-image="/assets/zero-to-first-sale-cover.png"><img src="/assets/zero-to-first-sale-cover.png" alt="Okładka e-booka"></button>
+        </div>
+        <div class="sxd-main-image"><img id="sxdMainImage" src="/assets/zero-to-first-sale-3d.png" alt="ZERO TO FIRST SALE"></div>
+      </div>
+      <div class="sxd-info">
+        <span class="sxd-kicker">STARXV DIGITAL / E-BOOK</span>
+        <h1>ZERO TO<br>FIRST SALE</h1>
+        <h2>Od pomysłu do pierwszej sprzedaży.</h2>
+        <p class="sxd-desc">Praktyczny przewodnik, który prowadzi od sprawdzenia pomysłu, przez MVP, wycenę i przygotowanie oferty, aż po launch, sprzedaż i pierwszych klientów.</p>
+        <div class="sxd-features"><span><b>20</b> rozdziałów</span><span><b>✓</b> checklisty</span><span><b>30</b> dni planu</span><span><b>PDF</b> natychmiastowy dostęp</span></div>
+        <div class="sxd-price"><strong id="sxDigitalPrice">39,99 PLN</strong><small>jednorazowa płatność</small></div>
+        <button class="sxd-buy" id="sxDigitalBuy" type="button">KUP TERAZ <span>→</span></button>
+        <label class="sx-digital-consent"><input id="sxDigitalConsent" type="checkbox"><span>Chcę otrzymać treść cyfrową od razu po zapłacie i przyjmuję do wiadomości, że po rozpoczęciu jej dostarczania utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.</span></label>
+        <div class="sx-digital-status" id="sxDigitalStatus"></div>
+        <div class="sxd-delivery"><span>⚡ <b>Po płatności</b><small>dostęp od razu</small></span><span>✉ <b>E-mail</b><small>link do produktu</small></span><span>↓ <b>Twoje konto</b><small>pobierz ponownie</small></span></div>
+      </div>
+    </section>
+
+    <section class="sxd-about"><div><span>O E-BOOKU</span><h2>OD POMYSŁU<br>DO DZIAŁANIA.</h2></div><p>ZERO TO FIRST SALE łączy teorię z praktyką. Każdy etap wyjaśnia, dlaczego dane działanie ma znaczenie, a następnie zamienia wiedzę w konkretne kroki i checklistę do wykonania.</p></section>
+    <section class="sxd-cards"><article><b>01</b><h3>SPRAWDŹ POMYSŁ</h3><p>Walidacja, rynek i konkurencja.</p></article><article><b>02</b><h3>ZBUDUJ PRODUKT</h3><p>MVP, wycena i pozycjonowanie.</p></article><article><b>03</b><h3>PRZYGOTUJ LAUNCH</h3><p>Lista oczekujących i plan premiery.</p></article><article><b>04</b><h3>SPRZEDAJ I ULEPSZAJ</h3><p>Sprzedaż, feedback i powtarzalny proces.</p></article></section>
+    <div class="sx-digital-owned" id="sxDigitalOwned" hidden><span>YOUR DIGITAL LIBRARY</span><h2>Twój e-book jest gotowy.</h2><p>Płatność została potwierdzona. Plik pozostaje przypisany do Twojego konta STARXV.</p><a href="/api/digital/download/zero-to-first-sale" id="sxDigitalDownload">POBIERZ ZERO TO FIRST SALE ↓</a></div>
+  </main>
 </section>
 
 <nav>
@@ -3025,7 +3048,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
  async function checkOrders(){try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json();const o=(j.orders||[]).find(x=>x.orderType==='digital'&&x.digitalProductId==='zero-to-first-sale'&&x.paymentStatus==='paid');if(o){owned.hidden=false;buy.textContent='JUŻ KUPIONO ✓';buy.disabled=true;status.textContent='Produkt jest przypisany do Twojego konta.'}}catch{}}
  async function purchase(){status.textContent='';if(!consent.checked){status.textContent='Zaznacz zgodę dotyczącą natychmiastowego dostępu do treści cyfrowej.';return}buy.disabled=true;buy.textContent='PRZYGOTOWYWANIE...';try{let r=await fetch('/api/digital/orders/prepare',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:'zero-to-first-sale',digitalConsent:true})});if(r.status===401){status.textContent='Najpierw zaloguj się na konto STARXV. Kliknij CLOTHING, a następnie ikonę profilu.';buy.disabled=false;buy.textContent='KUP E-BOOK →';return}let j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się utworzyć zamówienia.');if(j.alreadyOwned){owned.hidden=false;status.textContent='Ten e-book jest już na Twoim koncie.';return}r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:j.order.id})});j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić płatności.');location.href=j.url}catch(e){status.textContent=e.message;buy.disabled=false;buy.textContent='KUP E-BOOK →'}}
  async function paymentReturn(){const q=new URLSearchParams(location.search),oid=q.get('order');if(q.get('payment')!=='return'||!oid)return;status.textContent='Potwierdzamy płatność…';for(let i=0;i<12;i++){try{const r=await fetch('/api/orders/'+encodeURIComponent(oid)+'/payment-status',{credentials:'same-origin'});if(r.ok){const j=await r.json();if(j.confirmed){status.textContent='Płatność potwierdzona ✓';owned.hidden=false;owned.scrollIntoView({behavior:'smooth'});return}}}catch{}await new Promise(x=>setTimeout(x,1500))}status.textContent='Płatność wróciła z bramki. Jeśli została opłacona, dostęp pojawi się po potwierdzeniu przez SimPay.'}
- gate.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>world(b.dataset.world));document.getElementById('sxBackWorlds').onclick=showGate;document.getElementById('sxGoClothing').onclick=()=>world('clothing');buy.onclick=purchase;
+ gate.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>world(b.dataset.world));document.getElementById('sxBackWorlds').onclick=showGate;document.getElementById('sxGoClothing').onclick=()=>world('clothing');buy.onclick=purchase;document.querySelectorAll('[data-sxd-image]').forEach(btn=>btn.onclick=()=>{document.getElementById('sxdMainImage').src=btn.dataset.sxdImage;document.querySelectorAll('[data-sxd-image]').forEach(x=>x.classList.toggle('active',x===btn))});
  const q=new URLSearchParams(location.search);if(q.get('section')==='digital'){world('digital',false);paymentReturn()}else if(!sessionStorage.getItem('starxv-world'))setTimeout(showGate,1200);
 })();
 </script>
