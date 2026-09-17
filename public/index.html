@@ -590,6 +590,19 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 }
 </style>
 
+
+<style id="starxv-digital-gallery-switcher-v2">
+.sx-digital-lightbox-stage{padding:18px 76px 42px!important}
+.sx-digital-lightbox-counter{position:absolute;left:50%;bottom:14px;z-index:5;transform:translateX(-50%);color:#777;font:900 8px/1 Arial,sans-serif;letter-spacing:.14em}
+.sx-digital-lightbox-dots{display:flex;align-items:center;justify-content:center;gap:7px;min-height:14px}
+.sx-digital-lightbox-dot{width:5px;height:5px;padding:0;border:0;border-radius:50%;background:#4c4b47;cursor:pointer;transition:.18s}
+.sx-digital-lightbox-dot.active{width:18px;border-radius:99px;background:#c9a83d}
+.sx-digital-lightbox-nav{display:grid!important;place-items:center!important;transition:.18s!important}
+.sx-digital-lightbox-nav:hover{background:#f1eee7!important;color:#080808!important;border-color:#f1eee7!important}
+.sx-digital-lightbox-thumb{transition:.18s}.sx-digital-lightbox-thumb:hover{opacity:.9}
+@media(max-width:700px){.sx-digital-lightbox-stage{padding:12px 50px 36px!important}.sx-digital-lightbox-thumbs{justify-content:flex-start!important}}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -3358,12 +3371,12 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
 <div class="sx-digital-lightbox" id="sxDigitalLightbox" aria-hidden="true">
  <div class="sx-digital-lightbox-shell" role="dialog" aria-modal="true" aria-label="Powiększona galeria produktu">
   <div class="sx-digital-lightbox-stage">
-   <img class="sx-digital-lightbox-image" id="sxDigitalLightboxImage" alt="Powiększone zdjęcie produktu">
+   <img class="sx-digital-lightbox-image" id="sxDigitalLightboxImage" alt="Powiększone zdjęcie produktu"><div class="sx-digital-lightbox-counter" id="sxDigitalLightboxCounter"></div>
    <button class="sx-digital-lightbox-close" id="sxDigitalLightboxClose" type="button" aria-label="Zamknij">×</button>
    <button class="sx-digital-lightbox-nav sx-digital-lightbox-prev" id="sxDigitalLightboxPrev" type="button" aria-label="Poprzednie zdjęcie">‹</button>
    <button class="sx-digital-lightbox-nav sx-digital-lightbox-next" id="sxDigitalLightboxNext" type="button" aria-label="Następne zdjęcie">›</button>
   </div>
-  <div class="sx-digital-lightbox-thumbs" id="sxDigitalLightboxThumbs"></div>
+  <div><div class="sx-digital-lightbox-thumbs" id="sxDigitalLightboxThumbs"></div><div class="sx-digital-lightbox-dots" id="sxDigitalLightboxDots"></div></div>
  </div>
 </div>
 
@@ -3371,16 +3384,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
 <script id="starxv-digital-gallery-lightbox-script">
 (()=>{
  const box=document.getElementById('sxDigitalLightbox'),img=document.getElementById('sxDigitalLightboxImage'),
- thumbs=document.getElementById('sxDigitalLightboxThumbs'),close=document.getElementById('sxDigitalLightboxClose'),
+ thumbs=document.getElementById('sxDigitalLightboxThumbs'),dots=document.getElementById('sxDigitalLightboxDots'),counter=document.getElementById('sxDigitalLightboxCounter'),close=document.getElementById('sxDigitalLightboxClose'),
  prev=document.getElementById('sxDigitalLightboxPrev'),next=document.getElementById('sxDigitalLightboxNext');
  if(!box||!img||!thumbs)return;
  let images=[],current=0;
 
  const collect=()=>{
    const out=[];
-   document.querySelectorAll('#sxDigitalProduct .sx-digital-product-cover img, #sxDigitalProduct .sx-digital-product-thumb img, #sxDigitalProduct img[data-digital-gallery]').forEach(el=>{
-     const src=el.currentSrc||el.src;
-     if(src&&!out.some(x=>x.src===src))out.push({src,alt:el.alt||'ZERO TO FIRST SALE'});
+   document.querySelectorAll('#sxDigitalProduct [data-digital-image], #sxDigitalProduct .sx-digital-product-cover img').forEach(el=>{
+     const child=el.tagName==='IMG'?el:el.querySelector('img');
+     const src=el.matches('[data-digital-image]')?el.getAttribute('data-digital-image'):(el.currentSrc||el.src||child?.currentSrc||child?.src);
+     if(src&&!out.some(x=>x.src===src))out.push({src,alt:child?.alt||el.alt||'ZERO TO FIRST SALE'});
    });
    return out;
  };
@@ -3389,6 +3403,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
    current=(current+images.length)%images.length;
    img.src=images[current].src;img.alt=images[current].alt;
    thumbs.innerHTML=images.map((x,i)=>`<button class="sx-digital-lightbox-thumb ${i===current?'active':''}" type="button" data-i="${i}" aria-label="Zdjęcie ${i+1}"><img src="${x.src.replace(/"/g,'&quot;')}" alt=""></button>`).join('');
+   if(dots)dots.innerHTML=images.map((x,i)=>`<button class="sx-digital-lightbox-dot ${i===current?'active':''}" type="button" data-dot="${i}" aria-label="Zdjęcie ${i+1}"></button>`).join('');
+   if(counter)counter.textContent=`${String(current+1).padStart(2,'0')} / ${String(images.length).padStart(2,'0')}`;
    prev.hidden=next.hidden=images.length<2;
  };
  const openAt=src=>{
@@ -3412,12 +3428,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
  prev?.addEventListener('click',()=>move(-1));
  next?.addEventListener('click',()=>move(1));
  thumbs.addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){current=Number(b.dataset.i)||0;render()}});
+ dots?.addEventListener('click',e=>{const b=e.target.closest('[data-dot]');if(b){current=Number(b.dataset.dot)||0;render()}});
  box.addEventListener('click',e=>{if(e.target===box)hide()});
  document.addEventListener('keydown',e=>{
    if(!box.classList.contains('open'))return;
    if(e.key==='Escape')hide();
    if(e.key==='ArrowLeft')move(-1);
    if(e.key==='ArrowRight')move(1);
+ });
+})();
+</script>
+
+
+<script id="starxv-digital-offer-gallery-switcher">
+(()=>{
+ const root=document.getElementById('sxDigitalProduct');if(!root)return;
+ root.addEventListener('click',e=>{
+  const b=e.target.closest('[data-digital-image]');if(!b)return;
+  const image=document.getElementById('sxDigitalProductImage'),src=b.getAttribute('data-digital-image');if(!image||!src)return;
+  image.src=src;root.querySelectorAll('[data-digital-image]').forEach(x=>x.classList.toggle('active',x===b));
  });
 })();
 </script>
