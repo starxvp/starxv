@@ -563,6 +563,33 @@
 @media(max-width:760px){.sx-digital-reviews{padding:58px 20px}.sx-digital-reviews-head{align-items:flex-start;flex-direction:column}.sx-digital-rating-summary{justify-content:flex-start}.sx-digital-review-list{grid-template-columns:1fr}.sx-digital-purchase-count{width:100%;min-height:0;margin-top:2px}}
 </style>
 
+
+<style id="starxv-digital-gallery-lightbox-style">
+#sxDigitalProduct .sx-digital-product-cover img,
+#sxDigitalProduct .sx-digital-product-thumb{cursor:zoom-in}
+.sx-digital-lightbox{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,.88);backdrop-filter:blur(14px)}
+.sx-digital-lightbox.open{display:flex}
+.sx-digital-lightbox-shell{position:relative;width:min(1180px,96vw);height:min(850px,92vh);display:grid;grid-template-rows:minmax(0,1fr) auto;gap:14px;padding:18px;border:1px solid rgba(255,255,255,.18);border-radius:20px;background:#080808;box-shadow:0 35px 120px rgba(0,0,0,.72)}
+.sx-digital-lightbox-stage{position:relative;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:13px;background:#050505}
+.sx-digital-lightbox-image{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;user-select:none}
+.sx-digital-lightbox-close{position:absolute;z-index:4;top:18px;right:18px;width:46px;height:46px;border:1px solid rgba(255,255,255,.16);border-radius:50%;background:rgba(10,10,10,.8);color:#fff;font-size:25px;line-height:1;cursor:pointer}
+.sx-digital-lightbox-nav{position:absolute;z-index:4;top:50%;transform:translateY(-50%);width:48px;height:48px;border:1px solid rgba(255,255,255,.25);border-radius:50%;background:rgba(5,5,5,.7);color:#fff;font-size:26px;cursor:pointer}
+.sx-digital-lightbox-prev{left:18px}.sx-digital-lightbox-next{right:18px}
+.sx-digital-lightbox-thumbs{display:flex;align-items:center;justify-content:center;gap:9px;min-height:66px;overflow-x:auto;padding:3px}
+.sx-digital-lightbox-thumb{flex:0 0 54px;width:54px;height:62px;padding:0;border:1px solid #333;border-radius:8px;overflow:hidden;background:#111;cursor:pointer;opacity:.58}
+.sx-digital-lightbox-thumb.active{opacity:1;border-color:#c9a83d;box-shadow:0 0 0 1px #c9a83d}
+.sx-digital-lightbox-thumb img{width:100%;height:100%;object-fit:cover}
+body.sx-digital-lightbox-lock{overflow:hidden!important}
+@media(max-width:700px){
+ .sx-digital-lightbox{padding:10px}
+ .sx-digital-lightbox-shell{width:100%;height:90vh;padding:10px;border-radius:14px}
+ .sx-digital-lightbox-close{top:12px;right:12px;width:40px;height:40px}
+ .sx-digital-lightbox-nav{width:42px;height:42px}
+ .sx-digital-lightbox-prev{left:10px}.sx-digital-lightbox-next{right:10px}
+ .sx-digital-lightbox-thumb{flex-basis:46px;width:46px;height:54px}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -3324,6 +3351,74 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
   close?.addEventListener('click',hide);
   modal.addEventListener('click',e=>{if(e.target===modal)hide()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))hide()});
+})();
+</script>
+
+
+<div class="sx-digital-lightbox" id="sxDigitalLightbox" aria-hidden="true">
+ <div class="sx-digital-lightbox-shell" role="dialog" aria-modal="true" aria-label="Powiększona galeria produktu">
+  <div class="sx-digital-lightbox-stage">
+   <img class="sx-digital-lightbox-image" id="sxDigitalLightboxImage" alt="Powiększone zdjęcie produktu">
+   <button class="sx-digital-lightbox-close" id="sxDigitalLightboxClose" type="button" aria-label="Zamknij">×</button>
+   <button class="sx-digital-lightbox-nav sx-digital-lightbox-prev" id="sxDigitalLightboxPrev" type="button" aria-label="Poprzednie zdjęcie">‹</button>
+   <button class="sx-digital-lightbox-nav sx-digital-lightbox-next" id="sxDigitalLightboxNext" type="button" aria-label="Następne zdjęcie">›</button>
+  </div>
+  <div class="sx-digital-lightbox-thumbs" id="sxDigitalLightboxThumbs"></div>
+ </div>
+</div>
+
+
+<script id="starxv-digital-gallery-lightbox-script">
+(()=>{
+ const box=document.getElementById('sxDigitalLightbox'),img=document.getElementById('sxDigitalLightboxImage'),
+ thumbs=document.getElementById('sxDigitalLightboxThumbs'),close=document.getElementById('sxDigitalLightboxClose'),
+ prev=document.getElementById('sxDigitalLightboxPrev'),next=document.getElementById('sxDigitalLightboxNext');
+ if(!box||!img||!thumbs)return;
+ let images=[],current=0;
+
+ const collect=()=>{
+   const out=[];
+   document.querySelectorAll('#sxDigitalProduct .sx-digital-product-cover img, #sxDigitalProduct .sx-digital-product-thumb img, #sxDigitalProduct img[data-digital-gallery]').forEach(el=>{
+     const src=el.currentSrc||el.src;
+     if(src&&!out.some(x=>x.src===src))out.push({src,alt:el.alt||'ZERO TO FIRST SALE'});
+   });
+   return out;
+ };
+ const render=()=>{
+   if(!images.length)return;
+   current=(current+images.length)%images.length;
+   img.src=images[current].src;img.alt=images[current].alt;
+   thumbs.innerHTML=images.map((x,i)=>`<button class="sx-digital-lightbox-thumb ${i===current?'active':''}" type="button" data-i="${i}" aria-label="Zdjęcie ${i+1}"><img src="${x.src.replace(/"/g,'&quot;')}" alt=""></button>`).join('');
+   prev.hidden=next.hidden=images.length<2;
+ };
+ const openAt=src=>{
+   images=collect();
+   if(!images.length)return;
+   const found=images.findIndex(x=>x.src===src);
+   current=found>=0?found:0;
+   render();box.classList.add('open');box.setAttribute('aria-hidden','false');document.body.classList.add('sx-digital-lightbox-lock');
+ };
+ const hide=()=>{box.classList.remove('open');box.setAttribute('aria-hidden','true');document.body.classList.remove('sx-digital-lightbox-lock')};
+ const move=d=>{if(images.length){current+=d;render()}};
+
+ document.addEventListener('click',e=>{
+   const target=e.target.closest?.('#sxDigitalProduct .sx-digital-product-cover img, #sxDigitalProduct .sx-digital-product-thumb, #sxDigitalProduct .sx-digital-product-thumb img');
+   if(!target)return;
+   const source=target.tagName==='IMG'?target:target.querySelector('img');
+   if(!source)return;
+   e.preventDefault();openAt(source.currentSrc||source.src);
+ });
+ close?.addEventListener('click',hide);
+ prev?.addEventListener('click',()=>move(-1));
+ next?.addEventListener('click',()=>move(1));
+ thumbs.addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(b){current=Number(b.dataset.i)||0;render()}});
+ box.addEventListener('click',e=>{if(e.target===box)hide()});
+ document.addEventListener('keydown',e=>{
+   if(!box.classList.contains('open'))return;
+   if(e.key==='Escape')hide();
+   if(e.key==='ArrowLeft')move(-1);
+   if(e.key==='ArrowRight')move(1);
+ });
 })();
 </script>
 
