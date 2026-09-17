@@ -436,9 +436,6 @@
 </div>
 <section class="sx-digital-page" id="sxDigitalPage" hidden>
   <div class="sx-digital-top">
-    <button type="button" id="sxBackWorlds" class="sx-digital-back" aria-label="Wróć do wyboru STARXV">
-      <span class="sx-digital-back-arrow">←</span><span>STARXV</span>
-    </button>
     <div class="sx-digital-top-brand"><strong>STARXV®</strong><span>/</span><strong>DIGITAL</strong></div>
   </div>
   <div class="sx-digital-hero">
@@ -458,10 +455,10 @@
 <img alt="STARXV" class="nav-logo" src="/assets/a21bc8c9acad5dd8.webp">
 </img></a><span class="sx-test-version" data-ghost="">TEST VERSION 0.0</span></div>
 <div class="nav-links">
-<a href="#shop">Clothing</a>
+<a href="#shop" id="sxNavClothing">Clothing</a>
 <a href="/?section=digital" id="sxNavDigital">Digital</a>
-<a href="#story">Brand</a>
-<a href="#contact">Contact</a>
+<a href="#story" id="sxNavBrand">Brand</a>
+<a href="#contact" id="sxNavContact">Contact</a>
 </div>
 <div class="nav-actions"><button aria-label="Zaloguj się lub utwórz konto" class="account-nav-button" id="openAccount" type="button"><svg aria-hidden="true" class="account-icon" fill="none" viewbox="0 0 24 24"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"></circle><path d="M5.5 19c.8-3.6 3-5.4 6.5-5.4s5.7 1.8 6.5 5.4" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"></path></svg><span class="account-badge" id="accountBadge"></span></button><button aria-label="Otwórz koszyk" class="nav-button cart-nav-button" id="openCart" type="button"><svg aria-hidden="true" class="cart-icon" fill="none" viewbox="0 0 24 24"><path d="M3 4h2.1l1.8 10.1a2 2 0 0 0 2 1.65h7.85a2 2 0 0 0 1.95-1.55L20 8H7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path><circle cx="9.2" cy="19" fill="currentColor" r="1.15"></circle><circle cx="17.2" cy="19" fill="currentColor" r="1.15"></circle></svg><span class="cart-count" id="cartCount">0</span></button></div>
 </nav>
@@ -3025,16 +3022,27 @@ window.STARXV_CART_PRICE_HTML=function(item){
  let product=null;
  function showGate(){gate.classList.add('open');gate.setAttribute('aria-hidden','false')}
  function hideGate(){gate.classList.remove('open');gate.setAttribute('aria-hidden','true')}
- function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=isDigital;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
+ function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=false;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
  async function loadDigital(){try{const r=await fetch('/api/digital/products',{cache:'no-store'}),j=await r.json();product=j.products?.find(x=>x.id==='zero-to-first-sale');if(!product)return;price.textContent=product.price>0?`${product.price.toFixed(2).replace('.',',')} PLN`:'CENA WKRÓTCE';buy.disabled=!product.available;buy.textContent=product.available?'KUP E-BOOK →':'SPRZEDAŻ WKRÓTCE';await checkOrders()}catch{status.textContent='Nie udało się wczytać produktu.'}}
  async function checkOrders(){try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json();const o=(j.orders||[]).find(x=>x.orderType==='digital'&&x.digitalProductId==='zero-to-first-sale'&&x.paymentStatus==='paid');if(o){owned.hidden=false;buy.textContent='JUŻ KUPIONO ✓';buy.disabled=true;status.textContent='Produkt jest przypisany do Twojego konta.'}}catch{}}
  async function purchase(){status.textContent='';if(!consent.checked){status.textContent='Zaznacz zgodę dotyczącą natychmiastowego dostępu do treści cyfrowej.';return}buy.disabled=true;buy.textContent='PRZYGOTOWYWANIE...';try{let r=await fetch('/api/digital/orders/prepare',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:'zero-to-first-sale',digitalConsent:true})});if(r.status===401){status.textContent='Najpierw zaloguj się na konto STARXV. Kliknij CLOTHING, a następnie ikonę profilu.';buy.disabled=false;buy.textContent='KUP E-BOOK →';return}let j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się utworzyć zamówienia.');if(j.alreadyOwned){owned.hidden=false;status.textContent='Ten e-book jest już na Twoim koncie.';return}r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:j.order.id})});j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić płatności.');location.href=j.url}catch(e){status.textContent=e.message;buy.disabled=false;buy.textContent='KUP E-BOOK →'}}
  async function paymentReturn(){const q=new URLSearchParams(location.search),oid=q.get('order');if(q.get('payment')!=='return'||!oid)return;status.textContent='Potwierdzamy płatność…';for(let i=0;i<12;i++){try{const r=await fetch('/api/orders/'+encodeURIComponent(oid)+'/payment-status',{credentials:'same-origin'});if(r.ok){const j=await r.json();if(j.confirmed){status.textContent='Płatność potwierdzona ✓';owned.hidden=false;owned.scrollIntoView({behavior:'smooth'});return}}}catch{}await new Promise(x=>setTimeout(x,1500))}status.textContent='Płatność wróciła z bramki. Jeśli została opłacona, dostęp pojawi się po potwierdzeniu przez SimPay.'}
  gate.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>world(b.dataset.world));
- const sxBackWorlds=document.getElementById('sxBackWorlds');if(sxBackWorlds)sxBackWorlds.onclick=showGate;
- const sxGoClothing=document.getElementById('sxGoClothing');if(sxGoClothing)sxGoClothing.onclick=()=>world('clothing');
- const sxNavDigital=document.getElementById('sxNavDigital');if(sxNavDigital)sxNavDigital.addEventListener('click',e=>{e.preventDefault();world('digital')});
- const sxNavClothing=document.querySelector('.nav-links a[href="#shop"]');if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{e.preventDefault();world('clothing');requestAnimationFrame(()=>document.getElementById('shop')?.scrollIntoView({behavior:'smooth',block:'start'}))});
+ const sxNavClothing=document.getElementById('sxNavClothing');
+ const sxNavDigital=document.getElementById('sxNavDigital');
+ const sxNavBrand=document.getElementById('sxNavBrand');
+ const sxNavContact=document.getElementById('sxNavContact');
+ function goClothingSection(selector){
+   world('clothing');
+   requestAnimationFrame(()=>requestAnimationFrame(()=>{
+     const target=document.querySelector(selector);
+     if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+   }));
+ }
+ if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{e.preventDefault();goClothingSection('#shop')});
+ if(sxNavDigital)sxNavDigital.addEventListener('click',e=>{e.preventDefault();world('digital');window.scrollTo({top:0,behavior:'smooth'})});
+ if(sxNavBrand)sxNavBrand.addEventListener('click',e=>{e.preventDefault();goClothingSection('#story')});
+ if(sxNavContact)sxNavContact.addEventListener('click',e=>{e.preventDefault();goClothingSection('#contact')});
  buy.onclick=purchase;
  const q=new URLSearchParams(location.search);if(q.get('section')==='digital'){world('digital',false);paymentReturn()}else if(!sessionStorage.getItem('starxv-world'))setTimeout(showGate,1200);
 })();
