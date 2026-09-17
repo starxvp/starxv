@@ -497,6 +497,55 @@
 #sxDigitalPage .sx-digital-art>span{z-index:3!important}
 @media(max-width:760px){#sxDigitalPage .sx-digital-art:before{left:6%;top:6%;font-size:8px}#sxDigitalPage .sx-digital-art:after{left:6%;right:6%;bottom:7%;font-size:6px}}
 </style>
+
+<style id="starxv-clothing-beta-access">
+.sx-world-coming-soon{
+  cursor:not-allowed!important;
+  opacity:.58!important;
+  filter:saturate(.45);
+}
+.sx-world-coming-soon:hover{transform:none!important}
+.sx-world-coming-soon b{opacity:.78}
+.sx-clothing-beta-btn{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:9px!important;
+  position:relative;
+}
+.sx-clothing-beta-btn small{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 7px;
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:999px;
+  background:#171717;
+  color:#8d8d8d;
+  font:900 7px/1 Arial,sans-serif;
+  letter-spacing:.12em;
+}
+.sx-clothing-beta-btn i{
+  margin-left:auto;
+  font-style:normal;
+}
+</style>
+
+
+<style id="starxv-clothing-coming-soon-modal-style">
+.sx-world-coming-soon{cursor:pointer!important}
+.sx-coming-soon-modal{position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.78);backdrop-filter:blur(10px)}
+.sx-coming-soon-modal.open{display:flex}
+.sx-coming-soon-card{position:relative;width:min(520px,100%);padding:34px;border:1px solid rgba(255,255,255,.13);background:#080808;box-shadow:0 28px 90px rgba(0,0,0,.58)}
+.sx-coming-soon-card small{display:block;margin-bottom:18px;color:#666;font:900 8px/1 Arial,sans-serif;letter-spacing:.17em}
+.sx-coming-soon-card h2{margin:0;color:#fff;font:950 clamp(31px,5vw,52px)/.9 Arial,sans-serif;letter-spacing:-.055em}
+.sx-coming-soon-card h2 span{color:#777}
+.sx-coming-soon-card p{max-width:420px;margin:22px 0 0;color:#a7a7a7;font:650 11px/1.7 Arial,sans-serif}
+.sx-coming-soon-close{position:absolute;top:15px;right:17px;border:0;background:transparent;color:#777;font-size:24px;cursor:pointer}
+.sx-coming-soon-close:hover{color:#fff}
+@media(max-width:600px){.sx-coming-soon-card{padding:29px 24px}.sx-coming-soon-card p{font-size:10px}}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -504,8 +553,16 @@
   <div class="sx-world-brand">STARXV<span>®</span></div>
   <div class="sx-world-tag">ONE BRAND / TWO WORLDS</div>
   <div class="sx-world-grid">
-    <button class="sx-world-card sx-world-clothing" data-world="clothing" type="button"><span>01 / PHYSICAL</span><strong>STARXV<br>CLOTHING</strong><em>Wear your identity.</em><b>EXPLORE CLOTHING →</b></button>
+    <button class="sx-world-card sx-world-clothing sx-world-coming-soon" id="sxClothingComingSoon" type="button"><span>01 / PHYSICAL</span><strong>STARXV<br>CLOTHING</strong><em>Currently in development.</em><b>COMING SOON...</b></button>
     <button class="sx-world-card sx-world-digital" data-world="digital" type="button"><span>02 / DIGITAL</span><strong>STARXV<br>DIGITAL</strong><em>Learn. Build. Create.</em><b>EXPLORE DIGITAL →</b></button>
+  </div>
+</div>
+<div class="sx-coming-soon-modal" id="sxClothingComingSoonModal" aria-hidden="true">
+  <div class="sx-coming-soon-card" role="dialog" aria-modal="true" aria-labelledby="sxClothingComingSoonTitle">
+    <button class="sx-coming-soon-close" id="sxClothingComingSoonClose" type="button" aria-label="Zamknij">×</button>
+    <small>STARXV / CLOTHING / COMING SOON</small>
+    <h2 id="sxClothingComingSoonTitle">CLOTHING<br><span>COMING SOON.</span></h2>
+    <p>Ubrania są jeszcze w fazie tworzenia i ustalania szczegółów. Ubrania będą wkrótce dostępne.</p>
   </div>
 </div>
 <section class="sx-digital-page" id="sxDigitalPage" hidden>
@@ -528,7 +585,7 @@
 <img alt="STARXV" class="nav-logo" src="/assets/a21bc8c9acad5dd8.webp">
 </img></a><span class="sx-test-version" data-ghost="">TEST VERSION 0.0</span></div>
 <div class="nav-links">
-<a href="#shop" id="sxNavClothing">Clothing</a>
+<a href="#" id="sxNavClothing" aria-disabled="true" title="Coming soon">Clothing <span style="opacity:.48;font-size:.72em">COMING SOON</span></a>
 <a href="/?section=digital" id="sxNavDigital">Digital</a>
 <a href="#story" id="sxNavBrand">Brand</a>
 <a href="#contact" id="sxNavContact">Contact</a>
@@ -690,7 +747,7 @@
 </div>
 <div class="account-profile" id="accountProfile">
 <div class="profile-hero"><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div></div></div>
-<div class="profile-actions"><button class="profile-btn" id="profileOrders">MOJE ZAMÓWIENIA →</button><button class="profile-btn sx-delete-account-btn" id="deleteAccountBtn" type="button">USUŃ KONTO</button></div>
+<div class="profile-actions"><button class="profile-btn" id="profileOrders">MOJE ZAMÓWIENIA →</button><button class="profile-btn sx-clothing-beta-btn" id="sxClothingBeta" type="button" hidden><span>CLOTHING</span><small>BETA</small><i>→</i></button><button class="profile-btn sx-delete-account-btn" id="deleteAccountBtn" type="button">USUŃ KONTO</button></div>
 </div>
 </div>
 </div>
@@ -1637,6 +1694,13 @@ const renderCart=()=>{hydrateCartDiscounts();
   function renderState(){
     const a=currentUser,sub=$('accountSubtitle');
     window.STARXV_AUTH_USER=a||null;
+    const betaBtn=$('sxClothingBeta');
+    if(betaBtn)betaBtn.hidden=true;
+    if(a&&betaBtn){
+      fetch('/api/admin/me',{credentials:'include',cache:'no-store'})
+        .then(r=>{betaBtn.hidden=!r.ok})
+        .catch(()=>{betaBtn.hidden=true});
+    }
     if(a){guest.style.display='none';profile.classList.add('active');const av=$('profileAvatar');av.textContent=a.avatarData?'':initials(a);av.style.backgroundImage=a.avatarData?`url(${a.avatarData})`:'';av.classList.toggle('has-photo',!!a.avatarData);$('profileName').textContent=`${a.firstName} ${a.lastName}`;$('profileEmail').textContent=a.email;$('profileCreated').textContent=new Date(a.createdAt).toLocaleDateString('pl-PL');badge.textContent=initials(a);badge.classList.add('show');sub.textContent='Twoje konto STARXV';openBtn.setAttribute('aria-label',`Konto: ${a.firstName} ${a.lastName}`)}
     else{guest.style.display='block';profile.classList.remove('active');badge.classList.remove('show');badge.textContent='';sub.textContent='Zaloguj się lub utwórz konto';openBtn.setAttribute('aria-label','Zaloguj się lub utwórz konto');try{localStorage.removeItem('starxv-favorites')}catch(e){}}
     window.dispatchEvent(new Event('starxv:auth-changed'));
@@ -1685,6 +1749,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     }
   };
   $('profileOrders').onclick=()=>{close();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)};
+  const sxClothingBeta=$('sxClothingBeta');if(sxClothingBeta)sxClothingBeta.onclick=()=>{close();sessionStorage.setItem('starxv-clothing-beta','1');setTimeout(()=>{const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');if(gate){gate.classList.remove('show');gate.setAttribute('aria-hidden','true')}if(digital)digital.hidden=true;if(main)main.hidden=false;if(nav)nav.hidden=false;document.body.classList.remove('sx-digital-mode');sessionStorage.setItem('starxv-world','clothing');history.replaceState(null,'','/');window.scrollTo({top:0,behavior:'smooth'})},120)};
   const avatarInput=$('profileAvatarInput');if(avatarInput)avatarInput.addEventListener('change',()=>{const file=avatarInput.files?.[0];if(!file||!file.type.startsWith('image/'))return;if(file.size>4*1024*1024){alert('Zdjęcie jest za duże. Maksymalnie 4 MB.');return}const img=new Image(),reader=new FileReader();reader.onload=()=>{img.onload=async()=>{const size=420,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');const scale=Math.max(size/img.width,size/img.height),w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);const avatarData=canvas.toDataURL('image/jpeg',.82);try{const d=await api('/account/avatar',{method:'PUT',body:JSON.stringify({avatarData})});currentUser=d.user;renderState()}catch(e){alert(e.message)}};img.src=reader.result};reader.readAsDataURL(file)});
   refreshUser();
 })();
@@ -1863,17 +1928,11 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.addEventListener('starxv:reviews-changed',e=>{if(!e.detail?.productId||e.detail.productId===PRODUCT.id)renderReviews()});
   function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-  async function renderAccountDashboard(){
+  function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
     const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
-    let adminBeta='';
-    try{
-      const adminCheck=await fetch('/api/admin/me',{credentials:'same-origin',cache:'no-store'});
-      if(adminCheck.ok)adminBeta=`<button class="sx-profile-link-card sx-clothing-beta-admin" id="sxClothingBetaAdmin" type="button"><span class="sx-profile-link-kicker">ADMIN / BETA</span><b>CLOTHING BETA</b><span class="sx-profile-link-arrow">→</span></button>`;
-    }catch(e){}
-    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links">${adminBeta}<button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
-    $('#sxClothingBetaAdmin')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();if(typeof world==='function')world('clothing');setTimeout(()=>document.getElementById('shop')?.scrollIntoView({behavior:'smooth',block:'start'}),120)});
+    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();},0);
   }
@@ -3146,7 +3205,11 @@ window.STARXV_CART_PRICE_HTML=function(item){
      if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
    }));
  }
- if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{e.preventDefault();goClothingSection('#shop')});
+ if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{
+  e.preventDefault();
+  const modal=document.getElementById('sxClothingComingSoonModal');
+  if(modal){modal.classList.add('open');modal.setAttribute('aria-hidden','false')}
+});
  if(sxNavDigital)sxNavDigital.addEventListener('click',e=>{e.preventDefault();world('digital');window.scrollTo({top:0,behavior:'smooth'})});
  if(sxNavBrand)sxNavBrand.addEventListener('click',e=>{e.preventDefault();goClothingSection('#story')});
  if(sxNavContact)sxNavContact.addEventListener('click',e=>{e.preventDefault();openStarxvContact()});
@@ -3208,5 +3271,20 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
 
 <style>
 .sx-digital-product-gallery{display:grid;grid-template-columns:72px minmax(0,1fr);gap:14px;align-items:start}.sx-digital-product-thumbs{display:flex;flex-direction:column;gap:10px}.sx-digital-product-thumbs button{width:72px;height:92px;padding:0;border:1px solid #292824;border-radius:7px;background:#0a0a09;overflow:hidden;cursor:pointer;opacity:.55}.sx-digital-product-thumbs button.active,.sx-digital-product-thumbs button:hover{opacity:1;border-color:#c8a950}.sx-digital-product-thumbs img{width:100%;height:100%;object-fit:cover;display:block}.sx-digital-product-cover img{width:100%;height:100%;object-fit:contain;display:block}@media(max-width:760px){.sx-digital-product-gallery{grid-template-columns:1fr}.sx-digital-product-thumbs{order:2;flex-direction:row}.sx-digital-product-thumbs button{width:62px;height:78px}}
-</style><script>(()=>{const main=document.getElementById("sxDigitalProductImage"),buttons=[...document.querySelectorAll("[data-digital-image]")];buttons.forEach(b=>b.addEventListener("click",()=>{main.src=b.dataset.digitalImage;buttons.forEach(x=>x.classList.toggle("active",x===b))}))})();</script></body>
+</style><script>(()=>{const main=document.getElementById("sxDigitalProductImage"),buttons=[...document.querySelectorAll("[data-digital-image]")];buttons.forEach(b=>b.addEventListener("click",()=>{main.src=b.dataset.digitalImage;buttons.forEach(x=>x.classList.toggle("active",x===b))}))})();</script>
+<script id="starxv-clothing-coming-soon-modal-script">
+(()=>{
+  const open=document.getElementById('sxClothingComingSoon');
+  const modal=document.getElementById('sxClothingComingSoonModal');
+  const close=document.getElementById('sxClothingComingSoonClose');
+  if(!open||!modal)return;
+  const hide=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
+  open.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();modal.classList.add('open');modal.setAttribute('aria-hidden','false')},true);
+  close?.addEventListener('click',hide);
+  modal.addEventListener('click',e=>{if(e.target===modal)hide()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))hide()});
+})();
+</script>
+
+</body>
 </html>
