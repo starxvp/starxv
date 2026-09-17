@@ -3198,7 +3198,11 @@ window.STARXV_CART_PRICE_HTML=function(item){
      if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
    }));
  }
- if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{e.preventDefault();});
+ if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{
+  e.preventDefault();
+  const modal=document.getElementById('sxClothingComingSoonModal');
+  if(modal){modal.classList.add('open');modal.setAttribute('aria-hidden','false')}
+});
  if(sxNavDigital)sxNavDigital.addEventListener('click',e=>{e.preventDefault();world('digital');window.scrollTo({top:0,behavior:'smooth'})});
  if(sxNavBrand)sxNavBrand.addEventListener('click',e=>{e.preventDefault();goClothingSection('#story')});
  if(sxNavContact)sxNavContact.addEventListener('click',e=>{e.preventDefault();openStarxvContact()});
