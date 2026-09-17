@@ -3038,7 +3038,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
 
 <script id="starxv-digital-v1">
 (()=>{
- const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');
+ const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('body > main'),nav=document.querySelector('body > nav');
  const status=document.getElementById('sxDigitalStatus'),price=document.getElementById('sxDigitalPrice'),buy=document.getElementById('sxDigitalBuy'),consent=document.getElementById('sxDigitalConsent'),owned=document.getElementById('sxDigitalOwned');
  let product=null;
  function showGate(){gate.classList.add('open');gate.setAttribute('aria-hidden','false')}
