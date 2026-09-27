@@ -628,7 +628,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 
 
 <style id="starxv-cart-coming-soon-lock">
-#openCart{opacity:.42!important;cursor:not-allowed!important;pointer-events:auto!important}
+#openCart,#sxSearchBtn{opacity:.42!important;cursor:not-allowed!important;pointer-events:auto!important}
 #openCart .cart-count{display:none!important}
 </style>
 </head>
@@ -3528,6 +3528,43 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
     modal.style.display='flex';modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
   },true);
   const hide=()=>{modal.style.display='none';modal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
+  close?.addEventListener('click',hide);
+  modal.addEventListener('click',e=>{if(e.target===modal)hide()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.getAttribute('aria-hidden')==='false')hide()});
+})();
+</script>
+
+
+<div id="sxSearchLockedNotice" aria-hidden="true" style="position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.78);backdrop-filter:blur(10px)">
+  <div style="position:relative;width:min(460px,100%);padding:34px;border:1px solid rgba(255,255,255,.14);background:#090909;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.6)">
+    <button id="sxSearchLockedClose" type="button" aria-label="Zamknij" style="position:absolute;right:16px;top:12px;border:0;background:transparent;color:#777;font-size:25px;cursor:pointer">×</button>
+    <div style="color:#b89b3f;font:900 8px/1 Arial,sans-serif;letter-spacing:.18em;margin-bottom:18px">STARXV / SEARCH</div>
+    <h3 style="margin:0;font:950 32px/.95 Arial,sans-serif;letter-spacing:-.045em">WYSZUKIWARKA<br>COMING SOON.</h3>
+    <p style="margin:20px 0 0;color:#999;font:650 11px/1.7 Arial,sans-serif">Wyszukiwarka zostanie uruchomiona wraz z działem Accessories, kiedy w STARXV pojawią się produkty fizyczne. E-booki znajdziesz obecnie bezpośrednio w sekcji Digital.</p>
+  </div>
+</div>
+<script id="starxv-search-coming-soon-lock-script">
+(function(){
+  const modal=document.getElementById('sxSearchLockedNotice');
+  const close=document.getElementById('sxSearchLockedClose');
+  if(!modal)return;
+  const hide=()=>{modal.style.display='none';modal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
+  const show=()=>{modal.style.display='flex';modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'};
+  const lock=()=>{
+    const btn=document.getElementById('sxSearchBtn');
+    if(!btn)return false;
+    btn.setAttribute('title','Wyszukiwarka będzie dostępna wraz z Accessories');
+    btn.setAttribute('aria-label','Wyszukiwarka — coming soon');
+    if(btn.dataset.sxSearchLocked==='1')return true;
+    btn.dataset.sxSearchLocked='1';
+    btn.addEventListener('click',function(e){e.preventDefault();e.stopImmediatePropagation();show();},true);
+    return true;
+  };
+  lock();
+  setTimeout(lock,100);
+  setTimeout(lock,500);
+  const observer=new MutationObserver(()=>{if(lock())observer.disconnect()});
+  observer.observe(document.documentElement,{childList:true,subtree:true});
   close?.addEventListener('click',hide);
   modal.addEventListener('click',e=>{if(e.target===modal)hide()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.getAttribute('aria-hidden')==='false')hide()});
