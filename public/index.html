@@ -561,6 +561,17 @@
 .sx-digital-review-card{min-height:180px;padding:24px;border:1px solid #282722;background:#0c0c0b}
 .sx-digital-review-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px}.sx-digital-review-author{display:flex;align-items:center;gap:11px}.sx-digital-review-avatar{width:38px;height:38px;display:grid;place-items:center;border:1px solid #35342f;border-radius:50%;color:#f2efe8;font-size:12px;font-weight:950}.sx-digital-review-author b{display:block;color:#eeeae2;font-size:11px}.sx-digital-review-author small{display:block;margin-top:4px;color:#66645f;font-size:8px}.sx-digital-review-card .stars{color:#d1ad3e;font-size:13px;letter-spacing:1px}.sx-digital-review-card p{margin:22px 0 0;color:#aaa7a0;font-size:11px;line-height:1.75;white-space:pre-wrap}.sx-digital-review-empty{grid-column:1/-1;padding:35px 0;color:#686660;font-size:11px}
 @media(max-width:760px){.sx-digital-reviews{padding:58px 20px}.sx-digital-reviews-head{align-items:flex-start;flex-direction:column}.sx-digital-rating-summary{justify-content:flex-start}.sx-digital-review-list{grid-template-columns:1fr}.sx-digital-purchase-count{width:100%;min-height:0;margin-top:2px}}
+
+/* STARXV Digital catalog: render every active e-book from the backend. */
+.sx-digital-catalog{max-width:1250px;margin:0 auto;padding:42px 70px 24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;background:#080807}
+.sx-digital-catalog-card{display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;align-items:center;padding:16px;border:1px solid #292824;background:#0c0c0b;cursor:pointer;text-align:left;color:#f2efe8;transition:.18s ease}
+.sx-digital-catalog-card:hover,.sx-digital-catalog-card.active{border-color:#b89b3f;transform:translateY(-1px)}
+.sx-digital-catalog-card img{width:112px;height:142px;object-fit:cover;background:#111}
+.sx-digital-catalog-card small{display:block;color:#b89b3f;font-size:8px;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
+.sx-digital-catalog-card strong{display:block;margin-top:7px;font-size:19px;line-height:1.05}
+.sx-digital-catalog-card p{margin:8px 0 0;color:#85827b;font-size:10px;line-height:1.5}
+.sx-digital-catalog-card .price{margin-top:11px;color:#f2efe8;font-size:13px;font-weight:950}
+@media(max-width:760px){.sx-digital-catalog{padding:28px 20px 14px;grid-template-columns:1fr}.sx-digital-catalog-card{grid-template-columns:86px minmax(0,1fr)}.sx-digital-catalog-card img{width:86px;height:110px}}
 </style>
 
 
@@ -631,12 +642,13 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
     <div class="sx-digital-art"><img src="/assets/zero-to-first-sale-cover.png" alt="ZERO TO FIRST SALE — okładka e-booka"><span>A STARXV DIGITAL PRODUCT</span></div>
   </div>
   <div class="sx-digital-strip"><span>20 ROZDZIAŁÓW</span><span>CHECKLISTY</span><span>30-DNIOWY PLAN</span><span>PDF / DIGITAL</span></div>
+  <div class="sx-digital-catalog" id="sxDigitalCatalog" aria-label="Produkty cyfrowe"></div>
   <div class="sx-digital-product" id="sxDigitalProduct">
 <div class="sx-digital-product-gallery"><div class="sx-digital-product-thumbs"><button class="active" type="button" data-digital-image="/assets/zero-to-first-sale-3d.png"><img src="/assets/zero-to-first-sale-3d.png" alt=""></button><button type="button" data-digital-image="/assets/zero-to-first-sale-cover.png"><img src="/assets/zero-to-first-sale-cover.png" alt=""></button></div><div class="sx-digital-product-cover"><img id="sxDigitalProductImage" src="/assets/zero-to-first-sale-3d.png" alt="ZERO TO FIRST SALE"></div></div>
-<div class="sx-digital-product-info"><span>01 / BUSINESS • MARKETING • SALES</span><h2>ZERO TO<br>FIRST SALE</h2><h3>Od pomysłu do pierwszej sprzedaży.</h3><p>Przewodnik prowadzący przez walidację pomysłu, MVP, wycenę, branding, launch, sprzedaż i pracę z pierwszymi klientami. Każdy etap kończy się praktyczną checklistą.</p><div class="sx-digital-points"><b>20 praktycznych rozdziałów</b><b>Checklisty po każdym etapie</b><b>Plan działania na pierwsze 30 dni</b><b>Dostęp po potwierdzeniu płatności</b></div><div class="sx-digital-buy"><strong id="sxDigitalPrice">39,99 PLN</strong><button id="sxDigitalBuy" type="button">KUP TERAZ →</button><span class="sx-digital-purchase-count" id="sxDigitalPurchaseCount">— osób kupiło</span></div><label class="sx-digital-consent"><input id="sxDigitalConsent" type="checkbox"><span>Chcę otrzymać treść cyfrową od razu po zapłacie i przyjmuję do wiadomości, że po rozpoczęciu jej dostarczania utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.</span></label><div class="sx-digital-status" id="sxDigitalStatus" aria-live="polite"></div></div></div>
+<div class="sx-digital-product-info"><span id="sxDigitalProductMeta">STARXV DIGITAL / E-BOOK</span><h2 id="sxDigitalProductName">ZERO TO<br>FIRST SALE</h2><h3 id="sxDigitalProductSubtitle">Od pomysłu do pierwszej sprzedaży.</h3><p id="sxDigitalProductDescription">Przewodnik prowadzący przez walidację pomysłu, MVP, wycenę, branding, launch, sprzedaż i pracę z pierwszymi klientami. Każdy etap kończy się praktyczną checklistą.</p><div class="sx-digital-points" id="sxDigitalProductPoints"><b>Produkt cyfrowy PDF</b><b>Dostęp po potwierdzeniu płatności</b><b>Przypisany do konta STARXV</b><b>Pobieranie z biblioteki zamówień</b></div><div class="sx-digital-buy"><strong id="sxDigitalPrice">39,99 PLN</strong><button id="sxDigitalBuy" type="button">KUP TERAZ →</button><span class="sx-digital-purchase-count" id="sxDigitalPurchaseCount">— osób kupiło</span></div><label class="sx-digital-consent"><input id="sxDigitalConsent" type="checkbox"><span>Chcę otrzymać treść cyfrową od razu po zapłacie i przyjmuję do wiadomości, że po rozpoczęciu jej dostarczania utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.</span></label><div class="sx-digital-status" id="sxDigitalStatus" aria-live="polite"></div></div></div>
 <section class="sx-digital-reviews" id="sxDigitalReviews">
   <div class="sx-digital-reviews-head">
-    <div><span>STARXV DIGITAL / REVIEWS</span><h2>OPINIE O<br>ZERO TO FIRST SALE</h2></div>
+    <div><span>STARXV DIGITAL / REVIEWS</span><h2 id="sxDigitalReviewsTitle">OPINIE O<br>ZERO TO FIRST SALE</h2></div>
     <div class="sx-digital-rating-summary"><strong id="sxDigitalReviewAverage">—</strong><div><div class="sx-digital-review-stars" id="sxDigitalReviewStars">☆☆☆☆☆</div><small id="sxDigitalReviewCount">Brak opinii</small></div></div>
   </div>
   <div class="sx-digital-review-list" id="sxDigitalReviewList"><div class="sx-digital-review-empty">Ładowanie opinii…</div></div>
@@ -3261,47 +3273,54 @@ window.STARXV_CART_PRICE_HTML=function(item){
  const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');
  const status=document.getElementById('sxDigitalStatus'),price=document.getElementById('sxDigitalPrice'),buy=document.getElementById('sxDigitalBuy'),consent=document.getElementById('sxDigitalConsent'),owned=document.getElementById('sxDigitalOwned');
  const purchaseCount=document.getElementById('sxDigitalPurchaseCount'),reviewList=document.getElementById('sxDigitalReviewList'),reviewAverage=document.getElementById('sxDigitalReviewAverage'),reviewStars=document.getElementById('sxDigitalReviewStars'),reviewCount=document.getElementById('sxDigitalReviewCount');
- let product=null;
- function showGate(){gate.classList.add('open');gate.setAttribute('aria-hidden','false')}
- function hideGate(){gate.classList.remove('open');gate.setAttribute('aria-hidden','true')}
- function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=false;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
- async function loadDigital(){try{const r=await fetch('/api/digital/products',{cache:'no-store'}),j=await r.json();product=j.products?.find(x=>x.id==='zero-to-first-sale');if(!product)return;price.textContent=`${Number(product.price||0).toFixed(2).replace('.',',')} PLN`;if(purchaseCount){const n=Math.max(0,Number(product.purchaseCount||0));purchaseCount.textContent=n===1?'1 osoba kupiła':`${n} osób kupiło`;}await loadDigitalReviews();const main=document.getElementById('sxDigitalProductImage'),thumbs=document.querySelector('.sx-digital-product-thumbs');const images=[product.image,...(Array.isArray(product.gallery)?product.gallery:[])].map(x=>String(x||'').trim()).filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,10);if(main&&images.length)main.src=images[0];if(thumbs&&images.length){thumbs.innerHTML=images.map((src,i)=>`<button class="${i===0?'active':''}" type="button" data-digital-image="${src.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}"><img src="${src.replace(/&/g,'&amp;').replace(/"/g,'&quot;')}" alt=""></button>`).join('');thumbs.querySelectorAll('[data-digital-image]').forEach(b=>b.addEventListener('click',()=>{main.src=b.dataset.digitalImage;thumbs.querySelectorAll('[data-digital-image]').forEach(x=>x.classList.toggle('active',x===b))}))}buy.disabled=false;buy.textContent='KUP TERAZ →';await checkOrders()}catch{price.textContent='39,99 PLN';buy.disabled=false;buy.textContent='KUP TERAZ →';status.textContent=''}}
+ const catalog=document.getElementById('sxDigitalCatalog'),nameEl=document.getElementById('sxDigitalProductName'),subtitleEl=document.getElementById('sxDigitalProductSubtitle'),descriptionEl=document.getElementById('sxDigitalProductDescription'),reviewsTitle=document.getElementById('sxDigitalReviewsTitle'),download=document.getElementById('sxDigitalDownload');
+ let product=null,products=[];
  const escDigital=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const starsDigital=n=>{const v=Math.max(0,Math.min(5,Number(n)||0));return Array.from({length:5},(_,i)=>i<Math.round(v)?'★':'☆').join('')};
- async function loadDigitalReviews(){
-   if(!reviewList)return;
-   try{
-     const r=await fetch('/api/reviews/zero-to-first-sale',{cache:'no-store',credentials:'same-origin'}),j=await r.json();
-     if(!r.ok)throw new Error();
-     const list=Array.isArray(j.reviews)?j.reviews:[];
-     const avg=Number(j.average||0);
-     reviewAverage.textContent=list.length?avg.toFixed(1).replace('.',','):'—';
-     reviewStars.textContent=starsDigital(avg);
-     reviewCount.textContent=list.length===1?'1 OPINIA':`${list.length} OPINII`;
-     reviewList.innerHTML=list.length?list.map(x=>`<article class="sx-digital-review-card"><div class="sx-digital-review-card-head"><div class="sx-digital-review-author"><div class="sx-digital-review-avatar">${escDigital((x.name||'K').trim().charAt(0).toUpperCase()||'K')}</div><div><b>${escDigital(x.name||'Klient')}</b><small>${new Date(x.updatedAt||x.createdAt||Date.now()).toLocaleDateString('pl-PL')}</small></div></div><div class="stars">${starsDigital(x.rating)}</div></div><p>${escDigital(x.text||'')}</p></article>`).join(''):'<div class="sx-digital-review-empty">Ten e-book nie ma jeszcze opinii. Pierwszą opinię będzie można dodać po opłaconym zakupie.</div>';
-   }catch{reviewList.innerHTML='<div class="sx-digital-review-empty">Nie udało się pobrać opinii.</div>'}
+ function showGate(){gate.classList.add('open');gate.setAttribute('aria-hidden','false')}
+ function hideGate(){gate.classList.remove('open');gate.setAttribute('aria-hidden','true')}
+ function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=false;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){const q=new URLSearchParams(location.search);if(!q.get('section'))history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
+ function renderCatalog(){
+   if(!catalog)return;
+   catalog.innerHTML=products.length?products.map((p,i)=>`<button class="sx-digital-catalog-card ${product?.id===p.id?'active':''}" type="button" data-digital-product-id="${escDigital(p.id)}"><img src="${escDigital(p.image||p.gallery?.[0]||'')}" alt="${escDigital(p.name||'E-book')}"><span><small>STARXV DIGITAL / E-BOOK ${String(i+1).padStart(2,'0')}</small><strong>${escDigital(p.name||p.id)}</strong><p>${escDigital(p.subtitle||p.description||'Produkt cyfrowy STARXV')}</p><span class="price">${Number(p.price||0).toFixed(2).replace('.',',')} PLN</span></span></button>`).join(''):'<div class="sx-digital-review-empty">Brak aktywnych produktów cyfrowych.</div>';
+   catalog.querySelectorAll('[data-digital-product-id]').forEach(b=>b.onclick=()=>selectDigitalProduct(b.dataset.digitalProductId,true));
  }
- window.addEventListener('starxv:reviews-changed',e=>{if(e.detail?.productId==='zero-to-first-sale')loadDigitalReviews()});
- async function checkOrders(){try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json();const o=(j.orders||[]).find(x=>x.orderType==='digital'&&x.digitalProductId==='zero-to-first-sale'&&x.paymentStatus==='paid');if(o){owned.hidden=false;buy.textContent='JUŻ KUPIONO ✓';buy.disabled=true;status.textContent='Produkt jest przypisany do Twojego konta.'}}catch{}}
- async function purchase(){status.textContent='';if(!consent.checked){status.textContent='Zaznacz zgodę dotyczącą natychmiastowego dostępu do treści cyfrowej.';return}buy.disabled=true;buy.textContent='PRZYGOTOWYWANIE...';try{let r=await fetch('/api/digital/orders/prepare',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:'zero-to-first-sale',digitalConsent:true})});if(r.status===401){status.textContent='Najpierw zaloguj się na konto STARXV przez ikonę profilu w górnym menu.';buy.disabled=false;buy.textContent='KUP TERAZ →';return}let j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się utworzyć zamówienia.');if(j.alreadyOwned){owned.hidden=false;status.textContent='Ten e-book jest już na Twoim koncie.';return}r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:j.order.id})});j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić płatności.');location.href=j.url}catch(e){status.textContent=e.message;buy.disabled=false;buy.textContent='KUP E-BOOK →'}}
+ async function selectDigitalProduct(id,scroll=false){
+   const next=products.find(x=>x.id===id);if(!next)return;product=next;owned.hidden=true;status.textContent='';if(consent)consent.checked=false;
+   renderCatalog();
+   if(nameEl)nameEl.textContent=product.name||product.id;
+   if(subtitleEl)subtitleEl.textContent=product.subtitle||'';
+   if(descriptionEl)descriptionEl.textContent=product.description||'';
+   if(reviewsTitle)reviewsTitle.innerHTML=`OPINIE O<br>${escDigital(product.name||product.id)}`;
+   if(download){download.href='/api/digital/download/'+encodeURIComponent(product.id);download.textContent=`POBIERZ ${product.name||'E-BOOK'} ↓`;}
+   price.textContent=`${Number(product.price||0).toFixed(2).replace('.',',')} PLN`;
+   if(purchaseCount){const n=Math.max(0,Number(product.purchaseCount||0));purchaseCount.textContent=n===1?'1 osoba kupiła':`${n} osób kupiło`;}
+   const image=document.getElementById('sxDigitalProductImage'),thumbs=document.querySelector('.sx-digital-product-thumbs');
+   const images=[product.image,...(Array.isArray(product.gallery)?product.gallery:[])].map(x=>String(x||'').trim()).filter((x,i,a)=>x&&a.indexOf(x)===i).slice(0,10);
+   if(image&&images.length){image.src=images[0];image.alt=product.name||'E-book';}
+   if(thumbs){thumbs.innerHTML=images.map((src,i)=>`<button class="${i===0?'active':''}" type="button" data-digital-image="${escDigital(src)}"><img src="${escDigital(src)}" alt=""></button>`).join('');thumbs.querySelectorAll('[data-digital-image]').forEach(b=>b.addEventListener('click',()=>{image.src=b.dataset.digitalImage;thumbs.querySelectorAll('[data-digital-image]').forEach(x=>x.classList.toggle('active',x===b))}))}
+   buy.disabled=false;buy.textContent='KUP TERAZ →';
+   const q=new URLSearchParams(location.search);q.set('section','digital');q.set('product',product.id);history.replaceState(null,'','/?'+q.toString());
+   await loadDigitalReviews();await checkOrders();
+   if(scroll)document.getElementById('sxDigitalProduct')?.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+ async function loadDigital(){
+   try{const r=await fetch('/api/digital/products',{cache:'no-store'}),j=await r.json();products=Array.isArray(j.products)?j.products:[];if(!products.length)return;const requested=new URLSearchParams(location.search).get('product');product=products.find(x=>x.id===requested)||products[0];renderCatalog();await selectDigitalProduct(product.id,false)}
+   catch{price.textContent='—';buy.disabled=true;buy.textContent='NIEDOSTĘPNE';status.textContent='Nie udało się pobrać produktów cyfrowych.'}
+ }
+ async function loadDigitalReviews(){
+   if(!reviewList||!product)return;
+   try{const r=await fetch('/api/reviews/'+encodeURIComponent(product.id),{cache:'no-store',credentials:'same-origin'}),j=await r.json();if(!r.ok)throw new Error();const list=Array.isArray(j.reviews)?j.reviews:[],avg=Number(j.average||0);reviewAverage.textContent=list.length?avg.toFixed(1).replace('.',','):'—';reviewStars.textContent=starsDigital(avg);reviewCount.textContent=list.length===1?'1 OPINIA':`${list.length} OPINII`;reviewList.innerHTML=list.length?list.map(x=>`<article class="sx-digital-review-card"><div class="sx-digital-review-card-head"><div class="sx-digital-review-author"><div class="sx-digital-review-avatar">${escDigital((x.name||'K').trim().charAt(0).toUpperCase()||'K')}</div><div><b>${escDigital(x.name||'Klient')}</b><small>${new Date(x.updatedAt||x.createdAt||Date.now()).toLocaleDateString('pl-PL')}</small></div></div><div class="stars">${starsDigital(x.rating)}</div></div><p>${escDigital(x.text||'')}</p></article>`).join(''):'<div class="sx-digital-review-empty">Ten e-book nie ma jeszcze opinii. Pierwszą opinię będzie można dodać po opłaconym zakupie.</div>'}
+   catch{reviewList.innerHTML='<div class="sx-digital-review-empty">Nie udało się pobrać opinii.</div>'}
+ }
+ window.addEventListener('starxv:reviews-changed',e=>{if(product&&e.detail?.productId===product.id)loadDigitalReviews()});
+ async function checkOrders(){if(!product)return;try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json();const o=(j.orders||[]).find(x=>x.orderType==='digital'&&x.digitalProductId===product.id&&x.paymentStatus==='paid');if(o){owned.hidden=false;buy.textContent='JUŻ KUPIONO ✓';buy.disabled=true;status.textContent='Produkt jest przypisany do Twojego konta.'}}catch{}}
+ async function purchase(){if(!product)return;status.textContent='';if(!consent.checked){status.textContent='Zaznacz zgodę dotyczącą natychmiastowego dostępu do treści cyfrowej.';return}buy.disabled=true;buy.textContent='PRZYGOTOWYWANIE...';try{let r=await fetch('/api/digital/orders/prepare',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:product.id,digitalConsent:true})});if(r.status===401){status.textContent='Najpierw zaloguj się na konto STARXV.';buy.disabled=false;buy.textContent='KUP TERAZ →';return}let j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się utworzyć zamówienia.');if(j.alreadyOwned){owned.hidden=false;status.textContent='Ten e-book jest już na Twoim koncie.';return}r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:j.order.id})});j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić płatności.');location.href=j.url}catch(e){status.textContent=e.message;buy.disabled=false;buy.textContent='KUP E-BOOK →'}}
  async function paymentReturn(){const q=new URLSearchParams(location.search),oid=q.get('order');if(q.get('payment')!=='return'||!oid)return;status.textContent='Potwierdzamy płatność…';for(let i=0;i<12;i++){try{const r=await fetch('/api/orders/'+encodeURIComponent(oid)+'/payment-status',{credentials:'same-origin'});if(r.ok){const j=await r.json();if(j.confirmed){status.textContent='Płatność potwierdzona ✓';owned.hidden=false;owned.scrollIntoView({behavior:'smooth'});return}}}catch{}await new Promise(x=>setTimeout(x,1500))}status.textContent='Płatność wróciła z bramki. Jeśli została opłacona, dostęp pojawi się po potwierdzeniu przez SimPay.'}
  gate.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>world(b.dataset.world));
- const sxNavClothing=document.getElementById('sxNavClothing');
- const sxNavDigital=document.getElementById('sxNavDigital');
- const sxNavBrand=document.getElementById('sxNavBrand');
- const sxNavContact=document.getElementById('sxNavContact');
- function goClothingSection(selector){
-   world('clothing');
-   requestAnimationFrame(()=>requestAnimationFrame(()=>{
-     const target=document.querySelector(selector);
-     if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
-   }));
- }
- if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{
-  e.preventDefault();
-  const modal=document.getElementById('sxClothingComingSoonModal');
-  if(modal){modal.classList.add('open');modal.setAttribute('aria-hidden','false')}
-});
+ const sxNavClothing=document.getElementById('sxNavClothing'),sxNavDigital=document.getElementById('sxNavDigital'),sxNavBrand=document.getElementById('sxNavBrand'),sxNavContact=document.getElementById('sxNavContact');
+ function goClothingSection(selector){world('clothing');requestAnimationFrame(()=>requestAnimationFrame(()=>{const target=document.querySelector(selector);if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}))}
+ if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{e.preventDefault();const modal=document.getElementById('sxClothingComingSoonModal');if(modal){modal.classList.add('open');modal.setAttribute('aria-hidden','false')}});
  if(sxNavDigital)sxNavDigital.addEventListener('click',e=>{e.preventDefault();world('digital');window.scrollTo({top:0,behavior:'smooth'})});
  if(sxNavBrand)sxNavBrand.addEventListener('click',e=>{e.preventDefault();goClothingSection('#story')});
  if(sxNavContact)sxNavContact.addEventListener('click',e=>{e.preventDefault();openStarxvContact()});
