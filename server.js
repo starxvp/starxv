@@ -819,7 +819,7 @@ function ensureStore(db){
   if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
   if(!db.digitalProducts||typeof db.digitalProducts!=='object'){
     db.digitalProducts={
-      'zero-to-first-sale':{id:'zero-to-first-sale',name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/zero-to-first-sale-3d.png',gallery:['/assets/zero-to-first-sale-3d.png','/assets/zero-to-first-sale-cover.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
+      'zero-to-first-sale':{id:'zero-to-first-sale',name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',meta:'STARXV DIGITAL / E-BOOK',points:['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/zero-to-first-sale-3d.png',gallery:['/assets/zero-to-first-sale-3d.png','/assets/zero-to-first-sale-cover.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
     };
   }
   if(!Array.isArray(db.orders))db.orders=[];
@@ -1171,7 +1171,7 @@ function getDigitalProduct(db,id){ensureStore(db);return db.digitalProducts?.[St
 function publicDigitalProduct(p,db){
   const file=digitalFilePath(p);
   const purchaseCount=db?new Set((db.orders||[]).filter(o=>o.orderType==='digital'&&String(o.digitalProductId||'')===String(p.id||'')&&o.paymentStatus==='paid'&&o.userId).map(o=>String(o.userId))).size:0;
-  return {id:p.id,name:p.name,subtitle:p.subtitle||'',description:p.description||'',price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file),purchaseCount};
+  return {id:p.id,name:p.name,subtitle:p.subtitle||'',description:p.description||'',meta:p.meta||'STARXV DIGITAL / E-BOOK',points:Array.isArray(p.points)?p.points.slice(0,4):['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file),purchaseCount};
 }
 app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.setHeader('Cache-Control','no-store');res.json({ok:true,products:Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(p=>publicDigitalProduct(p,db))});});
 app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60*1000),(req,res)=>{
@@ -1748,6 +1748,11 @@ function cleanDigitalPayload(body={},existing=null){
   const name=String(body.name??existing?.name??'').trim().slice(0,160);
   const subtitle=String(body.subtitle??existing?.subtitle??'').trim().slice(0,220);
   const description=String(body.description??existing?.description??'').trim().slice(0,2000);
+  const meta=String(body.meta??existing?.meta??'STARXV DIGITAL / E-BOOK').trim().slice(0,120);
+  const defaultPoints=['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'];
+  const rawPoints=Array.isArray(body.points)?body.points:(Array.isArray(existing?.points)?existing.points:defaultPoints);
+  const points=rawPoints.map(x=>String(x||'').trim().slice(0,160)).filter(Boolean).slice(0,4);
+  while(points.length<4)points.push(defaultPoints[points.length]);
   const price=Number(body.price??existing?.price??0);
   const image=String(body.image??existing?.image??'').trim().slice(0,200000);
   const gallery=(Array.isArray(body.gallery)?body.gallery:(existing?.gallery||[])).map(x=>String(x||'').trim().slice(0,200000)).filter(Boolean).slice(0,10);
@@ -1757,7 +1762,7 @@ function cleanDigitalPayload(body={},existing=null){
   if(!name)throw new Error('Podaj nazwę produktu cyfrowego.');
   if(!Number.isFinite(price)||price<0||price>100000)throw new Error('Podaj prawidłową cenę.');
   if(fileName&&!/\.pdf$/i.test(fileName))throw new Error('Plik produktu cyfrowego musi być plikiem PDF.');
-  return {id,name,subtitle,description,price:money2(price),image,gallery,fileName,downloadName:downloadName||fileName,active};
+  return {id,name,subtitle,description,meta:meta||'STARXV DIGITAL / E-BOOK',points,price:money2(price),image,gallery,fileName,downloadName:downloadName||fileName,active};
 }
 app.post('/api/admin/digital-products',adminOnly,(req,res)=>{try{ensureStore(req.db);const data=cleanDigitalPayload(req.body||{});if(req.db.digitalProducts[data.id])return res.status(409).json({error:'Produkt cyfrowy o takim ID już istnieje.'});req.db.digitalProducts[data.id]=data;save(req.db);res.status(201).json({ok:true,product:publicDigitalProduct(data)})}catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu cyfrowego.'})}});
 app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{ensureStore(req.db);const id=String(req.params.id||''),current=req.db.digitalProducts[id];if(!current)return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const data=cleanDigitalPayload({...req.body,id},current);req.db.digitalProducts[id]=data;save(req.db);res.json({ok:true,product:publicDigitalProduct(data)})}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu cyfrowego.'})}});
