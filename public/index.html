@@ -489,13 +489,24 @@
 </style>
 
 <style id="starxv-digital-hero-art-fill">
-/* Fill the beige DIGITAL hero artwork without changing the cover asset. */
-#sxDigitalPage .sx-digital-art{position:relative!important;overflow:hidden!important;isolation:isolate!important}
-#sxDigitalPage .sx-digital-art:before{content:"ZERO TO FIRST SALE\A\A 01 / DIGITAL GUIDE\A BUSINESS • MARKETING • SALES";white-space:pre;position:absolute;left:7%;top:9%;z-index:1;color:#151515;font:900 clamp(10px,1vw,14px)/1.45 Arial,sans-serif;letter-spacing:.12em;opacity:.82}
-#sxDigitalPage .sx-digital-art:after{content:"20 ROZDZIAŁÓW     /     CHECKLISTY     /     30-DNIOWY PLAN";position:absolute;left:7%;right:7%;bottom:8%;z-index:1;padding-top:13px;border-top:1px solid rgba(10,10,10,.24);color:#181818;font:900 clamp(7px,.72vw,10px)/1.4 Arial,sans-serif;letter-spacing:.12em;text-align:left}
-#sxDigitalPage .sx-digital-art>img{position:relative!important;z-index:2!important}
-#sxDigitalPage .sx-digital-art>span{z-index:3!important}
-@media(max-width:760px){#sxDigitalPage .sx-digital-art:before{left:6%;top:6%;font-size:8px}#sxDigitalPage .sx-digital-art:after{left:6%;right:6%;bottom:7%;font-size:6px}}
+/* Refined minimal DIGITAL hero artwork. */
+#sxDigitalPage .sx-digital-art{position:relative!important;overflow:hidden!important;isolation:isolate!important;display:flex;align-items:stretch;justify-content:center;background:#d9d0bf!important}
+#sxDigitalPage .sx-digital-art>img,
+#sxDigitalPage .sx-digital-art>span{display:none!important}
+#sxDigitalPage .sx-digital-art-minimal{position:relative;width:100%;min-height:100%;display:block}
+#sxDigitalPage .sx-digital-art-minimal:before{content:"";position:absolute;left:9%;right:9%;bottom:102px;height:1px;background:rgba(17,17,17,.22)}
+#sxDigitalPage .sx-digital-art-minimal span{position:absolute;left:9%;bottom:64px;color:#161616;font:900 clamp(10px,.95vw,13px)/1 Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase}
+#sxDigitalPage .sx-digital-copy .sx-digital-kicker{letter-spacing:.18em}
+#sxDigitalPage .sx-digital-strip{display:flex;align-items:center;justify-content:center;gap:18px;padding:26px 70px;border-top:1px solid #24231f;border-bottom:1px solid #24231f;background:#080807}
+#sxDigitalPage .sx-digital-strip:before,
+#sxDigitalPage .sx-digital-strip:after{content:"";flex:1 1 0;height:1px;background:#24231f}
+#sxDigitalPage .sx-digital-strip span{display:block;color:#b89b3f;font:900 10px/1 Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase;white-space:nowrap}
+@media(max-width:760px){
+  #sxDigitalPage .sx-digital-art-minimal:before{left:8%;right:8%;bottom:76px}
+  #sxDigitalPage .sx-digital-art-minimal span{left:8%;bottom:44px;font-size:9px;letter-spacing:.22em}
+  #sxDigitalPage .sx-digital-strip{padding:18px 20px;gap:12px}
+  #sxDigitalPage .sx-digital-strip span{font-size:8px;letter-spacing:.2em}
+}
 </style>
 
 <style id="starxv-clothing-beta-access">
@@ -639,10 +650,10 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
     <div class="sx-digital-top-brand"><strong>STARXV®</strong><span>/</span><strong>DIGITAL</strong></div>
   </div>
   <div class="sx-digital-hero">
-    <div class="sx-digital-copy"><span class="sx-digital-kicker">STARXV DIGITAL / E-BOOK 01</span><h1>IDEAS INTO<br><i>SOMETHING REAL.</i></h1><p>Praktyczna wiedza dla osób, które chcą przejść od pomysłu do działania — bez zbędnego lania wody.</p><a href="#sxDigitalProduct">DISCOVER E-BOOK →</a></div>
-    <div class="sx-digital-art"><img src="/assets/zero-to-first-sale-cover.png" alt="ZERO TO FIRST SALE — okładka e-booka"><span>A STARXV DIGITAL PRODUCT</span></div>
+    <div class="sx-digital-copy"><span class="sx-digital-kicker">STARXV DIGITAL / E-BOOKS</span><h1>IDEAS INTO<br><i>SOMETHING REAL.</i></h1><p>Praktyczna wiedza dla osób, które chcą przejść od pomysłu do działania — bez zbędnego lania wody.</p><a href="#sxDigitalProduct">DISCOVER E-BOOK →</a></div>
+    <div class="sx-digital-art"><div class="sx-digital-art-minimal"><span>E-BOOKS</span></div></div>
   </div>
-  <div class="sx-digital-strip"><span>20 ROZDZIAŁÓW</span><span>CHECKLISTY</span><span>30-DNIOWY PLAN</span><span>PDF / DIGITAL</span></div>
+  <div class="sx-digital-strip"><span>E-BOOKS</span></div>
   <div class="sx-digital-catalog" id="sxDigitalCatalog" aria-label="Produkty cyfrowe"></div>
   <div class="sx-digital-product" id="sxDigitalProduct">
 <div class="sx-digital-product-gallery"><div class="sx-digital-product-thumbs"><button class="active" type="button" data-digital-image="/assets/zero-to-first-sale-3d.png"><img src="/assets/zero-to-first-sale-3d.png" alt=""></button><button type="button" data-digital-image="/assets/zero-to-first-sale-cover.png"><img src="/assets/zero-to-first-sale-cover.png" alt=""></button></div><div class="sx-digital-product-cover"><img id="sxDigitalProductImage" src="/assets/zero-to-first-sale-3d.png" alt="ZERO TO FIRST SALE"></div></div>
