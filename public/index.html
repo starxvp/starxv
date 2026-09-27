@@ -563,15 +563,16 @@
 @media(max-width:760px){.sx-digital-reviews{padding:58px 20px}.sx-digital-reviews-head{align-items:flex-start;flex-direction:column}.sx-digital-rating-summary{justify-content:flex-start}.sx-digital-review-list{grid-template-columns:1fr}.sx-digital-purchase-count{width:100%;min-height:0;margin-top:2px}}
 
 /* STARXV Digital catalog: render every active e-book from the backend. */
-.sx-digital-catalog{max-width:1250px;margin:0 auto;padding:42px 70px 24px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;background:#080807}
-.sx-digital-catalog-card{display:grid;grid-template-columns:112px minmax(0,1fr);gap:18px;align-items:center;padding:16px;border:1px solid #292824;background:#0c0c0b;cursor:pointer;text-align:left;color:#f2efe8;transition:.18s ease}
-.sx-digital-catalog-card:hover,.sx-digital-catalog-card.active{border-color:#b89b3f;transform:translateY(-1px)}
-.sx-digital-catalog-card img{width:112px;height:142px;object-fit:cover;background:#111}
-.sx-digital-catalog-card small{display:block;color:#b89b3f;font-size:8px;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
-.sx-digital-catalog-card strong{display:block;margin-top:7px;font-size:19px;line-height:1.05}
-.sx-digital-catalog-card p{margin:8px 0 0;color:#85827b;font-size:10px;line-height:1.5}
-.sx-digital-catalog-card .price{margin-top:11px;color:#f2efe8;font-size:13px;font-weight:950}
-@media(max-width:760px){.sx-digital-catalog{padding:28px 20px 14px;grid-template-columns:1fr}.sx-digital-catalog-card{grid-template-columns:86px minmax(0,1fr)}.sx-digital-catalog-card img{width:86px;height:110px}}
+.sx-digital-catalog{max-width:1250px;margin:0 auto;padding:46px 70px 30px;display:flex;flex-direction:column;gap:0;background:#080807;border-top:1px solid #1d1c19}
+.sx-digital-catalog-card{position:relative;width:100%;display:grid;grid-template-columns:155px minmax(0,1fr) auto;gap:28px;align-items:center;padding:24px 18px;border:0;border-bottom:1px solid #292824;background:transparent;cursor:pointer;text-align:left;color:#f2efe8;transition:background .2s ease,padding .2s ease}
+.sx-digital-catalog-card:before{content:'';position:absolute;left:0;top:22px;bottom:22px;width:2px;background:transparent;transition:.2s ease}
+.sx-digital-catalog-card:hover{background:#0d0d0b;padding-left:24px}.sx-digital-catalog-card.active{background:linear-gradient(90deg,rgba(184,155,63,.10),rgba(184,155,63,0) 55%);padding-left:24px}.sx-digital-catalog-card.active:before{background:#b89b3f}
+.sx-digital-catalog-card img{width:155px;height:190px;object-fit:cover;background:#111;border:1px solid #27251f}
+.sx-digital-catalog-copy{min-width:0}.sx-digital-catalog-card small{display:block;color:#b89b3f;font-size:9px;font-weight:950;letter-spacing:.16em;text-transform:uppercase}
+.sx-digital-catalog-card strong{display:block;margin-top:10px;font-size:clamp(24px,2.2vw,35px);line-height:.98;letter-spacing:-.035em}
+.sx-digital-catalog-card p{max-width:650px;margin:12px 0 0;color:#8f8b83;font-size:13px;line-height:1.65}
+.sx-digital-catalog-side{display:flex;min-width:150px;flex-direction:column;align-items:flex-end;gap:12px}.sx-digital-catalog-card .price{color:#f2efe8;font-size:18px;font-weight:950;white-space:nowrap}.sx-digital-catalog-open{font-size:9px;font-weight:950;letter-spacing:.13em;color:#b89b3f;text-transform:uppercase}
+@media(max-width:760px){.sx-digital-catalog{padding:28px 20px 18px}.sx-digital-catalog-card{grid-template-columns:86px minmax(0,1fr);gap:16px;padding:18px 8px}.sx-digital-catalog-card:hover,.sx-digital-catalog-card.active{padding-left:12px}.sx-digital-catalog-card img{width:86px;height:112px}.sx-digital-catalog-card strong{font-size:20px}.sx-digital-catalog-card p{font-size:10px;margin-top:7px}.sx-digital-catalog-side{grid-column:2;min-width:0;align-items:flex-start;gap:5px}.sx-digital-catalog-card .price{font-size:14px}}
 </style>
 
 
@@ -3282,7 +3283,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
  function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=false;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){const q=new URLSearchParams(location.search);if(!q.get('section'))history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
  function renderCatalog(){
    if(!catalog)return;
-   catalog.innerHTML=products.length?products.map((p,i)=>`<button class="sx-digital-catalog-card ${product?.id===p.id?'active':''}" type="button" data-digital-product-id="${escDigital(p.id)}"><img src="${escDigital(p.image||p.gallery?.[0]||'')}" alt="${escDigital(p.name||'E-book')}"><span><small>STARXV DIGITAL / E-BOOK ${String(i+1).padStart(2,'0')}</small><strong>${escDigital(p.name||p.id)}</strong><p>${escDigital(p.subtitle||p.description||'Produkt cyfrowy STARXV')}</p><span class="price">${Number(p.price||0).toFixed(2).replace('.',',')} PLN</span></span></button>`).join(''):'<div class="sx-digital-review-empty">Brak aktywnych produktów cyfrowych.</div>';
+   catalog.innerHTML=products.length?products.map((p,i)=>{const pos=Number.isFinite(Number(p.position))?Number(p.position):(i+1);return `<button class="sx-digital-catalog-card ${product?.id===p.id?'active':''}" type="button" data-digital-product-id="${escDigital(p.id)}"><img src="${escDigital(p.image||p.gallery?.[0]||'')}" alt="${escDigital(p.name||'E-book')}"><span class="sx-digital-catalog-copy"><small>STARXV DIGITAL / E-BOOK ${String(pos).padStart(2,'0')}</small><strong>${escDigital(p.name||p.id)}</strong><p>${escDigital(p.subtitle||p.description||'Produkt cyfrowy STARXV')}</p></span><span class="sx-digital-catalog-side"><span class="price">${Number(p.price||0).toFixed(2).replace('.',',')} PLN</span><span class="sx-digital-catalog-open">ZOBACZ E-BOOK →</span></span></button>`}).join(''):'<div class="sx-digital-review-empty">Brak aktywnych produktów cyfrowych.</div>';
    catalog.querySelectorAll('[data-digital-product-id]').forEach(b=>b.onclick=()=>selectDigitalProduct(b.dataset.digitalProductId,true));
  }
  async function selectDigitalProduct(id,scroll=false){
@@ -3307,7 +3308,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
    if(scroll)document.getElementById('sxDigitalProduct')?.scrollIntoView({behavior:'smooth',block:'start'});
  }
  async function loadDigital(){
-   try{const r=await fetch('/api/digital/products',{cache:'no-store'}),j=await r.json();products=Array.isArray(j.products)?j.products:[];if(!products.length)return;const requested=new URLSearchParams(location.search).get('product');product=products.find(x=>x.id===requested)||products[0];renderCatalog();await selectDigitalProduct(product.id,false)}
+   try{const r=await fetch('/api/digital/products',{cache:'no-store'}),j=await r.json();products=Array.isArray(j.products)?j.products:[];products.sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||String(a.name||'').localeCompare(String(b.name||''),'pl'));if(!products.length)return;const requested=new URLSearchParams(location.search).get('product');product=products.find(x=>x.id===requested)||products[0];renderCatalog();await selectDigitalProduct(product.id,false)}
    catch{price.textContent='—';buy.disabled=true;buy.textContent='NIEDOSTĘPNE';status.textContent='Nie udało się pobrać produktów cyfrowych.'}
  }
  async function loadDigitalReviews(){
