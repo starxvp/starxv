@@ -489,23 +489,23 @@
 </style>
 
 <style id="starxv-digital-hero-art-fill">
-/* Refined minimal DIGITAL hero artwork. */
-#sxDigitalPage .sx-digital-art{position:relative!important;overflow:hidden!important;isolation:isolate!important;display:flex;align-items:stretch;justify-content:center;background:#d9d0bf!important}
+/* Minimal DIGITAL hero panel with editorial benefits. */
+#sxDigitalPage .sx-digital-art{position:relative!important;overflow:hidden!important;isolation:isolate!important;display:flex;align-items:center;justify-content:center;background:#d9d0bf!important;padding:clamp(34px,4vw,70px)!important}
 #sxDigitalPage .sx-digital-art>img,
 #sxDigitalPage .sx-digital-art>span{display:none!important}
-#sxDigitalPage .sx-digital-art-minimal{position:relative;width:100%;min-height:100%;display:block}
-#sxDigitalPage .sx-digital-art-minimal:before{content:"";position:absolute;left:9%;right:9%;bottom:102px;height:1px;background:rgba(17,17,17,.22)}
-#sxDigitalPage .sx-digital-art-minimal span{position:absolute;left:9%;bottom:64px;color:#161616;font:900 clamp(10px,.95vw,13px)/1 Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase}
-#sxDigitalPage .sx-digital-copy .sx-digital-kicker{letter-spacing:.18em}
-#sxDigitalPage .sx-digital-strip{display:flex;align-items:center;justify-content:center;gap:18px;padding:26px 70px;border-top:1px solid #24231f;border-bottom:1px solid #24231f;background:#080807}
-#sxDigitalPage .sx-digital-strip:before,
-#sxDigitalPage .sx-digital-strip:after{content:"";flex:1 1 0;height:1px;background:#24231f}
-#sxDigitalPage .sx-digital-strip span{display:block;color:#b89b3f;font:900 10px/1 Arial,sans-serif;letter-spacing:.28em;text-transform:uppercase;white-space:nowrap}
+#sxDigitalPage .sx-digital-benefits{width:100%;max-width:360px;display:flex;flex-direction:column;gap:0;color:#171717}
+#sxDigitalPage .sx-digital-benefits-kicker{display:block;margin-bottom:24px;color:#6f6243;font:900 9px/1 Arial,sans-serif;letter-spacing:.22em;text-transform:uppercase}
+#sxDigitalPage .sx-digital-benefit{display:grid;grid-template-columns:30px 1fr;gap:15px;align-items:start;padding:18px 0;border-top:1px solid rgba(20,20,20,.20)}
+#sxDigitalPage .sx-digital-benefit:last-child{border-bottom:1px solid rgba(20,20,20,.20)}
+#sxDigitalPage .sx-digital-benefit-num{color:#8c773c;font:900 9px/1 Arial,sans-serif;letter-spacing:.12em;padding-top:3px}
+#sxDigitalPage .sx-digital-benefit b{display:block;color:#171717;font:900 clamp(13px,1.1vw,16px)/1.18 Arial,sans-serif;letter-spacing:-.015em}
+#sxDigitalPage .sx-digital-benefit p{margin:6px 0 0;color:#5f5a50;font:650 10px/1.55 Arial,sans-serif}
+#sxDigitalPage .sx-digital-strip{height:1px!important;min-height:1px!important;padding:0!important;margin:0 70px!important;border:0!important;background:#24231f!important;overflow:hidden!important}
+#sxDigitalPage .sx-digital-strip>*{display:none!important}
 @media(max-width:760px){
-  #sxDigitalPage .sx-digital-art-minimal:before{left:8%;right:8%;bottom:76px}
-  #sxDigitalPage .sx-digital-art-minimal span{left:8%;bottom:44px;font-size:9px;letter-spacing:.22em}
-  #sxDigitalPage .sx-digital-strip{padding:18px 20px;gap:12px}
-  #sxDigitalPage .sx-digital-strip span{font-size:8px;letter-spacing:.2em}
+  #sxDigitalPage .sx-digital-art{padding:34px 24px!important}
+  #sxDigitalPage .sx-digital-benefits{max-width:none}
+  #sxDigitalPage .sx-digital-strip{margin:0 20px!important}
 }
 </style>
 
@@ -626,6 +626,11 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 @media(max-width:700px){.sx-digital-lightbox-stage{padding:12px 50px 36px!important}.sx-digital-lightbox-thumbs{justify-content:flex-start!important}}
 </style>
 
+
+<style id="starxv-cart-coming-soon-lock">
+#openCart{opacity:.42!important;cursor:not-allowed!important;pointer-events:auto!important}
+#openCart .cart-count{display:none!important}
+</style>
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -651,9 +656,15 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
   </div>
   <div class="sx-digital-hero">
     <div class="sx-digital-copy"><span class="sx-digital-kicker">STARXV DIGITAL / E-BOOKS</span><h1>IDEAS INTO<br><i>SOMETHING REAL.</i></h1><p>Praktyczna wiedza dla osób, które chcą przejść od pomysłu do działania — bez zbędnego lania wody.</p><a href="#sxDigitalProduct">DISCOVER E-BOOK →</a></div>
-    <div class="sx-digital-art"><div class="sx-digital-art-minimal"><span>E-BOOKS</span></div></div>
+    <div class="sx-digital-art"><div class="sx-digital-benefits">
+      <span class="sx-digital-benefits-kicker">DLACZEGO STARXV DIGITAL</span>
+      <div class="sx-digital-benefit"><span class="sx-digital-benefit-num">01</span><div><b>Dostęp od razu po płatności</b><p>Zakupiony e-book pojawia się na Twoim koncie po potwierdzeniu płatności.</p></div></div>
+      <div class="sx-digital-benefit"><span class="sx-digital-benefit-num">02</span><div><b>Na stałe w Twojej bibliotece</b><p>Wracaj do swoich materiałów z poziomu zamówień STARXV.</p></div></div>
+      <div class="sx-digital-benefit"><span class="sx-digital-benefit-num">03</span><div><b>Praktycznie, bez lania wody</b><p>Konkretne treści, przykłady i materiały przygotowane do realnego użycia.</p></div></div>
+      <div class="sx-digital-benefit"><span class="sx-digital-benefit-num">04</span><div><b>Wygodny format PDF</b><p>Czytaj na telefonie, komputerze lub tablecie — kiedy chcesz.</p></div></div>
+    </div></div>
   </div>
-  <div class="sx-digital-strip"><span>E-BOOKS</span></div>
+  <div class="sx-digital-strip" aria-hidden="true"></div>
   <div class="sx-digital-catalog" id="sxDigitalCatalog" aria-label="Produkty cyfrowe"></div>
   <div class="sx-digital-product" id="sxDigitalProduct">
 <div class="sx-digital-product-gallery"><div class="sx-digital-product-thumbs"><button class="active" type="button" data-digital-image="/assets/zero-to-first-sale-3d.png"><img src="/assets/zero-to-first-sale-3d.png" alt=""></button><button type="button" data-digital-image="/assets/zero-to-first-sale-cover.png"><img src="/assets/zero-to-first-sale-cover.png" alt=""></button></div><div class="sx-digital-product-cover"><img id="sxDigitalProductImage" src="/assets/zero-to-first-sale-3d.png" alt="ZERO TO FIRST SALE"></div></div>
@@ -3495,5 +3506,32 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
 })();
 </script>
 
+
+<div id="sxCartLockedNotice" aria-hidden="true" style="position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.78);backdrop-filter:blur(10px)">
+  <div style="position:relative;width:min(460px,100%);padding:34px;border:1px solid rgba(255,255,255,.14);background:#090909;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.6)">
+    <button id="sxCartLockedClose" type="button" aria-label="Zamknij" style="position:absolute;right:16px;top:12px;border:0;background:transparent;color:#777;font-size:25px;cursor:pointer">×</button>
+    <div style="color:#b89b3f;font:900 8px/1 Arial,sans-serif;letter-spacing:.18em;margin-bottom:18px">STARXV / CART</div>
+    <h3 style="margin:0;font:950 32px/.95 Arial,sans-serif;letter-spacing:-.045em">KOSZYK<br>COMING SOON.</h3>
+    <p style="margin:20px 0 0;color:#999;font:650 11px/1.7 Arial,sans-serif">Koszyk zostanie uruchomiony wraz z działem Accessories. E-booki kupujesz bezpośrednio przyciskiem „Kup teraz”.</p>
+  </div>
+</div>
+<script id="starxv-cart-coming-soon-lock-script">
+(function(){
+  const btn=document.getElementById('openCart');
+  const modal=document.getElementById('sxCartLockedNotice');
+  const close=document.getElementById('sxCartLockedClose');
+  if(!btn||!modal)return;
+  btn.setAttribute('title','Koszyk będzie dostępny wraz z Accessories');
+  btn.setAttribute('aria-label','Koszyk — coming soon');
+  btn.addEventListener('click',function(e){
+    e.preventDefault();e.stopImmediatePropagation();
+    modal.style.display='flex';modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+  },true);
+  const hide=()=>{modal.style.display='none';modal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
+  close?.addEventListener('click',hide);
+  modal.addEventListener('click',e=>{if(e.target===modal)hide()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.getAttribute('aria-hidden')==='false')hide()});
+})();
+</script>
 </body>
 </html>
