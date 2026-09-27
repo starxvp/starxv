@@ -3273,7 +3273,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
  const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');
  const status=document.getElementById('sxDigitalStatus'),price=document.getElementById('sxDigitalPrice'),buy=document.getElementById('sxDigitalBuy'),consent=document.getElementById('sxDigitalConsent'),owned=document.getElementById('sxDigitalOwned');
  const purchaseCount=document.getElementById('sxDigitalPurchaseCount'),reviewList=document.getElementById('sxDigitalReviewList'),reviewAverage=document.getElementById('sxDigitalReviewAverage'),reviewStars=document.getElementById('sxDigitalReviewStars'),reviewCount=document.getElementById('sxDigitalReviewCount');
- const catalog=document.getElementById('sxDigitalCatalog'),nameEl=document.getElementById('sxDigitalProductName'),subtitleEl=document.getElementById('sxDigitalProductSubtitle'),descriptionEl=document.getElementById('sxDigitalProductDescription'),reviewsTitle=document.getElementById('sxDigitalReviewsTitle'),download=document.getElementById('sxDigitalDownload');
+ const catalog=document.getElementById('sxDigitalCatalog'),nameEl=document.getElementById('sxDigitalProductName'),subtitleEl=document.getElementById('sxDigitalProductSubtitle'),descriptionEl=document.getElementById('sxDigitalProductDescription'),metaEl=document.getElementById('sxDigitalProductMeta'),pointsEl=document.getElementById('sxDigitalProductPoints'),reviewsTitle=document.getElementById('sxDigitalReviewsTitle'),download=document.getElementById('sxDigitalDownload');
  let product=null,products=[];
  const escDigital=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const starsDigital=n=>{const v=Math.max(0,Math.min(5,Number(n)||0));return Array.from({length:5},(_,i)=>i<Math.round(v)?'★':'☆').join('')};
@@ -3291,6 +3291,8 @@ window.STARXV_CART_PRICE_HTML=function(item){
    if(nameEl)nameEl.textContent=product.name||product.id;
    if(subtitleEl)subtitleEl.textContent=product.subtitle||'';
    if(descriptionEl)descriptionEl.textContent=product.description||'';
+   if(metaEl)metaEl.textContent=product.meta||'STARXV DIGITAL / E-BOOK';
+   if(pointsEl){const defaults=['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'];const pts=Array.isArray(product.points)?product.points:defaults;pointsEl.innerHTML=defaults.map((d,i)=>`<b>${escDigital(pts[i]||d)}</b>`).join('');}
    if(reviewsTitle)reviewsTitle.innerHTML=`OPINIE O<br>${escDigital(product.name||product.id)}`;
    if(download){download.href='/api/digital/download/'+encodeURIComponent(product.id);download.textContent=`POBIERZ ${product.name||'E-BOOK'} ↓`;}
    price.textContent=`${Number(product.price||0).toFixed(2).replace('.',',')} PLN`;
