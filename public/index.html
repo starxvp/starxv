@@ -657,6 +657,14 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </style>
 
 <style id="starxv-owner-deploy-style">
+.sx-profile-section{margin-top:28px}
+.sx-profile-section:first-of-type{margin-top:0}
+.sx-profile-section-head{display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:0 2px;color:#5f5f5f;font:900 8px/1 Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase}
+.sx-profile-section-head::after{content:"";height:1px;flex:1;background:rgba(255,255,255,.08)}
+.sx-profile-owner-section{margin-top:34px;padding-top:2px}
+.sx-profile-owner-section .sx-profile-section-head{color:#9d8540}
+.sx-profile-owner-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.sx-profile-owner-links{grid-template-columns:1fr}.sx-profile-section{margin-top:22px}.sx-profile-owner-section{margin-top:28px}}
 .sx-deploy-profile-card{position:relative;border-color:rgba(204,170,74,.35)!important}
 .sx-deploy-profile-card .sx-profile-link-kicker{color:#b89b3f!important}
 .sx-accessories-profile-card{position:relative;border-color:rgba(102,177,214,.30)!important}
@@ -2128,9 +2136,17 @@ const renderCart=()=>{hydrateCartDiscounts();
     modal.classList.add('open');modal.setAttribute('aria-hidden','false');
   }
   async function sxInstallDeployProfile(){
-    const links=document.querySelector('#sxAccountDashboard .sx-profile-main-links');if(!links)return;
+    const dash=document.querySelector('#sxAccountDashboard');if(!dash)return;
     const info=await sxLoadDeployInfo();if(!info?.ok)return;
     sxDeployInfo=info;
+    let ownerSection=document.getElementById('sxProfileOwnerSection');
+    if(!ownerSection){
+      ownerSection=document.createElement('section');ownerSection.id='sxProfileOwnerSection';ownerSection.className='sx-profile-section sx-profile-owner-section';
+      ownerSection.innerHTML='<div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-profile-owner-links" id="sxProfileOwnerLinks"></div>';
+      const mainSection=dash.querySelector('.sx-profile-user-section');
+      if(mainSection)mainSection.insertAdjacentElement('afterend',ownerSection);else dash.appendChild(ownerSection);
+    }
+    const links=document.getElementById('sxProfileOwnerLinks');if(!links)return;
     if(!document.getElementById('sxProfileDeployBtn')){
       const btn=document.createElement('button');btn.id='sxProfileDeployBtn';btn.type='button';btn.className='sx-profile-link-card sx-deploy-profile-card';btn.innerHTML='<span class="sx-profile-link-kicker">OWNER TOOLS</span><b>DEPLOY</b><span class="sx-profile-link-arrow">→</span>';btn.onclick=sxOpenDeploy;links.appendChild(btn);
     }
@@ -2145,7 +2161,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
     const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
-    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
+    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><section class="sx-profile-section sx-profile-user-section"><div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div></section>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
   }
