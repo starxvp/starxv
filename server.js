@@ -749,6 +749,7 @@ function supportForUser(report){
   const unread=Boolean(lastSupport && (!report.customerReadAt || new Date(report.customerReadAt)<new Date(lastSupport.createdAt||0)));
   return {
     id:report.id,ticketNo:report.ticketNo||'',type:report.type,description:report.description,
+    orderId:String(report.orderId||''),orderNo:String(report.orderNo||''),orderType:String(report.orderType||''),orderLabel:String(report.orderLabel||''),
     status:report.status||'new',messages,unread,
     createdAt:report.createdAt,updatedAt:report.updatedAt||null,closedByCustomer:Boolean(report.closedByCustomer)
   };
@@ -766,7 +767,19 @@ app.post('/api/support/report',auth,async(req,res)=>{
   const type=String(req.body?.type||'Inne').trim().slice(0,80);
   const description=String(req.body?.description||'').trim().slice(0,1500);
   const page=String(req.body?.page||'/').trim().slice(0,300);
+  const orderId=String(req.body?.orderId||'').trim().slice(0,120);
   if(description.length<5)return res.status(400).json({error:'Opisz problem trochę dokładniej.'});
+  const orderRequired=['Zamówienie','Płatność','Dostawa'].includes(type);
+  let selectedOrder=null;
+  if(orderId){
+    ensureStore(req.db);
+    selectedOrder=(req.db.orders||[]).find(o=>o.id===orderId&&o.userId===req.user.id)||null;
+    if(!selectedOrder)return res.status(400).json({error:'Wybrane zamówienie nie istnieje lub nie należy do tego konta.'});
+  }else if(orderRequired){
+    return res.status(400).json({error:'Wybierz zamówienie, którego dotyczy zgłoszenie.'});
+  }
+  const selectedPublic=selectedOrder?orderForUser(selectedOrder,req.db):null;
+  const selectedLabel=selectedPublic?(selectedPublic.items||[]).map(x=>x?.name).filter(Boolean).slice(0,2).join(' + '):'';
 
   if(!Array.isArray(req.db.supportReports))req.db.supportReports=[];
   const maxTicket=req.db.supportReports.reduce((m,r)=>{
@@ -779,6 +792,10 @@ app.post('/api/support/report',auth,async(req,res)=>{
     userId:req.user.id,
     email:req.user.email,
     type,
+    orderId:selectedPublic?.id||'',
+    orderNo:selectedPublic?.orderNo||'',
+    orderType:selectedPublic?.orderType||'',
+    orderLabel:selectedLabel||'',
     description,
     page,
     createdAt:new Date().toISOString(),
@@ -800,8 +817,8 @@ app.post('/api/support/report',auth,async(req,res)=>{
         from:process.env.SUPPORT_FROM||'STARXV Support <kontakt@starxv.pl>',
         to:'kontakt@starxv.pl',
         replyTo:req.user.email,
-        subject:`STARXV — zgłoszenie problemu: ${type}`,
-        text:`Nowe zgłoszenie STARXV\n\nTyp: ${type}\nKonto: ${req.user.email}\nStrona: ${page}\nData: ${report.createdAt}\n\nOpis:\n${description}`
+        subject:`STARXV — zgłoszenie problemu: ${type}${report.orderNo?' · #'+report.orderNo:''}`,
+        text:`Nowe zgłoszenie STARXV\n\nTyp: ${type}\nKonto: ${req.user.email}${report.orderNo?`\nZamówienie: #${report.orderNo} · ${report.orderType==='digital'?'CYFROWE':'FIZYCZNE'}${report.orderLabel?' · '+report.orderLabel:''}`:''}\nStrona: ${page}\nData: ${report.createdAt}\n\nOpis:\n${description}`
       });
     }catch(err){console.error('Support report email error:',err?.message||err)}
   }

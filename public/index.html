@@ -2620,6 +2620,13 @@ const renderCart=()=>{hydrateCartDiscounts();
 })();
 </script>
 <!-- STARXV: ZGŁOŚ PROBLEM -->
+<style id="starxv-support-order-picker-style">
+.sx-report-order-wrap{margin-top:14px}
+.sx-report-order-wrap[hidden]{display:none!important}
+.sx-report-order-hint{margin:6px 0 0;color:#5f5f5f;font-size:9px;line-height:1.5}
+.sx-report-order-summary{margin-top:9px;padding:10px 12px;border:1px solid rgba(255,255,255,.09);background:#0b0b0b;color:#aaa;font-size:9px;line-height:1.55}
+.sx-report-order-summary b{color:#fff;font-size:10px}
+</style>
 
 <div aria-hidden="true" class="sx-report-overlay" id="sxReportProblemOverlay">
 <div aria-labelledby="sxReportProblemTitle" aria-modal="true" class="sx-report-box" role="dialog">
@@ -2630,6 +2637,14 @@ const renderCart=()=>{hydrateCartDiscounts();
 <select class="sx-report-select" id="sxReportProblemType">
 <option value="Błąd strony">Błąd strony</option><option value="Koszyk">Koszyk</option><option value="Zamówienie">Zamówienie</option><option value="Płatność">Płatność</option><option value="Konto / logowanie">Konto / logowanie</option><option value="Dostawa">Dostawa</option><option value="Inne">Inne</option>
 </select>
+<div class="sx-report-order-wrap" id="sxReportOrderWrap" hidden>
+<label class="sx-report-label" for="sxReportOrderSelect">WYBIERZ ZAMÓWIENIE</label>
+<select class="sx-report-select" id="sxReportOrderSelect">
+<option value="">Ładowanie zamówień…</option>
+</select>
+<div class="sx-report-order-hint">Wybierz konkretne zamówienie fizyczne lub cyfrowe, którego dotyczy zgłoszenie.</div>
+<div class="sx-report-order-summary" id="sxReportOrderSummary" hidden></div>
+</div>
 <label class="sx-report-label" for="sxReportProblemText">OPIS PROBLEMU</label>
 <textarea class="sx-report-text" id="sxReportProblemText" maxlength="1500" placeholder="Napisz, co dokładnie nie działa..." required=""></textarea>
 <div class="sx-report-meta">Do zgłoszenia zostanie automatycznie dodana aktualna strona oraz data zgłoszenia.</div>
@@ -2646,7 +2661,30 @@ const renderCart=()=>{hydrateCartDiscounts();
 (()=>{
   const $=s=>document.querySelector(s);
   const overlay=$('#sxReportProblemOverlay'), form=$('#sxReportProblemForm'), status=$('#sxReportProblemStatus'), submit=$('#sxReportProblemSubmit');
+  const typeSelect=$('#sxReportProblemType'), orderWrap=$('#sxReportOrderWrap'), orderSelect=$('#sxReportOrderSelect'), orderSummary=$('#sxReportOrderSummary');
+  let supportOrders=[];
   const statusLabel=s=>s==='resolved'?'ROZWIĄZANE':s==='progress'?'W TRAKCIE':'NOWE';
+  const paymentLabel=s=>({paid:'OPŁACONE',pending:'OCZEKUJE NA PŁATNOŚĆ',failed:'PŁATNOŚĆ NIEUDANA',cancelled:'ANULOWANE'}[String(s||'').toLowerCase()]||String(s||'').toUpperCase()||'—');
+  const orderTypeLabel=o=>(o?.orderType||'physical')==='digital'?'CYFROWE':'FIZYCZNE';
+  const orderTitle=o=>{const names=(o?.items||[]).map(x=>x?.name).filter(Boolean);return names.length?names.slice(0,2).join(' + '):'Zamówienie'};
+  const needsOrder=()=>['Zamówienie','Płatność','Dostawa'].includes(typeSelect?.value||'');
+  function syncOrderVisibility(){if(!orderWrap)return;const show=needsOrder();orderWrap.hidden=!show;if(!show){if(orderSelect)orderSelect.value='';if(orderSummary){orderSummary.hidden=true;orderSummary.innerHTML=''}}}
+  function renderOrderSummary(){if(!orderSummary||!orderSelect)return;const o=supportOrders.find(x=>x.id===orderSelect.value);if(!o){orderSummary.hidden=true;orderSummary.innerHTML='';return}orderSummary.hidden=false;orderSummary.innerHTML=`<b>#${esc(o.orderNo||o.id)} · ${orderTypeLabel(o)}</b><br>${esc(orderTitle(o))}<br>${esc(paymentLabel(o.paymentStatus))} · ${Number(o.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2})} PLN`;}
+  async function loadSupportOrders(){
+    if(!orderSelect)return;
+    try{
+      const r=await fetch('/api/orders',{cache:'no-store'}),d=await r.json();if(!r.ok)throw 0;
+      supportOrders=Array.isArray(d.orders)?d.orders:[];
+      const digital=supportOrders.filter(o=>(o.orderType||'physical')==='digital');
+      const physical=supportOrders.filter(o=>(o.orderType||'physical')!=='digital');
+      const opt=o=>`<option value="${esc(o.id)}">#${esc(o.orderNo||o.id)} · ${esc(orderTitle(o))} · ${esc(paymentLabel(o.paymentStatus))}</option>`;
+      let html='<option value="">— wybierz zamówienie —</option>';
+      if(digital.length)html+=`<optgroup label="PRODUKTY CYFROWE">${digital.map(opt).join('')}</optgroup>`;
+      if(physical.length)html+=`<optgroup label="PRODUKTY FIZYCZNE">${physical.map(opt).join('')}</optgroup>`;
+      if(!supportOrders.length)html='<option value="">Brak zamówień na tym koncie</option>';
+      orderSelect.innerHTML=html;orderSelect.disabled=!supportOrders.length;renderOrderSummary();
+    }catch{orderSelect.innerHTML='<option value="">Nie udało się pobrać zamówień</option>';orderSelect.disabled=true}
+  }
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   async function loadHistory(){
     const box=$('#sxReportHistory');if(!box)return;
@@ -2657,7 +2695,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       const hasUnread=a.some(x=>x.unread);
       const dot=$('#sxReportUnreadDot'),txt=$('#sxReportUnreadText');
       if(dot)dot.hidden=!hasUnread;if(txt)txt.hidden=!hasUnread;
-      box.innerHTML=a.length?a.map(x=>`<div class="sx-report-history-item" data-ticket="${esc(x.id)}"><div class="sx-report-history-top"><div class="sx-report-ticket">${esc(x.ticketNo||'ZGŁOSZENIE')}${x.unread?' · NOWA ODPOWIEDŹ':''}</div><span class="sx-report-history-status">${statusLabel(x.status)}</span></div><div class="sx-report-history-type">${esc(x.type||'Inne')}</div><div class="sx-report-history-date">${esc(new Date(x.createdAt).toLocaleString('pl-PL'))}</div><div class="sx-ticket-thread">${(x.messages||[]).map(m=>`<div class="sx-ticket-msg ${m.author==='support'?'support':'customer'}"><b>${m.author==='support'?'STARXV SUPPORT':'TY'}</b><div>${esc(m.text||'')}</div><small>${esc(new Date(m.createdAt).toLocaleString('pl-PL'))}</small></div>`).join('')}</div>${x.status!=='resolved'&&!x.closedByCustomer?`<div class="sx-ticket-reply"><textarea maxlength="2000" data-customer-reply="${esc(x.id)}" placeholder="Napisz odpowiedź..."></textarea><div class="sx-ticket-actions"><button type="button" data-send-customer="${esc(x.id)}">WYŚLIJ →</button><button type="button" data-close-ticket="${esc(x.id)}">ZAMKNIJ ZGŁOSZENIE</button></div></div>`:`<div class="sx-ticket-actions"><button type="button" data-reopen-ticket="${esc(x.id)}">OTWÓRZ PONOWNIE</button></div>`}</div>`).join(''):'<div class="sx-report-history-empty">Nie masz jeszcze żadnych zgłoszeń.</div>';
+      box.innerHTML=a.length?a.map(x=>`<div class="sx-report-history-item" data-ticket="${esc(x.id)}"><div class="sx-report-history-top"><div class="sx-report-ticket">${esc(x.ticketNo||'ZGŁOSZENIE')}${x.unread?' · NOWA ODPOWIEDŹ':''}</div><span class="sx-report-history-status">${statusLabel(x.status)}</span></div><div class="sx-report-history-type">${esc(x.type||'Inne')}${x.orderNo?` · ZAMÓWIENIE #${esc(x.orderNo)} · ${esc(x.orderType==='digital'?'CYFROWE':'FIZYCZNE')}`:''}</div><div class="sx-report-history-date">${esc(new Date(x.createdAt).toLocaleString('pl-PL'))}</div><div class="sx-ticket-thread">${(x.messages||[]).map(m=>`<div class="sx-ticket-msg ${m.author==='support'?'support':'customer'}"><b>${m.author==='support'?'STARXV SUPPORT':'TY'}</b><div>${esc(m.text||'')}</div><small>${esc(new Date(m.createdAt).toLocaleString('pl-PL'))}</small></div>`).join('')}</div>${x.status!=='resolved'&&!x.closedByCustomer?`<div class="sx-ticket-reply"><textarea maxlength="2000" data-customer-reply="${esc(x.id)}" placeholder="Napisz odpowiedź..."></textarea><div class="sx-ticket-actions"><button type="button" data-send-customer="${esc(x.id)}">WYŚLIJ →</button><button type="button" data-close-ticket="${esc(x.id)}">ZAMKNIJ ZGŁOSZENIE</button></div></div>`:`<div class="sx-ticket-actions"><button type="button" data-reopen-ticket="${esc(x.id)}">OTWÓRZ PONOWNIE</button></div>`}</div>`).join(''):'<div class="sx-report-history-empty">Nie masz jeszcze żadnych zgłoszeń.</div>';
     }catch{box.innerHTML='<div class="sx-report-history-empty">Nie udało się pobrać historii.</div>'}
   }
 
@@ -2687,21 +2725,24 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(!window.STARXV_AUTH_USER)return;
     try{const r=await fetch('/api/support/reports',{cache:'no-store'}),d=await r.json();if(!r.ok)return;const has=(d.reports||[]).some(x=>x.unread);const dot=$('#sxReportUnreadDot'),txt=$('#sxReportUnreadText');if(dot)dot.hidden=!has;if(txt)txt.hidden=!has}catch{}
   }
-  async function open(){overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');if(status){status.textContent='';status.className='sx-report-status'}await loadHistory();setTimeout(()=>$('#sxReportProblemText')?.focus(),120);try{await fetch('/api/support/reports/read',{method:'POST'});setTimeout(refreshUnread,250)}catch{}}
+  async function open(){overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');if(status){status.textContent='';status.className='sx-report-status'}syncOrderVisibility();await Promise.all([loadHistory(),loadSupportOrders()]);setTimeout(()=>$('#sxReportProblemText')?.focus(),120);try{await fetch('/api/support/reports/read',{method:'POST'});setTimeout(refreshUnread,250)}catch{}}
   window.addEventListener('starxv:auth-changed',()=>setTimeout(refreshUnread,150));
   setTimeout(refreshUnread,350);
   function close(){overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true')}
   document.addEventListener('click',e=>{if(e.target.closest?.('#sxReportProblemBtn'))open()});
   $('#sxReportProblemClose')?.addEventListener('click',close);
+  typeSelect?.addEventListener('change',()=>{syncOrderVisibility();if(needsOrder())loadSupportOrders()});
+  orderSelect?.addEventListener('change',renderOrderSummary);
   overlay?.addEventListener('click',e=>{if(e.target===overlay)close()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&overlay?.classList.contains('open'))close()});
   form?.addEventListener('submit',async e=>{
     e.preventDefault();
-    const description=$('#sxReportProblemText').value.trim(), type=$('#sxReportProblemType').value;
+    const description=$('#sxReportProblemText').value.trim(), type=$('#sxReportProblemType').value, orderId=needsOrder()?String(orderSelect?.value||''):'';
     if(description.length<5){status.textContent='Opisz problem trochę dokładniej.';status.className='sx-report-status err';return}
+    if(needsOrder()&&!orderId){status.textContent='Wybierz zamówienie, którego dotyczy zgłoszenie.';status.className='sx-report-status err';return}
     submit.disabled=true;status.textContent='Wysyłanie…';status.className='sx-report-status';
     try{
-      const r=await fetch('/api/support/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,description,page:location.pathname+location.search})});
+      const r=await fetch('/api/support/report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type,description,orderId,page:location.pathname+location.search})});
       const d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(d.error||'Nie udało się wysłać zgłoszenia.');
       status.textContent=`Dziękujemy. Zgłoszenie ${d.ticketNo||''} zostało wysłane ✓`;status.className='sx-report-status ok';form.reset();loadHistory();
