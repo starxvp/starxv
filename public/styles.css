@@ -1910,3 +1910,10 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
   border-radius:999px;color:#b89b3f;font-size:7px;font-weight:950;font-style:normal;letter-spacing:.11em
 }
 .sx-later-note{margin-top:14px;padding:12px 14px;border-left:2px solid #b89b3f;background:#0d0c08;color:#8e897b;font-size:9px;line-height:1.6}
+
+/* Keep future navigation features out of the main navbar until launch */
+nav .nav-actions #sxSearchBtn,
+nav .nav-actions #sxFavNav,
+nav .nav-actions #openCart{
+  display:none!important;
+}

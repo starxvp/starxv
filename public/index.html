@@ -2101,7 +2101,12 @@ const renderCart=()=>{hydrateCartDiscounts();
     // Future product tools stay hidden from the main navigation for now.
     ['#sxSearchBtn','#sxFavNav','#openCart'].forEach(sel=>{
       const el=nav.querySelector(sel);
-      if(el) el.style.display='none';
+      if(el){
+        el.style.display='none';
+        el.hidden=true;
+        el.setAttribute('aria-hidden','true');
+        el.setAttribute('tabindex','-1');
+      }
     });
 
     const later=document.createElement('button');

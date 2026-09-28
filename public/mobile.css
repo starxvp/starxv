@@ -283,3 +283,10 @@
   #openAccount svg,#sxLaterNav svg{width:19px!important;height:19px!important}
   #sxLaterNav .sx-later-dot{right:6px;top:6px}
 }
+
+/* Future navbar buttons remain hidden on mobile too */
+@media(max-width:700px){
+  nav .nav-actions #sxSearchBtn,
+  nav .nav-actions #sxFavNav,
+  nav .nav-actions #openCart{display:none!important}
+}
