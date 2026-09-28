@@ -659,10 +659,13 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <style id="starxv-owner-deploy-style">
 .sx-profile-section-head{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;margin:26px 0 12px;color:#5f5f5f;font:900 8px/1 Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;text-align:center}
 .sx-profile-section-head::before,.sx-profile-section-head::after{content:"";height:1px;flex:1;background:rgba(255,255,255,.08)}
-#sxProfileOwnerGroup{width:100%;margin:0}
+#sxProfileOwnerGroup{width:100%;margin:0;grid-column:1/-1!important}
 #sxProfileOwnerGroup[hidden]{display:none!important}
 #sxProfileOwnerGroup .sx-profile-section-head{color:#9d8540}
-.sx-profile-owner-links{width:100%}
+.sx-profile-owner-links{width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+.sx-profile-owner-links .sx-profile-link-card{width:100%!important;min-width:0!important;margin:0!important}
+.profile-actions #profileOrders{display:none!important}
+@media(max-width:700px){.sx-profile-owner-links{grid-template-columns:1fr!important}}
 
 /* Only labels/separation are added here. The cards keep exactly the same layout as the existing profile cards. */
 .sx-deploy-profile-card .sx-profile-link-kicker{color:#b89b3f!important}
