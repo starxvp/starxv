@@ -271,19 +271,15 @@
 
 /* ===== STARXV COMING LATER + profile search mobile ===== */
 @media(max-width:700px){
-  #sxSearchBtn,#openAccount,#sxLaterNav,#sxFavNav,#openCart{
-    width:42px!important;height:42px!important;min-width:42px!important;max-width:42px!important;flex-basis:42px!important
-  }
+  #openAccount,#sxLaterNav{width:42px!important;height:42px!important;min-width:42px!important;max-width:42px!important;flex-basis:42px!important}
   #sxLaterNav svg{width:21px!important;height:21px!important}
   .sx-later-grid{grid-template-columns:1fr!important}
-  .sx-later-card{min-height:108px;padding:16px!important}
+  .sx-later-card{min-height:112px;padding:16px!important;grid-template-columns:48px minmax(0,1fr)!important}.sx-later-card-icon{width:48px!important;height:48px!important}.sx-later-card-icon svg{width:23px!important;height:23px!important}
   .sx-site-search-result{grid-template-columns:36px minmax(0,1fr) 20px;padding:12px!important}
   .sx-site-search-icon{width:36px;height:36px}
 }
 @media(max-width:390px){
-  #sxSearchBtn,#openAccount,#sxLaterNav,#sxFavNav,#openCart{
-    width:36px!important;height:36px!important;min-width:36px!important;max-width:36px!important;flex-basis:36px!important
-  }
-  #sxSearchBtn svg,#openAccount svg,#sxLaterNav svg,#sxFavNav svg,#openCart svg{width:19px!important;height:19px!important}
+  #openAccount,#sxLaterNav{width:36px!important;height:36px!important;min-width:36px!important;max-width:36px!important;flex-basis:36px!important}
+  #openAccount svg,#sxLaterNav svg{width:19px!important;height:19px!important}
   #sxLaterNav .sx-later-dot{right:6px;top:6px}
 }
