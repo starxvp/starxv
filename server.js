@@ -713,14 +713,30 @@ app.post('/api/support/reports/read',auth,(req,res)=>{
 
 function supportMessages(report){
   if(!Array.isArray(report.messages))report.messages=[];
+
+  // Remove accidental exact duplicates that could have been created by the old
+  // supportReply compatibility field. Keep genuinely separate messages intact.
+  const seen=new Set();
+  report.messages=report.messages.filter(m=>{
+    const key=[String(m?.author||''),String(m?.text||''),String(m?.createdAt||'')].join('\u0000');
+    if(seen.has(key))return false;
+    seen.add(key);return true;
+  });
+
+  // Backward compatibility for tickets created before threaded support messages.
   if(report.supportReply && !report.messages.some(m=>m.legacySupportReply)){
-    report.messages.push({
-      id:crypto.randomUUID(),
-      author:'support',
-      text:String(report.supportReply),
-      createdAt:report.supportRepliedAt||report.updatedAt||report.createdAt||new Date().toISOString(),
-      legacySupportReply:true
-    });
+    const legacyText=String(report.supportReply);
+    const legacyAt=report.supportRepliedAt||report.updatedAt||report.createdAt||new Date().toISOString();
+    const alreadyThere=report.messages.some(m=>m.author==='support'&&String(m.text||'')===legacyText&&String(m.createdAt||'')===String(legacyAt));
+    if(!alreadyThere){
+      report.messages.push({
+        id:crypto.randomUUID(),
+        author:'support',
+        text:legacyText,
+        createdAt:legacyAt,
+        legacySupportReply:true
+      });
+    }
   }
   return report.messages;
 }
@@ -2084,8 +2100,6 @@ app.post('/api/admin/support-reports/:id/reply',adminOnly,async(req,res)=>{
   if(reply.length<2)return res.status(400).json({error:'Wpisz odpowiedź dla klienta.'});
   const repliedAt=new Date().toISOString();
   supportMessages(report).push({id:crypto.randomUUID(),author:'support',text:reply,createdAt:repliedAt});
-  report.supportReply=reply;
-  report.supportRepliedAt=repliedAt;
   report.customerReadAt=null;
   report.supportReadAt=repliedAt;
   report.closedByCustomer=false;
