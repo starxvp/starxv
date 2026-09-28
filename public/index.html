@@ -2119,10 +2119,8 @@ const renderCart=()=>{hydrateCartDiscounts();
   function sxOpenDeploy(){
     const modal=sxEnsureDeployModal(),code=modal.querySelector('#sxDeployCode'),btn=modal.querySelector('#sxDeployTrigger'),web=modal.querySelector('#sxDeployWebText'),status=modal.querySelector('#sxDeployStatus');
     const commands=Array.isArray(sxDeployInfo?.commands)?sxDeployInfo.commands:['git add .','git commit -m "Update STARXV"','git push'];
-    code.textContent=commands.join('
-');
-    if(!code.querySelector('.sx-deploy-copy')){const copy=document.createElement('button');copy.type='button';copy.className='sx-deploy-copy';copy.textContent='KOPIUJ';copy.onclick=async()=>{try{await navigator.clipboard.writeText(commands.join('
-'));copy.textContent='SKOPIOWANO';setTimeout(()=>copy.textContent='KOPIUJ',1400)}catch{copy.textContent='BŁĄD'}};code.appendChild(copy)}
+    code.textContent=commands.join('\n');
+    if(!code.querySelector('.sx-deploy-copy')){const copy=document.createElement('button');copy.type='button';copy.className='sx-deploy-copy';copy.textContent='KOPIUJ';copy.onclick=async()=>{try{await navigator.clipboard.writeText(commands.join('\n'));copy.textContent='SKOPIOWANO';setTimeout(()=>copy.textContent='KOPIUJ',1400)}catch{copy.textContent='BŁĄD'}};code.appendChild(copy)}
     const available=!!sxDeployInfo?.webDeployAvailable;btn.disabled=!available;web.textContent=available?'Render Deploy Hook jest skonfigurowany. Możesz ręcznie uruchomić ponowny deploy najnowszego commita z GitHuba.':'Przycisk będzie dostępny po dodaniu RENDER_DEPLOY_HOOK_URL do Environment na Renderze.';status.textContent='';status.className='sx-deploy-status';
     btn.onclick=async()=>{btn.disabled=true;status.textContent='Uruchamianie deployu…';status.className='sx-deploy-status';try{const r=await fetch('/api/admin/deploy/trigger',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić deployu.');status.textContent=j.message||'Deploy został uruchomiony.';status.className='sx-deploy-status ok'}catch(e){status.textContent=e.message;status.className='sx-deploy-status err'}finally{btn.disabled=!available}};
     modal.classList.add('open');modal.setAttribute('aria-hidden','false');
