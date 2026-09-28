@@ -72,12 +72,12 @@
     zakładania konta, składania zamówień, wyboru dostawy, płatności oraz korzystania z pozostałych
     funkcji sklepu STARXV.
   </p>
-  <div class="updated">Ostatnia aktualizacja: 15 września 2026 r.</div>
+  <div class="updated">Ostatnia aktualizacja: 29 września 2026 r.</div>
 
   <div class="notice">
-    <b>Przed uruchomieniem sprzedaży uzupełnij pola [DO UZUPEŁNIENIA].</b>
-    Szczególnie ważne są dane administratora, adres kontaktowy oraz ostateczna lista dostawców
-    hostingu, płatności, poczty i innych usług używanych produkcyjnie.
+    <b>Polityka dotyczy produkcyjnej wersji sklepu STARXV.</b>
+    Opisuje przetwarzanie danych związane z kontem użytkownika, zakupami produktów fizycznych
+    i cyfrowych, płatnościami, dostawą, obsługą klienta, reklamacjami oraz komunikacją e-mail.
   </div>
 
   <section>
@@ -99,6 +99,9 @@
       <li>dane konta: imię, nazwisko, adres e-mail, identyfikator konta, dane związane z logowaniem oraz zdjęcie profilowe, jeżeli jest dostępne;</li>
       <li>dane potrzebne do zamówienia i dostawy: imię, nazwisko, e-mail, numer telefonu, adres, kod pocztowy, miejscowość oraz wybrany punkt InPost;</li>
       <li>dane dotyczące zamówienia: produkty, warianty, rozmiary, ilości, ceny, status płatności, status realizacji i numer przesyłki;</li>
+      <li>dane dotyczące produktów cyfrowych: identyfikator zakupionego e-booka, status dostępu do pliku, historia zamówienia oraz informacja o wyrażeniu zgody na rozpoczęcie dostarczania treści cyfrowej przed upływem terminu do odstąpienia, wraz z czasem jej zapisania;</li>
+      <li>dane związane z obsługą klienta: treść zgłoszeń, reklamacji, zwrotów i odpowiedzi supportu oraz informacje potrzebne do powiązania sprawy z właściwym Zamówieniem;</li>
+      <li>dane związane z opiniami o produktach, jeżeli użytkownik zdecyduje się dodać opinię, w tym treść opinii, ocena i informacja o zweryfikowanym zakupie;</li>
       <li>dane konta i preferencji: zapisane adresy, koszyk, ulubione, ustawienia konta oraz zgoda lub rezygnacja z komunikacji marketingowej;</li>
       <li>dane techniczne: informacje o sesji, przeglądarce, urządzeniu, adresie IP, żądaniach do serwera oraz informacje potrzebne do bezpieczeństwa serwisu;</li>
       <li>dane lokalizacyjne przekazane przez przeglądarkę wyłącznie wtedy, gdy samodzielnie zezwolisz stronie na użycie lokalizacji w celu wyszukania punktów InPost w pobliżu.</li>
@@ -113,6 +116,7 @@
         <tbody>
           <tr><td>Utworzenie i obsługa konta STARXV</td><td>e-mail, imię, nazwisko, dane logowania, identyfikator konta</td><td>wykonanie umowy o świadczenie usługi konta lub działania na żądanie użytkownika przed jej zawarciem</td><td>do usunięcia konta, a następnie przez okres niezbędny do obsługi ewentualnych roszczeń lub obowiązków prawnych</td></tr>
           <tr><td>Przyjęcie i realizacja zamówienia</td><td>dane kontaktowe, adres, produkty, dostawa, płatność</td><td>wykonanie umowy sprzedaży lub działania przed jej zawarciem</td><td>przez czas realizacji umowy, a następnie przez okres wymagany przepisami i niezbędny do obrony lub dochodzenia roszczeń</td></tr>
+          <tr><td>Dostarczenie produktu cyfrowego i utrzymanie dostępu</td><td>konto STARXV, numer zamówienia, identyfikator produktu cyfrowego, status płatności, informacja o dostępie i zapis zgody dotyczącej rozpoczęcia dostarczania treści cyfrowej</td><td>wykonanie umowy oraz — w zakresie dokumentowania wymaganych oświadczeń — obowiązek prawny i prawnie uzasadniony interes polegający na możliwości wykazania prawidłowego przebiegu transakcji</td><td>przez okres potrzebny do wykonania umowy, utrzymania dostępu wynikającego z zakupu oraz przez okres wymagany przepisami lub niezbędny do obrony lub dochodzenia roszczeń</td></tr>
           <tr><td>Rozliczenia i obowiązki prawne</td><td>dane zamówienia i płatności, dane wymagane dokumentami rozliczeniowymi</td><td>obowiązek prawny ciążący na Administratorze</td><td>przez okres wynikający z właściwych przepisów</td></tr>
           <tr><td>Reklamacje, zwroty i kontakt posprzedażowy</td><td>dane kontaktowe, numer zamówienia, korespondencja, informacje o produkcie</td><td>wykonanie obowiązków związanych z umową i przepisami konsumenckimi; w odpowiednich przypadkach prawnie uzasadniony interes Administratora</td><td>przez czas obsługi sprawy i okres przedawnienia związanych z nią roszczeń</td></tr>
           <tr><td>Bezpieczeństwo sklepu i zapobieganie nadużyciom</td><td>IP, dane sesji, logi techniczne, informacje o żądaniach</td><td>prawnie uzasadniony interes Administratora polegający na ochronie serwisu, kont użytkowników i ustalaniu ewentualnych roszczeń</td><td>przez okres niezbędny do realizacji tego celu</td></tr>
@@ -156,6 +160,11 @@
       W przypadku dostawy do punktu odbioru przechowujemy informacje niezbędne do identyfikacji wybranego punktu
       oraz realizacji przesyłki.
     </p>
+    <p>
+      W przypadku Produktów cyfrowych przetwarzamy dane Zamówienia oraz Konta STARXV w celu przypisania zakupionego
+      pliku do właściwego użytkownika, weryfikacji prawa dostępu oraz umożliwienia pobrania produktu po prawidłowym
+      potwierdzeniu płatności.
+    </p>
   </section>
 
   <section>
@@ -176,9 +185,10 @@
     <ul>
       <li>Google — w zakresie logowania kontem Google;</li>
       <li>InPost — w zakresie dostawy i obsługi wybranego punktu odbioru;</li>
-      <li>SimPay — w zakresie obsługi płatności;</li>
-      <li><span class="placeholder">Render</span> — w zakresie infrastruktury sklepu;</li>
-      <li><span class="placeholder">Resend</span> — jeżeli uczestniczy w wysyłce wiadomości transakcyjnych lub marketingowych;</li>
+      <li>SimPay / Payments Solution Sp. z o.o. — w zakresie obsługi płatności;</li>
+      <li>Render — w zakresie hostingu aplikacji i infrastruktury serwerowej;</li>
+      <li>dostawca bazy danych PostgreSQL używany przez STARXV — w zakresie przechowywania danych aplikacji;</li>
+      <li>Resend — w zakresie wysyłki wiadomości transakcyjnych, supportowych i — jeżeli użytkownik wyrazi zgodę — marketingowych;</li>
       <li>podmioty świadczące usługi IT, księgowe, prawne lub inne usługi pomocnicze, jeżeli są rzeczywiście wykorzystywane i dostęp do danych jest potrzebny do wykonania tych usług;</li>
       <li>uprawnione organy publiczne — gdy obowiązek przekazania danych wynika z prawa.</li>
     </ul>
@@ -193,7 +203,7 @@
       Europejskiej stwierdzająca odpowiedni stopień ochrony lub standardowe klauzule umowne — zależnie od dostawcy
       i miejsca przetwarzania.
     </p>
-    <p class="mini">Przed startem sprzedaży należy zweryfikować faktyczne lokalizacje przetwarzania danych u wszystkich dostawców.</p>
+    <p class="mini">Zakres i mechanizm ewentualnego transferu zależą od dostawcy oraz jego aktualnej infrastruktury. STARXV korzysta z usługodawców na podstawie obowiązujących warunków i mechanizmów ochrony danych.</p>
   </section>
 
   <section>
@@ -252,7 +262,17 @@
   </section>
 
   <section>
-    <h2>13. Usunięcie konta a dane o zamówieniach</h2>
+    <h2>13. Produkty cyfrowe i zapis zgody</h2>
+    <p>
+      Jeżeli Klient kupuje Produkt cyfrowy z natychmiastowym dostępem, STARXV może zapisać informację o wyrażeniu
+      przez Klienta zgody na rozpoczęcie dostarczania treści cyfrowej przed upływem terminu do odstąpienia oraz
+      o przyjęciu do wiadomości skutków tej zgody. Informacja ta jest powiązana z Zamówieniem i może być przechowywana
+      przez okres potrzebny do wykonania umowy, obsługi reklamacji oraz wykazania prawidłowego przebiegu transakcji.
+    </p>
+  </section>
+
+  <section>
+    <h2>14. Usunięcie konta a dane o zamówieniach</h2>
     <p>
       Usunięcie konta STARXV nie zawsze oznacza natychmiastowe usunięcie wszystkich danych.
       Dane, które muszą być dalej przechowywane w celu wykonania obowiązków prawnych, obsługi reklamacji,
@@ -261,7 +281,7 @@
   </section>
 
   <section>
-    <h2>14. Zautomatyzowane decyzje i profilowanie</h2>
+    <h2>15. Zautomatyzowane decyzje i profilowanie</h2>
     <p>
       na obecnym etapie STARXV nie przewiduje
       podejmowania wobec klientów decyzji wywołujących skutki prawne lub w podobny sposób istotnie na nich
@@ -270,7 +290,7 @@
   </section>
 
   <section>
-    <h2>15. Bezpieczeństwo</h2>
+    <h2>16. Bezpieczeństwo</h2>
     <p>
       Stosujemy środki techniczne i organizacyjne odpowiednie do charakteru serwisu, w tym szyfrowane połączenie HTTPS,
       mechanizmy sesji i ograniczenie dostępu do funkcji administracyjnych. Środki bezpieczeństwa są dostosowywane
@@ -279,7 +299,7 @@
   </section>
 
   <section>
-    <h2>16. Zmiany Polityki prywatności</h2>
+    <h2>17. Zmiany Polityki prywatności</h2>
     <p>
       Dokument może być aktualizowany, w szczególności w przypadku zmiany funkcji sklepu, dostawców usług,
       metod płatności lub dostawy albo wymogów prawnych. Aktualna wersja będzie publikowana pod adresem
