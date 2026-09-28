@@ -659,6 +659,10 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <style id="starxv-owner-deploy-style">
 .sx-deploy-profile-card{position:relative;border-color:rgba(204,170,74,.35)!important}
 .sx-deploy-profile-card .sx-profile-link-kicker{color:#b89b3f!important}
+.sx-accessories-profile-card{position:relative;border-color:rgba(102,177,214,.30)!important}
+.sx-accessories-profile-card .sx-profile-link-kicker{color:#70b9dd!important}
+.sx-accessories-profile-card .sx-profile-beta-pill{display:inline-flex;align-items:center;justify-content:center;margin-left:7px;padding:3px 7px;border:1px solid rgba(255,255,255,.16);border-radius:999px;color:#8d8d8d;font:900 7px/1 Arial,sans-serif;letter-spacing:.11em;vertical-align:1px}
+.profile-actions #sxClothingBeta{display:none!important}
 .sx-deploy-modal{position:fixed;inset:0;z-index:100500;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)}
 .sx-deploy-modal.open{display:flex}
 .sx-deploy-card{position:relative;width:min(720px,100%);max-height:min(760px,90vh);overflow:auto;padding:34px;border:1px solid rgba(255,255,255,.14);background:#090909;color:#fff;box-shadow:0 32px 110px rgba(0,0,0,.65)}
@@ -2124,10 +2128,17 @@ const renderCart=()=>{hydrateCartDiscounts();
     modal.classList.add('open');modal.setAttribute('aria-hidden','false');
   }
   async function sxInstallDeployProfile(){
-    const links=document.querySelector('#sxAccountDashboard .sx-profile-main-links');if(!links||document.getElementById('sxProfileDeployBtn'))return;
+    const links=document.querySelector('#sxAccountDashboard .sx-profile-main-links');if(!links)return;
     const info=await sxLoadDeployInfo();if(!info?.ok)return;
     sxDeployInfo=info;
-    const btn=document.createElement('button');btn.id='sxProfileDeployBtn';btn.type='button';btn.className='sx-profile-link-card sx-deploy-profile-card';btn.innerHTML='<span class="sx-profile-link-kicker">OWNER TOOLS</span><b>DEPLOY</b><span class="sx-profile-link-arrow">→</span>';btn.onclick=sxOpenDeploy;links.appendChild(btn);
+    if(!document.getElementById('sxProfileDeployBtn')){
+      const btn=document.createElement('button');btn.id='sxProfileDeployBtn';btn.type='button';btn.className='sx-profile-link-card sx-deploy-profile-card';btn.innerHTML='<span class="sx-profile-link-kicker">OWNER TOOLS</span><b>DEPLOY</b><span class="sx-profile-link-arrow">→</span>';btn.onclick=sxOpenDeploy;links.appendChild(btn);
+    }
+    if(!document.getElementById('sxProfileAccessoriesBtn')){
+      const accessories=document.createElement('button');accessories.id='sxProfileAccessoriesBtn';accessories.type='button';accessories.className='sx-profile-link-card sx-accessories-profile-card';accessories.innerHTML='<span class="sx-profile-link-kicker">OWNER PREVIEW</span><b>ACCESSORIES <span class="sx-profile-beta-pill">BETA</span></b><span class="sx-profile-link-arrow">→</span>';
+      accessories.onclick=()=>document.getElementById('sxClothingBeta')?.click();
+      links.appendChild(accessories);
+    }
   }
 
   function renderAccountDashboard(){
