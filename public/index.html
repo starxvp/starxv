@@ -627,6 +627,30 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </style>
 
 
+
+<style id="starxv-digital-access-info-style">
+.sx-digital-access-hint{display:flex;align-items:center;gap:8px;margin-top:13px;color:#8b8881;font-size:9px;font-weight:750;line-height:1.45;letter-spacing:.01em}
+.sx-digital-access-info-btn{appearance:none;width:19px;height:19px;flex:0 0 19px;display:grid;place-items:center;padding:0;border:1px solid #3a3935;border-radius:50%;background:#0c0c0b;color:#c9a83d;font:900 10px/1 Arial,sans-serif;cursor:pointer;transition:.18s ease}
+.sx-digital-access-info-btn:hover,.sx-digital-access-info-btn:focus-visible{border-color:#c9a83d;background:#15130d;color:#e2c45f;outline:none}
+.sx-digital-access-modal{position:fixed;inset:0;z-index:1000002;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.78);backdrop-filter:blur(12px)}
+.sx-digital-access-modal.open{display:flex}
+.sx-digital-access-card{position:relative;width:min(620px,94vw);max-height:min(760px,90vh);overflow:auto;border:1px solid #2d2c28;background:#0b0b0a;color:#f3efe6;padding:30px 30px 26px;box-shadow:0 30px 100px rgba(0,0,0,.62)}
+.sx-digital-access-close{position:absolute;top:16px;right:16px;width:38px;height:38px;border:1px solid #34332f;border-radius:50%;background:#11110f;color:#fff;font-size:21px;line-height:1;cursor:pointer}
+.sx-digital-access-close:hover{background:#f1eee7;color:#080808;border-color:#f1eee7}
+.sx-digital-access-kicker-modal{display:block;padding-right:50px;color:#b89b3f;font-size:8px;font-weight:950;letter-spacing:.18em;text-transform:uppercase}
+.sx-digital-access-card h3{margin:12px 48px 0 0;font-size:clamp(26px,4vw,40px);line-height:.98;letter-spacing:-.04em}
+.sx-digital-access-lead{margin:16px 0 24px;color:#9e9b94;font-size:11px;line-height:1.7}
+.sx-digital-access-steps{display:grid;gap:0;border-top:1px solid #2a2925}
+.sx-digital-access-step{display:grid;grid-template-columns:34px 1fr;gap:14px;padding:17px 0;border-bottom:1px solid #24231f}
+.sx-digital-access-step>span{color:#b89b3f;font-size:9px;font-weight:950;letter-spacing:.1em;padding-top:2px}
+.sx-digital-access-step b{display:block;color:#eeeae1;font-size:11px;line-height:1.35}
+.sx-digital-access-step p{margin:5px 0 0;color:#8a8780;font-size:10px;line-height:1.65}
+.sx-digital-access-warning{margin-top:18px;padding:13px 14px;border:1px solid rgba(184,155,63,.25);background:rgba(184,155,63,.06);color:#b8b3a9;font-size:9px;line-height:1.65}
+.sx-digital-access-warning strong{color:#e7dfca}
+.sx-digital-access-modal-lock{overflow:hidden!important}
+@media(max-width:600px){.sx-digital-access-hint{align-items:flex-start;font-size:8px}.sx-digital-access-card{padding:25px 20px 22px}.sx-digital-access-step{grid-template-columns:28px 1fr;gap:10px}.sx-digital-access-card h3{margin-right:42px}}
+</style>
+
 <style id="starxv-cart-coming-soon-lock">
 #openCart,#sxSearchBtn{opacity:.42!important;cursor:not-allowed!important;pointer-events:auto!important}
 #openCart .cart-count{display:none!important}
@@ -668,7 +692,24 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
   <div class="sx-digital-catalog" id="sxDigitalCatalog" aria-label="Produkty cyfrowe"></div>
   <div class="sx-digital-product" id="sxDigitalProduct">
 <div class="sx-digital-product-gallery"><div class="sx-digital-product-thumbs"><button class="active" type="button" data-digital-image="/assets/zero-to-first-sale-3d.png"><img src="/assets/zero-to-first-sale-3d.png" alt=""></button><button type="button" data-digital-image="/assets/zero-to-first-sale-cover.png"><img src="/assets/zero-to-first-sale-cover.png" alt=""></button></div><div class="sx-digital-product-cover"><img id="sxDigitalProductImage" src="/assets/zero-to-first-sale-3d.png" alt="ZERO TO FIRST SALE"></div></div>
-<div class="sx-digital-product-info"><span id="sxDigitalProductMeta">STARXV DIGITAL / E-BOOK</span><h2 id="sxDigitalProductName">ZERO TO<br>FIRST SALE</h2><h3 id="sxDigitalProductSubtitle">Od pomysłu do pierwszej sprzedaży.</h3><p id="sxDigitalProductDescription">Przewodnik prowadzący przez walidację pomysłu, MVP, wycenę, branding, launch, sprzedaż i pracę z pierwszymi klientami. Każdy etap kończy się praktyczną checklistą.</p><div class="sx-digital-points" id="sxDigitalProductPoints"><b>Produkt cyfrowy PDF</b><b>Dostęp po potwierdzeniu płatności</b><b>Przypisany do konta STARXV</b><b>Pobieranie z biblioteki zamówień</b></div><div class="sx-digital-buy"><strong id="sxDigitalPrice">39,99 PLN</strong><button id="sxDigitalBuy" type="button">KUP TERAZ →</button><span class="sx-digital-purchase-count" id="sxDigitalPurchaseCount">— osób kupiło</span></div><label class="sx-digital-consent"><input id="sxDigitalConsent" type="checkbox"><span>Chcę otrzymać treść cyfrową od razu po zapłacie i przyjmuję do wiadomości, że po rozpoczęciu jej dostarczania utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.</span></label><div class="sx-digital-status" id="sxDigitalStatus" aria-live="polite"></div></div></div>
+<div class="sx-digital-product-info"><span id="sxDigitalProductMeta">STARXV DIGITAL / E-BOOK</span><h2 id="sxDigitalProductName">ZERO TO<br>FIRST SALE</h2><h3 id="sxDigitalProductSubtitle">Od pomysłu do pierwszej sprzedaży.</h3><p id="sxDigitalProductDescription">Przewodnik prowadzący przez walidację pomysłu, MVP, wycenę, branding, launch, sprzedaż i pracę z pierwszymi klientami. Każdy etap kończy się praktyczną checklistą.</p><div class="sx-digital-points" id="sxDigitalProductPoints"><b>Produkt cyfrowy PDF</b><b>Dostęp po potwierdzeniu płatności</b><b>Przypisany do konta STARXV</b><b>Pobieranie z biblioteki zamówień</b></div><div class="sx-digital-buy"><strong id="sxDigitalPrice">39,99 PLN</strong><button id="sxDigitalBuy" type="button">KUP TERAZ →</button><span class="sx-digital-purchase-count" id="sxDigitalPurchaseCount">— osób kupiło</span></div><div class="sx-digital-access-hint"><span>Dostęp do e-booka otrzymasz od razu po prawidłowym potwierdzeniu płatności.</span><button class="sx-digital-access-info-btn" id="sxDigitalAccessInfo" type="button" aria-label="Jak działa dostęp do e-booka?" aria-haspopup="dialog">i</button></div><label class="sx-digital-consent"><input id="sxDigitalConsent" type="checkbox"><span>Chcę otrzymać treść cyfrową od razu po zapłacie i przyjmuję do wiadomości, że po rozpoczęciu jej dostarczania utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.</span></label><div class="sx-digital-status" id="sxDigitalStatus" aria-live="polite"></div></div></div>
+
+<div class="sx-digital-access-modal" id="sxDigitalAccessModal" aria-hidden="true">
+  <div class="sx-digital-access-card" role="dialog" aria-modal="true" aria-labelledby="sxDigitalAccessTitle">
+    <button class="sx-digital-access-close" id="sxDigitalAccessClose" type="button" aria-label="Zamknij">×</button>
+    <span class="sx-digital-access-kicker-modal">STARXV DIGITAL / DOSTĘP DO E-BOOKA</span>
+    <h3 id="sxDigitalAccessTitle">Jak otrzymasz swój e-book?</h3>
+    <p class="sx-digital-access-lead">Dostęp jest przypisywany do konta STARXV użytego przy zakupie. Po prawidłowym potwierdzeniu płatności plik pojawi się automatycznie w Twoich zamówieniach cyfrowych.</p>
+    <div class="sx-digital-access-steps">
+      <div class="sx-digital-access-step"><span>01</span><div><b>Po opłaceniu zamówienia</b><p>Po powrocie z bramki płatniczej STARXV sprawdza status transakcji. Gdy płatność zostanie potwierdzona, dostęp do e-booka aktywuje się automatycznie.</p></div></div>
+      <div class="sx-digital-access-step"><span>02</span><div><b>Gdzie znajdziesz zakupiony plik?</b><p>Wejdź w <strong>Profil → Moje zamówienia → Produkty cyfrowe</strong>. Przy opłaconym zamówieniu zobaczysz przycisk pobierania e-booka.</p></div></div>
+      <div class="sx-digital-access-step"><span>03</span><div><b>Jeśli płatność nie powiedzie się lub ją przerwiesz</b><p>Nie musisz tworzyć nowego zamówienia. W <strong>Moje zamówienia → Produkty cyfrowe</strong> przy zamówieniu oczekującym na płatność lub nieudanej płatności użyj przycisku <strong>„ZAPŁAĆ →”</strong>, aby ponowić próbę.</p></div></div>
+      <div class="sx-digital-access-step"><span>04</span><div><b>Jeśli pieniądze zostały pobrane, ale dostęp jeszcze się nie pojawił</b><p>Nie płać drugi raz. Odśwież po chwili sekcję „Moje zamówienia” — potwierdzenie może dotrzeć z niewielkim opóźnieniem. Jeśli status nadal się nie zmieni, użyj opcji <strong>„Zgłoś problem”</strong> w profilu lub skontaktuj się przez Contact.</p></div></div>
+    </div>
+    <div class="sx-digital-access-warning"><strong>Ważne:</strong> korzystaj z tego samego konta STARXV, na którym rozpocząłeś zakup. E-book pozostaje przypisany do tego konta i możesz wracać do niego z biblioteki zamówień.</div>
+  </div>
+</div>
+
 <section class="sx-digital-reviews" id="sxDigitalReviews">
   <div class="sx-digital-reviews-head">
     <div><span>STARXV DIGITAL / REVIEWS</span><h2 id="sxDigitalReviewsTitle">OPINIE O<br>ZERO TO FIRST SALE</h2></div>
@@ -3288,6 +3329,23 @@ window.STARXV_CART_PRICE_HTML=function(item){
  document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,500));
  document.addEventListener('click',e=>{if(e.target.closest?.('.product-card,[data-product-id]'))setTimeout(refresh,120)});
  setInterval(refresh,2000);
+})();
+</script>
+
+
+<script id="starxv-digital-access-info-script">
+(()=>{
+ const openBtn=document.getElementById('sxDigitalAccessInfo');
+ const modal=document.getElementById('sxDigitalAccessModal');
+ const closeBtn=document.getElementById('sxDigitalAccessClose');
+ if(!openBtn||!modal||!closeBtn)return;
+ let lastFocus=null;
+ const open=()=>{lastFocus=document.activeElement;modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.classList.add('sx-digital-access-modal-lock');setTimeout(()=>closeBtn.focus(),0)};
+ const close=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('sx-digital-access-modal-lock');lastFocus?.focus?.()};
+ openBtn.addEventListener('click',open);
+ closeBtn.addEventListener('click',close);
+ modal.addEventListener('click',e=>{if(e.target===modal)close()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
 })();
 </script>
 
