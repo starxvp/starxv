@@ -1854,3 +1854,57 @@ body.sx-light-theme .sx-report-box{background:#fff;color:#111;border-color:rgba(
   .sx-accessory-card{min-height:270px}
   .sx-accessory-symbol{font-size:66px}
 }
+
+
+/* ===== STARXV profile navigation search + COMING LATER ===== */
+#sxLaterNav{position:relative}
+#sxLaterNav .sx-later-dot{
+  position:absolute;right:8px;top:8px;width:6px;height:6px;border-radius:50%;
+  background:#b89b3f;box-shadow:0 0 12px rgba(184,155,63,.65)
+}
+.sx-feature-locked{opacity:.36!important;cursor:not-allowed!important}
+.sx-feature-locked:hover{transform:none!important;border-color:rgba(255,255,255,.13)!important;background:rgba(255,255,255,.035)!important}
+#sxFavNav.sx-feature-locked .sx-badge{display:none!important}
+.sx-fav-btn,.sx-modal-fav{opacity:.32!important;cursor:not-allowed!important}
+.sx-profile-search-card{
+  border-color:rgba(184,155,63,.22)!important;
+  background:linear-gradient(135deg,rgba(184,155,63,.06),#0b0b0b 58%)!important
+}
+.sx-profile-search-card .sx-profile-link-kicker{color:#b89b3f!important}
+
+.sx-site-search-intro{padding:7px 2px 14px;display:grid;gap:5px}
+.sx-site-search-intro b{font-size:9px;letter-spacing:.14em}
+.sx-site-search-intro span{font-size:10px;color:#777;line-height:1.5}
+.sx-site-search-result{
+  appearance:none;width:100%;margin-top:8px;padding:14px 15px;
+  border:1px solid rgba(255,255,255,.09);border-radius:15px;background:#0b0b0d;color:#fff;
+  display:grid;grid-template-columns:38px minmax(0,1fr) 24px;align-items:center;gap:12px;
+  text-align:left;cursor:pointer;transition:.18s ease
+}
+.sx-site-search-result:hover{transform:translateY(-1px);background:#111114;border-color:rgba(255,255,255,.18)}
+.sx-site-search-icon{
+  width:38px;height:38px;border:1px solid rgba(255,255,255,.10);border-radius:11px;
+  display:grid;place-items:center;background:#08080a;color:#b89b3f;font-size:12px;font-weight:950
+}
+.sx-site-search-copy{min-width:0;display:grid;gap:4px}
+.sx-site-search-copy b{font-size:11px;letter-spacing:.02em}
+.sx-site-search-copy small{color:#696969;font-size:8px;font-weight:800;letter-spacing:.09em}
+.sx-site-search-arrow{justify-self:end;color:#666;font-size:17px}
+
+.sx-later-panel{width:min(820px,100%)}
+.sx-later-kicker{display:block;color:#b89b3f;font-size:8px;font-weight:950;letter-spacing:.17em;margin-bottom:6px}
+.sx-later-lead{margin:0 0 18px;color:#858585;font-size:11px;line-height:1.65;max-width:650px}
+.sx-later-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sx-later-card{
+  position:relative;min-height:124px;padding:18px;border:1px solid rgba(255,255,255,.09);
+  background:#0a0a0c;display:grid;grid-template-columns:28px 1fr;gap:11px;align-content:start
+}
+.sx-later-card>span{color:#555;font-size:8px;font-weight:950;letter-spacing:.12em;padding-top:2px}
+.sx-later-card div{display:grid;gap:7px}
+.sx-later-card b{font-size:11px;letter-spacing:.06em}
+.sx-later-card small{font-size:9px;color:#747474;line-height:1.55}
+.sx-later-card em{
+  grid-column:2;margin-top:12px;width:max-content;padding:5px 8px;border:1px solid rgba(184,155,63,.25);
+  border-radius:999px;color:#b89b3f;font-size:7px;font-weight:950;font-style:normal;letter-spacing:.11em
+}
+.sx-later-note{margin-top:14px;padding:12px 14px;border-left:2px solid #b89b3f;background:#0d0c08;color:#8e897b;font-size:9px;line-height:1.6}

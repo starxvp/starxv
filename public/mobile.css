@@ -267,3 +267,23 @@
   .sx-digital-page .sx-digital-top-brand{gap:6px;font-size:7px;letter-spacing:.12em}
   .sx-digital-page .sx-digital-top-brand strong{font-size:7px}
 }
+
+
+/* ===== STARXV COMING LATER + profile search mobile ===== */
+@media(max-width:700px){
+  #sxSearchBtn,#openAccount,#sxLaterNav,#sxFavNav,#openCart{
+    width:42px!important;height:42px!important;min-width:42px!important;max-width:42px!important;flex-basis:42px!important
+  }
+  #sxLaterNav svg{width:21px!important;height:21px!important}
+  .sx-later-grid{grid-template-columns:1fr!important}
+  .sx-later-card{min-height:108px;padding:16px!important}
+  .sx-site-search-result{grid-template-columns:36px minmax(0,1fr) 20px;padding:12px!important}
+  .sx-site-search-icon{width:36px;height:36px}
+}
+@media(max-width:390px){
+  #sxSearchBtn,#openAccount,#sxLaterNav,#sxFavNav,#openCart{
+    width:36px!important;height:36px!important;min-width:36px!important;max-width:36px!important;flex-basis:36px!important
+  }
+  #sxSearchBtn svg,#openAccount svg,#sxLaterNav svg,#sxFavNav svg,#openCart svg{width:19px!important;height:19px!important}
+  #sxLaterNav .sx-later-dot{right:6px;top:6px}
+}

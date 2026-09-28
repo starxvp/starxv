@@ -2016,6 +2016,24 @@ const renderCart=()=>{hydrateCartDiscounts();
 </script>
 <div aria-hidden="true" class="sx-overlay" id="sxSearchOverlay"><div class="sx-panel"><div class="sx-panel-head"><h3>WYSZUKIWARKA</h3><button aria-label="Zamknij wyszukiwarkę" class="sx-close" data-sx-close="sxSearchOverlay" type="button">×</button></div><div class="sx-panel-body"><div class="sx-searchbox"><input autocomplete="off" id="sxSearchInput" placeholder="Szukaj w STARXV..."/></div><div id="sxSearchResults"></div></div></div></div>
 <div aria-hidden="true" class="sx-overlay" id="sxFavOverlay"><div class="sx-panel"><div class="sx-panel-head"><h3>ULUBIONE</h3><button aria-label="Zamknij ulubione" class="sx-close" data-sx-close="sxFavOverlay" type="button">×</button></div><div class="sx-panel-body" id="sxFavBody"></div></div></div>
+<div aria-hidden="true" class="sx-overlay" id="sxLaterOverlay">
+  <div class="sx-panel sx-later-panel">
+    <div class="sx-panel-head">
+      <div><span class="sx-later-kicker">STARXV / ROADMAP</span><h3>COMING LATER.</h3></div>
+      <button aria-label="Zamknij Coming Later" class="sx-close" data-sx-close="sxLaterOverlay" type="button">×</button>
+    </div>
+    <div class="sx-panel-body">
+      <p class="sx-later-lead">Te funkcje są częścią dalszego rozwoju STARXV. Są już zaplanowane, ale na razie pozostają wyłączone.</p>
+      <div class="sx-later-grid">
+        <article class="sx-later-card"><span>01</span><div><b>ACCESSORIES</b><small>Biżuteria i akcesoria STARXV.</small></div><em>COMING LATER</em></article>
+        <article class="sx-later-card"><span>02</span><div><b>WYSZUKIWARKA PRODUKTÓW</b><small>Pełne wyszukiwanie katalogu i produktów.</small></div><em>COMING LATER</em></article>
+        <article class="sx-later-card"><span>03</span><div><b>ULUBIONE</b><small>Zapisywanie produktów na później.</small></div><em>COMING LATER</em></article>
+        <article class="sx-later-card"><span>04</span><div><b>KOSZYK</b><small>Wspólny koszyk dla przyszłej oferty.</small></div><em>COMING LATER</em></article>
+      </div>
+      <div class="sx-later-note">Wyszukiwarka dostępna w Profilu służy do nawigacji po STARXV i pozostaje aktywna.</div>
+    </div>
+  </div>
+</div>
 <div class="sx-lightbox" id="sxLightbox"><img alt="Powiększenie produktu"/></div>
 <div class="sx-cookie" id="sxCookie"><div class="sx-cookie-copy"><b>Cookies w STARXV</b><span>Używamy lokalnego zapisu w przeglądarce, aby działały m.in. koszyk, konto, ulubione i zamówienia. Ta wersja sklepu nie korzysta z backendu.</span></div><div class="sx-cookie-actions"><button class="sx-cookie-essential" data-cookie="essential">TYLKO NIEZBĘDNE</button><button class="sx-cookie-accept" data-cookie="all">AKCEPTUJ</button></div></div>
 <script>
@@ -2032,7 +2050,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   const getProductImage=()=>$('.product-card .product-visual img')?.src||$('#galleryTrack img')?.src||'';
   const isFav=()=>read(FAV_KEY,[]).includes(PRODUCT.id);
   const setFav=on=>{let a=read(FAV_KEY,[]);a=on?[...new Set([...a,PRODUCT.id])]:a.filter(x=>x!==PRODUCT.id);localStorage.setItem(FAV_KEY,JSON.stringify(a));renderFavState();renderFavPanel();renderAccountDashboard()};
-  const toggleFav=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;setFav(!isFav())};
+  const toggleFav=()=>{openOverlay('sxLaterOverlay')};
   function setTheme(theme){
     const t=theme==='light'?'light':'dark';
     localStorage.setItem('starxv-theme',t);
@@ -2059,44 +2077,157 @@ const renderCart=()=>{hydrateCartDiscounts();
 
   function makeNav(){
     const nav=$('.nav-actions'); if(!nav||$('#sxSearchBtn'))return;
-    const search=document.createElement('button');search.id='sxSearchBtn';search.className='sx-nav-icon';search.type='button';search.setAttribute('aria-label','Szukaj');search.innerHTML='<svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.4" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
-    const fav=document.createElement('button');fav.id='sxFavNav';fav.className='sx-nav-icon';fav.type='button';fav.setAttribute('aria-label','Ulubione');fav.innerHTML='<svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.8A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="sx-badge" id="sxFavCount">0</span>';
+
+    const search=document.createElement('button');
+    search.id='sxSearchBtn';
+    search.className='sx-nav-icon sx-feature-locked';
+    search.type='button';
+    search.setAttribute('aria-label','Wyszukiwarka produktów — w dalszym rozwoju');
+    search.setAttribute('aria-disabled','true');
+    search.title='Wyszukiwarka produktów — COMING LATER';
+    search.innerHTML='<svg viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.4" stroke="currentColor" stroke-width="1.7"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+    const later=document.createElement('button');
+    later.id='sxLaterNav';
+    later.className='sx-nav-icon sx-later-nav';
+    later.type='button';
+    later.setAttribute('aria-label','Coming Later');
+    later.title='COMING LATER';
+    later.innerHTML='<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.5v5l3.3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sx-later-dot"></span>';
+
+    const fav=document.createElement('button');
+    fav.id='sxFavNav';
+    fav.className='sx-nav-icon sx-feature-locked';
+    fav.type='button';
+    fav.setAttribute('aria-label','Ulubione — w dalszym rozwoju');
+    fav.setAttribute('aria-disabled','true');
+    fav.title='Ulubione — COMING LATER';
+    fav.innerHTML='<svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.8A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg><span class="sx-badge" id="sxFavCount">0</span>';
+
     nav.prepend(search);
+
+    const accountBtn=nav.querySelector('#openAccount');
+    if(accountBtn) accountBtn.insertAdjacentElement('afterend',later);
+    else nav.appendChild(later);
+
     const cartBtn=nav.querySelector('#openCart');
-    if(cartBtn) nav.insertBefore(fav,cartBtn); else nav.appendChild(fav);
-    search.onclick=()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)};
-    fav.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;renderFavPanel();openOverlay('sxFavOverlay')};
+    if(cartBtn){
+      nav.insertBefore(fav,cartBtn);
+      cartBtn.classList.add('sx-feature-locked');
+      cartBtn.setAttribute('aria-disabled','true');
+      cartBtn.setAttribute('aria-label','Koszyk — w dalszym rozwoju');
+      cartBtn.title='Koszyk — COMING LATER';
+    }else nav.appendChild(fav);
+
+    const openLater=()=>openOverlay('sxLaterOverlay');
+    search.onclick=openLater;
+    later.onclick=openLater;
+    fav.onclick=openLater;
+
+    // Existing cart code is still kept for future development, but the icon is blocked for now.
+    if(cartBtn){
+      cartBtn.addEventListener('click',e=>{
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        openLater();
+      },true);
+    }
   }
 
   function setupSearch(){
     const input=$('#sxSearchInput'),results=$('#sxSearchResults'); if(!input||!results)return;
     const escSearch=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const norm=x=>String(x??'').toLocaleLowerCase('pl-PL').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    let remoteCatalog={};
-    let renderToken=0;
-    const staticProducts=[
-      {id:PRODUCT.id,name:PRODUCT.name,fit:PRODUCT.fit,price:PRODUCT.price,image:getProductImage(),keywords:'hoodie bluza bluzy sweatshirt graffiti black czarna czarny relaxed fit drop 01',open:()=>openProduct()},
-      {id:'oversized-white-shirt',name:'White T-Shirt Different Reality.',fit:'OVERSIZED FIT',price:99,image:document.querySelector('#shirtCard .product-visual img')?.src||'/assets/b1322871e28ce217.webp',keywords:'t-shirt tshirt koszulka koszulki different reality white biala bialy blue niebieska niebieski purple fioletowa fioletowy oversized fit',open:()=>document.getElementById('shirtCard')?.click()}
-    ];
-    const getDynamicProducts=()=>Object.entries(remoteCatalog||{}).filter(([id])=>!['black-hoodie-graffiti','oversized-white-shirt'].includes(id)).map(([id,p])=>{
-      const colors=Object.entries(p.colors||{}).flatMap(([key,v])=>[key,v?.label,v?.name]).filter(Boolean).join(' ');
-      const image=p.image||p.images?.[0]||Object.values(p.colors||{}).map(v=>v?.image||v?.images?.[0]).find(Boolean)||'';
-      const category=String(p.category||'').toLowerCase().includes('shirt')?'koszulka koszulki tshirt t-shirt':'bluza bluzy hoodie';
-      return {id,name:p.name||id,fit:p.fit||'STARXV',price:(Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):Number(p.price||0)),image,keywords:`${id} ${category} ${colors} ${p.description||''}`,open:()=>{const el=document.querySelector(`[data-product-id="${CSS.escape(id)}"]`);if(el)el.click();else window.STARXV_RENDER_DYNAMIC_CATALOG?.()}};
-    });
-    const loadCatalog=async()=>{try{const r=await fetch('/api/store/catalog',{cache:'no-store',credentials:'same-origin'});if(r.ok){const j=await r.json();remoteCatalog=j.catalog||{}}}catch{remoteCatalog={}}};
-    const render=async()=>{
-      const token=++renderToken,qRaw=input.value.trim(),q=norm(qRaw);
-      if(!q){results.innerHTML='<div class="sx-muted" style="padding:16px 2px">Wyszukaj po nazwie, kategorii, kroju lub kolorze.</div>';return}
-      await loadCatalog();if(token!==renderToken)return;
-      const words=q.split(/\s+/).filter(Boolean);
-      const products=[...staticProducts,...getDynamicProducts()];
-      const hits=products.filter(p=>{const hay=norm(`${p.name} ${p.fit} ${p.price} ${p.keywords}`);return words.every(w=>hay.includes(w))});
-      if(!hits.length){results.innerHTML='<div class="sx-fav-empty">Brak produktów pasujących do wyszukiwania.</div>';return}
-      results.innerHTML=hits.map((p,i)=>`<div class="sx-search-result" data-search-index="${i}">${p.image?`<img src="${escSearch(p.image)}" alt="${escSearch(p.name)}">`:'<div style="width:76px;height:86px;border-radius:13px;background:#111"></div>'}<div><b>${escSearch(p.name)}</b><small>${escSearch(p.fit)} · ${Number(p.price||0).toFixed(0)} PLN</small></div></div>`).join('');
-      results.querySelectorAll('[data-search-index]').forEach(el=>el.addEventListener('click',()=>{const p=hits[Number(el.dataset.searchIndex)];closeOverlay('sxSearchOverlay');p?.open?.()}));
+
+    const closeSearch=()=>closeOverlay('sxSearchOverlay');
+    const closeProfile=()=>document.getElementById('closeAccount')?.click();
+
+    const openAccount=()=>{
+      closeSearch();
+      document.getElementById('openAccount')?.click();
     };
-    let timer;input.addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(render,120)});render();
+
+    const openOrders=()=>{
+      closeSearch();
+      const btn=document.getElementById('sxAccountOrders');
+      if(btn){btn.click();return}
+      if(window.STARXV_REQUIRE_AUTH?.()===false)return;
+      window.STARXV_OPEN_ORDERS?.();
+    };
+
+    const openProfileFeature=id=>{
+      closeSearch();
+      const btn=document.getElementById(id);
+      if(btn){btn.click();return}
+      document.getElementById('openAccount')?.click();
+      setTimeout(()=>document.getElementById(id)?.click(),160);
+    };
+
+    const go=url=>{
+      closeSearch();
+      window.location.href=url;
+    };
+
+    const openContact=()=>{
+      closeSearch();
+      closeProfile();
+      setTimeout(()=>window.openStarxvContact?.(),80);
+    };
+
+    function getItems(){
+      const items=[
+        {title:'Digital',meta:'STARXV / STRONA GŁÓWNA',keywords:'digital ebook ebooki strona glowna sklep home',icon:'D',open:()=>go('/?section=digital')},
+        {title:'Profil',meta:'TWOJE KONTO',keywords:'profil konto account dane konto starxv',icon:'P',open:openAccount},
+        {title:'Moje zamówienia',meta:'PROFIL / ZAMÓWIENIA',keywords:'zamowienia zamówienia order orders zakupy historia platnosc płatność',icon:'Z',open:openOrders},
+        {title:'Zwroty i reklamacje',meta:'POMOC',keywords:'zwrot zwroty reklamacja reklamacje odstapienie odstąpienie pomoc',icon:'R',open:()=>go('/returns.html')},
+        {title:'Zmień hasło / e-mail',meta:'PROFIL / DANE LOGOWANIA',keywords:'haslo hasło email e-mail dane logowania bezpieczenstwo bezpieczeństwo konto',icon:'K',open:()=>openProfileFeature('sxAccountSecurityBtn')},
+        {title:'Zgłoś problem',meta:'STARXV SUPPORT',keywords:'support problem pomoc zglos zgłoś ticket kontakt techniczny',icon:'S',open:()=>openProfileFeature('sxReportProblemBtn')},
+        {title:'Contact',meta:'KONTAKT Z STARXV',keywords:'contact kontakt mail email e-mail kontakt@starxv.pl napisz',icon:'C',open:openContact},
+        {title:'Regulamin',meta:'INFORMACJE PRAWNE',keywords:'regulamin terms zasady sklep prawo prawne',icon:'§',open:()=>go('/terms.html')},
+        {title:'Polityka prywatności',meta:'PRYWATNOŚĆ / RODO',keywords:'polityka prywatnosci prywatności privacy rodo dane osobowe cookies',icon:'R',open:()=>go('/privacy.html')},
+        {title:'Prawa autorskie',meta:'STARXV / COPYRIGHT',keywords:'prawa autorskie copyright materialy materiały tresci treści',icon:'©',open:()=>go('/copyright.html')},
+        {title:'Coming Later',meta:'FUNKCJE W DALSZYM ROZWOJU',keywords:'later coming soon funkcje przyszlosc przyszłość accessories ulubione koszyk wyszukiwarka produktow produktów',icon:'L',open:()=>{closeSearch();openOverlay('sxLaterOverlay')}},
+      ];
+
+      if(document.getElementById('sxProfileDeployBtn')){
+        items.push({title:'Deploy',meta:'STREFA WŁAŚCICIELA',keywords:'deploy render github push wlasciciel właściciel owner',icon:'D',open:()=>openProfileFeature('sxProfileDeployBtn')});
+      }
+      if(document.getElementById('sxProfileAccessoriesBtn')){
+        items.push({title:'Accessories Beta',meta:'STREFA WŁAŚCICIELA',keywords:'accessories beta owner preview podglad podgląd akcesoria',icon:'A',open:()=>openProfileFeature('sxProfileAccessoriesBtn')});
+      }
+      return items;
+    }
+
+    function render(){
+      const qRaw=input.value.trim(),q=norm(qRaw);
+      const items=getItems();
+
+      if(!q){
+        const featured=items.slice(0,10);
+        results.innerHTML='<div class="sx-site-search-intro"><b>SZUKAJ W STARXV</b><span>Wpisz np. „zamówienia”, „regulamin”, „contact” albo „zwroty”.</span></div>'+
+          featured.map((item,i)=>`<button class="sx-site-search-result" type="button" data-site-search="${i}"><span class="sx-site-search-icon">${escSearch(item.icon)}</span><span class="sx-site-search-copy"><b>${escSearch(item.title)}</b><small>${escSearch(item.meta)}</small></span><span class="sx-site-search-arrow">→</span></button>`).join('');
+        results.querySelectorAll('[data-site-search]').forEach(el=>el.addEventListener('click',()=>featured[Number(el.dataset.siteSearch)]?.open?.()));
+        return;
+      }
+
+      const words=q.split(/\s+/).filter(Boolean);
+      const hits=items.filter(item=>{
+        const hay=norm(`${item.title} ${item.meta} ${item.keywords}`);
+        return words.every(w=>hay.includes(w));
+      });
+
+      if(!hits.length){
+        results.innerHTML='<div class="sx-fav-empty">Nic nie znaleziono.<br><span class="sx-muted">Spróbuj np. „zamówienia”, „regulamin”, „kontakt” albo „profil”.</span></div>';
+        return;
+      }
+
+      results.innerHTML=hits.map((item,i)=>`<button class="sx-site-search-result" type="button" data-site-search="${i}"><span class="sx-site-search-icon">${escSearch(item.icon)}</span><span class="sx-site-search-copy"><b>${escSearch(item.title)}</b><small>${escSearch(item.meta)}</small></span><span class="sx-site-search-arrow">→</span></button>`).join('');
+      results.querySelectorAll('[data-site-search]').forEach(el=>el.addEventListener('click',()=>hits[Number(el.dataset.siteSearch)]?.open?.()));
+    }
+
+    input.placeholder='Szukaj: zamówienia, regulamin, contact...';
+    input.addEventListener('input',render);
+    render();
   }
 
   function openProduct(){getCard()?.click()}
@@ -2215,8 +2346,9 @@ const renderCart=()=>{hydrateCartDiscounts();
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
     const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
-    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
+    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-profile-search-card" id="sxProfileSearchBtn" type="button"><span class="sx-profile-link-kicker">NAWIGACJA</span><b>WYSZUKIWARKA STARXV</b><span class="sx-profile-link-arrow">→</span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
+    $('#sxProfileSearchBtn')?.addEventListener('click',()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
   }
 
