@@ -1,84 +1,48 @@
 <!doctype html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="index,follow">
-  <meta name="theme-color" content="#050505">
-  <title>Zwroty i reklamacje — STARXV</title>
-  <meta name="description" content="Informacje o zwrotach, odstąpieniu od umowy i reklamacjach w sklepie STARXV.">
-  <style>
-    :root{color-scheme:dark}
-    *{box-sizing:border-box}
-    html{background:#050505}
-    body{margin:0;background:#050505;color:#f6f6f6;font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
-    a{color:inherit}
-    .top{position:sticky;top:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid #1b1b1b;background:rgba(5,5,5,.94);backdrop-filter:blur(12px)}
-    .brand{font-size:17px;font-weight:950;letter-spacing:.08em;text-decoration:none}
-    .back{border:1px solid #2a2a2a;border-radius:999px;padding:10px 14px;font-size:10px;font-weight:900;letter-spacing:.1em;text-decoration:none}
-    main{max-width:980px;margin:0 auto;padding:72px 24px 96px}
-    .kicker{font-size:10px;font-weight:900;letter-spacing:.22em;color:#777;margin-bottom:16px}
-    h1{font-size:clamp(38px,7vw,82px);line-height:.92;margin:0 0 22px;letter-spacing:-.055em}
-    .lead{max-width:790px;color:#aaa;line-height:1.7;font-size:14px;margin-bottom:34px}
-    section{border-top:1px solid #1c1c1c;padding:30px 0}
-    h2{font-size:18px;margin:0 0 15px;letter-spacing:-.02em}
-    h3{font-size:13px;margin:20px 0 8px;color:#e7e7e7}
-    p,li{font-size:13px;line-height:1.75;color:#b8b8b8}
-    ul,ol{padding-left:20px}
-    .card{padding:18px;border:1px solid #242424;border-radius:16px;background:#0a0a0a;margin-top:14px}
-    .badge{display:inline-flex;padding:7px 10px;border:1px solid #2c2c2c;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.1em;color:#ddd;margin-bottom:10px}
-    .contact{display:inline-block;margin-top:8px;font-weight:900;text-decoration:none;border-bottom:1px solid #555}
-    .template{white-space:pre-line;border:1px dashed #353535;background:#090909;border-radius:14px;padding:18px;color:#bcbcbc;font-size:12px;line-height:1.75}
-    .note{margin-top:16px;padding:14px 16px;border-left:2px solid #3a3a3a;background:#090909;color:#858585;font-size:11px;line-height:1.65}
-    footer{border-top:1px solid #1b1b1b;padding:28px 24px;text-align:center;color:#666;font-size:10px;letter-spacing:.08em}
-    @media(max-width:650px){.top{padding:14px 16px}main{padding:48px 18px 72px}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="index,follow">
+<meta name="theme-color" content="#050505">
+<title>Zwroty i reklamacje — STARXV</title>
+<meta name="description" content="Zwroty, odstąpienie od umowy i reklamacje produktów fizycznych oraz treści cyfrowych STARXV.">
+<style>
+:root{color-scheme:dark;--bg:#050505;--panel:#0a0a0a;--line:#202020;--text:#f5f3ee;--muted:#9a9a9a;--gold:#b89b3f;--blue:#70b9dd}
+*{box-sizing:border-box}html{background:var(--bg);scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit}
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:18px 28px;border-bottom:1px solid #1b1b1b;background:rgba(5,5,5,.94);backdrop-filter:blur(14px)}
+.brand{font-size:17px;font-weight:950;letter-spacing:.08em;text-decoration:none}.back{border:1px solid #2a2a2a;border-radius:999px;padding:10px 14px;font-size:10px;font-weight:900;letter-spacing:.1em;text-decoration:none}
+main{max-width:1060px;margin:0 auto;padding:72px 24px 96px}.kicker{font-size:10px;font-weight:900;letter-spacing:.22em;color:var(--gold);margin-bottom:16px}
+h1{font-size:clamp(42px,7vw,88px);line-height:.9;margin:0 0 22px;letter-spacing:-.06em}.lead{max-width:820px;color:#aaa;line-height:1.75;font-size:14px;margin:0 0 30px}
+.notice{border:1px solid rgba(184,155,63,.25);background:rgba(184,155,63,.05);padding:15px 17px;color:#b8b3a9;font-size:11px;line-height:1.7;margin:0 0 34px}
+.switcher{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px;border:1px solid var(--line);background:#080808;margin-bottom:42px}.switcher button{border:1px solid transparent;background:#0c0c0c;color:#777;padding:17px 16px;cursor:pointer;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;transition:.2s}.switcher button.active{background:#f0ede5;color:#070707;border-color:#f0ede5}
+.mode{display:none}.mode.active{display:block}.mode-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-end;padding-bottom:20px;border-bottom:1px solid var(--line)}.mode-head .eyebrow{font-size:9px;color:var(--gold);font-weight:900;letter-spacing:.18em;text-transform:uppercase;margin-bottom:9px}.mode-head h2{font-size:clamp(28px,4vw,44px);margin:0;letter-spacing:-.04em}.mode-head p{max-width:470px;margin:0;color:#888;font-size:11px;line-height:1.65}
+section{border-top:1px solid var(--line);padding:30px 0}.mode section:first-of-type{border-top:0}h3{font-size:19px;margin:0 0 13px;letter-spacing:-.02em}p,li{font-size:13px;line-height:1.75;color:#b8b8b8}ul{padding-left:19px}
+.badge{display:inline-flex;padding:7px 10px;border:1px solid #2c2c2c;border-radius:999px;font-size:9px;font-weight:900;letter-spacing:.1em;color:#ddd;margin-bottom:11px}.badge.digital{border-color:rgba(112,185,221,.35);color:#a9d9ef}.badge.physical{border-color:rgba(184,155,63,.35);color:#d1bb73}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}.card{padding:18px;border:1px solid #242424;border-radius:14px;background:#090909}.card b{display:block;color:#f0ede5;font-size:11px;margin-bottom:7px}.card p{margin:0;font-size:11px;color:#8f8f8f}.contact{font-weight:900;text-decoration:none;border-bottom:1px solid #555}
+.template{white-space:pre-line;border:1px dashed #353535;background:#080808;border-radius:14px;padding:18px;color:#bcbcbc;font-size:12px;line-height:1.75;margin-top:14px}.note{margin-top:16px;padding:14px 16px;border-left:2px solid #3a3a3a;background:#090909;color:#858585;font-size:11px;line-height:1.65}.important{border-left-color:var(--gold);background:rgba(184,155,63,.05);color:#b9b3a5}
+.cta{margin-top:34px;border:1px solid var(--line);background:linear-gradient(135deg,#0a0a0a,#0f0d0d);padding:24px;display:flex;align-items:center;justify-content:space-between;gap:20px}.cta small{display:block;color:var(--gold);font-size:8px;font-weight:950;letter-spacing:.18em;margin-bottom:8px}.cta h3{margin:0 0 6px}.cta p{margin:0;color:#858585;font-size:11px}.cta-actions{display:flex;gap:8px;flex-wrap:wrap}.cta a{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:12px 15px;border:1px solid #343434;font-size:9px;font-weight:950;letter-spacing:.08em}.cta a.primary{background:#f0ede5;color:#080808;border-color:#f0ede5}
+.legal{margin-top:42px;padding-top:24px;border-top:1px solid var(--line);color:#626262;font-size:9px;line-height:1.7}footer{border-top:1px solid #1b1b1b;padding:28px 24px;text-align:center;color:#666;font-size:10px;letter-spacing:.08em}@media(max-width:760px){.top{padding:14px 16px}main{padding:48px 18px 72px}.switcher,.grid{grid-template-columns:1fr}.mode-head{display:block}.mode-head p{margin-top:12px}.cta{display:block}.cta-actions{margin-top:16px}}
+</style>
 </head>
 <body>
-<header class="top">
-  <a class="brand" href="/">STARXV</a>
-  <a class="back" href="/">← WRÓĆ DO SKLEPU</a>
-</header>
-
+<header class="top"><a class="brand" href="/">STARXV</a><a class="back" href="/">← WRÓĆ DO SKLEPU</a></header>
 <main>
-  <div class="kicker">STARXV / POMOC / ZWROTY I REKLAMACJE</div>
-  <h1>ZWROTY I<br>REKLAMACJE.</h1>
-  <p class="lead">Tutaj znajdziesz najważniejsze informacje dotyczące odstąpienia od umowy, zwrotu produktu i reklamacji. Szczegółowe zasady określa Regulamin STARXV.</p>
+<div class="kicker">STARXV / POMOC / ZWROTY I REKLAMACJE</div><h1>ZWROTY I<br>REKLAMACJE.</h1>
+<p class="lead">Wybierz typ produktu, aby zobaczyć zasady dotyczące odstąpienia od umowy, zwrotu lub reklamacji. Informacje dotyczą zakupów konsumenckich w sklepie internetowym STARXV.</p>
+<div class="notice">W zgłoszeniu podaj numer zamówienia oraz dane pozwalające zidentyfikować zakup. Kontakt: <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>.</div>
+<div class="switcher" role="tablist"><button id="tabPhysical" class="active" type="button" aria-selected="true">PRODUKT FIZYCZNY</button><button id="tabDigital" type="button" aria-selected="false">PRODUKT CYFROWY / E-BOOK</button></div>
 
-  <section>
-    <span class="badge">ZWROT</span>
-    <h2>14 dni na odstąpienie od umowy</h2>
-    <p>Konsument, który zawarł umowę na odległość, ma co do zasady 14 dni na odstąpienie od umowy bez podawania przyczyny, z wyjątkami przewidzianymi przez prawo. Termin co do zasady liczy się od objęcia produktu w posiadanie przez Konsumenta lub wskazaną przez niego osobę trzecią inną niż przewoźnik.</p>
-    <p>Oświadczenie możesz wysłać na <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>. Podaj numer zamówienia i informacje pozwalające zidentyfikować zakup.</p>
-  </section>
+<div id="physical" class="mode active">
+<div class="mode-head"><div><div class="eyebrow">STARXV / PHYSICAL</div><h2>Produkty fizyczne</h2></div><p>Zasady dotyczące towarów wysyłanych do klienta, w tym przyszłych produktów STARXV Accessories.</p></div>
+<section><span class="badge physical">ODSTĄPIENIE OD UMOWY</span><h3>14 dni na decyzję przy zakupie online</h3><p>Przy zakupie przez internet konsument ma co do zasady 14 dni na odstąpienie od umowy bez podawania przyczyny. Dla pojedynczego towaru termin liczy się od dnia jego otrzymania przez konsumenta lub wskazaną przez niego osobę.</p><p>Oświadczenie możesz przesłać na <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>. Dla celów dowodowych warto zachować potwierdzenie wysłania wiadomości.</p></section>
+<section><span class="badge physical">ODESŁANIE</span><h3>Po odstąpieniu masz 14 dni na odesłanie towaru</h3><p>Po złożeniu oświadczenia o odstąpieniu konsument powinien odesłać produkt niezwłocznie, nie później niż w ciągu 14 dni. Przy zwykłym odstąpieniu bezpośredni koszt odesłania rzeczy ponosi konsument, jeżeli został o tym prawidłowo poinformowany.</p><div class="grid"><div class="card"><b>Zabezpiecz przesyłkę</b><p>Zapakuj produkt tak, aby nie został uszkodzony podczas transportu.</p></div><div class="card"><b>Zachowaj potwierdzenie nadania</b><p>Może być potrzebne do potwierdzenia, że towar został odesłany w terminie.</p></div></div></section>
+<section><span class="badge physical">ZWROT PŁATNOŚCI</span><h3>Rozliczenie odstąpienia</h3><p>Po skutecznym odstąpieniu sprzedawca zwraca płatności co do zasady nie później niż w ciągu 14 dni od otrzymania oświadczenia. Zwrot kosztów dostawy obejmuje koszt najtańszego zwykłego sposobu dostarczenia oferowanego przy zakupie.</p><p>Sprzedawca może wstrzymać się ze zwrotem pieniędzy do chwili otrzymania zwracanej rzeczy lub przedstawienia dowodu jej odesłania — zależnie od tego, co nastąpi wcześniej.</p></section>
+<section><span class="badge physical">STAN PRODUKTU</span><h3>Możesz sprawdzić produkt</h3><p>Konsument odpowiada za zmniejszenie wartości produktu wynikające z korzystania z niego w sposób wykraczający poza konieczny do stwierdzenia charakteru, cech i funkcjonowania towaru.</p></section>
+<section><span class="badge physical">REKLAMACJA</span><h3>Produkt jest niezgodny z umową?</h3><p>Reklamację kierujesz do STARXV jako sprzedawcy. W zgłoszeniu opisz problem i wskaż swoje żądanie. Dowód zakupu może ułatwić obsługę sprawy, ale paragon nie jest jedynym możliwym dowodem zakupu.</p><p>Odpowiedzialność sprzedawcy za niezgodność towaru z umową trwa co do zasady 2 lata od wydania towaru. Na reklamację konsumenta sprzedawca powinien odpowiedzieć w ciągu 14 dni od jej otrzymania.</p><div class="grid"><div class="card"><b>W pierwszej kolejności</b><p>Konsument może żądać naprawy albo wymiany towaru, z wyjątkami wynikającymi z przepisów.</p></div><div class="card"><b>W określonych przypadkach</b><p>Możliwe jest żądanie obniżenia ceny albo odstąpienia od umowy, m.in. gdy niezgodność jest istotna lub naprawa/wymiana nie doprowadziła towaru do zgodności.</p></div></div><div class="note">Koszty związane z reklamacją towaru niezgodnego z umową ponosi sprzedawca w zakresie wymaganym przez przepisy.</div></section>
+<section><span class="badge physical">WZÓR</span><h3>Oświadczenie o odstąpieniu od umowy</h3><p>Nie musisz korzystać z konkretnego formularza. Możesz użyć poniższego wzoru:</p><div class="template">Do: STARXV — kontakt@starxv.pl
 
-  <section>
-    <span class="badge">ODESŁANIE</span>
-    <h2>Koszt przesyłki zwrotnej</h2>
-    <p>Przy zwykłym odstąpieniu od umowy bezpośredni koszt odesłania produktu ponosi Konsument, zgodnie z Regulaminem STARXV.</p>
-    <p>Produkt należy odesłać niezwłocznie, nie później niż w terminie wynikającym z obowiązujących przepisów. Zabezpiecz przesyłkę tak, aby produkt nie został uszkodzony podczas transportu.</p>
-  </section>
-
-  <section>
-    <span class="badge">STAN PRODUKTU</span>
-    <h2>Możesz sprawdzić produkt</h2>
-    <p>Konsument odpowiada za zmniejszenie wartości produktu wynikające z korzystania z niego w sposób wykraczający poza konieczny do stwierdzenia jego charakteru, cech i funkcjonowania.</p>
-  </section>
-
-  <section>
-    <span class="badge">REKLAMACJA</span>
-    <h2>Produkt jest niezgodny z umową?</h2>
-    <p>Reklamację możesz zgłosić na <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>. W wiadomości podaj w miarę możliwości numer zamówienia, opis problemu i swoje żądanie. Jeżeli zdjęcia pomagają pokazać problem, możesz je dołączyć.</p>
-    <p>Brak zdjęć lub niektórych informacji nie pozbawia Konsumenta ustawowych praw. STARXV udziela odpowiedzi na reklamację w terminie wymaganym przez obowiązujące przepisy.</p>
-  </section>
-
-  <section>
-    <span class="badge">FORMULARZ</span>
-    <h2>Wzór oświadczenia o odstąpieniu</h2>
-    <p>Nie musisz korzystać z konkretnego formularza. Możesz jednak skopiować poniższy wzór do wiadomości e-mail:</p>
-    <div class="template">Do: STARXV — kontakt@starxv.pl
-
-Ja, [imię i nazwisko], niniejszym informuję o odstąpieniu od umowy sprzedaży następującego produktu / produktów:
+Ja, [imię i nazwisko], informuję o odstąpieniu od umowy sprzedaży następującego produktu / produktów:
 [nazwa produktu]
 
 Numer zamówienia:
@@ -94,17 +58,19 @@ Adres:
 [adres]
 
 Data złożenia oświadczenia:
-[data]</div>
-  </section>
+[data]</div></section>
+</div>
 
-  <section>
-    <span class="badge">WAŻNE</span>
-    <h2>Wyjątki od prawa odstąpienia</h2>
-    <p>Prawo odstąpienia może nie przysługiwać w przypadkach określonych przepisami, na przykład w odniesieniu do niektórych produktów wykonywanych według indywidualnej specyfikacji klienta.</p>
-    <div class="note">Pełne zasady zwrotów, reklamacji, kosztów i rozliczeń znajdują się w Regulaminie STARXV.</div>
-  </section>
+<div id="digital" class="mode">
+<div class="mode-head"><div><div class="eyebrow">STARXV / DIGITAL</div><h2>E-booki i treści cyfrowe</h2></div><p>Zasady dotyczące plików cyfrowych udostępnianych po potwierdzeniu płatności na koncie STARXV.</p></div>
+<section><span class="badge digital">DOSTĘP CYFROWY</span><h3>Dostęp po prawidłowym potwierdzeniu płatności</h3><p>Jeżeli treść cyfrowa jest dostępna natychmiast, dostęp jest przypisywany do konta STARXV po prawidłowym potwierdzeniu płatności. W przypadku problemu z dostępem lub pobraniem skontaktuj się z nami i podaj numer zamówienia.</p><div class="grid"><div class="card"><b>Nie widzisz e-booka?</b><p>Sprawdź, czy jesteś zalogowany na to samo konto STARXV, z którego dokonano zakupu.</p></div><div class="card"><b>Płatność się nie potwierdziła?</b><p>Nie wykonuj wielu płatności pod rząd. Sprawdź status zamówienia na koncie lub zgłoś problem do supportu.</p></div></div></section>
+<section><span class="badge digital">ODSTĄPIENIE OD UMOWY</span><h3>Treść cyfrowa ma szczególne zasady</h3><p>Przy odpłatnej treści cyfrowej niedostarczanej na nośniku materialnym prawo do odstąpienia może zostać utracone po rozpoczęciu dostarczania treści, ale tylko po spełnieniu wymaganych prawem warunków.</p><div class="grid"><div class="card"><b>Wyraźna uprzednia zgoda</b><p>Konsument musi wyrazić zgodę na rozpoczęcie dostarczania treści przed upływem terminu do odstąpienia.</p></div><div class="card"><b>Informacja o utracie prawa</b><p>Konsument musi zostać poinformowany o skutku rozpoczęcia dostarczania i przyjąć tę informację do wiadomości.</p></div><div class="card"><b>Potwierdzenie</b><p>Przedsiębiorca powinien przekazać wymagane potwierdzenie zawarcia umowy i otrzymanej zgody na trwałym nośniku, np. e-mailem.</p></div><div class="card"><b>To nie działa automatycznie</b><p>Samo oznaczenie produktu jako cyfrowy nie wystarcza do wyłączenia prawa odstąpienia.</p></div></div><div class="note important">Jeśli wymagane warunki nie zostały spełnione, konsument może nadal mieć prawo do odstąpienia.</div></section>
+<section><span class="badge digital">REKLAMACJA</span><h3>Treść cyfrową również możesz reklamować</h3><p>Utrata prawa do zwykłego odstąpienia nie oznacza utraty prawa do reklamacji. Jeżeli e-book lub inna treść cyfrowa nie została dostarczona zgodnie z umową, nie działa prawidłowo, nie odpowiada opisowi albo dostęp nie został zapewniony w uzgodniony sposób, skontaktuj się z STARXV.</p><p>W zgłoszeniu podaj numer zamówienia, nazwę produktu, opis problemu oraz — jeśli to możliwe — informację, na jakim urządzeniu lub w jakiej przeglądarce występuje problem.</p></section>
+<section><span class="badge digital">WAŻNE</span><h3>Zwrot a reklamacja to dwie różne sprawy</h3><p>Odstąpienie od umowy służy rozwiązaniu umowy bez podawania przyczyny w sytuacjach przewidzianych prawem. Reklamacja dotyczy problemu z prawidłowym wykonaniem umowy lub zgodnością produktu z umową.</p></section>
+</div>
+<div class="cta"><div><small>STARXV / CUSTOMER CARE</small><h3>Potrzebujesz pomocy?</h3><p>Przygotuj numer zamówienia i krótki opis sprawy.</p></div><div class="cta-actions"><a class="primary" href="mailto:kontakt@starxv.pl?subject=STARXV%20-%20zwrot%20lub%20reklamacja">NAPISZ DO STARXV →</a><a href="/">WRÓĆ DO SKLEPU</a></div></div>
+<div class="legal">Informacje na tej stronie powinny być spójne z Regulaminem STARXV, procesem zakupowym oraz faktycznym sposobem obsługi płatności, dostawy i treści cyfrowych.</div>
 </main>
-
 <footer>© 2026 STARXV — ALL RIGHTS RESERVED</footer>
-</body>
-</html>
+<script>(()=>{const p=document.getElementById('tabPhysical'),d=document.getElementById('tabDigital'),pm=document.getElementById('physical'),dm=document.getElementById('digital');function show(which){const digital=which==='digital';p.classList.toggle('active',!digital);d.classList.toggle('active',digital);p.setAttribute('aria-selected',String(!digital));d.setAttribute('aria-selected',String(digital));pm.classList.toggle('active',!digital);dm.classList.toggle('active',digital);history.replaceState(null,'',digital?'#digital':'#physical')}p.addEventListener('click',()=>show('physical'));d.addEventListener('click',()=>show('digital'));if(location.hash==='#digital')show('digital')})();</script>
+</body></html>
