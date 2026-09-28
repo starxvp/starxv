@@ -662,10 +662,46 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 #sxProfileOwnerGroup{width:100%;margin:0;grid-column:1/-1!important}
 #sxProfileOwnerGroup[hidden]{display:none!important}
 #sxProfileOwnerGroup .sx-profile-section-head{color:#9d8540}
-.sx-profile-owner-links{width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
-.sx-profile-owner-links .sx-profile-link-card{width:100%!important;min-width:0!important;margin:0!important}
+.account-profile.active .sx-profile-owner-links{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-card{
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:88px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:17px 46px 17px 18px!important;
+  border:1px solid var(--line)!important;
+  background:#0b0b0b!important;
+  color:#fff!important;
+  text-align:left!important;
+  font:inherit!important;
+  cursor:pointer!important;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease!important;
+  overflow:hidden!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-card:hover{
+  transform:translateY(-2px)!important;
+  background:#101010!important;
+  border-color:rgba(255,255,255,.2)!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-arrow{
+  position:absolute!important;
+  right:17px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-card:hover .sx-profile-link-arrow{
+  transform:translate(3px,-50%)!important;
+}
 .profile-actions #profileOrders{display:none!important}
-@media(max-width:700px){.sx-profile-owner-links{grid-template-columns:1fr!important}}
+@media(max-width:700px){.account-profile.active .sx-profile-owner-links{grid-template-columns:1fr!important}}
 
 /* Only labels/separation are added here. The cards keep exactly the same layout as the existing profile cards. */
 .sx-deploy-profile-card .sx-profile-link-kicker{color:#b89b3f!important}
@@ -1815,7 +1851,15 @@ const renderCart=()=>{hydrateCartDiscounts();
     await fetchOrders();render();
     if(location.hash!=='#orders')history.pushState({starxvOrders:true},'',location.pathname+location.search+'#orders');
   }
-  function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';if(location.hash==='#orders')history.replaceState(null,'',location.pathname+location.search);setTimeout(()=>document.getElementById('openAccount')?.click(),80)}
+  function close(){
+    modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
+    const backToProfile=sessionStorage.getItem('starxv-return-to-profile')==='1';
+    if(backToProfile){
+      sessionStorage.removeItem('starxv-return-to-profile');
+      if(location.hash==='#orders')history.replaceState(null,'',location.pathname+location.search);
+      setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+    }else if(location.hash==='#orders')history.back();
+  }
   window.STARXV_OPEN_ORDERS=open;
   closeBtn?.addEventListener('click',close);
   refresh?.addEventListener('click',async()=>{await fetchOrders();render()});
@@ -1853,7 +1897,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       render();
     }catch(err){alert(err.message||'Nie udało się anulować zamówienia.');btn.disabled=false;btn.textContent=oldText}
   });
-  window.addEventListener('popstate',()=>{if(location.hash!=='#orders'&&modal.classList.contains('open')){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';setTimeout(()=>document.getElementById('openAccount')?.click(),80)}});
+  window.addEventListener('popstate',()=>{if(location.hash!=='#orders'&&modal.classList.contains('open')){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
 
   // Orders are authoritative on the backend. The browser never marks an order as paid by itself.
@@ -1892,10 +1936,19 @@ const renderCart=()=>{hydrateCartDiscounts();
   function switchTab(name){document.querySelectorAll('[data-auth-tab]').forEach(x=>x.classList.toggle('active',x.dataset.authTab===name));document.querySelectorAll('[data-auth-view]').forEach(x=>x.classList.toggle('active',x.dataset.authView===name));setMsg('loginMessage','');setMsg('registerMessage','');setMsg('verifyMessage','')}
   document.querySelectorAll('[data-auth-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.authTab));
   async function refreshUser(){try{const d=await api('/auth/me');currentUser=d.user||null}catch(e){currentUser=null}renderState()}
+  let sxKeepWorldOnAccountClose=false;
   function open(){document.getElementById('ordersModal')?.classList.remove('open');document.getElementById('cartModal')?.classList.remove('open');refreshUser();modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>modal.classList.add('open'))}
-  function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
+  function close(){
+    modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
+    if(!sxKeepWorldOnAccountClose){
+      setTimeout(()=>{
+        const digitalNav=document.getElementById('sxNavDigital');
+        if(digitalNav)digitalNav.click();
+        else history.replaceState(null,'','/?section=digital');
+      },0);
+    }
+  }
   openBtn.onclick=open;closeBtn.onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
-  if(location.hash==='#profile'){setTimeout(()=>{open();history.replaceState(null,'',location.pathname+location.search)},120)}
   $('registerSubmit').onclick=async()=>{
     const firstName=$('registerFirstName').value.trim(),lastName=$('registerLastName').value.trim(),email=normalize($('registerEmail').value),password=$('registerPassword').value,password2=$('registerPassword2').value;
     if(!firstName||!lastName||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<8||password!==password2){setMsg('registerMessage',password!==password2?'Hasła nie są takie same.':'Uzupełnij dane, wpisz poprawny e-mail i hasło minimum 8 znaków.','error');return}
@@ -1932,8 +1985,12 @@ const renderCart=()=>{hydrateCartDiscounts();
       deleteAccountBtn.textContent=(localStorage.getItem('starxv-language')||'pl')==='en'?'DELETE ACCOUNT':'USUŃ KONTO';
     }
   };
-  $('profileOrders').onclick=()=>{close();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)};
-  const sxClothingBeta=$('sxClothingBeta');if(sxClothingBeta)sxClothingBeta.onclick=()=>{close();sessionStorage.setItem('starxv-clothing-beta','1');setTimeout(()=>{const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');if(gate){gate.classList.remove('show');gate.setAttribute('aria-hidden','true')}if(digital)digital.hidden=true;if(main)main.hidden=false;if(nav)nav.hidden=false;document.body.classList.remove('sx-digital-mode');sessionStorage.setItem('starxv-world','clothing');history.replaceState(null,'','/');window.scrollTo({top:0,behavior:'smooth'})},120)};
+  $('profileOrders').onclick=()=>{
+    sessionStorage.setItem('starxv-return-to-profile','1');
+    sxKeepWorldOnAccountClose=true;close();sxKeepWorldOnAccountClose=false;
+    setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120);
+  };
+  const sxClothingBeta=$('sxClothingBeta');if(sxClothingBeta)sxClothingBeta.onclick=()=>{sxKeepWorldOnAccountClose=true;close();sxKeepWorldOnAccountClose=false;sessionStorage.setItem('starxv-clothing-beta','1');setTimeout(()=>{const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');if(gate){gate.classList.remove('show');gate.setAttribute('aria-hidden','true')}if(digital)digital.hidden=true;if(main)main.hidden=false;if(nav)nav.hidden=false;document.body.classList.remove('sx-digital-mode');sessionStorage.setItem('starxv-world','clothing');history.replaceState(null,'','/');window.scrollTo({top:0,behavior:'smooth'})},120)};
   const avatarInput=$('profileAvatarInput');if(avatarInput)avatarInput.addEventListener('change',()=>{const file=avatarInput.files?.[0];if(!file||!file.type.startsWith('image/'))return;if(file.size>4*1024*1024){alert('Zdjęcie jest za duże. Maksymalnie 4 MB.');return}const img=new Image(),reader=new FileReader();reader.onload=()=>{img.onload=async()=>{const size=420,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');const scale=Math.max(size/img.width,size/img.height),w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);const avatarData=canvas.toDataURL('image/jpeg',.82);try{const d=await api('/account/avatar',{method:'PUT',body:JSON.stringify({avatarData})});currentUser=d.user;renderState()}catch(e){alert(e.message)}};img.src=reader.result};reader.readAsDataURL(file)});
   refreshUser();
 })();
@@ -2125,7 +2182,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     modal=document.createElement('div');modal.id='sxDeployModal';modal.className='sx-deploy-modal';modal.setAttribute('aria-hidden','true');
     modal.innerHTML=`<div class="sx-deploy-card" role="dialog" aria-modal="true" aria-labelledby="sxDeployTitle"><button class="sx-deploy-close" type="button" aria-label="Zamknij">×</button><div class="sx-deploy-kicker">STARXV / OWNER TOOLS</div><h2 id="sxDeployTitle">DEPLOY</h2><p class="sx-deploy-intro">Szybkie publikowanie zmian STARXV. Ta sekcja jest dostępna wyłącznie dla Twojego konta.</p><div class="sx-deploy-section"><h3>DEPLOY PRZEZ CMD</h3><p>Zapisz zmiany w plikach, otwórz CMD w folderze projektu i uruchom poniższe komendy. <b>git push</b> wysyła kod do GitHuba, a Render dzięki Auto-Deploy wdroży go automatycznie.</p><div class="sx-deploy-code" id="sxDeployCode"></div><div class="sx-deploy-warning">Nie musisz później wchodzić na Render ani klikać Manual Deploy. Przy ustawieniu Auto-Deploy: On Commit wdrożenie rozpocznie się automatycznie po git push.</div></div></div>`;
     document.body.appendChild(modal);
-    const close=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true');setTimeout(()=>{const a=document.getElementById('accountModal');if(a&&!a.classList.contains('open'))document.getElementById('openAccount')?.click()},60)};
+    const close=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
     modal.querySelector('.sx-deploy-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
     return modal;
@@ -2232,8 +2289,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(!btn.dataset.bound){
       btn.dataset.bound='1';
       btn.addEventListener('click',function(){
-        try{history.replaceState({starxvProfileReturn:true},'',location.pathname+location.search+'#profile')}catch{}
-        window.location.href='/returns.html?from=profile';
+        window.location.href='/returns.html';
       });
     }
   }
@@ -2624,7 +2680,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   }
   window.STARXV_INSTALL_ACCOUNT_SECURITY=installButtons;
   async function open(){try{const d=await getMe();currentEmail.textContent=d.user?.email||'—';email.value='';emailPassword.value='';emailCode.value='';currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'');msg(passwordMsg,'');document.getElementById('accountModal')?.classList.remove('open');modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}catch(e){alert(e.message)}}
-  function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';setTimeout(()=>document.getElementById('openAccount')?.click(),80)}
+  function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
   closeBtn.addEventListener('click',close);modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
   // Delegacja kliknięcia sprawia, że oczko działa także po ponownym otwarciu / przebudowie widoku profilu.
   emailSend.addEventListener('click',async()=>{const newEmailValue=String(email.value||'').trim().toLowerCase(),password=emailPassword.value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailValue)){msg(emailMsg,'Wpisz poprawny nowy adres e-mail.','error');return}if(!password){msg(emailMsg,'Wpisz obecne hasło.','error');return}emailSend.disabled=true;try{await api('/account/change-email/start',{newEmail:newEmailValue,currentPassword:password});pendingNewEmail=newEmailValue;codeBox.classList.add('show');msg(emailMsg,`Kod został wysłany na ${newEmailValue}. Jest ważny 10 minut.`,'success');emailCode.focus()}catch(e){msg(emailMsg,e.message,'error')}finally{emailSend.disabled=false}});
@@ -2742,7 +2798,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   async function open(){overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');if(status){status.textContent='';status.className='sx-report-status'}syncOrderVisibility();await Promise.all([loadHistory(),loadSupportOrders()]);setTimeout(()=>$('#sxReportProblemText')?.focus(),120);try{await fetch('/api/support/reports/read',{method:'POST'});setTimeout(refreshUnread,250)}catch{}}
   window.addEventListener('starxv:auth-changed',()=>setTimeout(refreshUnread,150));
   setTimeout(refreshUnread,350);
-  function close(){overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true');setTimeout(()=>{const a=document.getElementById('accountModal');if(a&&!a.classList.contains('open'))document.getElementById('openAccount')?.click()},60)}
+  function close(){overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true')}
   document.addEventListener('click',e=>{if(e.target.closest?.('#sxReportProblemBtn'))open()});
   $('#sxReportProblemClose')?.addEventListener('click',close);
   typeSelect?.addEventListener('change',()=>{syncOrderVisibility();if(needsOrder())loadSupportOrders()});
