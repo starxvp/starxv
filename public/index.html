@@ -662,10 +662,46 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 #sxProfileOwnerGroup{width:100%;margin:0;grid-column:1/-1!important}
 #sxProfileOwnerGroup[hidden]{display:none!important}
 #sxProfileOwnerGroup .sx-profile-section-head{color:#9d8540}
-.sx-profile-owner-links{width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
-.sx-profile-owner-links .sx-profile-link-card{width:100%!important;min-width:0!important;margin:0!important}
+.account-profile.active .sx-profile-owner-links{
+  width:100%!important;
+  max-width:none!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-card{
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:88px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:17px 46px 17px 18px!important;
+  border:1px solid var(--line)!important;
+  background:#0b0b0b!important;
+  color:#fff!important;
+  text-align:left!important;
+  font:inherit!important;
+  cursor:pointer!important;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease!important;
+  overflow:hidden!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-card:hover{
+  transform:translateY(-2px)!important;
+  background:#101010!important;
+  border-color:rgba(255,255,255,.2)!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-arrow{
+  position:absolute!important;
+  right:17px!important;
+  top:50%!important;
+  transform:translateY(-50%)!important;
+}
+.account-profile.active .sx-profile-owner-links .sx-profile-link-card:hover .sx-profile-link-arrow{
+  transform:translate(3px,-50%)!important;
+}
 .profile-actions #profileOrders{display:none!important}
-@media(max-width:700px){.sx-profile-owner-links{grid-template-columns:1fr!important}}
+@media(max-width:700px){.account-profile.active .sx-profile-owner-links{grid-template-columns:1fr!important}}
 
 /* Only labels/separation are added here. The cards keep exactly the same layout as the existing profile cards. */
 .sx-deploy-profile-card .sx-profile-link-kicker{color:#b89b3f!important}
