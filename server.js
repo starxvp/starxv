@@ -1365,6 +1365,52 @@ function adminOnly(req,res,next){
   });
 }
 
+// --- STARXV owner deploy tools ---------------------------------------------------
+// Visible only to accounts listed in ADMIN_EMAILS. The optional web button uses a
+// Render Deploy Hook stored server-side as RENDER_DEPLOY_HOOK_URL. The hook URL is
+// never returned to the browser.
+function renderDeployHookUrl(){return String(process.env.RENDER_DEPLOY_HOOK_URL||'').trim()}
+function deployOwnerEmail(){return cleanEmail(process.env.DEPLOY_OWNER_EMAIL||adminEmails()[0]||'')}
+function deployOwnerOnly(req,res,next){
+  auth(req,res,()=>{
+    const owner=deployOwnerEmail();
+    if(!owner)return res.status(503).json({error:'Właściciel narzędzi deploy nie jest skonfigurowany.'});
+    if(cleanEmail(req.user.email)!==owner)return res.status(403).json({error:'Brak dostępu.'});
+    next();
+  });
+}
+function validRenderDeployHook(url){
+  try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='api.render.com'&&u.pathname.startsWith('/deploy/')}catch{return false}
+}
+app.get('/api/admin/deploy/info',deployOwnerOnly,(req,res)=>{
+  const hook=renderDeployHookUrl();
+  res.setHeader('Cache-Control','no-store');
+  res.json({
+    ok:true,
+    webDeployAvailable:validRenderDeployHook(hook),
+    commands:[
+      'git add .',
+      'git commit -m "Update STARXV"',
+      'git push'
+    ],
+    note:'Zmiany z komputera muszą najpierw trafić na GitHub przez git push. Przycisk na stronie może jedynie uruchomić ponowny deploy najnowszego commita, który już znajduje się na GitHubie.'
+  });
+});
+app.post('/api/admin/deploy/trigger',deployOwnerOnly,rateLimit('admin-deploy',3,10*60*1000),async(req,res)=>{
+  try{
+    const hook=renderDeployHookUrl();
+    if(!hook)return res.status(503).json({error:'Deploy przez stronę nie jest skonfigurowany. Dodaj RENDER_DEPLOY_HOOK_URL w Environment na Renderze.'});
+    if(!validRenderDeployHook(hook))return res.status(503).json({error:'RENDER_DEPLOY_HOOK_URL ma nieprawidłowy format.'});
+    const r=await fetch(hook,{method:'POST',headers:{'Accept':'application/json'},redirect:'error'});
+    const body=await r.text().catch(()=>'');
+    if(!r.ok)throw new Error(`Render zwrócił HTTP ${r.status}${body?': '+body.slice(0,160):''}`);
+    res.json({ok:true,message:'Deploy został uruchomiony na Renderze.'});
+  }catch(e){
+    console.error('STARXV deploy trigger error:',e);
+    res.status(502).json({error:'Nie udało się uruchomić deployu. '+String(e.message||'').slice(0,220)});
+  }
+});
+
 // --- STARXV InPost shipping — production ShipX + official Geowidget v5 ------------
 // ShipX uses the production token generated in Manager Paczek. The Geowidget token
 // is public by design and domain-restricted in Manager Paczek; the ShipX token never

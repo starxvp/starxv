@@ -655,6 +655,25 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 #openCart,#sxSearchBtn{opacity:.42!important;cursor:not-allowed!important;pointer-events:auto!important}
 #openCart .cart-count{display:none!important}
 </style>
+
+<style id="starxv-owner-deploy-style">
+.sx-deploy-profile-card{position:relative;border-color:rgba(204,170,74,.35)!important}
+.sx-deploy-profile-card .sx-profile-link-kicker{color:#b89b3f!important}
+.sx-deploy-modal{position:fixed;inset:0;z-index:100500;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)}
+.sx-deploy-modal.open{display:flex}
+.sx-deploy-card{position:relative;width:min(720px,100%);max-height:min(760px,90vh);overflow:auto;padding:34px;border:1px solid rgba(255,255,255,.14);background:#090909;color:#fff;box-shadow:0 32px 110px rgba(0,0,0,.65)}
+.sx-deploy-close{position:absolute;right:18px;top:15px;border:0;background:transparent;color:#777;font-size:26px;cursor:pointer}.sx-deploy-close:hover{color:#fff}
+.sx-deploy-kicker{color:#b89b3f;font:900 8px/1 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.sx-deploy-card h2{margin:12px 0 8px;font:950 clamp(30px,5vw,48px)/.95 Arial,sans-serif;letter-spacing:-.045em}.sx-deploy-intro{margin:0 0 26px;color:#8f8f8f;font:650 11px/1.65 Arial,sans-serif}
+.sx-deploy-section{padding:20px 0;border-top:1px solid rgba(255,255,255,.09)}.sx-deploy-section h3{margin:0 0 9px;font:900 11px/1.2 Arial,sans-serif;letter-spacing:.05em}.sx-deploy-section p{margin:0 0 14px;color:#858585;font:600 10px/1.65 Arial,sans-serif}
+.sx-deploy-code{position:relative;margin-top:12px;padding:18px 110px 18px 18px;border:1px solid rgba(255,255,255,.10);background:#050505;white-space:pre-wrap;color:#e9e9e9;font:650 12px/1.8 Consolas,monospace;overflow:auto}
+.sx-deploy-copy{position:absolute;right:10px;top:10px;border:1px solid #303030;background:#111;color:#fff;padding:9px 11px;font:900 8px/1 Arial,sans-serif;letter-spacing:.08em;cursor:pointer}.sx-deploy-copy:hover{background:#1b1b1b}
+.sx-deploy-trigger{width:100%;border:0;background:#f2eee3;color:#090909;padding:15px 18px;font:950 9px/1 Arial,sans-serif;letter-spacing:.11em;cursor:pointer}.sx-deploy-trigger:hover{opacity:.9}.sx-deploy-trigger:disabled{opacity:.4;cursor:not-allowed}
+.sx-deploy-status{min-height:18px;margin-top:11px;color:#999;font:700 9px/1.5 Arial,sans-serif}.sx-deploy-status.ok{color:#a7d5b2}.sx-deploy-status.err{color:#e0a0a0}
+.sx-deploy-warning{margin-top:14px;padding:12px 14px;border-left:2px solid #b89b3f;background:#100e08;color:#a9a28f;font:650 9px/1.6 Arial,sans-serif}
+@media(max-width:600px){.sx-deploy-card{padding:28px 20px}.sx-deploy-code{padding:58px 14px 14px;font-size:11px}.sx-deploy-copy{left:10px;right:auto}}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/a21bc8c9acad5dd8.webp"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -2079,13 +2098,49 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.addEventListener('starxv:reviews-changed',e=>{if(!e.detail?.productId||e.detail.productId===PRODUCT.id)renderReviews()});
   function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+  let sxDeployInfo=null;
+  async function sxLoadDeployInfo(){
+    try{
+      const r=await fetch('/api/admin/deploy/info',{credentials:'same-origin',cache:'no-store'});
+      if(!r.ok)return null;
+      return await r.json();
+    }catch{return null}
+  }
+  function sxEnsureDeployModal(){
+    let modal=document.getElementById('sxDeployModal');if(modal)return modal;
+    modal=document.createElement('div');modal.id='sxDeployModal';modal.className='sx-deploy-modal';modal.setAttribute('aria-hidden','true');
+    modal.innerHTML=`<div class="sx-deploy-card" role="dialog" aria-modal="true" aria-labelledby="sxDeployTitle"><button class="sx-deploy-close" type="button" aria-label="Zamknij">×</button><div class="sx-deploy-kicker">STARXV / OWNER TOOLS</div><h2 id="sxDeployTitle">DEPLOY</h2><p class="sx-deploy-intro">Szybkie wdrażanie zmian STARXV. Ta sekcja jest dostępna wyłącznie dla konta administratora.</p><div class="sx-deploy-section"><h3>DEPLOY PRZEZ CMD</h3><p>Uruchom te komendy w folderze projektu po zapisaniu zmian. Wyślą najnowsze pliki do GitHuba, a Auto-Deploy Rendera powinien uruchomić wdrożenie.</p><div class="sx-deploy-code" id="sxDeployCode"></div></div><div class="sx-deploy-section"><h3>DEPLOY PRZEZ STRONĘ</h3><p id="sxDeployWebText">Sprawdzanie konfiguracji…</p><button class="sx-deploy-trigger" id="sxDeployTrigger" type="button" disabled>URUCHOM DEPLOY →</button><div class="sx-deploy-status" id="sxDeployStatus"></div><div class="sx-deploy-warning">Przycisk nie wysyła lokalnych plików z Twojego komputera do GitHuba. Może wdrożyć tylko commit, który już znajduje się w repozytorium. Do przesłania nowych plików nadal użyj komend CMD powyżej.</div></div></div>`;
+    document.body.appendChild(modal);
+    const close=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
+    modal.querySelector('.sx-deploy-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
+    return modal;
+  }
+  function sxOpenDeploy(){
+    const modal=sxEnsureDeployModal(),code=modal.querySelector('#sxDeployCode'),btn=modal.querySelector('#sxDeployTrigger'),web=modal.querySelector('#sxDeployWebText'),status=modal.querySelector('#sxDeployStatus');
+    const commands=Array.isArray(sxDeployInfo?.commands)?sxDeployInfo.commands:['git add .','git commit -m "Update STARXV"','git push'];
+    code.textContent=commands.join('
+');
+    if(!code.querySelector('.sx-deploy-copy')){const copy=document.createElement('button');copy.type='button';copy.className='sx-deploy-copy';copy.textContent='KOPIUJ';copy.onclick=async()=>{try{await navigator.clipboard.writeText(commands.join('
+'));copy.textContent='SKOPIOWANO';setTimeout(()=>copy.textContent='KOPIUJ',1400)}catch{copy.textContent='BŁĄD'}};code.appendChild(copy)}
+    const available=!!sxDeployInfo?.webDeployAvailable;btn.disabled=!available;web.textContent=available?'Render Deploy Hook jest skonfigurowany. Możesz ręcznie uruchomić ponowny deploy najnowszego commita z GitHuba.':'Przycisk będzie dostępny po dodaniu RENDER_DEPLOY_HOOK_URL do Environment na Renderze.';status.textContent='';status.className='sx-deploy-status';
+    btn.onclick=async()=>{btn.disabled=true;status.textContent='Uruchamianie deployu…';status.className='sx-deploy-status';try{const r=await fetch('/api/admin/deploy/trigger',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:'{}'}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić deployu.');status.textContent=j.message||'Deploy został uruchomiony.';status.className='sx-deploy-status ok'}catch(e){status.textContent=e.message;status.className='sx-deploy-status err'}finally{btn.disabled=!available}};
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+  }
+  async function sxInstallDeployProfile(){
+    const links=document.querySelector('#sxAccountDashboard .sx-profile-main-links');if(!links||document.getElementById('sxProfileDeployBtn'))return;
+    const info=await sxLoadDeployInfo();if(!info?.ok)return;
+    sxDeployInfo=info;
+    const btn=document.createElement('button');btn.id='sxProfileDeployBtn';btn.type='button';btn.className='sx-profile-link-card sx-deploy-profile-card';btn.innerHTML='<span class="sx-profile-link-kicker">OWNER TOOLS</span><b>DEPLOY</b><span class="sx-profile-link-arrow">→</span>';btn.onclick=sxOpenDeploy;links.appendChild(btn);
+  }
+
   function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
     const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
     dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
-    setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();},0);
+    setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
   }
 
   function cookie(){const c=$('#sxCookie');if(!c)return;if(!localStorage.getItem(CONSENT_KEY))setTimeout(()=>c.classList.add('show'),600);$$('[data-cookie]',c).forEach(b=>b.onclick=()=>{localStorage.setItem(CONSENT_KEY,b.dataset.cookie);c.classList.remove('show')})}
