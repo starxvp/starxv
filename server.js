@@ -781,7 +781,7 @@ app.post('/api/support/report',auth,async(req,res)=>{
     try{
       const resend=new Resend(key);
       await resend.emails.send({
-        from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',
+        from:process.env.SUPPORT_FROM||'STARXV Support <kontakt@starxv.pl>',
         to:'kontakt@starxv.pl',
         replyTo:req.user.email,
         subject:`STARXV — zgłoszenie problemu: ${type}`,
@@ -2098,8 +2098,9 @@ app.post('/api/admin/support-reports/:id/reply',adminOnly,async(req,res)=>{
     try{
       const resend=new Resend(key);
       await resend.emails.send({
-        from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',
+        from:process.env.SUPPORT_FROM||'STARXV Support <kontakt@starxv.pl>',
         to:report.email,
+        replyTo:'kontakt@starxv.pl',
         subject:`STARXV Support — odpowiedź ${report.ticketNo||''}`,
         text:`Cześć,\n\nSTARXV Support odpowiedział na Twoje zgłoszenie ${report.ticketNo||''}.\n\n${reply}\n\nStatus: ${report.status==='resolved'?'Rozwiązane':'W trakcie'}\n\nOdpowiedź zobaczysz również po zalogowaniu w Profil → Zgłoś problem.`
       });
