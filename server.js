@@ -858,9 +858,23 @@ function ensureStore(db){
 
   if(!db.digitalProducts||typeof db.digitalProducts!=='object'){
     db.digitalProducts={
-      'zero-to-first-sale':{id:'zero-to-first-sale',position:1,name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',meta:'STARXV DIGITAL / E-BOOK',points:['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/zero-to-first-sale-3d.png',gallery:['/assets/zero-to-first-sale-3d.png','/assets/zero-to-first-sale-cover.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
+      'zero-to-first-sale':{id:'zero-to-first-sale',position:1,name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',meta:'STARXV DIGITAL / E-BOOK',points:['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/placeholder.png',gallery:['/assets/placeholder.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
     };
   }
+  // Replace obsolete ZERO TO FIRST SALE local artwork with the generic image-error placeholder.
+  // This only touches the two legacy asset paths; real images configured later stay unchanged.
+  const legacyDigitalImages=new Set(['/assets/zero-to-first-sale-3d.png','/assets/zero-to-first-sale-cover.png']);
+  const zeroProduct=db.digitalProducts?.['zero-to-first-sale'];
+  if(zeroProduct){
+    if(!zeroProduct.image||legacyDigitalImages.has(String(zeroProduct.image)))zeroProduct.image='/assets/placeholder.png';
+    if(Array.isArray(zeroProduct.gallery)){
+      zeroProduct.gallery=[...new Set(zeroProduct.gallery.map(x=>legacyDigitalImages.has(String(x))?'/assets/placeholder.png':String(x||'').trim()).filter(Boolean))];
+      if(!zeroProduct.gallery.length)zeroProduct.gallery=['/assets/placeholder.png'];
+    }else{
+      zeroProduct.gallery=['/assets/placeholder.png'];
+    }
+  }
+
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.reviews))db.reviews=[];
   if(!Array.isArray(db.marketingCampaigns))db.marketingCampaigns=[];
@@ -1223,7 +1237,7 @@ app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60
     const existing=(req.db.orders||[]).find(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
     if(existing)return res.json({ok:true,alreadyOwned:true,order:orderForUser(existing)});
     const now=Date.now();
-    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:Number(product.price),image:String(product.image||'/assets/zero-to-first-sale-3d.png')}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:null,subtotal:Number(product.price),shippingCost:0,total:Number(product.price),paymentStatus:'pending',shippingStage:0,stockCommitted:true,digitalConsentAt:now,timeline:[]};
+    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:Number(product.price),image:String(product.image||'/assets/placeholder.png')}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:null,subtotal:Number(product.price),shippingCost:0,total:Number(product.price),paymentStatus:'pending',shippingStage:0,stockCommitted:true,digitalConsentAt:now,timeline:[]};
     orderEvent(order,'created','Zamówienie cyfrowe utworzone','Po potwierdzeniu płatności e-book będzie dostępny natychmiast.',now);
     req.db.orders.push(order);save(req.db);
     res.json({ok:true,order:orderForUser(order)});
