@@ -791,7 +791,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <nav>
 <div class="sx-nav-brand"><a aria-label="STARXV" href="#">
 <img alt="STARXV" class="nav-logo" src="/assets/starxv-logo.png">
-</img></a><span class="sx-test-version" data-ghost="">TEST VERSION 0.0</span></div>
+</img></a><span class="sx-test-version" data-ghost="">BETA 1.0v</span></div>
 <div class="nav-links">
 <a href="#" id="sxNavClothing" aria-disabled="true" title="Coming soon">Accessories <span style="opacity:.48;font-size:.72em">COMING SOON</span></a>
 <a href="/?section=digital" id="sxNavDigital">Digital</a>
@@ -3241,7 +3241,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const el = document.querySelector('.sx-test-version');
   if (!el) return;
 
-  const target = 'TEST VERSION 0.0';
+  const target = el.textContent.trim();
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#<>/_-';
   const randomChar = () => chars[Math.floor(Math.random() * chars.length)];
 
