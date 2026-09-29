@@ -905,7 +905,7 @@ html.starxv-intro-active,html.starxv-intro-active body{overflow:hidden!important
 #starxvIntro{
   position:fixed;inset:0;z-index:2147483647;overflow:hidden;pointer-events:all;
   display:grid;place-items:center;isolation:isolate;
-  background:linear-gradient(135deg,#f8f2e9 0%,#efe4d6 46%,#fbf7f1 100%);
+  background:#ffffff;
   opacity:1;visibility:visible;
   transition:opacity .34s cubic-bezier(.16,1,.3,1),visibility .34s step-end;
   will-change:opacity;
@@ -2137,10 +2137,7 @@ body.sx-light-theme .profile-hero{
 
 /* ===== STARXV champagne refresh loader final ===== */
 #starxvIntro{
-  background:
-    radial-gradient(circle at 18% 20%,rgba(184,154,122,.09),transparent 28%),
-    radial-gradient(circle at 82% 76%,rgba(226,178,125,.08),transparent 30%),
-    linear-gradient(135deg,#f8f2e9 0%,#efe4d6 48%,#fbf7f1 100%)!important;
+  background:#ffffff!important;
 }
 #starxvIntro .intro-loader{
   background:rgba(92,70,47,.10)!important;
