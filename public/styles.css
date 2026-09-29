@@ -905,7 +905,7 @@ html.starxv-intro-active,html.starxv-intro-active body{overflow:hidden!important
 #starxvIntro{
   position:fixed;inset:0;z-index:2147483647;overflow:hidden;pointer-events:all;
   display:grid;place-items:center;isolation:isolate;
-  background:linear-gradient(135deg,#fbfbfd 0%,#f7f5fb 45%,#fff 100%);
+  background:linear-gradient(135deg,#f8f2e9 0%,#efe4d6 46%,#fbf7f1 100%);
   opacity:1;visibility:visible;
   transition:opacity .34s cubic-bezier(.16,1,.3,1),visibility .34s step-end;
   will-change:opacity;
@@ -913,9 +913,9 @@ html.starxv-intro-active,html.starxv-intro-active body{overflow:hidden!important
 #starxvIntro::before{
   content:"";position:absolute;inset:-18%;z-index:0;pointer-events:none;
   background:
-    radial-gradient(circle at 23% 32%,rgba(126,186,255,.24),transparent 22%),
-    radial-gradient(circle at 76% 68%,rgba(255,141,205,.22),transparent 23%),
-    radial-gradient(circle at 56% 18%,rgba(183,148,255,.15),transparent 20%);
+    radial-gradient(circle at 23% 32%,rgba(184,154,122,.24),transparent 22%),
+    radial-gradient(circle at 76% 68%,rgba(226,178,125,.22),transparent 23%),
+    radial-gradient(circle at 56% 18%,rgba(209,184,156,.15),transparent 20%);
   filter:blur(24px);opacity:.92;transform:scale(.96);
   animation:starxvAura 1.08s cubic-bezier(.16,1,.3,1) both;
 }
@@ -927,25 +927,25 @@ html.starxv-intro-active,html.starxv-intro-active body{overflow:hidden!important
 #starxvIntro .intro-shape{position:absolute;z-index:1;display:block;pointer-events:none;will-change:transform,opacity;backface-visibility:hidden}
 #starxvIntro .shape-a{
   width:min(42vw,620px);height:min(19vw,270px);left:-8vw;top:13vh;border-radius:999px;
-  background:linear-gradient(100deg,rgba(138,192,255,.78),rgba(177,155,255,.48));
+  background:linear-gradient(100deg,rgba(184,154,122,.74),rgba(209,184,156,.46));
   filter:blur(.2px);opacity:0;transform:translate3d(-24%,0,0) rotate(-8deg);
   animation:shapeA 1.08s cubic-bezier(.16,1,.3,1) both;
 }
 #starxvIntro .shape-b{
   width:min(38vw,560px);height:min(18vw,250px);right:-7vw;bottom:15vh;border-radius:999px;
-  background:linear-gradient(105deg,rgba(255,177,220,.62),rgba(255,127,195,.8));
+  background:linear-gradient(105deg,rgba(226,178,125,.58),rgba(201,151,86,.76));
   opacity:0;transform:translate3d(24%,0,0) rotate(9deg);
   animation:shapeB 1.08s cubic-bezier(.16,1,.3,1) both;
 }
 #starxvIntro .shape-c{
   width:min(18vw,260px);height:min(18vw,260px);right:16vw;top:-7vw;border-radius:34%;
-  background:linear-gradient(145deg,rgba(212,197,255,.42),rgba(145,206,255,.2));
+  background:linear-gradient(145deg,rgba(231,211,186,.40),rgba(184,154,122,.20));
   opacity:0;transform:translate3d(0,-28%,0) rotate(18deg);
   animation:shapeC 1.08s cubic-bezier(.16,1,.3,1) both;
 }
 #starxvIntro .starxv-intro-logo{
   position:relative;z-index:3;width:min(380px,68vw);max-height:34vh;height:auto;object-fit:contain;display:block;
-  opacity:1;transform:translate3d(0,0,0) scale(.985);filter:blur(0) drop-shadow(0 12px 28px rgba(90,95,130,.08));
+  opacity:1;transform:translate3d(0,0,0) scale(.985);filter:blur(0) drop-shadow(0 12px 28px rgba(117,86,53,.11));
   transform-origin:50% 50%;backface-visibility:hidden;will-change:transform,opacity,filter;
   animation:starxvLogoEditorial 1.08s cubic-bezier(.16,1,.3,1) both;
 }
@@ -953,13 +953,13 @@ html.starxv-intro-active,html.starxv-intro-active body{overflow:hidden!important
 #starxvIntro .intro-loader{
   position:absolute;z-index:5;left:50%;top:calc(50% + 122px);transform:translateX(-50%);
   width:min(220px,46vw);height:3px;border-radius:999px;overflow:hidden;
-  background:rgba(26,27,34,.09);box-shadow:inset 0 0 0 1px rgba(255,255,255,.24);
+  background:rgba(94,72,50,.10);box-shadow:inset 0 0 0 1px rgba(255,250,242,.42);
   opacity:0;animation:starxvLoaderFade .98s cubic-bezier(.16,1,.3,1) both;
 }
 #starxvIntro .intro-loader-fill{
   width:100%;height:100%;border-radius:inherit;transform:scaleX(0);transform-origin:left center;
-  background:linear-gradient(90deg,rgba(121,188,255,.92),rgba(182,151,255,.92) 50%,rgba(255,145,208,.95));
-  box-shadow:0 0 16px rgba(165,169,255,.26);
+  background:linear-gradient(90deg,rgba(169,138,108,.96),rgba(209,173,139,.97) 50%,rgba(226,178,125,.98));
+  box-shadow:0 0 16px rgba(201,151,86,.28);
   animation:starxvLoaderFill .86s .05s cubic-bezier(.22,.61,.36,1) forwards;
   will-change:transform;
 }
@@ -2132,4 +2132,25 @@ body.sx-light-theme .profile-hero{
     radial-gradient(circle at 15% 8%,rgba(184,154,122,.13),transparent 34%),
     radial-gradient(circle at 92% 18%,rgba(226,178,125,.11),transparent 35%),
     #fffaf3!important;
+}
+
+
+/* ===== STARXV champagne refresh loader final ===== */
+#starxvIntro{
+  background:
+    radial-gradient(circle at 18% 20%,rgba(184,154,122,.09),transparent 28%),
+    radial-gradient(circle at 82% 76%,rgba(226,178,125,.08),transparent 30%),
+    linear-gradient(135deg,#f8f2e9 0%,#efe4d6 48%,#fbf7f1 100%)!important;
+}
+#starxvIntro .intro-loader{
+  background:rgba(92,70,47,.10)!important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,250,242,.42),
+    0 7px 22px rgba(99,72,45,.06)!important;
+}
+#starxvIntro .intro-loader-fill{
+  background:linear-gradient(90deg,#a98a6c 0%,#cfad8b 48%,#e2b27d 100%)!important;
+  box-shadow:
+    0 0 10px rgba(226,178,125,.22),
+    0 0 22px rgba(201,151,86,.12)!important;
 }
