@@ -1917,3 +1917,219 @@ nav .nav-actions #sxFavNav,
 nav .nav-actions #openCart{
   display:none!important;
 }
+
+/* ===== STARXV WARM CHAMPAGNE BRAND SYSTEM v1 =====
+   Palette based on the new STARXV logo: black + sand/beige + champagne gold.
+   This block intentionally overrides the older blue/pink accents without
+   changing the existing layout or component logic.
+*/
+:root{
+  --bg:#050505;
+  --surface:#0c0b0a;
+  --surface-2:#13110f;
+  --text:#f5f1ea;
+  --muted:#918a81;
+
+  /* legacy variable names are kept so existing components inherit the new palette */
+  --blue:#b89a7a;
+  --pink:#e2b27d;
+
+  --sx-sand:#b89a7a;
+  --sx-beige:#d1b89c;
+  --sx-champagne:#e3b57f;
+  --sx-gold:#c99756;
+  --sx-warm-line:rgba(226,178,125,.16);
+}
+
+/* Main site glow: subtle warm light instead of blue/pink. */
+.glow.blue{
+  background:#b89a7a!important;
+  opacity:.075!important;
+}
+.glow.pink{
+  background:#d69c67!important;
+  opacity:.065!important;
+}
+
+/* Main branded gradients. */
+.hero h1 span,
+.gradient-text{
+  background:linear-gradient(100deg,#a98a6c 0%,#cfad8b 44%,#e6b77f 100%)!important;
+  -webkit-background-clip:text!important;
+  background-clip:text!important;
+  color:transparent!important;
+}
+
+/* Product cards: warm, almost invisible light instead of colourful neon. */
+.card{
+  background:
+    radial-gradient(circle at 50% 24%,rgba(207,173,139,.075),transparent 34%),
+    var(--surface)!important;
+}
+.card:nth-child(2){
+  background:
+    radial-gradient(circle at 50% 24%,rgba(226,178,125,.075),transparent 34%),
+    var(--surface)!important;
+}
+.card:nth-child(3){
+  background:
+    radial-gradient(circle at 50% 24%,rgba(245,224,197,.055),transparent 34%),
+    var(--surface)!important;
+}
+
+/* Newsletter / contact: elegant champagne reflections on black. */
+.newsletter-box{
+  border-color:rgba(226,178,125,.14)!important;
+  background:
+    radial-gradient(circle at 15% 6%,rgba(184,154,122,.11),transparent 34%),
+    radial-gradient(circle at 88% 5%,rgba(226,178,125,.10),transparent 35%),
+    linear-gradient(180deg,rgba(255,244,225,.025),transparent 44%),
+    #080706!important;
+}
+.contact-card{
+  border-color:rgba(226,178,125,.13)!important;
+  background:
+    radial-gradient(circle at 85% 10%,rgba(226,178,125,.07),transparent 35%),
+    linear-gradient(120deg,rgba(209,184,156,.035),transparent 42%),
+    #070706!important;
+}
+.newsletter .section-kicker,
+.contact-section .section-kicker{
+  border-color:rgba(226,178,125,.15)!important;
+  color:#b9aa98!important;
+}
+.newsletter .section-kicker::before,
+.contact-section .section-kicker::before{
+  background:#d9b07d!important;
+  box-shadow:0 0 14px rgba(217,176,125,.45)!important;
+}
+
+/* Mail chooser and account/login surfaces. */
+.sx-mail-picker-card{
+  background:
+    radial-gradient(circle at 15% 0%,rgba(184,154,122,.075),transparent 31%),
+    radial-gradient(circle at 88% 0%,rgba(226,178,125,.065),transparent 33%),
+    #090807!important;
+}
+.auth-view{
+  background:
+    radial-gradient(circle at 100% 0%,rgba(226,178,125,.07),transparent 35%),
+    radial-gradient(circle at 0% 0%,rgba(184,154,122,.07),transparent 35%),
+    #090807!important;
+}
+
+/* Profile hero and avatar. */
+.profile-hero{
+  background:
+    radial-gradient(circle at 15% 8%,rgba(184,154,122,.13),transparent 34%),
+    radial-gradient(circle at 92% 18%,rgba(226,178,125,.11),transparent 35%),
+    linear-gradient(160deg,#0d0c0b,#080807 72%)!important;
+  border-color:rgba(226,178,125,.12)!important;
+}
+.profile-avatar{
+  background:linear-gradient(135deg,#b89a7a,#e2b27d)!important;
+  color:#070605!important;
+}
+
+/* Navigation and small interaction accents. */
+.sx-nav-icon:hover,
+.account-nav-button:hover,
+.cart-nav-button:hover{
+  border-color:rgba(226,178,125,.42)!important;
+}
+.account-badge,
+.orders-count{
+  background:linear-gradient(100deg,#b89a7a,#e2b27d)!important;
+  color:#070605!important;
+}
+.checkout-step-dot.active:after,
+.checkout-step-dot.done:after,
+.track-step.done:not(:first-child):after,
+.add-btn.added{
+  background:linear-gradient(90deg,#a98a6c,#e2b27d)!important;
+}
+.track-step.done:before{
+  background:linear-gradient(100deg,#b89a7a,#e2b27d)!important;
+  box-shadow:0 0 14px rgba(226,178,125,.20)!important;
+}
+
+/* Product gallery and detail accents. */
+.gallery{
+  background:
+    radial-gradient(circle at 50% 50%,rgba(209,184,156,.09),transparent 42%),
+    #0b0a09!important;
+}
+.dot.active{
+  background:#e4c19a!important;
+  box-shadow:0 0 18px rgba(226,178,125,.42)!important;
+}
+
+/* Buttons: keep contrast but make the primary action part of the brand. */
+.btn-primary,
+.contact-mail{
+  background:#ead8c2!important;
+  color:#080706!important;
+}
+.btn-primary:hover,
+.contact-mail:hover{
+  background:#f1e3d2!important;
+}
+.sx-switch input:checked + .sx-switch-track{
+  background:#d9b07d!important;
+  border-color:#d9b07d!important;
+}
+.sx-switch input:checked + .sx-switch-track::after{
+  background:#080706!important;
+}
+
+/* Coming Later / owner features stay gold, now matching the main palette. */
+#sxLaterNav .sx-later-dot{
+  background:#d4a463!important;
+  box-shadow:0 0 12px rgba(212,164,99,.55)!important;
+}
+.sx-profile-search-card{
+  border-color:rgba(226,178,125,.20)!important;
+  background:linear-gradient(135deg,rgba(226,178,125,.055),#0b0a09 58%)!important;
+}
+.sx-profile-search-card .sx-profile-link-kicker,
+.sx-site-search-icon,
+.sx-later-kicker{
+  color:#d4a463!important;
+}
+.sx-later-card-icon{
+  border-color:rgba(226,178,125,.23)!important;
+  background:rgba(226,178,125,.055)!important;
+  color:#d4a463!important;
+}
+.sx-later-card-copy em{
+  border-color:rgba(226,178,125,.25)!important;
+  color:#d4a463!important;
+}
+.sx-later-note{
+  border-left-color:#d4a463!important;
+  background:#0d0b08!important;
+  color:#9f907c!important;
+}
+
+/* Footer and subtle brand details. */
+footer{
+  border-top-color:rgba(226,178,125,.10)!important;
+}
+footer img{
+  filter:drop-shadow(0 0 14px rgba(226,178,125,.10));
+}
+
+/* Light theme: warm ivory rather than cold white/blue. */
+body.sx-light-theme{
+  --bg:#f6f1e9!important;
+  --surface:#fffaf3!important;
+  --surface-2:#f1e8dd!important;
+  --text:#211b16!important;
+  --muted:#71675e!important;
+}
+body.sx-light-theme .profile-hero{
+  background:
+    radial-gradient(circle at 15% 8%,rgba(184,154,122,.13),transparent 34%),
+    radial-gradient(circle at 92% 18%,rgba(226,178,125,.11),transparent 35%),
+    #fffaf3!important;
+}
