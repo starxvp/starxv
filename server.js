@@ -843,13 +843,19 @@ app.put('/api/account/preferences',auth,(req,res)=>{
 
 
 // --- STARXV backend catalog, inventory and orders ---
-const DEFAULT_CATALOG={
-  'black-hoodie-graffiti':{name:'Hoodie x Graffiti - Fantastic Style',price:129,fit:'RELAXED FIT',category:'hoodies',image:'',colors:{black:{label:'Czarny',sizes:{S:8,M:12,L:6,XL:4}},pink:{label:'Różowy',sizes:{S:5,M:7,L:3,XL:2}},blue:{label:'Jasny niebieski',sizes:{S:4,M:6,L:5,XL:3}}}},
-  'oversized-white-shirt':{name:'T-Shirt Different Reality.',price:99,fit:'OVERSIZED FIT',category:'tshirts',image:'',colors:{white:{label:'Biały',sizes:{S:8,M:12,L:8,XL:5}},blue:{label:'Jasny niebieski',sizes:{S:6,M:8,L:6,XL:4}},purple:{label:'Fioletowy',sizes:{S:5,M:7,L:5,XL:3}}}}
-};
+const DEFAULT_CATALOG={};
 function ensureStore(db){
-  // Seed the starter catalog only once. Do not recreate products that an admin deliberately deleted.
+  // Keep the physical-product system, but start with an empty catalog.
   if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
+
+  // One-time cleanup of the old clothing demo products from existing persistent databases.
+  if(!db.starxvMigrations||typeof db.starxvMigrations!=='object')db.starxvMigrations={};
+  if(!db.starxvMigrations.removedLegacyClothing20260929){
+    delete db.catalog['black-hoodie-graffiti'];
+    delete db.catalog['oversized-white-shirt'];
+    db.starxvMigrations.removedLegacyClothing20260929=true;
+  }
+
   if(!db.digitalProducts||typeof db.digitalProducts!=='object'){
     db.digitalProducts={
       'zero-to-first-sale':{id:'zero-to-first-sale',position:1,name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',meta:'STARXV DIGITAL / E-BOOK',points:['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/zero-to-first-sale-3d.png',gallery:['/assets/zero-to-first-sale-3d.png','/assets/zero-to-first-sale-cover.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
