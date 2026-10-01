@@ -2151,3 +2151,82 @@ body.sx-light-theme .profile-hero{
     0 0 10px rgba(226,178,125,.22),
     0 0 22px rgba(201,151,86,.12)!important;
 }
+
+
+/* ===== STARXV DIGITAL — dedicated ebook product view ===== */
+#sxDigitalHomeView[hidden],
+#sxDigitalDetailView[hidden]{display:none!important}
+
+.sx-digital-detail-view{
+  min-height:calc(100vh - 78px);
+  background:
+    radial-gradient(circle at 82% 9%,rgba(184,155,63,.08),transparent 28%),
+    linear-gradient(180deg,#080807 0%,#050505 42%,#080807 100%);
+  padding-bottom:70px;
+}
+.sx-digital-detail-bar{
+  width:min(1250px,calc(100% - 80px));
+  min-height:74px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  border-bottom:1px solid #282722;
+}
+.sx-digital-detail-back,
+.sx-digital-detail-footer button{
+  appearance:none;
+  border:0;
+  background:transparent;
+  color:#a5a198;
+  cursor:pointer;
+  font:900 9px/1 Inter,Arial,sans-serif;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  transition:.2s ease;
+}
+.sx-digital-detail-back{display:inline-flex;align-items:center;gap:10px;padding:18px 0}
+.sx-digital-detail-back span{color:#c9a83d;font-size:16px;letter-spacing:0}
+.sx-digital-detail-back:hover,
+.sx-digital-detail-footer button:hover{color:#fff;transform:translateX(-3px)}
+.sx-digital-detail-brand{display:flex;align-items:center;gap:8px;color:#5f5d58;font-size:8px;font-weight:900;letter-spacing:.16em}
+.sx-digital-detail-brand span{color:#d7d2c8}
+.sx-digital-detail-intro{
+  width:min(1250px,calc(100% - 80px));
+  margin:0 auto;
+  padding:45px 0 12px;
+  display:flex;
+  justify-content:space-between;
+  gap:30px;
+  align-items:flex-end;
+}
+.sx-digital-detail-intro>span{color:#b89b3f;font-size:8px;font-weight:950;letter-spacing:.2em}
+.sx-digital-detail-intro>p{margin:0;color:#6f6c65;font-size:10px;line-height:1.6;text-align:right}
+
+#sxDigitalDetailView #sxDigitalProduct{
+  width:min(1250px,calc(100% - 80px));
+  margin:0 auto;
+  padding:44px 0 90px;
+  min-height:720px;
+  border-bottom:1px solid #282722;
+}
+#sxDigitalDetailView #sxDigitalReviews{
+  width:min(1250px,calc(100% - 80px));
+  max-width:none;
+  margin:0 auto;
+  padding:80px 0;
+  background:transparent;
+}
+#sxDigitalDetailView #sxDigitalOwned{
+  width:min(1250px,calc(100% - 80px));
+  max-width:none;
+  margin:0 auto 0;
+}
+.sx-digital-detail-footer{
+  width:min(1250px,calc(100% - 80px));
+  margin:0 auto;
+  padding:34px 0 0;
+  border-top:1px solid #282722;
+}
+body.sx-digital-product-open #sxDigitalPage{background:#050505}
