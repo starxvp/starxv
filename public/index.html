@@ -2032,7 +2032,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   </div>
 </div>
 <div class="sx-lightbox" id="sxLightbox"><img alt="Powiększenie produktu"/></div>
-<div class="sx-cookie" id="sxCookie"><div class="sx-cookie-copy"><b>Cookies w STARXV</b><span>Używamy lokalnego zapisu w przeglądarce, aby działały m.in. koszyk, konto, ulubione i zamówienia. Ta wersja sklepu nie korzysta z backendu.</span></div><div class="sx-cookie-actions"><button class="sx-cookie-essential" data-cookie="essential">TYLKO NIEZBĘDNE</button><button class="sx-cookie-accept" data-cookie="all">AKCEPTUJ</button></div></div>
+<div class="sx-cookie" id="sxCookie"><div class="sx-cookie-copy"><b>Cookies w STARXV</b><span>STARXV wykorzystuje niezbędne pliki cookies oraz lokalną pamięć przeglądarki do obsługi logowania, ustawień, sesji użytkownika i prawidłowego działania strony. Część danych zalogowanego użytkownika może być synchronizowana z kontem STARXV.</span></div><div class="sx-cookie-actions"><button class="sx-cookie-accept" data-cookie="acknowledged">ROZUMIEM</button></div></div>
 <script>
 (()=>{
   const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',price:129,fit:'RELAXED FIT'};window.STARXV_HOODIE_SEARCH_PRODUCT=PRODUCT;
@@ -2319,7 +2319,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
   }
 
-  function cookie(){const c=$('#sxCookie');if(!c)return;if(!localStorage.getItem(CONSENT_KEY))setTimeout(()=>c.classList.add('show'),600);$$('[data-cookie]',c).forEach(b=>b.onclick=()=>{localStorage.setItem(CONSENT_KEY,b.dataset.cookie);c.classList.remove('show')})}
+  function cookie(){const c=$('#sxCookie');if(!c)return;if(!localStorage.getItem(CONSENT_KEY))setTimeout(()=>c.classList.add('show'),600);$$('[data-cookie]',c).forEach(b=>b.onclick=()=>{localStorage.setItem(CONSENT_KEY,'acknowledged');c.classList.remove('show')})}
   function commonEvents(){
     $$('[data-sx-close]').forEach(b=>b.onclick=()=>closeOverlay(b.dataset.sxClose));$$('.sx-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeOverlay(o.id)}));$('#sxLightbox')?.addEventListener('click',e=>{e.currentTarget.classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape'){$$('.sx-overlay.open').forEach(x=>closeOverlay(x.id));$('#sxLightbox')?.classList.remove('open')}});
     $('#openAccount')?.addEventListener('click',()=>setTimeout(renderAccountDashboard,50));
