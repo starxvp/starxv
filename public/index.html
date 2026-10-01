@@ -1978,7 +1978,13 @@ const renderCart=()=>{hydrateCartDiscounts();
       guest.style.display='none';profile.classList.add('active');
       document.querySelectorAll('#profileAvatar').forEach(av=>{
         av.textContent=a.avatarData?'':initials(a);
-        av.style.backgroundImage=a.avatarData?`url(${a.avatarData})`:'';
+        if(a.avatarData){
+          av.style.setProperty('background-image',`url(${a.avatarData})`,'important');
+          av.style.setProperty('background-size','cover','important');
+          av.style.setProperty('background-position','center','important');
+        }else{
+          av.style.removeProperty('background-image');
+        }
         av.classList.toggle('has-photo',!!a.avatarData);
       });
       document.querySelectorAll('#profileName').forEach(el=>el.textContent=`${a.firstName} ${a.lastName}`);
