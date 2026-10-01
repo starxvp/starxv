@@ -721,7 +721,60 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 @media(max-width:600px){.sx-deploy-card{padding:28px 20px}.sx-deploy-code{padding:58px 14px 14px;font-size:11px}.sx-deploy-copy{left:10px;right:auto}}
 </style>
 
-<style id="starxv-digital-legal-launch-style">.sx-digital-legal-box{margin-top:18px;padding:16px;border:1px solid #292824;background:#0b0b0a;display:grid;gap:12px}.sx-digital-consent{display:flex;align-items:flex-start;gap:10px;color:#aaa;font-size:9px;line-height:1.6;cursor:pointer}.sx-digital-consent input{margin-top:2px;flex:0 0 auto;accent-color:#c9a83d}.sx-digital-consent a{color:#e4d49b;text-underline-offset:2px}.sx-digital-legal-note{padding-top:11px;border-top:1px solid #23221f;color:#706e68;font-size:8px;line-height:1.6}</style></head>
+<style id="starxv-digital-legal-launch-style">.sx-digital-legal-box{margin-top:18px;padding:16px;border:1px solid #292824;background:#0b0b0a;display:grid;gap:12px}.sx-digital-consent{display:flex;align-items:flex-start;gap:10px;color:#aaa;font-size:9px;line-height:1.6;cursor:pointer}.sx-digital-consent input{margin-top:2px;flex:0 0 auto;accent-color:#c9a83d}.sx-digital-consent a{color:#e4d49b;text-underline-offset:2px}.sx-digital-legal-note{padding-top:11px;border-top:1px solid #23221f;color:#706e68;font-size:8px;line-height:1.6}</style>
+<style id="starxv-avatar-cropper-style">
+.sx-avatar-cropper{
+  position:fixed;inset:0;z-index:1000002;display:none;align-items:center;justify-content:center;
+  padding:24px;background:rgba(0,0,0,.82);backdrop-filter:blur(14px)
+}
+.sx-avatar-cropper.open{display:flex}
+.sx-avatar-cropper-card{
+  width:min(520px,94vw);max-height:92vh;overflow:auto;background:#090909;border:1px solid rgba(255,255,255,.14);
+  border-radius:24px;padding:24px;box-shadow:0 30px 120px rgba(0,0,0,.65)
+}
+.sx-avatar-cropper-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:20px}
+.sx-avatar-cropper-kicker{font-size:8px;font-weight:950;letter-spacing:.18em;color:#9a8547;margin-bottom:7px}
+.sx-avatar-cropper-head h3{font-size:25px;letter-spacing:-.04em;margin:0}
+.sx-avatar-cropper-close{
+  width:40px;height:40px;border:1px solid rgba(255,255,255,.12);border-radius:50%;background:#111;color:#fff;
+  font-size:22px;cursor:pointer
+}
+.sx-avatar-cropper-stage{
+  position:relative;width:min(320px,78vw);aspect-ratio:1;margin:0 auto;overflow:hidden;background:#050505;
+  border:1px solid rgba(255,255,255,.12);border-radius:18px;touch-action:none;cursor:grab
+}
+.sx-avatar-cropper-stage.dragging{cursor:grabbing}
+.sx-avatar-cropper-stage img{
+  position:absolute;left:50%;top:50%;max-width:none;max-height:none;user-select:none;pointer-events:none;
+  transform-origin:center center;will-change:transform
+}
+.sx-avatar-cropper-mask{
+  position:absolute;inset:0;pointer-events:none;
+  box-shadow:inset 0 0 0 999px rgba(0,0,0,.38)
+}
+.sx-avatar-cropper-mask::after{
+  content:"";position:absolute;inset:9%;border:2px solid rgba(255,255,255,.92);border-radius:50%;
+  box-shadow:0 0 0 1px rgba(0,0,0,.2)
+}
+.sx-avatar-cropper-hint{margin:14px 0 18px;text-align:center;color:#777;font-size:10px;line-height:1.55}
+.sx-avatar-cropper-control{display:grid;grid-template-columns:48px 1fr 48px;align-items:center;gap:10px}
+.sx-avatar-cropper-control span{font-size:10px;color:#777;text-align:center}
+.sx-avatar-cropper-control input{width:100%;accent-color:#fff}
+.sx-avatar-cropper-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+.sx-avatar-cropper-actions button{
+  min-height:48px;border-radius:12px;font-size:9px;font-weight:950;letter-spacing:.11em;cursor:pointer
+}
+.sx-avatar-cropper-replace{border:1px solid rgba(255,255,255,.15);background:#0d0d0d;color:#ddd}
+.sx-avatar-cropper-save{border:0;background:#f1e7cf;color:#111}
+.sx-avatar-cropper-save:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:560px){
+  .sx-avatar-cropper{padding:14px}
+  .sx-avatar-cropper-card{padding:18px;border-radius:20px}
+  .sx-avatar-cropper-head h3{font-size:22px}
+}
+</style>
+
+</head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
 <div class="sx-world-gate" id="sxWorldGate" aria-hidden="true">
@@ -1921,7 +1974,18 @@ const renderCart=()=>{hydrateCartDiscounts();
         .then(r=>{betaBtn.hidden=!r.ok})
         .catch(()=>{betaBtn.hidden=true});
     }
-    if(a){guest.style.display='none';profile.classList.add('active');const av=$('profileAvatar');av.textContent=a.avatarData?'':initials(a);av.style.backgroundImage=a.avatarData?`url(${a.avatarData})`:'';av.classList.toggle('has-photo',!!a.avatarData);$('profileName').textContent=`${a.firstName} ${a.lastName}`;$('profileEmail').textContent=a.email;$('profileCreated').textContent=new Date(a.createdAt).toLocaleDateString('pl-PL');badge.textContent=initials(a);badge.classList.add('show');sub.textContent='Twoje konto STARXV';openBtn.setAttribute('aria-label',`Konto: ${a.firstName} ${a.lastName}`)}
+    if(a){
+      guest.style.display='none';profile.classList.add('active');
+      document.querySelectorAll('#profileAvatar').forEach(av=>{
+        av.textContent=a.avatarData?'':initials(a);
+        av.style.backgroundImage=a.avatarData?`url(${a.avatarData})`:'';
+        av.classList.toggle('has-photo',!!a.avatarData);
+      });
+      document.querySelectorAll('#profileName').forEach(el=>el.textContent=`${a.firstName} ${a.lastName}`);
+      document.querySelectorAll('#profileEmail').forEach(el=>el.textContent=a.email);
+      document.querySelectorAll('#profileCreated').forEach(el=>el.textContent=new Date(a.createdAt).toLocaleDateString('pl-PL'));
+      badge.textContent=initials(a);badge.classList.add('show');sub.textContent='Twoje konto STARXV';openBtn.setAttribute('aria-label',`Konto: ${a.firstName} ${a.lastName}`)
+    }
     else{guest.style.display='block';profile.classList.remove('active');badge.classList.remove('show');badge.textContent='';sub.textContent='Zaloguj się lub utwórz konto';openBtn.setAttribute('aria-label','Zaloguj się lub utwórz konto');try{localStorage.removeItem('starxv-favorites')}catch(e){}}
     window.dispatchEvent(new Event('starxv:auth-changed'));
     if(!a)window.dispatchEvent(new Event('starxv:favorites-changed'));
@@ -1984,7 +2048,176 @@ const renderCart=()=>{hydrateCartDiscounts();
     setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120);
   };
   const sxClothingBeta=$('sxClothingBeta');if(sxClothingBeta)sxClothingBeta.onclick=()=>{sxKeepWorldOnAccountClose=true;close();sxKeepWorldOnAccountClose=false;sessionStorage.setItem('starxv-clothing-beta','1');setTimeout(()=>{const gate=document.getElementById('sxWorldGate'),digital=document.getElementById('sxDigitalPage'),main=document.querySelector('main'),nav=document.querySelector('nav');if(gate){gate.classList.remove('show');gate.setAttribute('aria-hidden','true')}if(digital)digital.hidden=true;if(main)main.hidden=false;if(nav)nav.hidden=false;document.body.classList.remove('sx-digital-mode');sessionStorage.setItem('starxv-world','clothing');history.replaceState(null,'','/');window.scrollTo({top:0,behavior:'smooth'})},120)};
-  const avatarInput=$('profileAvatarInput');if(avatarInput)avatarInput.addEventListener('change',()=>{const file=avatarInput.files?.[0];if(!file||!file.type.startsWith('image/'))return;if(file.size>4*1024*1024){alert('Zdjęcie jest za duże. Maksymalnie 4 MB.');return}const img=new Image(),reader=new FileReader();reader.onload=()=>{img.onload=async()=>{const size=420,canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;const ctx=canvas.getContext('2d');const scale=Math.max(size/img.width,size/img.height),w=img.width*scale,h=img.height*scale;ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);const avatarData=canvas.toDataURL('image/jpeg',.82);try{const d=await api('/account/avatar',{method:'PUT',body:JSON.stringify({avatarData})});currentUser=d.user;renderState()}catch(e){alert(e.message)}};img.src=reader.result};reader.readAsDataURL(file)});
+  let sxAvatarPendingInput=null,sxAvatarPendingFile=null,sxAvatarObjectUrl='',sxAvatarImage=null;
+  let sxAvatarZoom=1,sxAvatarX=0,sxAvatarY=0,sxAvatarDragging=false,sxAvatarStartX=0,sxAvatarStartY=0,sxAvatarBaseX=0,sxAvatarBaseY=0;
+
+  function sxAvatarEnsureCropper(){
+    let modal=document.getElementById('sxAvatarCropper');
+    if(modal)return modal;
+    modal=document.createElement('div');
+    modal.id='sxAvatarCropper';
+    modal.className='sx-avatar-cropper';
+    modal.setAttribute('aria-hidden','true');
+    modal.innerHTML=`
+      <div class="sx-avatar-cropper-card" role="dialog" aria-modal="true" aria-labelledby="sxAvatarCropTitle">
+        <div class="sx-avatar-cropper-head">
+          <div><div class="sx-avatar-cropper-kicker">STARXV / PROFILE</div><h3 id="sxAvatarCropTitle">Dopasuj zdjęcie.</h3></div>
+          <button class="sx-avatar-cropper-close" id="sxAvatarCropClose" type="button" aria-label="Zamknij">×</button>
+        </div>
+        <div class="sx-avatar-cropper-stage" id="sxAvatarCropStage">
+          <img id="sxAvatarCropImage" alt="">
+          <div class="sx-avatar-cropper-mask"></div>
+        </div>
+        <div class="sx-avatar-cropper-hint">Przeciągnij zdjęcie, aby ustawić kadr. Suwakiem możesz je przybliżyć.</div>
+        <div class="sx-avatar-cropper-control">
+          <span>−</span><input id="sxAvatarCropZoom" type="range" min="1" max="3" step="0.01" value="1" aria-label="Powiększenie zdjęcia"><span>+</span>
+        </div>
+        <div class="sx-avatar-cropper-actions">
+          <button class="sx-avatar-cropper-replace" id="sxAvatarCropReplace" type="button">WYBIERZ INNE</button>
+          <button class="sx-avatar-cropper-save" id="sxAvatarCropSave" type="button">ZAPISZ</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+
+    const stage=modal.querySelector('#sxAvatarCropStage');
+    const zoom=modal.querySelector('#sxAvatarCropZoom');
+    const closeBtn=modal.querySelector('#sxAvatarCropClose');
+    const replaceBtn=modal.querySelector('#sxAvatarCropReplace');
+    const saveBtn=modal.querySelector('#sxAvatarCropSave');
+
+    const clamp=()=>{
+      if(!sxAvatarImage)return;
+      const stageSize=stage.clientWidth||320;
+      const base=Math.max(stageSize/sxAvatarImage.naturalWidth,stageSize/sxAvatarImage.naturalHeight);
+      const scale=base*sxAvatarZoom;
+      const maxX=Math.max(0,(sxAvatarImage.naturalWidth*scale-stageSize)/2);
+      const maxY=Math.max(0,(sxAvatarImage.naturalHeight*scale-stageSize)/2);
+      sxAvatarX=Math.max(-maxX,Math.min(maxX,sxAvatarX));
+      sxAvatarY=Math.max(-maxY,Math.min(maxY,sxAvatarY));
+    };
+    const render=()=>{
+      if(!sxAvatarImage)return;
+      const stageSize=stage.clientWidth||320;
+      const base=Math.max(stageSize/sxAvatarImage.naturalWidth,stageSize/sxAvatarImage.naturalHeight);
+      clamp();
+      sxAvatarImage.style.width=(sxAvatarImage.naturalWidth*base)+'px';
+      sxAvatarImage.style.height=(sxAvatarImage.naturalHeight*base)+'px';
+      sxAvatarImage.style.transform=`translate(calc(-50% + ${sxAvatarX}px),calc(-50% + ${sxAvatarY}px)) scale(${sxAvatarZoom})`;
+    };
+    window.addEventListener('resize',render);
+
+    zoom.addEventListener('input',()=>{
+      sxAvatarZoom=Number(zoom.value)||1;
+      render();
+    });
+
+    stage.addEventListener('pointerdown',e=>{
+      if(!sxAvatarImage)return;
+      sxAvatarDragging=true;stage.classList.add('dragging');stage.setPointerCapture?.(e.pointerId);
+      sxAvatarStartX=e.clientX;sxAvatarStartY=e.clientY;sxAvatarBaseX=sxAvatarX;sxAvatarBaseY=sxAvatarY;
+    });
+    stage.addEventListener('pointermove',e=>{
+      if(!sxAvatarDragging)return;
+      sxAvatarX=sxAvatarBaseX+(e.clientX-sxAvatarStartX);
+      sxAvatarY=sxAvatarBaseY+(e.clientY-sxAvatarStartY);
+      render();
+    });
+    const stopDrag=()=>{sxAvatarDragging=false;stage.classList.remove('dragging')};
+    stage.addEventListener('pointerup',stopDrag);
+    stage.addEventListener('pointercancel',stopDrag);
+
+    function closeCropper(clearInput=true){
+      modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+      document.body.style.overflow='';
+      if(clearInput&&sxAvatarPendingInput)sxAvatarPendingInput.value='';
+      if(sxAvatarObjectUrl){URL.revokeObjectURL(sxAvatarObjectUrl);sxAvatarObjectUrl=''}
+      sxAvatarPendingFile=null;sxAvatarImage=null;
+    }
+    closeBtn.addEventListener('click',()=>closeCropper(true));
+    modal.addEventListener('click',e=>{if(e.target===modal)closeCropper(true)});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))closeCropper(true)});
+
+    replaceBtn.addEventListener('click',()=>{
+      const input=sxAvatarPendingInput;
+      closeCropper(false);
+      if(input){input.value='';setTimeout(()=>input.click(),0)}
+    });
+
+    saveBtn.addEventListener('click',async()=>{
+      if(!sxAvatarImage||!sxAvatarPendingInput)return;
+      saveBtn.disabled=true;saveBtn.textContent='ZAPISYWANIE...';
+      try{
+        const stageSize=stage.clientWidth||320;
+        const base=Math.max(stageSize/sxAvatarImage.naturalWidth,stageSize/sxAvatarImage.naturalHeight);
+        const scale=base*sxAvatarZoom;
+        const outSize=420;
+        const ratio=outSize/stageSize;
+        const canvas=document.createElement('canvas');
+        canvas.width=outSize;canvas.height=outSize;
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#000';ctx.fillRect(0,0,outSize,outSize);
+        const drawW=sxAvatarImage.naturalWidth*scale*ratio;
+        const drawH=sxAvatarImage.naturalHeight*scale*ratio;
+        const drawX=(outSize-drawW)/2+sxAvatarX*ratio;
+        const drawY=(outSize-drawH)/2+sxAvatarY*ratio;
+        ctx.drawImage(sxAvatarImage,drawX,drawY,drawW,drawH);
+        const avatarData=canvas.toDataURL('image/jpeg',.86);
+        const d=await api('/account/avatar',{method:'PUT',body:JSON.stringify({avatarData})});
+        currentUser=d.user;
+        renderState();
+        closeCropper(true);
+      }catch(e){
+        alert(e.message||'Nie udało się zmienić zdjęcia profilowego.');
+      }finally{
+        saveBtn.disabled=false;saveBtn.textContent='ZAPISZ';
+      }
+    });
+    modal._sxRenderAvatar=render;
+    return modal;
+  }
+
+  function sxAvatarOpenCropper(avatarInput,file){
+    const modal=sxAvatarEnsureCropper();
+    const img=modal.querySelector('#sxAvatarCropImage');
+    const zoom=modal.querySelector('#sxAvatarCropZoom');
+    sxAvatarPendingInput=avatarInput;sxAvatarPendingFile=file;
+    if(sxAvatarObjectUrl)URL.revokeObjectURL(sxAvatarObjectUrl);
+    sxAvatarObjectUrl=URL.createObjectURL(file);
+    sxAvatarZoom=1;sxAvatarX=0;sxAvatarY=0;zoom.value='1';
+    img.onload=()=>{
+      sxAvatarImage=img;
+      modal._sxRenderAvatar?.();
+      modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+    };
+    img.onerror=()=>{alert('Nie udało się odczytać tego zdjęcia.');avatarInput.value=''};
+    img.src=sxAvatarObjectUrl;
+  }
+
+  document.querySelectorAll('.sx-avatar-input').forEach(avatarInput=>{
+    if(avatarInput.dataset.sxAvatarBound==='1')return;
+    avatarInput.dataset.sxAvatarBound='1';
+    avatarInput.addEventListener('change',()=>{
+      const file=avatarInput.files?.[0];
+      if(!file)return;
+      if(!file.type.startsWith('image/')){alert('Wybierz plik graficzny.');avatarInput.value='';return}
+      if(file.size>4*1024*1024){alert('Zdjęcie jest za duże. Maksymalnie 4 MB.');avatarInput.value='';return}
+      sxAvatarOpenCropper(avatarInput,file);
+    });
+  });
+  document.querySelectorAll('.sx-avatar-edit').forEach(edit=>{
+    if(edit.dataset.sxAvatarClickBound==='1')return;
+    edit.dataset.sxAvatarClickBound='1';
+    edit.removeAttribute('for');
+    edit.setAttribute('role','button');
+    edit.setAttribute('tabindex','0');
+    const openPicker=()=>{
+      const input=edit.parentElement?.querySelector('.sx-avatar-input');
+      if(input)input.click();
+    };
+    edit.addEventListener('click',e=>{e.preventDefault();openPicker()});
+    edit.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openPicker()}});
+  });
   refreshUser();
 })();
 </script>
