@@ -3972,7 +3972,23 @@ window.STARXV_CART_PRICE_HTML=function(item){
    else{digital.hidden=true;if(main)main.hidden=false;document.body.classList.remove('sx-digital-mode','sx-digital-product-open')}
  });
  buy.onclick=purchase;
- const q=new URLSearchParams(location.search);if(q.get('section')==='digital'){world('digital',false);paymentReturn()}else if(!sessionStorage.getItem('starxv-world'))setTimeout(showGate,1200);
+ const q=new URLSearchParams(location.search);
+ const isPaymentReturn=q.get('payment')==='return'&&q.get('order');
+ if(isPaymentReturn){
+   // Powrót z SimPay musi zachować widok Digital, aby dokończyć potwierdzanie płatności.
+   world('digital',false);
+   paymentReturn();
+ }else{
+   // Każde zwykłe wejście / odświeżenie STARXV zaczyna od strony głównej.
+   // Nie przywracamy automatycznie ostatnio oglądanego ebooka ani widoku Digital.
+   if(location.pathname!=='/'||location.search||location.hash)history.replaceState(null,'','/');
+   if(digital)digital.hidden=true;
+   if(main)main.hidden=false;
+   if(nav)nav.hidden=false;
+   document.body.classList.remove('sx-digital-mode','sx-digital-product-open');
+   showDigitalHome(false);
+   if(!sessionStorage.getItem('starxv-world'))setTimeout(showGate,1200);
+ }
 })();
 </script>
 
