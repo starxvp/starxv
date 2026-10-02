@@ -3974,13 +3974,18 @@ window.STARXV_CART_PRICE_HTML=function(item){
  buy.onclick=purchase;
  const q=new URLSearchParams(location.search);
  const isPaymentReturn=q.get('payment')==='return'&&q.get('order');
+ const navEntry=performance.getEntriesByType?.('navigation')?.[0];
+ const isReload=navEntry?.type==='reload';
+
  if(isPaymentReturn){
    // Powrót z SimPay musi zachować widok Digital, aby dokończyć potwierdzanie płatności.
    world('digital',false);
    paymentReturn();
+ }else if(isReload&&q.get('section')==='digital'){
+   // Odświeżenie ma zostawić użytkownika dokładnie w Digital / na otwartym ebooku.
+   world('digital',false);
  }else{
-   // Każde zwykłe wejście / odświeżenie STARXV zaczyna od strony głównej.
-   // Nie przywracamy automatycznie ostatnio oglądanego ebooka ani widoku Digital.
+   // Zwykłe nowe wejście na STARXV zaczyna od strony głównej.
    if(location.pathname!=='/'||location.search||location.hash)history.replaceState(null,'','/');
    if(digital)digital.hidden=true;
    if(main)main.hidden=false;
