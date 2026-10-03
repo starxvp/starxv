@@ -1265,9 +1265,61 @@ app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60
 app.get('/api/digital/download/:productId',auth,rateLimit('digital-download',40,10*60*1000),(req,res)=>{
   ensureStore(req.db);
   const product=getDigitalProduct(req.db,req.params.productId);
-  if(!product||product.active===false||!fs.existsSync(digitalFilePath(product)))return res.status(404).send('Nie znaleziono pliku.');
+
+  if(!product||product.active===false||!fs.existsSync(digitalFilePath(product))){
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('Content-Type','text/html; charset=utf-8');
+    return res.status(404).send(`<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f3ef">
+  <title>STARXV — plik chwilowo niedostępny</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f5f3ef;color:#111}
+    body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .wrap{width:min(100%,760px)}
+    .brand{font-size:16px;font-weight:800;letter-spacing:.26em;text-transform:uppercase;margin:0 0 18px 2px}
+    .card{background:rgba(255,255,255,.9);border:1px solid rgba(17,17,17,.08);border-radius:30px;padding:clamp(28px,5vw,54px);box-shadow:0 20px 70px rgba(17,17,17,.08)}
+    .icon{width:58px;height:58px;border-radius:18px;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;margin-bottom:28px}
+    .eyebrow{font-size:12px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#777;margin-bottom:12px}
+    h1{font-size:clamp(30px,6vw,54px);line-height:1.02;letter-spacing:-.045em;margin:0 0 18px;max-width:620px}
+    p{font-size:16px;line-height:1.7;color:#626262;margin:0;max-width:590px}
+    .actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+    a,button{appearance:none;border:0;border-radius:999px;padding:14px 20px;font:inherit;font-weight:700;text-decoration:none;cursor:pointer}
+    .primary{background:#111;color:#fff}
+    .secondary{background:#ece9e3;color:#111}
+    .code{margin-top:26px;padding-top:22px;border-top:1px solid rgba(17,17,17,.08);font-size:12px;color:#999;letter-spacing:.04em}
+    @media(max-width:560px){body{padding:14px}.card{border-radius:24px}.actions{flex-direction:column}.actions a,.actions button{width:100%;text-align:center}}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="brand">STARXV</div>
+    <section class="card">
+      <div class="icon">!</div>
+      <div class="eyebrow">STARXV DIGITAL</div>
+      <h1>Plik jest chwilowo niedostępny.</h1>
+      <p>
+        Nie możemy teraz pobrać tego e-booka, ponieważ jego plik nie jest obecnie dostępny na serwerze.
+        Spróbuj ponownie później. Jeśli problem będzie się powtarzał, skontaktuj się z obsługą STARXV.
+      </p>
+      <div class="actions">
+        <button class="primary" type="button" onclick="location.reload()">Spróbuj ponownie</button>
+        <a class="secondary" href="/?section=digital">Wróć do STARXV Digital</a>
+      </div>
+      <div class="code">Błąd 404 · DIGITAL_FILE_UNAVAILABLE</div>
+    </section>
+  </main>
+</body>
+</html>`);
+  }
+
   const owned=(req.db.orders||[]).some(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
   if(!owned)return res.status(403).send('Ten plik jest dostępny tylko dla konta, które kupiło produkt.');
+
   res.setHeader('Cache-Control','private, no-store');
   res.setHeader('X-Content-Type-Options','nosniff');
   res.download(digitalFilePath(product),product.downloadName||product.fileName||'STARXV_DIGITAL.pdf');
