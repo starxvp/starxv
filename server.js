@@ -1308,7 +1308,7 @@ app.get('/api/digital/download/:productId',auth,rateLimit('digital-download',40,
       </p>
       <div class="actions">
         <button class="primary" type="button" onclick="location.reload()">Spróbuj ponownie</button>
-        <a class="secondary" href="/?section=digital">Wróć do STARXV Digital</a>
+        <button class="secondary" type="button" onclick="history.length>1?history.back():location.href='/'">Wróć do STARXV Digital</button>
       </div>
       <div class="code">Błąd 404 · DIGITAL_FILE_UNAVAILABLE</div>
     </section>
