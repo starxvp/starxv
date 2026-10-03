@@ -658,6 +658,8 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 .sx-profile-section-head{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;margin:26px 0 12px;color:#5f5f5f;font:900 8px/1 Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;text-align:center}
 .sx-profile-section-head::before,.sx-profile-section-head::after{content:"";height:1px;flex:1;background:rgba(255,255,255,.08)}
 #sxProfileOwnerGroup{width:100%;margin:0;grid-column:1/-1!important}
+.sx-profile-release{color:#b89b3f!important;font-weight:950!important;letter-spacing:.07em!important;white-space:nowrap}
+.account-profile.active .sx-account-stats-launch{grid-template-columns:minmax(180px,1fr)!important;max-width:360px!important}
 #sxProfileOwnerGroup[hidden]{display:none!important}
 #sxProfileOwnerGroup .sx-profile-section-head{color:#9d8540}
 .account-profile.active .sx-profile-owner-links{
@@ -778,7 +780,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
 <div class="sx-world-gate" id="sxWorldGate" aria-hidden="true">
-  <div class="sx-world-brand">STARXV<span>®</span></div>
+  <div class="sx-world-brand">STARXV<span>™</span></div>
   <div class="sx-world-tag">ONE BRAND / DIGITAL + ACCESSORIES</div>
   <div class="sx-world-grid">
     <button class="sx-world-card sx-world-clothing sx-world-coming-soon" id="sxClothingComingSoon" type="button"><span>01 / ACCESSORIES</span><div class="sx-world-icon sx-world-icon-accessories" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M16 12c0 17.7 7.2 26.6 16 26.6S48 29.7 48 12"/><circle cx="32" cy="44" r="7"/><path d="M32 38.6v-6.5"/></svg></div><strong>STARXV<br>ACCESSORIES</strong><em>Jewelry. Details. Identity.</em><b>COMING SOON...</b></button>
@@ -795,7 +797,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </div>
 <section class="sx-digital-page" id="sxDigitalPage" hidden>
   <div class="sx-digital-top">
-    <div class="sx-digital-top-brand"><strong>STARXV®</strong><span>/</span><strong>DIGITAL</strong></div>
+    <div class="sx-digital-top-brand"><strong>STARXV™</strong><span>/</span><strong>DIGITAL</strong></div>
   </div>
   <div class="sx-digital-home-view" id="sxDigitalHomeView">
   <div class="sx-digital-hero">
@@ -860,7 +862,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <nav>
 <div class="sx-nav-brand"><a aria-label="STARXV" href="#">
 <img alt="STARXV" class="nav-logo" src="/assets/starxv-logo.png">
-</img></a><span class="sx-test-version" data-ghost="">BETA 1.0v</span></div>
+</img></a></div>
 <div class="nav-links">
 <a href="#" id="sxNavClothing" aria-disabled="true" title="Coming soon">Accessories <span style="opacity:.48;font-size:.72em">COMING SOON</span></a>
 <a href="/?section=digital" id="sxNavDigital">Digital</a>
@@ -910,7 +912,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
     <article class="sx-accessory-card"><span>02</span><div class="sx-accessory-symbol">⌁</div><h3>CHAINS</h3><p>Łańcuchy i naszyjniki budujące charakter stylizacji.</p><b>IN DEVELOPMENT</b></article>
     <article class="sx-accessory-card"><span>03</span><div class="sx-accessory-symbol">◇</div><h3>BRACELETS</h3><p>Bransoletki i małe akcesoria w estetyce STARXV.</p><b>IN DEVELOPMENT</b></article>
   </div>
-  <div class="sx-accessories-foot"><span>STARXV® / ACCESSORIES</span><button id="sxAccessoriesNotify" type="button">COMING SOON</button></div>
+  <div class="sx-accessories-foot"><span>STARXV™ / ACCESSORIES</span><button id="sxAccessoriesNotify" type="button">COMING SOON</button></div>
 </section>
 <section class="manifesto" id="story">
 <div class="manifesto-inner">
@@ -1011,7 +1013,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <div class="auth-note">Konto jest obsługiwane przez backend STARXV. Konto powstaje dopiero po poprawnym potwierdzeniu adresu e-mail.</div>
 </div>
 <div class="account-profile" id="accountProfile">
-<div class="profile-hero"><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div></div></div>
+<div class="profile-hero"><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div><div class="profile-meta-row"><span>WERSJA</span><b class="sx-profile-release">PRE-LAUNCH 1.0v</b></div></div></div>
 <div class="profile-actions"><button class="profile-btn" id="profileOrders">MOJE ZAMÓWIENIA →</button><button class="profile-btn sx-clothing-beta-btn" id="sxClothingBeta" type="button" hidden><span>ACCESSORIES</span><small>BETA</small><i>→</i></button><button class="profile-btn sx-delete-account-btn" id="deleteAccountBtn" type="button">USUŃ KONTO</button></div>
 </div>
 </div>
@@ -1073,42 +1075,6 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </section>
 </div>
 <div aria-hidden="true" class="sx-info-modal" id="sxShirtSizeGuide"><div aria-labelledby="sxShirtSizeGuideTitle" aria-modal="true" class="sx-info-card" role="dialog"><div class="sx-info-head"><div><small>STARXV / FIT GUIDE</small><h3 id="sxShirtSizeGuideTitle">Tabela rozmiarów</h3></div><button aria-label="Zamknij" class="sx-info-close" data-sx-close="shirtsize" type="button">×</button></div><div class="sx-info-body"><p class="sx-info-lead">Koszulka ma krój oversized fit. Dokładne wymiary produkcyjne wpiszemy po zatwierdzeniu finalnego blanku, żeby nie podawać klientom wymyślonych wartości.</p><table class="sx-size-table"><thead><tr><th>Rozmiar</th><th>Szerokość A</th><th>Długość B</th><th>Rękaw C</th></tr></thead><tbody><tr><td><b>S</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>M</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>L</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>XL</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr></tbody></table><div class="sx-measure-grid"><div class="sx-measure-card"><b>A — SZEROKOŚĆ</b><span>Mierzona na płasko od pachy do pachy.</span></div><div class="sx-measure-card"><b>B — DŁUGOŚĆ</b><span>Od najwyższego punktu ramienia do dolnej krawędzi.</span></div><div class="sx-measure-card"><b>C — RĘKAW</b><span>Od szwu ramienia do końca mankietu.</span></div></div><div class="sx-size-note">Wymiary odzieży mogą różnić się o około 1–2 cm. Przed uruchomieniem sprzedaży uzupełnij wartości na podstawie rzeczywistej koszulki produkcyjnej.</div></div></div></div>
-<div aria-hidden="true" class="account-modal" id="accountModal">
-<div aria-labelledby="accountTitle" aria-modal="true" class="account-panel" role="dialog">
-<div class="account-header"><div><div class="account-title" id="accountTitle">Konto STARXV</div><div class="account-subtitle" id="accountSubtitle">Zaloguj się lub utwórz konto</div></div><button aria-label="Zamknij" class="account-close" id="closeAccount">×</button></div>
-<div class="account-body">
-<div id="authGuest">
-<div class="auth-tabs"><button class="auth-tab active" data-auth-tab="login">ZALOGUJ SIĘ</button><button class="auth-tab" data-auth-tab="register">UTWÓRZ KONTO</button></div>
-<div class="auth-view active" data-auth-view="login">
-<h3>Witaj ponownie.</h3><p class="auth-lead">Zaloguj się do swojego lokalnego konta STARXV.</p>
-<div class="auth-grid"><div class="auth-field full"><label>E-mail</label><input autocomplete="email" id="loginEmail" placeholder="twoj@email.pl" type="email"/></div><div class="auth-field full"><label>Hasło</label><input autocomplete="current-password" id="loginPassword" placeholder="••••••••" type="password"/></div></div>
-<button class="auth-submit" id="loginSubmit">ZALOGUJ SIĘ →</button><button class="sx-forgot-open" type="button">NIE PAMIĘTASZ HASŁA?</button><div class="auth-message" id="loginMessage"></div>
-</div>
-<div class="auth-view" data-auth-view="register">
-<h3>Utwórz konto.</h3><p class="auth-lead">Konto pozwala zachować dane profilu w tej przeglądarce.</p>
-<div class="auth-grid"><div class="auth-field"><label>Imię</label><input autocomplete="given-name" id="registerFirstName"/></div><div class="auth-field"><label>Nazwisko</label><input autocomplete="family-name" id="registerLastName"/></div><div class="auth-field full"><label>E-mail</label><input autocomplete="email" id="registerEmail" type="email"/></div><div class="auth-field"><label>Hasło</label><input autocomplete="new-password" id="registerPassword" placeholder="minimum 6 znaków" type="password"/></div><div class="auth-field"><label>Powtórz hasło</label><input autocomplete="new-password" id="registerPassword2" type="password"/></div></div>
-<button class="auth-submit" id="registerSubmit">WYŚLIJ KOD →</button><div class="auth-message" id="registerMessage"></div>
-</div>
-<div class="auth-view" data-auth-view="verify">
-<h3>Potwierdź e-mail.</h3><p class="auth-lead" id="verifyLead">Wpisz 6-cyfrowy kod wysłany na Twój adres e-mail.</p>
-<div class="auth-grid"><div class="auth-field full"><label>Kod weryfikacyjny</label><input autocomplete="one-time-code" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="000000"/></div></div>
-<button class="auth-submit" id="verifySubmit">POTWIERDŹ KOD →</button><button class="profile-btn" id="verifyBack" style="width:100%;margin-top:10px" type="button">WRÓĆ DO REJESTRACJI</button><div class="auth-message" id="verifyMessage"></div>
-</div>
-<div class="auth-note">Konto jest obsługiwane przez backend STARXV. Konto powstaje dopiero po poprawnym potwierdzeniu adresu e-mail.</div>
-</div>
-<div class="account-profile" id="accountProfile">
-<div class="profile-hero"><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div></div></div>
-<div class="profile-actions"><button class="profile-btn" id="profileOrders">MOJE ZAMÓWIENIA →</button><button class="profile-btn danger" id="logoutBtn">WYLOGUJ SIĘ</button><button class="profile-btn sx-delete-account-btn" id="deleteAccountBtn" type="button">USUŃ KONTO</button></div>
-</div>
-</div>
-</div>
-</div>
-<div aria-hidden="true" class="orders-modal" id="ordersModal">
-<aside aria-labelledby="ordersTitle" aria-modal="true" class="orders-panel" role="dialog">
-<div class="orders-header"><div><div class="orders-title" id="ordersTitle">TWOJE ZAMÓWIENIA</div><div class="orders-subtitle">STARXV / ORDER HISTORY &amp; TRACKING</div></div><button aria-label="Zamknij zamówienia" class="orders-close" id="closeOrders">×</button></div>
-<div class="orders-body" id="ordersBody"></div>
-</aside>
-</div>
 <div aria-hidden="true" class="cart-modal" id="cartModal">
 <aside aria-labelledby="cartTitle" aria-modal="true" class="cart-panel" role="dialog">
 <div class="cart-header">
@@ -2282,7 +2248,6 @@ const renderCart=()=>{hydrateCartDiscounts();
           <div class="sx-later-card-copy"><span>04</span><b>KOSZYK</b><small>Wspólny koszyk dla przyszłej oferty.</small><em>COMING LATER</em></div>
         </article>
       </div>
-      <div class="sx-later-note">Wyszukiwarka dostępna w Profilu służy do nawigacji po STARXV i pozostaje aktywna.</div>
     </div>
   </div>
 </div>
@@ -2566,9 +2531,9 @@ const renderCart=()=>{hydrateCartDiscounts();
 
   function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
-    const orders=read('starxv-orders',[]),addresses=read('starxv-addresses',[]),fav=isFav()?1:0,def=localStorage.getItem('starxv-default-address');const address=addresses.find(a=>a.id===def)||addresses[0];
-    const tx={orders:'ZAMÓWIENIA',favorites:'ULUBIONE',addresses:'ADRESY',defaultAddress:'DOMYŚLNY ADRES',noAddress:'Nie zapisano jeszcze adresu dostawy.',myOrders:'MOJE ZAMÓWIENIA'};
-    dash.innerHTML=`<div class="sx-account-stats"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div><div class="sx-stat"><small>${tx.favorites}</small><b>${fav}</b></div><div class="sx-stat"><small>${tx.addresses}</small><b>${addresses.length}</b></div></div><div class="sx-address-card"><b>${tx.defaultAddress}</b><br>${address?`${esc(address.firstName||'')} ${esc(address.lastName||'')}<br>${esc(address.street||'')}<br>${esc(address.postal||'')} ${esc(address.city||'')}`:tx.noAddress}</div><div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-profile-search-card" id="sxProfileSearchBtn" type="button"><span class="sx-profile-link-kicker">NAWIGACJA</span><b>WYSZUKIWARKA STARXV</b><span class="sx-profile-link-arrow">→</span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
+    const orders=read('starxv-orders',[]);
+    const tx={orders:'ZAMÓWIENIA',myOrders:'MOJE ZAMÓWIENIA'};
+    dash.innerHTML=`<div class="sx-account-stats sx-account-stats-launch"><div class="sx-stat"><small>${tx.orders}</small><b>${orders.length}</b></div></div><div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-profile-search-card" id="sxProfileSearchBtn" type="button"><span class="sx-profile-link-kicker">NAWIGACJA</span><b>WYSZUKIWARKA STARXV</b><span class="sx-profile-link-arrow">→</span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
     $('#sxProfileSearchBtn')?.addEventListener('click',()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
@@ -3468,46 +3433,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 })();
 </script>
 
-<script>
-(() => {
-  const el = document.querySelector('.sx-test-version');
-  if (!el) return;
-
-  const target = el.textContent.trim();
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#<>/_-';
-  const randomChar = () => chars[Math.floor(Math.random() * chars.length)];
-
-  let running = false;
-  function runVersionLoad(){
-    if (running) return;
-    running = true;
-    el.classList.add('is-loading');
-    let frame = 0;
-    const totalFrames = 42;
-    const timer = setInterval(() => {
-      const progress = Math.min(target.length, Math.floor((frame / totalFrames) * (target.length + 1)));
-      let visible = '';
-      for (let i = 0; i < target.length; i++) {
-        const ch = target[i];
-        if (ch === ' ') visible += ' ';
-        else if (i < progress) visible += target[i];
-        else visible += randomChar();
-      }
-      el.textContent = visible;
-      el.setAttribute('data-ghost', visible);
-      frame++;
-      if (frame > totalFrames) {
-        clearInterval(timer);
-        el.textContent = target;
-        el.setAttribute('data-ghost', '');
-        el.classList.remove('is-loading');
-        running = false;
-      }
-    }, 28);
-  }
-  runVersionLoad();
-})();
-</script>
 
 <script id="starxv-view-persistence-v2">
 (()=>{
