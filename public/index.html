@@ -778,53 +778,84 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 
 
 <style id="starxv-profile-search-fab-style">
-/* Profile search: compact utility action aligned with the profile card. */
 #accountProfile{position:relative!important}
 #accountProfile .profile-hero{position:relative!important}
 
 .sx-profile-search-fab{
   position:absolute;
-  top:22px;
-  right:22px;
+  top:20px;
+  right:20px;
   z-index:8;
-  width:44px;
-  height:44px;
+  width:58px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012)),
+    rgba(8,8,8,.88);
+  color:#c7a84f;
+  box-shadow:0 10px 26px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.035);
+  backdrop-filter:blur(14px);
+  cursor:pointer;
+  transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease;
+}
+.sx-profile-search-fab::before{
+  content:"";
+  width:4px;
+  height:4px;
+  margin-right:8px;
+  border-radius:50%;
+  background:#7d6a34;
+  box-shadow:0 0 10px rgba(199,168,79,.18);
+  transition:background .18s ease,box-shadow .18s ease;
+}
+.sx-profile-search-fab-inner{
+  width:25px;
+  height:25px;
   display:grid;
   place-items:center;
-  padding:0;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:13px;
-  background:rgba(255,255,255,.025);
-  color:#d8b85a;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
-  cursor:pointer;
-  transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease;
 }
 .sx-profile-search-fab svg{
-  width:20px;
-  height:20px;
+  width:18px;
+  height:18px;
   fill:none;
   stroke:currentColor;
-  stroke-width:1.8;
+  stroke-width:1.65;
   stroke-linecap:round;
+  stroke-linejoin:round;
 }
 .sx-profile-search-fab:hover{
   transform:translateY(-2px);
-  border-color:rgba(216,184,90,.45);
-  background:rgba(184,155,63,.06);
-  color:#efd071;
+  border-color:rgba(199,168,79,.38);
+  background:
+    linear-gradient(180deg,rgba(199,168,79,.055),rgba(255,255,255,.012)),
+    rgba(10,10,9,.94);
+  color:#e1c56d;
+  box-shadow:0 14px 34px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.05);
+}
+.sx-profile-search-fab:hover::before{
+  background:#d4b75d;
+  box-shadow:0 0 12px rgba(212,183,93,.38);
 }
 .sx-profile-search-fab:focus-visible{
-  outline:2px solid rgba(216,184,90,.7);
+  outline:2px solid rgba(199,168,79,.62);
   outline-offset:3px;
 }
 @media(max-width:700px){
   .sx-profile-search-fab{
-    top:18px;
-    right:18px;
-    width:42px;
-    height:42px;
-    border-radius:12px;
+    top:16px;
+    right:16px;
+    width:52px;
+    height:38px;
+  }
+  .sx-profile-search-fab::before{
+    width:3px;
+    height:3px;
+    margin-right:7px;
   }
 }
 </style>
@@ -2584,7 +2615,7 @@ const renderCart=()=>{hydrateCartDiscounts();
 
   function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
-    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.2"></circle><path d="M15.2 15.2 20 20"></path></svg></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
+    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><span class="sx-profile-search-fab-inner"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.25" cy="10.25" r="5.75"></circle><path d="M14.7 14.7 19.4 19.4"></path></svg></span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{document.getElementById('closeAccount')?.click();setTimeout(()=>window.STARXV_OPEN_ORDERS?.(),120)});
     $('#sxProfileSearchBtn')?.addEventListener('click',()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
