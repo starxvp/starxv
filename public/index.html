@@ -862,6 +862,18 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 }
 </style>
 
+
+<style id="starxv-profile-child-layer-fix">
+#sxDeployModal,
+#sxReportProblemOverlay,
+#sxAccountSecurityModal,
+#ordersModal{
+  z-index:100500!important;
+}
+#accountModal{
+  z-index:100000!important;
+}
+</style>
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -1942,7 +1954,6 @@ const renderCart=()=>{hydrateCartDiscounts();
     }).join('');
   }
   async function open(){
-    document.getElementById('accountModal')?.classList.remove('open');
     document.getElementById('cartModal')?.classList.remove('open');
     activeType='digital';
     activeFilter='all';
@@ -1958,8 +1969,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(backToProfile){
       sessionStorage.removeItem('starxv-return-to-profile');
       if(location.hash==='#orders')history.replaceState(null,'',location.pathname+location.search);
-      sxReturnToProfile();
-    }else if(location.hash==='#orders')history.back();
+      }else if(location.hash==='#orders')history.back();
   }
   window.STARXV_OPEN_ORDERS=open;
   closeBtn?.addEventListener('click',close);
@@ -2577,14 +2587,6 @@ const renderCart=()=>{hydrateCartDiscounts();
   function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
 
-  function sxReturnToProfile(){
-    const account=document.getElementById('accountModal');
-    if(!account)return;
-    account.setAttribute('aria-hidden','false');
-    document.body.style.overflow='hidden';
-    requestAnimationFrame(()=>account.classList.add('open'));
-  }
-
   let sxDeployInfo=null;
   async function sxLoadDeployInfo(){
     try{
@@ -2600,14 +2602,12 @@ const renderCart=()=>{hydrateCartDiscounts();
     document.body.appendChild(modal);
     const close=()=>{
       modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
-      sxReturnToProfile();
-    };
+      };
     modal.querySelector('.sx-deploy-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
     return modal;
   }
   function sxOpenDeploy(){
-    document.getElementById('accountModal')?.classList.remove('open');
     const modal=sxEnsureDeployModal();
     const textarea=modal.querySelector('#sxDeployTextarea');
     const lines=modal.querySelector('#sxDeployLines');
@@ -3107,7 +3107,6 @@ const renderCart=()=>{hydrateCartDiscounts();
   async function open(){try{const d=await getMe();currentEmail.textContent=d.user?.email||'—';email.value='';emailPassword.value='';emailCode.value='';currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'');msg(passwordMsg,'');document.getElementById('accountModal')?.classList.remove('open');modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}catch(e){alert(e.message)}}
   function close(){
     modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
-    sxReturnToProfile();
   }
   closeBtn.addEventListener('click',close);modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
   // Delegacja kliknięcia sprawia, że oczko działa także po ponownym otwarciu / przebudowie widoku profilu.
@@ -3224,7 +3223,6 @@ const renderCart=()=>{hydrateCartDiscounts();
     try{const r=await fetch('/api/support/reports',{cache:'no-store'}),d=await r.json();if(!r.ok)return;const has=(d.reports||[]).some(x=>x.unread);const dot=$('#sxReportUnreadDot'),txt=$('#sxReportUnreadText');if(dot)dot.hidden=!has;if(txt)txt.hidden=!has}catch{}
   }
   async function open(){
-    document.getElementById('accountModal')?.classList.remove('open');
     overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');
     if(status){status.textContent='';status.className='sx-report-status'}
     syncOrderVisibility();await Promise.all([loadHistory(),loadSupportOrders()]);
@@ -3235,7 +3233,6 @@ const renderCart=()=>{hydrateCartDiscounts();
   setTimeout(refreshUnread,350);
   function close(){
     overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true');
-    sxReturnToProfile();
   }
   document.addEventListener('click',e=>{if(e.target.closest?.('#sxReportProblemBtn'))open()});
   $('#sxReportProblemClose')?.addEventListener('click',close);
