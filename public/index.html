@@ -1958,7 +1958,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(backToProfile){
       sessionStorage.removeItem('starxv-return-to-profile');
       if(location.hash==='#orders')history.replaceState(null,'',location.pathname+location.search);
-      setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+      sxReturnToProfile();
     }else if(location.hash==='#orders')history.back();
   }
   window.STARXV_OPEN_ORDERS=open;
@@ -2576,6 +2576,15 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.addEventListener('starxv:reviews-changed',e=>{if(!e.detail?.productId||e.detail.productId===PRODUCT.id)renderReviews()});
   function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
+
+  function sxReturnToProfile(){
+    const account=document.getElementById('accountModal');
+    if(!account)return;
+    account.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    requestAnimationFrame(()=>account.classList.add('open'));
+  }
+
   let sxDeployInfo=null;
   async function sxLoadDeployInfo(){
     try{
@@ -2591,7 +2600,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     document.body.appendChild(modal);
     const close=()=>{
       modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
-      setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+      sxReturnToProfile();
     };
     modal.querySelector('.sx-deploy-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
@@ -3098,7 +3107,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   async function open(){try{const d=await getMe();currentEmail.textContent=d.user?.email||'—';email.value='';emailPassword.value='';emailCode.value='';currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'');msg(passwordMsg,'');document.getElementById('accountModal')?.classList.remove('open');modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}catch(e){alert(e.message)}}
   function close(){
     modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
-    setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+    sxReturnToProfile();
   }
   closeBtn.addEventListener('click',close);modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
   // Delegacja kliknięcia sprawia, że oczko działa także po ponownym otwarciu / przebudowie widoku profilu.
@@ -3226,7 +3235,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   setTimeout(refreshUnread,350);
   function close(){
     overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true');
-    setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+    sxReturnToProfile();
   }
   document.addEventListener('click',e=>{if(e.target.closest?.('#sxReportProblemBtn'))open()});
   $('#sxReportProblemClose')?.addEventListener('click',close);
