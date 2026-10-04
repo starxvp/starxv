@@ -1514,36 +1514,60 @@ app.get('/api/admin/site-settings',adminOnly,(req,res)=>{
   res.json({ok:true,releaseVersion:req.db.siteSettings.releaseVersion,comingLater:Array.isArray(req.db.siteSettings.comingLater)?req.db.siteSettings.comingLater:[]});
 });
 
-app.patch('/api/admin/site-settings',adminOnly,(req,res)=>{
-  ensureStore(req.db);
-  const releaseVersion=cleanReleaseVersion(req.body?.releaseVersion);
-  if(!releaseVersion)return res.status(400).json({error:'Wpisz wersję, która ma być wyświetlana w profilu.'});
-  req.db.siteSettings.releaseVersion=releaseVersion;
-  save(req.db);
-  res.json({ok:true,releaseVersion});
+app.patch('/api/admin/site-settings',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const releaseVersion=cleanReleaseVersion(req.body?.releaseVersion);
+    if(!releaseVersion)return res.status(400).json({error:'Wpisz wersję, która ma być wyświetlana w profilu.'});
+    req.db.siteSettings.releaseVersion=releaseVersion;
+    await Promise.resolve(save(req.db));
+    res.setHeader('Cache-Control','no-store');
+    res.json({ok:true,releaseVersion});
+  }catch(err){
+    console.error('Site settings save error:',err);
+    res.status(500).json({error:'Nie udało się zapisać ustawień strony w bazie.'});
+  }
 });
 
 
 function cleanComingLaterText(v,max=220){
   return String(v||'').trim().replace(/\s+/g,' ').slice(0,max);
 }
-app.post('/api/admin/coming-later',adminOnly,(req,res)=>{
-  ensureStore(req.db);
-  const title=cleanComingLaterText(req.body?.title,80);
-  const description=cleanComingLaterText(req.body?.description,220);
-  if(title.length<2)return res.status(400).json({error:'Wpisz nazwę pozycji Coming Later.'});
-  const item={id:crypto.randomUUID(),title,description,createdAt:Date.now()};
-  req.db.siteSettings.comingLater.push(item);
-  save(req.db);
-  res.json({ok:true,item,comingLater:req.db.siteSettings.comingLater});
+app.post('/api/admin/coming-later',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const title=cleanComingLaterText(req.body?.title,80);
+    const description=cleanComingLaterText(req.body?.description,220);
+    if(title.length<2)return res.status(400).json({error:'Wpisz nazwę pozycji Coming Later.'});
+    const item={id:crypto.randomUUID(),title,description,createdAt:Date.now()};
+    req.db.siteSettings.comingLater.push(item);
+
+    // W PostgreSQL/Neon save() jest asynchroniczne. Czekamy na faktyczny zapis
+    // zanim panel dostanie odpowiedź, żeby po odświeżeniu pozycja nie znikała.
+    await Promise.resolve(save(req.db));
+
+    res.setHeader('Cache-Control','no-store');
+    res.json({ok:true,item,comingLater:req.db.siteSettings.comingLater});
+  }catch(err){
+    console.error('Coming Later save error:',err);
+    res.status(500).json({error:'Nie udało się zapisać Coming Later w bazie.'});
+  }
 });
-app.delete('/api/admin/coming-later/:id',adminOnly,(req,res)=>{
-  ensureStore(req.db);
-  const before=req.db.siteSettings.comingLater.length;
-  req.db.siteSettings.comingLater=req.db.siteSettings.comingLater.filter(x=>String(x?.id)!==String(req.params.id));
-  if(req.db.siteSettings.comingLater.length===before)return res.status(404).json({error:'Nie znaleziono tej pozycji.'});
-  save(req.db);
-  res.json({ok:true,comingLater:req.db.siteSettings.comingLater});
+app.delete('/api/admin/coming-later/:id',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const before=req.db.siteSettings.comingLater.length;
+    req.db.siteSettings.comingLater=req.db.siteSettings.comingLater.filter(x=>String(x?.id)!==String(req.params.id));
+    if(req.db.siteSettings.comingLater.length===before)return res.status(404).json({error:'Nie znaleziono tej pozycji.'});
+
+    await Promise.resolve(save(req.db));
+
+    res.setHeader('Cache-Control','no-store');
+    res.json({ok:true,comingLater:req.db.siteSettings.comingLater});
+  }catch(err){
+    console.error('Coming Later delete error:',err);
+    res.status(500).json({error:'Nie udało się zapisać zmiany Coming Later w bazie.'});
+  }
 });
 
 
