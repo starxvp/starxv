@@ -463,6 +463,9 @@
 .orders-type-tab{appearance:none;border:1px solid transparent;background:transparent;color:#777;border-radius:10px;padding:11px 15px;cursor:pointer;font:900 9px/1 Arial,sans-serif;letter-spacing:.09em;white-space:nowrap;transition:.18s}
 .orders-type-tab:hover{color:#fff;background:#111}
 .orders-type-tab.active{background:#fff;color:#050505;border-color:#fff}
+.orders-type-tab-coming{display:inline-flex;align-items:center;gap:7px;opacity:.42;cursor:not-allowed!important}
+.orders-type-tab-coming:hover{color:#777!important;background:transparent!important}
+.orders-type-tab-coming span{display:inline-flex;align-items:center;padding:4px 6px;border:1px solid rgba(255,255,255,.12);border-radius:999px;color:#777;font-size:7px;line-height:1;font-weight:950;letter-spacing:.08em}
 .order-card.digital-order .order-main-grid{grid-template-columns:minmax(0,1fr) minmax(285px,360px)}
 .order-card.digital-order .order-thumb{object-fit:contain;background:#111}
 .digital-order-meta{margin-top:6px;color:#777;font-size:9px;font-weight:800;letter-spacing:.06em}
@@ -1137,8 +1140,8 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <h1 class="orders-page-title" id="ordersTitle">MOJE<br/>ZAMÓWIENIA.</h1>
 <p class="orders-page-lead">Historia zakupów, płatności i aktualny etap realizacji przesyłki w jednym miejscu.</p>
 <div class="orders-type-tabs" id="ordersTypeTabs" role="tablist" aria-label="Rodzaj zamówień">
-<button class="orders-type-tab active" data-order-type="physical" type="button">PRODUKTY FIZYCZNE</button>
-<button class="orders-type-tab" data-order-type="digital" type="button">PRODUKTY CYFROWE</button>
+<button class="orders-type-tab orders-type-tab-coming" data-order-type="physical" type="button" disabled aria-disabled="true">PRODUKTY FIZYCZNE <span>COMING LATER</span></button>
+<button class="orders-type-tab active" data-order-type="digital" type="button">PRODUKTY CYFROWE</button>
 </div>
 <div class="orders-overview">
 <div class="orders-stat"><span>WSZYSTKIE</span><strong id="ordersStatAll">0</strong></div>
@@ -1866,7 +1869,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   const KEY='starxv-orders',PENDING='starxv-pending-order';
   const COLOR_META=window.STARXV_COLOR_META||{black:{label:'Czarny'},pink:{label:'Różowy'},blue:{label:'Jasny niebieski'}};
   const COLOR_IMAGES=window.STARXV_COLOR_IMAGES||{};
-  let orders=[],activeFilter='all',activeType='physical';
+  let orders=[],activeFilter='all',activeType='digital';
   const money=n=>`${Number(n||0).toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2})} PLN`;
   const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const localLoad=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
@@ -1945,6 +1948,10 @@ const renderCart=()=>{hydrateCartDiscounts();
   async function open(){
     document.getElementById('accountModal')?.classList.remove('open');
     document.getElementById('cartModal')?.classList.remove('open');
+    activeType='digital';
+    activeFilter='all';
+    document.querySelectorAll('.orders-type-tab').forEach(x=>x.classList.toggle('active',x.dataset.orderType==='digital'));
+    document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));
     modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>modal.classList.add('open'));
     await fetchOrders();render();
     if(location.hash!=='#orders')history.pushState({starxvOrders:true},'',location.pathname+location.search+'#orders');
@@ -1961,7 +1968,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.STARXV_OPEN_ORDERS=open;
   closeBtn?.addEventListener('click',close);
   refresh?.addEventListener('click',async()=>{await fetchOrders();render()});
-  document.getElementById('ordersTypeTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-type]');if(!b)return;activeType=b.dataset.orderType==='digital'?'digital':'physical';document.querySelectorAll('.orders-type-tab').forEach(x=>x.classList.toggle('active',x===b));activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));render()});
+  document.getElementById('ordersTypeTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-type]');if(!b||b.disabled||b.dataset.orderType==='physical')return;activeType='digital';document.querySelectorAll('.orders-type-tab').forEach(x=>x.classList.toggle('active',x===b));activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));render()});
   document.getElementById('ordersFilters')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-filter]');if(!b)return;activeFilter=b.dataset.orderFilter;document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x===b));render()});
   body.addEventListener('click',async e=>{
     const reviewBtn=e.target.closest('[data-review-order]');
