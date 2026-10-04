@@ -264,7 +264,6 @@ document.addEventListener('input',e=>{
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const money=n=>new Intl.NumberFormat('pl-PL',{style:'currency',currency:'PLN'}).format(Number(n||0));
-const stageNames=['Nowe','Przygotowanie','Nadane','W drodze','Dostarczone'];
 async function api(url,opt={}){const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});let j={};try{j=await r.json()}catch{}if(!r.ok)throw Object.assign(new Error(j.error||'Błąd serwera'),{status:r.status});return j}
 function showLogin(text='Zaloguj się kontem administratora.'){$('#app').classList.add('hidden');$('#login').classList.remove('hidden');$('#loginMsg').textContent=text}
 function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden')}
@@ -385,9 +384,6 @@ function renderOrders(orders){
            <option value="cancelled" ${o.paymentStatus==='cancelled'?'selected':''}>Anulowane</option>
          </select>
        </label>
-       <label>Wysyłka
-         <select data-stage>${stageNames.map((n,i)=>`<option value="${i}" ${Number(o.shippingStage)===i?'selected':''}>${esc(n)}</option>`).join('')}</select>
-       </label>
        <button class="btn primary" data-save-order>ZAPISZ</button>
      </div>
    </div>`;
@@ -413,7 +409,7 @@ async function deleteOrder(e){
  }
 }
 
-async function saveOrder(e){const box=e.currentTarget.closest('[data-order]');try{e.currentTarget.disabled=true;await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order),{method:'PUT',body:JSON.stringify({paymentStatus:box.querySelector('[data-pay]').value,shippingStage:Number(box.querySelector('[data-stage]').value)})});$('#msg').textContent='Zamówienie zaktualizowane.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
+async function saveOrder(e){const box=e.currentTarget.closest('[data-order]');try{e.currentTarget.disabled=true;await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order),{method:'PUT',body:JSON.stringify({paymentStatus:box.querySelector('[data-pay]').value})});$('#msg').textContent='Zamówienie zaktualizowane.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function adminPasswordLogin(){try{$('#loginMsg').textContent='Logowanie…';$('#loginBtn').disabled=true;await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});await boot()}catch(e){$('#loginMsg').textContent=e.message||'Nie udało się zalogować.'}finally{$('#loginBtn').disabled=false}}
 $('#loginBtn').onclick=adminPasswordLogin;
 $('#password').addEventListener('keydown',e=>{if(e.key==='Enter')adminPasswordLogin()});
