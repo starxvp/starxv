@@ -1924,7 +1924,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         const canCancel=['pending','failed'].includes(o.paymentStatus);
         const digitalState=paid?'OPŁACONO':o.paymentStatus==='failed'?'PŁATNOŚĆ NIEUDANA':o.paymentStatus==='cancelled'?'ANULOWANO':'OCZEKUJE NA PŁATNOŚĆ';
         const access=paid
-          ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button></div>`
+          ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'')}" data-review-size="${safe(x.size||'')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button></div>`
           : `<div class="digital-payment-wait">${o.paymentStatus==='pending'?'Dostęp do pliku pojawi się automatycznie po potwierdzeniu płatności.':'Plik nie jest dostępny, ponieważ płatność nie została potwierdzona.'}<br><button class="order-pay-btn" type="button" data-pay-order="${safe(o.id)}">ZAPŁAĆ →</button><div class="order-payment-error" data-pay-error="${safe(o.id)}"></div></div>`;
         return `<article class="order-card digital-order"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${digitalState}</div></div><div class="order-main-grid"><div class="order-items"><div class="order-item"><img class="order-thumb" src="${safe(img)}" alt=""><div><div class="order-item-name">${safe(x.name||'ZERO TO FIRST SALE')}</div><div class="digital-order-meta">STARXV DIGITAL • PDF • PRODUKT CYFROWY</div></div><div class="order-item-price">${money(Number(x.price||o.total||0)*Number(x.qty||1))}</div></div></div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div><div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa cyfrowa: 0 PLN</div>${access}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}</article>`;
       }
@@ -1964,7 +1964,17 @@ const renderCart=()=>{hydrateCartDiscounts();
   document.getElementById('ordersFilters')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-filter]');if(!b)return;activeFilter=b.dataset.orderFilter;document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x===b));render()});
   body.addEventListener('click',async e=>{
     const reviewBtn=e.target.closest('[data-review-order]');
-    if(reviewBtn){const order=orders.find(o=>String(o.id)===String(reviewBtn.dataset.reviewOrder));const item=order?.items?.find(x=>String(x.id)===String(reviewBtn.dataset.reviewProduct)&&String(x.color||'')===String(reviewBtn.dataset.reviewColor||'')&&String(x.size||'').toUpperCase()===String(reviewBtn.dataset.reviewSize||'').toUpperCase());if(order&&item)openOrderReview(order,item);return}
+    if(reviewBtn){
+      const order=orders.find(o=>String(o.id)===String(reviewBtn.dataset.reviewOrder));
+      let item=null;
+      if(order?.orderType==='digital'){
+        item=order.items?.find(x=>String(x.id)===String(reviewBtn.dataset.reviewProduct))||order.items?.[0]||null;
+      }else{
+        item=order?.items?.find(x=>String(x.id)===String(reviewBtn.dataset.reviewProduct)&&String(x.color||'')===String(reviewBtn.dataset.reviewColor||'')&&String(x.size||'').toUpperCase()===String(reviewBtn.dataset.reviewSize||'').toUpperCase())||null;
+      }
+      if(order&&item)openOrderReview(order,item);
+      return;
+    }
     const payBtn=e.target.closest('[data-pay-order]');
     if(payBtn){
       const id=payBtn.dataset.payOrder,err=body.querySelector(`[data-pay-error="${CSS.escape(id)}"]`);
