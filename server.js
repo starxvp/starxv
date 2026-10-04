@@ -898,11 +898,7 @@ app.get('/api/site/settings',(req,res)=>{
   ensureStore(db);
   if(!hadSettings)save(db);
   res.setHeader('Cache-Control','no-store');
-  res.json({
-    ok:true,
-    releaseVersion:db.siteSettings.releaseVersion,
-    comingLater:Array.isArray(db.siteSettings.comingLater)?db.siteSettings.comingLater:[]
-  });
+  res.json({ok:true,releaseVersion:db.siteSettings.releaseVersion,comingLater:Array.isArray(db.siteSettings.comingLater)?db.siteSettings.comingLater:[]});
 });
 
 const STARXV_PRICE_WINDOW_MS=30*24*60*60*1000;
@@ -1447,9 +1443,9 @@ app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);co
 
 
 // --- STARXV marketing/news campaigns -----------------------------------------
-const CAMPAIGN_TYPES=new Set(['newsletter','site_update','new_product','other']);
+const CAMPAIGN_TYPES=new Set(['newsletter','site_update','new_product','new_variant','restock','other']);
 function campaignType(v){const x=String(v||'').trim();return CAMPAIGN_TYPES.has(x)?x:'other'}
-function campaignTypeLabel(v){return ({newsletter:'NEWSLETTER',site_update:'ZMIANY NA STRONIE',new_product:'NOWY PRODUKT DIGITAL',other:'NOWOŚĆ STARXV DIGITAL'})[campaignType(v)]||'NOWOŚĆ STARXV DIGITAL'}
+function campaignTypeLabel(v){return ({newsletter:'NEWSLETTER',site_update:'ZMIANY NA STRONIE',new_product:'NOWY PRODUKT',new_variant:'NOWY WARIANT',restock:'POWRÓT DO MAGAZYNU',other:'NOWOŚĆ STARXV'})[campaignType(v)]||'NOWOŚĆ STARXV'}
 function cleanCampaignText(v,max=3000){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,max)}
 function emailEscape(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function cleanCampaignUrl(v){
@@ -1515,11 +1511,7 @@ function adminOnly(req,res,next){
 app.get('/api/admin/site-settings',adminOnly,(req,res)=>{
   ensureStore(req.db);
   res.setHeader('Cache-Control','no-store');
-  res.json({
-    ok:true,
-    releaseVersion:req.db.siteSettings.releaseVersion,
-    comingLater:Array.isArray(req.db.siteSettings.comingLater)?req.db.siteSettings.comingLater:[]
-  });
+  res.json({ok:true,releaseVersion:req.db.siteSettings.releaseVersion,comingLater:Array.isArray(req.db.siteSettings.comingLater)?req.db.siteSettings.comingLater:[]});
 });
 
 app.patch('/api/admin/site-settings',adminOnly,(req,res)=>{
@@ -1531,26 +1523,20 @@ app.patch('/api/admin/site-settings',adminOnly,(req,res)=>{
   res.json({ok:true,releaseVersion});
 });
 
-function cleanComingLaterText(v,max=160){
+
+function cleanComingLaterText(v,max=220){
   return String(v||'').trim().replace(/\s+/g,' ').slice(0,max);
 }
-
 app.post('/api/admin/coming-later',adminOnly,(req,res)=>{
   ensureStore(req.db);
   const title=cleanComingLaterText(req.body?.title,80);
   const description=cleanComingLaterText(req.body?.description,220);
   if(title.length<2)return res.status(400).json({error:'Wpisz nazwę pozycji Coming Later.'});
-  const item={
-    id:crypto.randomUUID(),
-    title,
-    description,
-    createdAt:new Date().toISOString()
-  };
+  const item={id:crypto.randomUUID(),title,description,createdAt:Date.now()};
   req.db.siteSettings.comingLater.push(item);
   save(req.db);
   res.json({ok:true,item,comingLater:req.db.siteSettings.comingLater});
 });
-
 app.delete('/api/admin/coming-later/:id',adminOnly,(req,res)=>{
   ensureStore(req.db);
   const before=req.db.siteSettings.comingLater.length;
