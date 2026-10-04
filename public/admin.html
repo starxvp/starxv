@@ -166,6 +166,20 @@ document.addEventListener('input',e=>{
 .sx-coming-item-icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 </style>
 
+
+<style id="sx-add-digital-panel-visibility-fix">
+/* Formularz dodawania produktu cyfrowego może istnieć tylko w zakładce DODAJ PRODUKT. */
+[data-product-type-panel="add-digital"]{
+  display:none!important;
+}
+[data-admin-panel="add-product"].active [data-product-type-panel="add-digital"]{
+  display:block!important;
+}
+[data-admin-panel="add-product"][hidden] [data-product-type-panel="add-digital"]{
+  display:none!important;
+}
+</style>
+
 </head>
 <body>
 <div id="login" class="login hidden"><div class="brand">STARXV</div><p class="sub">panel administratora</p><div id="loginMsg" class="msg">Zaloguj się kontem administratora.</div><button id="adminGoogleBtn" class="btn primary" style="width:100%;margin:10px 0 14px" disabled>KONTYNUUJ Z GOOGLE</button><div style="display:flex;align-items:center;gap:10px;color:#666;font-size:10px;margin:2px 0 12px"><span style="height:1px;background:#292929;flex:1"></span><span>LUB E-MAIL</span><span style="height:1px;background:#292929;flex:1"></span></div><input id="email" type="email" autocomplete="email" placeholder="E-mail"><input id="password" type="password" autocomplete="current-password" placeholder="Hasło"><button id="loginBtn" class="btn" style="width:100%;margin-top:8px">ZALOGUJ E-MAILEM</button></div>
@@ -714,6 +728,14 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
   const app=document.getElementById('app');
   if(!tabBar||!app)return;
 
+  // Naprawa struktury DOM po starszych wersjach panelu:
+  // formularz produktu cyfrowego zawsze należy do zakładki "Dodaj produkt".
+  const addProductPanel=document.querySelector('[data-admin-panel="add-product"]');
+  const addDigitalForm=document.querySelector('[data-product-type-panel="add-digital"]');
+  if(addProductPanel&&addDigitalForm&&!addProductPanel.contains(addDigitalForm)){
+    addProductPanel.appendChild(addDigitalForm);
+  }
+
   // Wszystkie zakładki trzymamy w jednym kontenerze. Dzięki temu zawartość
   // "Dodaj produkt" nie może zostać widoczna pod inną aktywną zakładką.
   let panelHost=document.getElementById('sxAdminPanelHost');
@@ -747,6 +769,14 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
       panel.setAttribute('aria-hidden',on?'false':'true');
       panel.style.setProperty('display',on?'block':'none','important');
     });
+
+    const addDigital=document.querySelector('[data-product-type-panel="add-digital"]');
+    if(addDigital){
+      const showAddDigital=name==='add-product';
+      addDigital.classList.toggle('active',showAddDigital);
+      addDigital.hidden=!showAddDigital;
+      addDigital.style.setProperty('display',showAddDigital?'block':'none','important');
+    }
 
     if(save){
       try{localStorage.setItem('starxv-admin-tab',name)}catch{}
