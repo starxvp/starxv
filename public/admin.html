@@ -362,8 +362,35 @@ function initProductTypeTabs(){document.querySelectorAll('[data-product-type-tab
 function renderOrders(orders){
  if(!orders.length){$('#orders').innerHTML='<div class="card meta">Brak zamówień.</div>';return}
  $('#orders').innerHTML=orders.map(o=>{
-   const deliveryText=o.address?`${esc(o.address?.firstName)} ${esc(o.address?.lastName)}, ${esc(o.address?.street)}, ${esc(o.address?.postal)} ${esc(o.address?.city)}`:'';
-   return `<div class="order" data-order="${esc(o.id)}"><div class="orderhead"><div><b>Zamówienie #${esc(o.orderNo)}</b><div class="meta">${new Date(o.createdAt).toLocaleString('pl-PL')} · ${esc(o.customer?.firstName)} ${esc(o.customer?.lastName)} · ${esc(o.customer?.email)}</div></div><div class="orderHeadActions"><button class="btn danger orderDeleteBtn" type="button" data-delete-order>USUŃ ZAMÓWIENIE</button><b>${money(o.total)}</b></div></div><div class="items">${(o.items||[]).map(x=>`<div>${esc(x.name)} — ${esc(x.colorLabel)} / ${esc(x.size)} × ${Number(x.qty||1)}</div>`).join('')}</div><div class="meta">Dostawa: ${deliveryText}${o.address?.phone?' · '+esc(o.address.phone):''} · Koszt dostawy: ${money(o.shippingCost||0)}</div><div class="row"><label>Status płatności <select data-pay><option value="pending" ${o.paymentStatus==='pending'?'selected':''}>Oczekuje</option><option value="paid" ${o.paymentStatus==='paid'?'selected':''}>Opłacone</option><option value="cancelled" ${o.paymentStatus==='cancelled'?'selected':''}>Anulowane</option></select></label><label>Wysyłka <select data-stage>${stageNames.map((n,i)=>`<option value="${i}" ${Number(o.shippingStage)===i?'selected':''}>${esc(n)}</option>`).join('')}</select></label><button class="btn primary" data-save-order>ZAPISZ</button></div>`;
+   const address=o.address||{};
+   const deliveryText=[`${esc(address.firstName||'')} ${esc(address.lastName||'')}`.trim(),esc(address.street||''),`${esc(address.postal||'')} ${esc(address.city||'')}`.trim()].filter(Boolean).join(', ');
+   return `<div class="order" data-order="${esc(o.id)}">
+     <div class="orderhead">
+       <div>
+         <b>Zamówienie #${esc(o.orderNo)}</b>
+         <div class="meta">${new Date(o.createdAt).toLocaleString('pl-PL')} · ${esc(o.customer?.firstName||'')} ${esc(o.customer?.lastName||'')} · ${esc(o.customer?.email||'')}</div>
+       </div>
+       <div class="orderHeadActions">
+         <button class="btn danger orderDeleteBtn" type="button" data-delete-order>USUŃ ZAMÓWIENIE</button>
+         <b>${money(o.total)}</b>
+       </div>
+     </div>
+     <div class="items">${(o.items||[]).map(x=>`<div>${esc(x.name)}${x.colorLabel||x.size?` — ${esc(x.colorLabel||'')} ${x.size?'/ '+esc(x.size):''}`:''} × ${Number(x.qty||1)}</div>`).join('')}</div>
+     ${deliveryText||address.phone?`<div class="meta">Dane zamówienia: ${deliveryText}${address.phone?' · '+esc(address.phone):''}</div>`:''}
+     <div class="row">
+       <label>Status płatności
+         <select data-pay>
+           <option value="pending" ${o.paymentStatus==='pending'?'selected':''}>Oczekuje</option>
+           <option value="paid" ${o.paymentStatus==='paid'?'selected':''}>Opłacone</option>
+           <option value="cancelled" ${o.paymentStatus==='cancelled'?'selected':''}>Anulowane</option>
+         </select>
+       </label>
+       <label>Wysyłka
+         <select data-stage>${stageNames.map((n,i)=>`<option value="${i}" ${Number(o.shippingStage)===i?'selected':''}>${esc(n)}</option>`).join('')}</select>
+       </label>
+       <button class="btn primary" data-save-order>ZAPISZ</button>
+     </div>
+   </div>`;
  }).join('');
  document.querySelectorAll('[data-save-order]').forEach(b=>b.onclick=saveOrder);
  document.querySelectorAll('[data-delete-order]').forEach(b=>b.onclick=deleteOrder);
