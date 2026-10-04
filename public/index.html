@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<meta content="STARXV — niezależna marka digital & accessories. Odkryj e-booki, cyfrowe produkty i nadchodzącą kolekcję akcesoriów STARXV." name="description"/>
+<meta content="STARXV — niezależna marka Digital. Odkryj e-booki i cyfrowe produkty STARXV." name="description"/>
 <meta content="index,follow,max-image-preview:large" name="robots"/>
 <meta content="#050505" name="theme-color"/>
 <link href="https://starxv.pl/" rel="canonical"/>
@@ -13,15 +13,15 @@
 <meta content="website" property="og:type"/>
 <meta content="STARXV" property="og:site_name"/>
 <meta content="STARXV — Official" property="og:title"/>
-<meta content="STARXV Digital & Accessories — produkty cyfrowe i nadchodząca kolekcja biżuterii oraz akcesoriów." property="og:description"/>
+<meta content="STARXV Digital — e-booki i produkty cyfrowe." property="og:description"/>
 <meta content="https://starxv.pl/" property="og:url"/>
 <meta content="https://starxv.pl/assets/starxv-logo.png" property="og:image"/>
-<meta content="STARXV — Digital & Accessories" property="og:image:alt"/>
+<meta content="STARXV — Digital" property="og:image:alt"/>
 <meta content="summary_large_image" name="twitter:card"/>
 <meta content="STARXV — Official" name="twitter:title"/>
-<meta content="STARXV Digital & Accessories — produkty cyfrowe i nadchodząca kolekcja biżuterii oraz akcesoriów." name="twitter:description"/>
+<meta content="STARXV Digital — e-booki i produkty cyfrowe." name="twitter:description"/>
 <meta content="https://starxv.pl/assets/starxv-logo.png" name="twitter:image"/>
-<title>STARXV — Digital & Accessories</title>
+<title>STARXV — Digital</title>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"STARXV","url":"https://starxv.pl/"}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"STARXV","url":"https://starxv.pl/","inLanguage":"pl-PL"}</script>
 
@@ -874,12 +874,34 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
   z-index:100000!important;
 }
 </style>
+
+<style id="starxv-digital-only-cleanup">
+/* STARXV is currently Digital-only. Legacy physical storefront stays unreachable for compatibility. */
+#sxClothingComingSoonModal,
+#sxClothingBeta,
+.sx-accessories-preview,
+#openCart,
+.cart-nav-button{display:none!important}
+
+.sx-profile-marketing-mini{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:15px 16px;margin:0 0 14px;border:1px solid rgba(255,255,255,.10);
+  border-radius:13px;background:#0a0a0a
+}
+.sx-profile-marketing-mini>div{min-width:0;display:grid;gap:4px}
+.sx-profile-marketing-mini b{color:#fff;font-size:11px;letter-spacing:.02em}
+.sx-profile-marketing-mini small{color:#777;font-size:9px;line-height:1.5;max-width:500px}
+.sx-profile-marketing-mini #sxMarketingStatus{color:#696969;font-size:8px;line-height:1.4;margin-top:2px}
+.sx-profile-marketing-mini .sx-switch{flex:0 0 auto}
+@media(max-width:600px){.sx-profile-marketing-mini{align-items:flex-start}.sx-profile-marketing-mini small{max-width:240px}}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
 <div class="sx-world-gate" id="sxWorldGate" aria-hidden="true">
   <div class="sx-world-brand">STARXV<span>™</span></div>
-  <div class="sx-world-tag">ONE BRAND / DIGITAL + ACCESSORIES</div>
+  <div class="sx-world-tag">ONE BRAND / STARXV DIGITAL</div>
   <div class="sx-world-grid">
     <button class="sx-world-card sx-world-clothing sx-world-coming-soon" id="sxClothingComingSoon" type="button"><span>01 / ACCESSORIES</span><div class="sx-world-icon sx-world-icon-accessories" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M16 12c0 17.7 7.2 26.6 16 26.6S48 29.7 48 12"/><circle cx="32" cy="44" r="7"/><path d="M32 38.6v-6.5"/></svg></div><strong>STARXV<br>ACCESSORIES</strong><em>Jewelry. Details. Identity.</em><b>COMING SOON...</b></button>
     <button class="sx-world-card sx-world-digital" data-world="digital" type="button"><span>02 / DIGITAL</span><div class="sx-world-icon sx-world-icon-digital" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><rect x="11" y="13" width="42" height="29" rx="3"/><path d="M7 49h50M20 49l3-7h18l3 7M20 34l8-9 7 5 10-12"/></svg></div><strong>STARXV<br>DIGITAL</strong><em>Learn. Build. Create.</em><b>EXPLORE DIGITAL →</b></button>
@@ -962,8 +984,8 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <img alt="STARXV" class="nav-logo" src="/assets/starxv-logo.png">
 </img></a></div>
 <div class="nav-links">
-<a href="#" id="sxNavClothing" aria-disabled="true" title="Coming soon">Accessories <span style="opacity:.48;font-size:.72em">COMING SOON</span></a>
 <a href="/?section=digital" id="sxNavDigital">Digital</a>
+<a href="#" id="sxNavComingLater">Coming Later</a>
 <a href="#contact" id="sxNavContact">Contact</a>
 </div>
 <div class="nav-actions"><button aria-label="Zaloguj się lub utwórz konto" class="account-nav-button" id="openAccount" type="button"><svg aria-hidden="true" class="account-icon" fill="none" viewbox="0 0 24 24"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"></circle><path d="M5.5 19c.8-3.6 3-5.4 6.5-5.4s5.7 1.8 6.5 5.4" stroke="currentColor" stroke-linecap="round" stroke-width="1.7"></path></svg><span class="account-badge" id="accountBadge"></span></button><button aria-label="Otwórz koszyk" class="nav-button cart-nav-button" id="openCart" type="button"><svg aria-hidden="true" class="cart-icon" fill="none" viewbox="0 0 24 24"><path d="M3 4h2.1l1.8 10.1a2 2 0 0 0 2 1.65h7.85a2 2 0 0 0 1.95-1.55L20 8H7" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"></path><circle cx="9.2" cy="19" fill="currentColor" r="1.15"></circle><circle cx="17.2" cy="19" fill="currentColor" r="1.15"></circle></svg><span class="cart-count" id="cartCount">0</span></button></div>
@@ -973,7 +995,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <div class="glow blue"></div>
 <div class="glow pink"></div>
 <div class="hero-content">
-<div class="eyebrow">DIGITAL / ACCESSORIES / STARXV</div>
+<div class="eyebrow">DIGITAL / STARXV</div>
 <img alt="STARXV logo" class="hero-logo" src="/assets/starxv-logo.png"/>
 <h1>BUILD YOUR <span>UNIVERSE.</span></h1>
 <p>
@@ -989,11 +1011,11 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <div class="marquee">
 <div class="marquee-track">
 <span>STARXV</span>✦
-        <span>DIGITAL + ACCESSORIES</span>✦
+        <span>STARXV DIGITAL</span>✦
         <span>STARXV</span>✦
         <span>DETAILS MAKE IDENTITY</span>✦
         <span>STARXV</span>✦
-        <span>DIGITAL + ACCESSORIES</span>✦
+        <span>STARXV DIGITAL</span>✦
         <span>STARXV</span>✦
         <span>DETAILS MAKE IDENTITY</span>✦
       </div>
@@ -1037,27 +1059,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </div>
 </div>
 </section>
-<section class="newsletter" id="updates">
-<div class="newsletter-box">
-<div class="section-kicker">03 / POWIADOMIENIA</div>
-<h2>STAY IN<br/><span class="gradient-text">THE LOOP.</span></h2>
-<p>
-          Zdecyduj, czy chcesz dostawać od STARXV informacje o nowościach,
-          restockach, premierach i okazjonalnych akcjach promocyjnych.
-        </p>
-<div class="sx-marketing-control">
-<div class="sx-marketing-copy">
-<b>Newsletter i informacje marketingowe</b>
-<span>Możesz włączyć lub wyłączyć te wiadomości w dowolnym momencie. Ustawienie jest zapisane na Twoim koncie STARXV.</span>
-</div>
-<label aria-label="Newsletter i informacje marketingowe" class="sx-switch">
-<input disabled="" id="sxMarketingToggle" type="checkbox"/>
-<span class="sx-switch-track"></span>
-</label>
-</div>
-<div class="newsletter-note" id="sxMarketingStatus">Zaloguj się, aby zmienić to ustawienie.</div>
-</div>
-</section>
+
 
 </main>
 <footer>
@@ -2321,31 +2323,8 @@ const renderCart=()=>{hydrateCartDiscounts();
     </div>
     <div class="sx-panel-body">
       <p class="sx-later-lead">Te funkcje są częścią dalszego rozwoju STARXV. Są już zaplanowane, ale na razie pozostają wyłączone.</p>
-      <div class="sx-later-grid">
-        <article class="sx-later-card">
-          <div class="sx-later-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5 19 9l-7 11.5L5 9l7-5.5Z" stroke="currentColor" stroke-width="1.6"/><path d="M5 9h14M8.5 9 12 20.5 15.5 9M8.5 9 12 3.5 15.5 9" stroke="currentColor" stroke-width="1.4"/></svg>
-          </div>
-          <div class="sx-later-card-copy"><span>01</span><b>ACCESSORIES</b><small>Biżuteria i akcesoria STARXV.</small><em>COMING LATER</em></div>
-        </article>
-        <article class="sx-later-card">
-          <div class="sx-later-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="5.8" stroke="currentColor" stroke-width="1.7"/><path d="m15 15 5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-          </div>
-          <div class="sx-later-card-copy"><span>02</span><b>WYSZUKIWARKA PRODUKTÓW</b><small>Pełne wyszukiwanie katalogu i produktów.</small><em>COMING LATER</em></div>
-        </article>
-        <article class="sx-later-card">
-          <div class="sx-later-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M12 20s-7-4.3-7-10a4 4 0 0 1 7-2.8A4 4 0 0 1 19 10c0 5.7-7 10-7 10Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
-          </div>
-          <div class="sx-later-card-copy"><span>03</span><b>ULUBIONE</b><small>Zapisywanie produktów na później.</small><em>COMING LATER</em></div>
-        </article>
-        <article class="sx-later-card">
-          <div class="sx-later-card-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M4 5h2l1.4 9.1h9.9l1.6-6.4H7.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="18.5" r="1.2" fill="currentColor"/><circle cx="17" cy="18.5" r="1.2" fill="currentColor"/></svg>
-          </div>
-          <div class="sx-later-card-copy"><span>04</span><b>KOSZYK</b><small>Wspólny koszyk dla przyszłej oferty.</small><em>COMING LATER</em></div>
-        </article>
+      <div class="sx-later-grid" id="sxLaterDynamicGrid">
+        <div class="sx-fav-empty">Ładowanie Coming Later…</div>
       </div>
     </div>
   </div>
@@ -2472,14 +2451,13 @@ const renderCart=()=>{hydrateCartDiscounts();
         {title:'Regulamin',meta:'INFORMACJE PRAWNE',keywords:'regulamin terms zasady sklep prawo prawne',icon:'§',open:()=>go('/terms.html')},
         {title:'Polityka prywatności',meta:'PRYWATNOŚĆ / RODO',keywords:'polityka prywatnosci prywatności privacy rodo dane osobowe cookies',icon:'R',open:()=>go('/privacy.html')},
         {title:'Prawa autorskie',meta:'STARXV / COPYRIGHT',keywords:'prawa autorskie copyright materialy materiały tresci treści',icon:'©',open:()=>go('/copyright.html')},
-        {title:'Coming Later',meta:'FUNKCJE W DALSZYM ROZWOJU',keywords:'later coming soon funkcje przyszlosc przyszłość accessories ulubione koszyk wyszukiwarka produktow produktów',icon:'L',open:()=>{closeSearch();openOverlay('sxLaterOverlay')}},
+        {title:'Coming Later',meta:'FUNKCJE W DALSZYM ROZWOJU',keywords:'later coming soon funkcje przyszlosc przyszłość roadmap plany zapowiedzi',icon:'L',open:()=>{closeSearch();openOverlay('sxLaterOverlay')}},
       ];
 
       if(document.getElementById('sxProfileDeployBtn')){
         items.push({title:'Deploy',meta:'STREFA WŁAŚCICIELA',keywords:'deploy render github push wlasciciel właściciel owner',icon:'D',open:()=>openProfileFeature('sxProfileDeployBtn')});
       }
-      if(document.getElementById('sxProfileAccessoriesBtn')){
-        items.push({title:'Accessories Beta',meta:'STREFA WŁAŚCICIELA',keywords:'accessories beta owner preview podglad podgląd akcesoria',icon:'A',open:()=>openProfileFeature('sxProfileAccessoriesBtn')});
+);
       }
       return items;
     }
@@ -2630,18 +2608,15 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(!document.getElementById('sxProfileDeployBtn')){
       const btn=document.createElement('button');btn.id='sxProfileDeployBtn';btn.type='button';btn.className='sx-profile-link-card sx-deploy-profile-card';btn.innerHTML='<span class="sx-profile-link-kicker">OWNER TOOLS</span><b>DEPLOY</b><span class="sx-profile-link-arrow">→</span>';btn.onclick=sxOpenDeploy;links.appendChild(btn);
     }
-    if(!document.getElementById('sxProfileAccessoriesBtn')){
-      const accessories=document.createElement('button');accessories.id='sxProfileAccessoriesBtn';accessories.type='button';accessories.className='sx-profile-link-card sx-accessories-profile-card';accessories.innerHTML='<span class="sx-profile-link-kicker">OWNER PREVIEW</span><b>ACCESSORIES <span class="sx-profile-beta-pill">BETA</span></b><span class="sx-profile-link-arrow">→</span>';
-      accessories.onclick=()=>document.getElementById('sxClothingBeta')?.click();
-      links.appendChild(accessories);
-    }
   }
 
   function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
-    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
+    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card" id="sxProfileComingLaterBtn" type="button"><span class="sx-profile-link-kicker">STARXV</span><b>COMING LATER</b><span class="sx-profile-link-arrow">→</span></button></div><div class="sx-profile-section-head">POWIADOMIENIA</div><div class="sx-profile-marketing-mini"><div><span class="sx-profile-link-kicker">DIGITAL / E-MAIL</span><b>NOWE PRODUKTY DIGITAL</b><small>Chcę otrzymywać informacje o nowych e-bookach i produktach cyfrowych STARXV.</small><div id="sxMarketingStatus">Ładowanie ustawienia…</div></div><label class="sx-switch" aria-label="Powiadomienia o nowych produktach Digital"><input disabled id="sxMarketingToggle" type="checkbox"><span class="sx-switch-track"></span></label></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{window.STARXV_OPEN_ORDERS?.()});
+    $('#sxProfileComingLaterBtn')?.addEventListener('click',()=>window.STARXV_OPEN_COMING_LATER?.());
     window.STARXV_INSTALL_ACCOUNT_SECURITY?.();
+    setTimeout(()=>window.STARXV_MARKETING_REFRESH?.(),0);
     $('#sxProfileSearchBtn')?.addEventListener('click',()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
   }
@@ -3321,18 +3296,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 <script id="starxv-marketing-preference">
 (()=>{
-  const toggle=document.getElementById('sxMarketingToggle');
-  const status=document.getElementById('sxMarketingStatus');
-  if(!toggle||!status)return;
   let busy=false;
 
   async function loadPreference(){
-    if(busy)return;
+    const toggle=document.getElementById('sxMarketingToggle');
+    const status=document.getElementById('sxMarketingStatus');
+    if(!toggle||!status||busy)return;
     try{
       const me=await fetch('/api/auth/me',{credentials:'include',cache:'no-store'});
       if(!me.ok){
-        toggle.checked=false;
-        toggle.disabled=true;
+        toggle.checked=false;toggle.disabled=true;
         status.textContent='Zaloguj się, aby zmienić to ustawienie.';
         return;
       }
@@ -3341,40 +3314,42 @@ document.addEventListener('DOMContentLoaded',()=>{
       const data=await prefs.json();
       toggle.checked=data?.preferences?.marketingEmails===true;
       toggle.disabled=false;
-      status.textContent=toggle.checked?'Powiadomienia marketingowe są włączone.':'Powiadomienia marketingowe są wyłączone.';
+      status.textContent=toggle.checked?'Włączone — będziesz dostawać informacje o nowościach Digital.':'Wyłączone — nie będziemy wysyłać takich wiadomości.';
+      if(!toggle.dataset.bound){
+        toggle.dataset.bound='1';
+        toggle.addEventListener('change',savePreference);
+      }
     }catch{
       toggle.disabled=true;
-      status.textContent='Nie udało się pobrać ustawienia. Spróbuj ponownie.';
+      status.textContent='Nie udało się pobrać ustawienia.';
     }
   }
 
-  toggle.addEventListener('change',async()=>{
+  async function savePreference(e){
+    const toggle=e.currentTarget;
+    const status=document.getElementById('sxMarketingStatus');
     const wanted=toggle.checked;
-    busy=true;
-    toggle.disabled=true;
-    status.textContent='Zapisywanie…';
+    busy=true;toggle.disabled=true;if(status)status.textContent='Zapisywanie…';
     try{
       const r=await fetch('/api/account/preferences',{
-        method:'PUT',
-        credentials:'include',
+        method:'PUT',credentials:'include',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({marketingEmails:wanted})
       });
       const data=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error(data.error||'Nie udało się zapisać.');
       toggle.checked=data?.preferences?.marketingEmails===true;
-      status.textContent=toggle.checked?'Powiadomienia marketingowe są włączone.':'Powiadomienia marketingowe są wyłączone.';
-    }catch(e){
+      if(status)status.textContent=toggle.checked?'Włączone — będziesz dostawać informacje o nowościach Digital.':'Wyłączone — nie będziemy wysyłać takich wiadomości.';
+    }catch(err){
       toggle.checked=!wanted;
-      status.textContent=e.message||'Nie udało się zapisać ustawienia.';
+      if(status)status.textContent=err.message||'Nie udało się zapisać ustawienia.';
     }finally{
-      busy=false;
-      toggle.disabled=false;
+      busy=false;toggle.disabled=false;
     }
-  });
+  }
 
-  window.addEventListener('starxv:auth-changed',loadPreference);
-  loadPreference();
+  window.STARXV_MARKETING_REFRESH=loadPreference;
+  window.addEventListener('starxv:auth-changed',()=>setTimeout(loadPreference,0));
 })();
 </script>
 <div aria-hidden="true" class="sx-mail-picker" id="sxMailPicker">
@@ -4008,19 +3983,16 @@ window.STARXV_CART_PRICE_HTML=function(item){
  async function purchase(){if(!product)return;status.textContent='';if(!legalAccept?.checked){status.textContent='Przed zakupem zaakceptuj Regulamin i potwierdź zapoznanie się z informacjami prawnymi.';return}if(!consent.checked){status.textContent='Aby otrzymać e-book od razu po płatności, zaznacz zgodę dotyczącą rozpoczęcia dostarczania treści cyfrowej.';return}buy.disabled=true;buy.textContent='PRZYGOTOWYWANIE...';try{let r=await fetch('/api/digital/orders/prepare',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({productId:product.id,termsAccepted:true,privacyAcknowledged:true,digitalConsent:true,legalVersion:'2026-10-01'})});if(r.status===401){status.textContent='Najpierw zaloguj się na konto STARXV.';buy.disabled=false;buy.textContent='KUPUJĘ I PŁACĘ →';return}let j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się utworzyć zamówienia.');if(j.alreadyOwned){owned.hidden=false;status.textContent='Ten e-book jest już na Twoim koncie.';return}r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:j.order.id})});j=await r.json();if(!r.ok)throw new Error(j.error||'Nie udało się uruchomić płatności.');location.href=j.url}catch(e){status.textContent=e.message;buy.disabled=false;buy.textContent='KUPUJĘ I PŁACĘ →'}}
  async function paymentReturn(){const q=new URLSearchParams(location.search),oid=q.get('order');if(q.get('payment')!=='return'||!oid)return;status.textContent='Potwierdzamy płatność…';for(let i=0;i<12;i++){try{const r=await fetch('/api/orders/'+encodeURIComponent(oid)+'/payment-status',{credentials:'same-origin'});if(r.ok){const j=await r.json();if(j.confirmed){status.textContent='Płatność potwierdzona ✓';owned.hidden=false;owned.scrollIntoView({behavior:'smooth'});return}}}catch{}await new Promise(x=>setTimeout(x,1500))}status.textContent='Płatność wróciła z bramki. Jeśli została opłacona, dostęp pojawi się po potwierdzeniu przez SimPay.'}
  gate.querySelectorAll('[data-world]').forEach(b=>b.onclick=()=>world(b.dataset.world));
- const sxNavClothing=document.getElementById('sxNavClothing'),sxNavDigital=document.getElementById('sxNavDigital'),sxNavBrand=document.getElementById('sxNavBrand'),sxNavContact=document.getElementById('sxNavContact');
- function goClothingSection(selector){world('clothing');requestAnimationFrame(()=>requestAnimationFrame(()=>{const target=document.querySelector(selector);if(target)target.scrollIntoView({behavior:'smooth',block:'start'})}))}
- if(sxNavClothing)sxNavClothing.addEventListener('click',e=>{e.preventDefault();const modal=document.getElementById('sxClothingComingSoonModal');if(modal){modal.classList.add('open');modal.setAttribute('aria-hidden','false')}});
+ const sxNavDigital=document.getElementById('sxNavDigital'),sxNavComingLater=document.getElementById('sxNavComingLater'),sxNavContact=document.getElementById('sxNavContact');
  if(sxNavDigital)sxNavDigital.addEventListener('click',e=>{e.preventDefault();history.replaceState({sxDigitalHome:true},'','/?section=digital');world('digital');showDigitalHome(true)});
- if(sxNavBrand)sxNavBrand.addEventListener('click',e=>{e.preventDefault();goClothingSection('#story')});
+ if(sxNavComingLater)sxNavComingLater.addEventListener('click',e=>{e.preventDefault();window.STARXV_OPEN_COMING_LATER?.()});
  if(sxNavContact)sxNavContact.addEventListener('click',e=>{e.preventDefault();openStarxvContact()});
  const backToCatalog=()=>goDigitalHome();
  if(detailBack)detailBack.addEventListener('click',backToCatalog);
  if(detailBackBottom)detailBackBottom.addEventListener('click',backToCatalog);
  window.addEventListener('popstate',()=>{
-   const params=new URLSearchParams(location.search);
-   if(params.get('section')==='digital'){world('digital',false)}
-   else{digital.hidden=true;if(main)main.hidden=false;document.body.classList.remove('sx-digital-mode','sx-digital-product-open')}
+   world('digital',false);
+   if(!new URLSearchParams(location.search).get('product'))showDigitalHome(false);
  });
  buy.onclick=purchase;
  const q=new URLSearchParams(location.search);
@@ -4278,6 +4250,39 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
   window.STARXV_REFRESH_RELEASE_VERSION=refreshReleaseVersion;
   refreshReleaseVersion();
   document.getElementById('openAccount')?.addEventListener('click',refreshReleaseVersion);
+})();
+</script>
+
+
+<script id="starxv-coming-later-dynamic">
+(()=>{
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  async function load(){
+    const root=document.getElementById('sxLaterDynamicGrid');if(!root)return;
+    try{
+      const r=await fetch('/api/site/settings',{cache:'no-store',credentials:'same-origin'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error();
+      const items=Array.isArray(d.comingLater)?d.comingLater:[];
+      root.innerHTML=items.length?items.map((x,i)=>`
+        <article class="sx-later-card">
+          <div class="sx-later-card-icon" aria-hidden="true">${String(i+1).padStart(2,'0')}</div>
+          <div class="sx-later-card-copy"><span>${String(i+1).padStart(2,'0')}</span><b>${esc(x.title||'')}</b><small>${esc(x.description||'')}</small><em>COMING LATER</em></div>
+        </article>`).join(''):'<div class="sx-fav-empty">Na ten moment nie ma żadnych zapowiedzianych rzeczy.<br><span class="sx-muted">Lista pojawi się tutaj, gdy zostanie dodana w panelu STARXV.</span></div>';
+    }catch{
+      root.innerHTML='<div class="sx-fav-empty">Nie udało się pobrać Coming Later.</div>';
+    }
+  }
+
+  function open(){
+    load();
+    const el=document.getElementById('sxLaterOverlay');
+    if(el){el.classList.add('open');el.setAttribute('aria-hidden','false')}
+  }
+
+  window.STARXV_OPEN_COMING_LATER=open;
+  window.STARXV_REFRESH_COMING_LATER=load;
 })();
 </script>
 
