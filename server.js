@@ -1530,16 +1530,22 @@ app.patch('/api/admin/site-settings',adminOnly,async(req,res)=>{
 });
 
 
+const COMING_LATER_ICONS=new Set(['sparkles','book','app','ai','code','laptop','phone','rocket','star','update']);
 function cleanComingLaterText(v,max=220){
   return String(v||'').trim().replace(/\s+/g,' ').slice(0,max);
+}
+function cleanComingLaterIcon(v){
+  const key=String(v||'').trim().toLowerCase();
+  return COMING_LATER_ICONS.has(key)?key:'sparkles';
 }
 app.post('/api/admin/coming-later',adminOnly,async(req,res)=>{
   try{
     ensureStore(req.db);
     const title=cleanComingLaterText(req.body?.title,80);
     const description=cleanComingLaterText(req.body?.description,220);
+    const icon=cleanComingLaterIcon(req.body?.icon);
     if(title.length<2)return res.status(400).json({error:'Wpisz nazwę pozycji Coming Later.'});
-    const item={id:crypto.randomUUID(),title,description,createdAt:Date.now()};
+    const item={id:crypto.randomUUID(),title,description,icon,createdAt:Date.now()};
     req.db.siteSettings.comingLater.push(item);
 
     // W PostgreSQL/Neon save() jest asynchroniczne. Czekamy na faktyczny zapis

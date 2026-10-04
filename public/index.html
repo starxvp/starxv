@@ -880,6 +880,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 .sx-profile-marketing-mini{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 15px;margin:0 0 14px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0a0a0a}
 .sx-profile-marketing-mini>div{display:grid;gap:4px;min-width:0}.sx-profile-marketing-mini b{font-size:11px;color:#fff}.sx-profile-marketing-mini small{font-size:9px;line-height:1.45;color:#777;max-width:500px}.sx-profile-marketing-mini #sxMarketingStatus{font-size:8px;line-height:1.4;color:#666;margin-top:2px}
 </style>
+<style id="sx-coming-later-public-icons">.sx-later-card-icon svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}</style>
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -4217,17 +4218,43 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
 <script id="starxv-coming-later-dynamic">
 (()=>{
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function iconSvg(key){
+    const map={
+      sparkles:'<svg viewBox="0 0 24 24"><path d="M12 3l1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2L12 3Z"/><path d="M18.5 13l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/></svg>',
+      book:'<svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5V5.5Z"/></svg>',
+      app:'<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 8h3v3H8zM13 8h3M13 11h3M8 14h8"/></svg>',
+      ai:'<svg viewBox="0 0 24 24"><rect x="5" y="6" width="14" height="12" rx="3"/><path d="M9 10v4M15 10v4M8 14h8M12 3v3M3 12h2M19 12h2"/></svg>',
+      code:'<svg viewBox="0 0 24 24"><path d="m9 7-5 5 5 5M15 7l5 5-5 5M13 5l-2 14"/></svg>',
+      laptop:'<svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="11" rx="1.5"/><path d="M3 18h18l-1 2H4l-1-2Z"/></svg>',
+      phone:'<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg>',
+      rocket:'<svg viewBox="0 0 24 24"><path d="M14 4c3-1 5-1 6-1 0 1 0 3-1 6l-6 6-4-4 5-7Z"/><path d="m9 11-4 1-2 3 5 1M13 15l-1 4-3 2-1-5"/><circle cx="16" cy="7" r="1.5"/></svg>',
+      star:'<svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9L12 3Z"/></svg>',
+      update:'<svg viewBox="0 0 24 24"><path d="M20 7v5h-5"/><path d="M19 12a7 7 0 1 1-2-5l3 3"/></svg>'
+    };
+    return map[key]||map.sparkles;
+  }
+
   async function load(){
     const root=document.getElementById('sxLaterDynamicGrid');if(!root)return;
     try{
       const r=await fetch('/api/site/settings',{cache:'no-store',credentials:'same-origin'}),d=await r.json().catch(()=>({}));
       if(!r.ok)throw new Error();
       const items=Array.isArray(d.comingLater)?d.comingLater:[];
-      root.innerHTML=items.length?items.map((x,i)=>`<article class="sx-later-card"><div class="sx-later-card-icon" aria-hidden="true">${String(i+1).padStart(2,'0')}</div><div class="sx-later-card-copy"><span>${String(i+1).padStart(2,'0')}</span><b>${esc(x.title||'')}</b><small>${esc(x.description||'')}</small><em>COMING LATER</em></div></article>`).join(''):'<div class="sx-fav-empty">Na ten moment nie ma żadnych zapowiedzianych rzeczy.</div>';
+      root.innerHTML=items.length?items.map((x,i)=>`
+        <article class="sx-later-card">
+          <div class="sx-later-card-icon" aria-hidden="true">${iconSvg(x.icon||'sparkles')}</div>
+          <div class="sx-later-card-copy">
+            <span>${String(i+1).padStart(2,'0')}</span>
+            <b>${esc(x.title||'')}</b>
+            <small>${esc(x.description||'')}</small>
+            <em>COMING LATER</em>
+          </div>
+        </article>`).join(''):'<div class="sx-fav-empty">Na ten moment nie ma żadnych zapowiedzianych rzeczy.</div>';
     }catch{root.innerHTML='<div class="sx-fav-empty">Nie udało się pobrać Coming Later.</div>'}
   }
   function open(){load();const el=document.getElementById('sxLaterOverlay');if(el){el.classList.add('open');el.setAttribute('aria-hidden','false')}}
-  window.STARXV_OPEN_COMING_LATER=open;window.STARXV_REFRESH_COMING_LATER=load;
+  window.STARXV_OPEN_COMING_LATER=open;
+  window.STARXV_REFRESH_COMING_LATER=load;
 })();
 </script>
 </body>
