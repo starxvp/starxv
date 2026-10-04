@@ -3944,11 +3944,20 @@ window.STARXV_CART_PRICE_HTML=function(item){
      products=Array.isArray(j.products)?j.products:[];
      products.sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||String(a.name||'').localeCompare(String(b.name||''),'pl'));
      if(!products.length)return;
-     const requested=new URLSearchParams(location.search).get('product');
+     const digitalParams=new URLSearchParams(location.search);
+     const forceHome=digitalParams.get('home')==='1';
+     const requested=forceHome?null:digitalParams.get('product');
      product=products.find(x=>x.id===requested)||products[0];
      renderCatalog();
      await selectDigitalProduct(product.id,false);
-     if(requested&&products.some(x=>x.id===requested))showDigitalDetail(false);else showDigitalHome(false);
+     if(forceHome){
+       history.replaceState({sxDigitalHome:true},'','/?section=digital');
+       showDigitalHome(false);
+     }else if(requested&&products.some(x=>x.id===requested)){
+       showDigitalDetail(false);
+     }else{
+       showDigitalHome(false);
+     }
    }
    catch{price.textContent='—';buy.disabled=true;buy.textContent='NIEDOSTĘPNE';status.textContent='Nie udało się pobrać produktów cyfrowych.'}
  }
@@ -3986,8 +3995,8 @@ window.STARXV_CART_PRICE_HTML=function(item){
    // Powrót z SimPay musi zachować widok Digital, aby dokończyć potwierdzanie płatności.
    world('digital',false);
    paymentReturn();
- }else if(q.get('section')==='digital'){
-   // Każde wejście z ?section=digital ma otworzyć widok Digital.
+ }else if(q.get('section')==='digital'&&(isReload||q.get('home')==='1')){
+   // Odświeżenie Digital zachowuje widok, a home=1 zawsze otwiera główną stronę Digital.
    world('digital',false);
  }else{
    // Zwykłe nowe wejście na STARXV zaczyna od strony głównej.
