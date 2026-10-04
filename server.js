@@ -878,11 +878,28 @@ function ensureStore(db){
     }
   }
 
+  if(!db.siteSettings||typeof db.siteSettings!=='object')db.siteSettings={};
+  if(!String(db.siteSettings.releaseVersion||'').trim())db.siteSettings.releaseVersion='PRE-LAUNCH 1.0v';
+
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.reviews))db.reviews=[];
   if(!Array.isArray(db.marketingCampaigns))db.marketingCampaigns=[];
   return db;
 }
+
+function cleanReleaseVersion(v){
+  return String(v||'').trim().replace(/\s+/g,' ').slice(0,60);
+}
+
+app.get('/api/site/settings',(req,res)=>{
+  const db=load();
+  const hadSettings=Boolean(db.siteSettings&&String(db.siteSettings.releaseVersion||'').trim());
+  ensureStore(db);
+  if(!hadSettings)save(db);
+  res.setHeader('Cache-Control','no-store');
+  res.json({ok:true,releaseVersion:db.siteSettings.releaseVersion});
+});
+
 const STARXV_PRICE_WINDOW_MS=30*24*60*60*1000;
 function money2(v){return Math.round((Number(v)||0)*100)/100}
 function effectiveCatalogPrice(p){
@@ -1489,6 +1506,22 @@ function adminOnly(req,res,next){
     next();
   });
 }
+
+app.get('/api/admin/site-settings',adminOnly,(req,res)=>{
+  ensureStore(req.db);
+  res.setHeader('Cache-Control','no-store');
+  res.json({ok:true,releaseVersion:req.db.siteSettings.releaseVersion});
+});
+
+app.patch('/api/admin/site-settings',adminOnly,(req,res)=>{
+  ensureStore(req.db);
+  const releaseVersion=cleanReleaseVersion(req.body?.releaseVersion);
+  if(!releaseVersion)return res.status(400).json({error:'Wpisz wersję, która ma być wyświetlana w profilu.'});
+  req.db.siteSettings.releaseVersion=releaseVersion;
+  save(req.db);
+  res.json({ok:true,releaseVersion});
+});
+
 
 // --- STARXV owner deploy tools ---------------------------------------------------
 // Visible only to the first account listed in ADMIN_EMAILS. This section only

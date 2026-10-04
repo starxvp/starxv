@@ -163,6 +163,7 @@ document.addEventListener('input',e=>{
    <button class="admin-tab" type="button" data-admin-tab="reviews">OPINIE</button>
    <button class="admin-tab" type="button" data-admin-tab="campaigns">KAMPANIE I NOWOŚCI</button>
    <button class="admin-tab" type="button" data-admin-tab="support">ZGŁOSZENIA</button>
+   <button class="admin-tab" type="button" data-admin-tab="settings">USTAWIENIA</button>
  </nav>
  <div class="section admin-panel" data-admin-panel="add-product">
  <h2>Dodaj nowy produkt</h2>
@@ -194,6 +195,19 @@ document.addEventListener('input',e=>{
  </div>
 <div class="section admin-panel" data-admin-panel="products"><h2>Produkty</h2><div class="productTypeTabs" data-product-type-tabs="products"><button class="productTypeTab active" type="button" data-product-type="physical">PRODUKT FIZYCZNY</button><button class="productTypeTab" type="button" data-product-type="digital">PRODUKT CYFROWY</button></div><div class="productTypePanel active" data-product-type-panel="products-physical"><h2>Produkty, skład, kolory, rozmiary i stany</h2><div id="products" class="products"></div></div><div class="productTypePanel" data-product-type-panel="products-digital"><h2>Produkty cyfrowe / STARXV Digital</h2><div id="digitalProducts" class="digitalProducts"></div></div></div>
  <div class="section admin-panel active" data-admin-panel="orders"><h2>Zamówienia</h2><div id="orders" class="orders"></div></div>
+
+ <div class="section admin-panel" data-admin-panel="settings" id="sxSiteSettingsAdmin">
+   <h2>Ustawienia strony</h2>
+   <div class="card" style="max-width:760px">
+     <div class="sub" style="margin-bottom:10px">WERSJA WYŚWIETLANA W PROFILU</div>
+     <div class="meta" style="margin-bottom:14px">Ta wartość pojawia się przy pozycji „WERSJA” w profilu użytkownika.</div>
+     <div class="row" style="align-items:flex-end">
+       <div style="flex:1;min-width:240px"><input id="sxReleaseVersionInput" maxlength="60" placeholder="np. PRE-LAUNCH 1.0v"></div>
+       <button class="btn primary" id="sxReleaseVersionSave" type="button">ZAPISZ WERSJĘ</button>
+     </div>
+     <div class="msg" id="sxReleaseVersionStatus"></div>
+   </div>
+ </div>
 </div>
 <script>
 const $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -204,7 +218,7 @@ async function api(url,opt={}){const r=await fetch(url,{credentials:'same-origin
 function showLogin(text='Zaloguj się kontem administratora.'){$('#app').classList.add('hidden');$('#login').classList.remove('hidden');$('#loginMsg').textContent=text}
 function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden')}
 async function boot(){try{const j=await api('/api/admin/me',{cache:'no-store'});$('#who').textContent=j.user.email;showApp();await load()}catch(e){showLogin(e.status===403?'To konto nie ma uprawnień administratora.':e.status===503?e.message:'Zaloguj się kontem administratora.');window.STARXV_ADMIN_INIT_GOOGLE?.()}}
-async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(j.catalog||{}))}catch{}render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
+async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(j.catalog||{}))}catch{}render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();window.STARXV_ADMIN_SETTINGS_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
 function render(j){shippingConfig=j.shipping||shippingConfig;const s=j.stats||{};$('#sOrders').textContent=s.orders??0;$('#sPending').textContent=s.pending??0;$('#sRevenue').textContent=money(s.revenue);$('#sStock').textContent=s.stock??0;renderProducts(j.catalog||{});renderDigitalProducts(j.digitalProducts||{});renderOrders(j.orders||[])}
 
 async function refreshCatalogCache(){
@@ -507,6 +521,58 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 })();
 </script>
 
+
+
+<script id="sx-site-settings-admin-script">
+(()=>{
+  'use strict';
+  const input=document.getElementById('sxReleaseVersionInput');
+  const saveBtn=document.getElementById('sxReleaseVersionSave');
+  const status=document.getElementById('sxReleaseVersionStatus');
+  if(!input||!saveBtn||!status)return;
+
+  async function loadSettings(){
+    try{
+      const r=await fetch('/api/admin/site-settings',{credentials:'same-origin',cache:'no-store'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Nie udało się pobrać ustawień.');
+      input.value=String(d.releaseVersion||'PRE-LAUNCH 1.0v');
+      status.textContent='';
+    }catch(e){
+      status.textContent=e.message||'Nie udało się pobrać ustawień.';
+    }
+  }
+
+  saveBtn.addEventListener('click',async()=>{
+    const releaseVersion=input.value.trim();
+    if(!releaseVersion){status.textContent='Wpisz wersję.';return}
+    saveBtn.disabled=true;
+    status.textContent='Zapisywanie…';
+    try{
+      const r=await fetch('/api/admin/site-settings',{
+        method:'PATCH',
+        credentials:'same-origin',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({releaseVersion})
+      });
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Nie udało się zapisać wersji.');
+      input.value=d.releaseVersion||releaseVersion;
+      status.textContent='Wersja została zapisana.';
+    }catch(e){
+      status.textContent=e.message||'Nie udało się zapisać wersji.';
+    }finally{
+      saveBtn.disabled=false;
+    }
+  });
+
+  window.STARXV_ADMIN_SETTINGS_LOAD=loadSettings;
+  document.addEventListener('click',e=>{
+    const tab=e.target.closest?.('#adminTabs [data-admin-tab="settings"]');
+    if(tab)setTimeout(loadSettings,0);
+  },true);
+})();
+</script>
 
 <script id="sx-admin-tabs-script">
 (()=>{

@@ -1111,7 +1111,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <div class="auth-note">Konto jest obsługiwane przez backend STARXV. Konto powstaje dopiero po poprawnym potwierdzeniu adresu e-mail.</div>
 </div>
 <div class="account-profile" id="accountProfile">
-<div class="profile-hero"><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.25" cy="10.25" r="5.75"></circle><path d="M14.7 14.7 19.4 19.4"></path></svg></button><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div><div class="profile-meta-row"><span>WERSJA</span><b class="sx-profile-release">PRE-LAUNCH 1.0v</b></div></div></div>
+<div class="profile-hero"><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.25" cy="10.25" r="5.75"></circle><path d="M14.7 14.7 19.4 19.4"></path></svg></button><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div><div class="profile-meta-row"><span>WERSJA</span><b class="sx-profile-release" id="sxProfileRelease">PRE-LAUNCH 1.0v</b></div></div></div>
 <div class="profile-actions"><button class="profile-btn" id="profileOrders">MOJE ZAMÓWIENIA →</button><button class="profile-btn sx-clothing-beta-btn" id="sxClothingBeta" type="button" hidden><span>ACCESSORIES</span><small>BETA</small><i>→</i></button><button class="profile-btn sx-delete-account-btn" id="deleteAccountBtn" type="button">USUŃ KONTO</button></div>
 </div>
 </div>
@@ -4036,14 +4036,11 @@ window.STARXV_CART_PRICE_HTML=function(item){
    // Odświeżenie Digital zachowuje widok, a home=1 zawsze otwiera główną stronę Digital.
    world('digital',false);
  }else{
-   // Zwykłe nowe wejście na STARXV zaczyna od strony głównej.
+   // Zwykłe wejście na STARXV po intro otwiera od razu główną stronę Digital.
    if(location.pathname!=='/'||location.search||location.hash)history.replaceState(null,'','/');
-   if(digital)digital.hidden=true;
-   if(main)main.hidden=false;
-   if(nav)nav.hidden=false;
-   document.body.classList.remove('sx-digital-mode','sx-digital-product-open');
+   history.replaceState({sxDigitalHome:true},'','/?section=digital');
+   world('digital',false);
    showDigitalHome(false);
-   if(!sessionStorage.getItem('starxv-world'))setTimeout(showGate,1200);
  }
 })();
 </script>
@@ -4264,5 +4261,25 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.getAttribute('aria-hidden')==='false')hide()});
 })();
 </script>
+
+<script id="starxv-public-site-settings">
+(()=>{
+  'use strict';
+  async function refreshReleaseVersion(){
+    try{
+      const r=await fetch('/api/site/settings',{cache:'no-store',credentials:'same-origin'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok)return;
+      const value=String(d.releaseVersion||'').trim();
+      if(!value)return;
+      document.querySelectorAll('.sx-profile-release').forEach(el=>el.textContent=value);
+    }catch{}
+  }
+  window.STARXV_REFRESH_RELEASE_VERSION=refreshReleaseVersion;
+  refreshReleaseVersion();
+  document.getElementById('openAccount')?.addEventListener('click',refreshReleaseVersion);
+})();
+</script>
+
 </body>
 </html>
