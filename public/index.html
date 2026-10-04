@@ -463,9 +463,6 @@
 .orders-type-tab{appearance:none;border:1px solid transparent;background:transparent;color:#777;border-radius:10px;padding:11px 15px;cursor:pointer;font:900 9px/1 Arial,sans-serif;letter-spacing:.09em;white-space:nowrap;transition:.18s}
 .orders-type-tab:hover{color:#fff;background:#111}
 .orders-type-tab.active{background:#fff;color:#050505;border-color:#fff}
-.orders-type-tab-coming{display:inline-flex;align-items:center;gap:7px;opacity:.42;cursor:not-allowed!important}
-.orders-type-tab-coming:hover{color:#777!important;background:transparent!important}
-.orders-type-tab-coming span{display:inline-flex;align-items:center;padding:4px 6px;border:1px solid rgba(255,255,255,.12);border-radius:999px;color:#777;font-size:7px;line-height:1;font-weight:950;letter-spacing:.08em}
 .order-card.digital-order .order-main-grid{grid-template-columns:minmax(0,1fr) minmax(285px,360px)}
 .order-card.digital-order .order-thumb{object-fit:contain;background:#111}
 .digital-order-meta{margin-top:6px;color:#777;font-size:9px;font-weight:800;letter-spacing:.06em}
@@ -1140,7 +1137,6 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <h1 class="orders-page-title" id="ordersTitle">MOJE<br/>ZAMÓWIENIA.</h1>
 <p class="orders-page-lead">Historia zakupów, płatności i aktualny etap realizacji przesyłki w jednym miejscu.</p>
 <div class="orders-type-tabs" id="ordersTypeTabs" role="tablist" aria-label="Rodzaj zamówień">
-<button class="orders-type-tab orders-type-tab-coming" data-order-type="physical" type="button" disabled aria-disabled="true">PRODUKTY FIZYCZNE <span>COMING LATER</span></button>
 <button class="orders-type-tab active" data-order-type="digital" type="button">PRODUKTY CYFROWE</button>
 </div>
 <div class="orders-overview">
@@ -1968,7 +1964,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.STARXV_OPEN_ORDERS=open;
   closeBtn?.addEventListener('click',close);
   refresh?.addEventListener('click',async()=>{await fetchOrders();render()});
-  document.getElementById('ordersTypeTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-type]');if(!b||b.disabled||b.dataset.orderType==='physical')return;activeType='digital';document.querySelectorAll('.orders-type-tab').forEach(x=>x.classList.toggle('active',x===b));activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));render()});
+  document.getElementById('ordersTypeTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-type="digital"]');if(!b)return;activeType='digital';activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));render()});
   document.getElementById('ordersFilters')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-filter]');if(!b)return;activeFilter=b.dataset.orderFilter;document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x===b));render()});
   body.addEventListener('click',async e=>{
     const reviewBtn=e.target.closest('[data-review-order]');
@@ -2593,12 +2589,16 @@ const renderCart=()=>{hydrateCartDiscounts();
     modal=document.createElement('div');modal.id='sxDeployModal';modal.className='sx-deploy-modal';modal.setAttribute('aria-hidden','true');
     modal.innerHTML=`<div class="sx-deploy-card" role="dialog" aria-modal="true" aria-labelledby="sxDeployTitle"><button class="sx-deploy-close" type="button" aria-label="Zamknij">×</button><div class="sx-deploy-kicker">STARXV / OWNER TOOLS</div><h2 id="sxDeployTitle">DEPLOY</h2><p class="sx-deploy-intro">Szybkie publikowanie zmian STARXV. Ta sekcja jest dostępna wyłącznie dla Twojego konta.</p><div class="sx-deploy-section"><h3>DEPLOY PRZEZ CMD</h3><p>Poniższe komendy są tylko domyślnym zestawem. Możesz je normalnie edytować przed skopiowaniem.</p><div class="sx-deploy-code" id="sxDeployCode"><div class="sx-deploy-editor"><div class="sx-deploy-lines" id="sxDeployLines">1\n2\n3</div><textarea class="sx-deploy-textarea" id="sxDeployTextarea" spellcheck="false" aria-label="Komendy deploy"></textarea></div><button class="sx-deploy-copy" type="button">KOPIUJ</button></div><div class="sx-deploy-warning">Jak zrobić deploy przez CMD: otwórz główny folder projektu STARXV w Eksploratorze plików, uruchom CMD bezpośrednio w tym folderze, skopiuj przygotowane komendy powyżej i wklej je do CMD. Po wykonaniu <b>git push</b> zmiany trafią do GitHuba, a Render uruchomi Auto-Deploy automatycznie.</div></div></div>`;
     document.body.appendChild(modal);
-    const close=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
+    const close=()=>{
+      modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+      setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+    };
     modal.querySelector('.sx-deploy-close').onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});
     document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
     return modal;
   }
   function sxOpenDeploy(){
+    document.getElementById('accountModal')?.classList.remove('open');
     const modal=sxEnsureDeployModal();
     const textarea=modal.querySelector('#sxDeployTextarea');
     const lines=modal.querySelector('#sxDeployLines');
@@ -3096,7 +3096,10 @@ const renderCart=()=>{hydrateCartDiscounts();
   }
   window.STARXV_INSTALL_ACCOUNT_SECURITY=installButtons;
   async function open(){try{const d=await getMe();currentEmail.textContent=d.user?.email||'—';email.value='';emailPassword.value='';emailCode.value='';currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'');msg(passwordMsg,'');document.getElementById('accountModal')?.classList.remove('open');modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}catch(e){alert(e.message)}}
-  function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}
+  function close(){
+    modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
+    setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+  }
   closeBtn.addEventListener('click',close);modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
   // Delegacja kliknięcia sprawia, że oczko działa także po ponownym otwarciu / przebudowie widoku profilu.
   emailSend.addEventListener('click',async()=>{const newEmailValue=String(email.value||'').trim().toLowerCase(),password=emailPassword.value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailValue)){msg(emailMsg,'Wpisz poprawny nowy adres e-mail.','error');return}if(!password){msg(emailMsg,'Wpisz obecne hasło.','error');return}emailSend.disabled=true;try{await api('/account/change-email/start',{newEmail:newEmailValue,currentPassword:password});pendingNewEmail=newEmailValue;codeBox.classList.add('show');msg(emailMsg,`Kod został wysłany na ${newEmailValue}. Jest ważny 10 minut.`,'success');emailCode.focus()}catch(e){msg(emailMsg,e.message,'error')}finally{emailSend.disabled=false}});
@@ -3211,10 +3214,20 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(!window.STARXV_AUTH_USER)return;
     try{const r=await fetch('/api/support/reports',{cache:'no-store'}),d=await r.json();if(!r.ok)return;const has=(d.reports||[]).some(x=>x.unread);const dot=$('#sxReportUnreadDot'),txt=$('#sxReportUnreadText');if(dot)dot.hidden=!has;if(txt)txt.hidden=!has}catch{}
   }
-  async function open(){overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');if(status){status.textContent='';status.className='sx-report-status'}syncOrderVisibility();await Promise.all([loadHistory(),loadSupportOrders()]);setTimeout(()=>$('#sxReportProblemText')?.focus(),120);try{await fetch('/api/support/reports/read',{method:'POST'});setTimeout(refreshUnread,250)}catch{}}
+  async function open(){
+    document.getElementById('accountModal')?.classList.remove('open');
+    overlay?.classList.add('open');overlay?.setAttribute('aria-hidden','false');
+    if(status){status.textContent='';status.className='sx-report-status'}
+    syncOrderVisibility();await Promise.all([loadHistory(),loadSupportOrders()]);
+    setTimeout(()=>$('#sxReportProblemText')?.focus(),120);
+    try{await fetch('/api/support/reports/read',{method:'POST'});setTimeout(refreshUnread,250)}catch{}
+  }
   window.addEventListener('starxv:auth-changed',()=>setTimeout(refreshUnread,150));
   setTimeout(refreshUnread,350);
-  function close(){overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true')}
+  function close(){
+    overlay?.classList.remove('open');overlay?.setAttribute('aria-hidden','true');
+    setTimeout(()=>document.getElementById('openAccount')?.click(),80);
+  }
   document.addEventListener('click',e=>{if(e.target.closest?.('#sxReportProblemBtn'))open()});
   $('#sxReportProblemClose')?.addEventListener('click',close);
   typeSelect?.addEventListener('change',()=>{syncOrderVisibility();if(needsOrder())loadSupportOrders()});
