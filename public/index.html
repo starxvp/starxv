@@ -866,7 +866,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 <style id="starxv-profile-child-layer-fix">
 #sxDeployModal,
 #sxReportProblemOverlay,
-#sxAccountSecurityModal,
+#sxAccountSettingsModal,
 #ordersModal{
   z-index:100500!important;
 }
@@ -2641,6 +2641,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
     dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{window.STARXV_OPEN_ORDERS?.()});
+    window.STARXV_INSTALL_ACCOUNT_SECURITY?.();
     $('#sxProfileSearchBtn')?.addEventListener('click',()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)});
     setTimeout(()=>{window.STARXV_ENSURE_SHIPPING_RETURNS?.();window.STARXV_INSTALL_ACCOUNT_SECURITY?.();sxInstallDeployProfile();},0);
   }
