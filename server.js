@@ -1051,16 +1051,18 @@ function ensurePromoCodes(db){
   for(const p of db.promoCodes){
     if(!Array.isArray(p.usedByUserIds))p.usedByUserIds=[];
     if(!Object.prototype.hasOwnProperty.call(p,'assignedUserId'))p.assignedUserId=null;
+    if(!Object.prototype.hasOwnProperty.call(p,'productId'))p.productId=null;
   }
   return db.promoCodes;
 }
-function promoPublic(p){return {id:p.id,code:p.code,type:p.type,value:Number(p.value||0),minSubtotal:Number(p.minSubtotal||0),usageLimit:p.usageLimit==null?null:Number(p.usageLimit),usedCount:Number(p.usedCount||0),usedByCount:Array.isArray(p.usedByUserIds)?p.usedByUserIds.length:0,assignedUserId:p.assignedUserId||null,active:Boolean(p.active),startsAt:p.startsAt||null,endsAt:p.endsAt||null,createdAt:p.createdAt,updatedAt:p.updatedAt}}
-function validatePromo(db,rawCode,subtotal,userId=''){
+function promoPublic(p){return {id:p.id,code:p.code,type:p.type,value:Number(p.value||0),minSubtotal:Number(p.minSubtotal||0),usageLimit:p.usageLimit==null?null:Number(p.usageLimit),usedCount:Number(p.usedCount||0),usedByCount:Array.isArray(p.usedByUserIds)?p.usedByUserIds.length:0,assignedUserId:p.assignedUserId||null,productId:p.productId||null,active:Boolean(p.active),startsAt:p.startsAt||null,endsAt:p.endsAt||null,createdAt:p.createdAt,updatedAt:p.updatedAt}}
+function validatePromo(db,rawCode,subtotal,userId='',productId=''){
   ensurePromoCodes(db);
-  const code=String(rawCode||'').trim().toUpperCase(),base=Math.max(0,Number(subtotal||0)),uid=String(userId||'');
+  const code=String(rawCode||'').trim().toUpperCase(),base=Math.max(0,Number(subtotal||0)),uid=String(userId||''),pid=String(productId||'').trim();
   if(!code)return {ok:false,error:'Wpisz kod rabatowy.'};
   const p=db.promoCodes.find(x=>String(x.code||'').toUpperCase()===code);
   if(!p||!p.active)return {ok:false,error:'Ten kod jest nieprawidłowy lub nieaktywny.'};
+  if(p.productId&&String(p.productId)!==pid)return {ok:false,error:'Ten kod rabatowy nie obowiązuje dla tego produktu.'};
   if(p.assignedUserId&&String(p.assignedUserId)!==uid)return {ok:false,error:'Ten kod rabatowy jest przypisany do innego konta.'};
   if(uid&&Array.isArray(p.usedByUserIds)&&p.usedByUserIds.some(id=>String(id)===uid))return {ok:false,error:'Ten kod rabatowy został już wykorzystany na tym koncie.',errorCode:'PROMO_ALREADY_USED'};
   const now=Date.now(),start=p.startsAt?new Date(p.startsAt).getTime():0,end=p.endsAt?new Date(p.endsAt).getTime():0;
@@ -1073,7 +1075,7 @@ function validatePromo(db,rawCode,subtotal,userId=''){
   return {ok:true,promo:promoPublic(p),discount,total:Math.max(0,Math.round((base-discount)*100)/100)};
 }
 app.get('/api/promos/validate',auth,(req,res)=>{
-  ensurePromoCodes(req.db);const result=validatePromo(req.db,req.query?.code,req.query?.subtotal,req.user.id);save(req.db);
+  ensurePromoCodes(req.db);const result=validatePromo(req.db,req.query?.code,req.query?.subtotal,req.user.id,req.query?.productId);save(req.db);
   if(!result.ok)return res.status(400).json(result);res.json(result);
 });
 
@@ -1259,8 +1261,19 @@ function digitalFilePath(p){
 function getDigitalProduct(db,id){ensureStore(db);return db.digitalProducts?.[String(id||'')];}
 function publicDigitalProduct(p,db){
   const file=digitalFilePath(p);
+  ensureProductPriceTracking(p);
+  const basePrice=money2(p.price||0),effectivePrice=effectiveCatalogPrice(p),ref=Number(p.omnibusReferencePrice);
+  const promoActive=Number(p.discountPercent||0)>0&&Number.isFinite(ref)&&ref>effectivePrice;
+  const shownDiscount=promoActive?Math.max(1,Math.round((1-effectivePrice/ref)*100)):0;
   const purchaseCount=db?new Set((db.orders||[]).filter(o=>o.orderType==='digital'&&String(o.digitalProductId||'')===String(p.id||'')&&o.paymentStatus==='paid'&&o.userId).map(o=>String(o.userId))).size:0;
-  return {id:p.id,position:Number.isFinite(Number(p.position))?Number(p.position):999,name:p.name,subtitle:p.subtitle||'',description:p.description||'',meta:p.meta||'STARXV DIGITAL / E-BOOK',points:Array.isArray(p.points)?p.points.slice(0,4):['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Number(p.price||0),image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,available:p.active!==false&&Number(p.price||0)>0&&Boolean(file)&&fs.existsSync(file),purchaseCount};
+  return {
+    id:p.id,position:Number.isFinite(Number(p.position))?Number(p.position):999,name:p.name,subtitle:p.subtitle||'',description:p.description||'',meta:p.meta||'STARXV DIGITAL / E-BOOK',
+    points:Array.isArray(p.points)?p.points.slice(0,4):['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],
+    price:basePrice,effectivePrice,discountPercent:Number(p.discountPercent||0),
+    promotion:{active:promoActive,referencePrice:promoActive?money2(ref):null,referenceType:promoActive?(p.omnibusReferenceType||'30-days'):null,discountPercent:shownDiscount,promotionStartedAt:Number(p.promotionStartedAt||0)||null},
+    image:p.image||'',gallery:Array.isArray(p.gallery)?p.gallery.slice(0,10):[],active:p.active!==false,
+    available:p.active!==false&&effectivePrice>0&&Boolean(file)&&fs.existsSync(file),purchaseCount
+  };
 }
 app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.setHeader('Cache-Control','no-store');const products=Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(p=>publicDigitalProduct(p,db)).sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||String(a.name||'').localeCompare(String(b.name||''),'pl'));res.json({ok:true,products});});
 app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60*1000),(req,res)=>{
@@ -1268,13 +1281,23 @@ app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60
     ensureStore(req.db);
     const product=getDigitalProduct(req.db,req.body?.productId);
     if(!product||product.active===false||!fs.existsSync(digitalFilePath(product)))return res.status(404).json({error:'Produkt cyfrowy nie jest jeszcze dostępny.'});
-    if(!(Number(product.price)>0))return res.status(409).json({error:'Cena produktu cyfrowego nie została jeszcze ustawiona.'});
+    const productPrice=effectiveCatalogPrice(product);
+    if(!(Number(productPrice)>0))return res.status(409).json({error:'Cena produktu cyfrowego nie została jeszcze ustawiona.'});
     if(req.body?.termsAccepted!==true)return res.status(400).json({error:'Przed zakupem zaakceptuj Regulamin STARXV.'});
     if(req.body?.digitalConsent!==true)return res.status(400).json({error:'Aby otrzymać e-book od razu po płatności, wyraź zgodę na rozpoczęcie dostarczania treści cyfrowej przed upływem terminu do odstąpienia i potwierdź przyjęcie do wiadomości skutku tej zgody.'});
     const existing=(req.db.orders||[]).find(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.digitalProductId===product.id&&o.paymentStatus==='paid');
     if(existing)return res.json({ok:true,alreadyOwned:true,order:orderForUser(existing)});
+    const promoCode=String(req.body?.promoCode||'').trim().toUpperCase();
+    let codeDiscount=0,promoRecord=null;
+    if(promoCode){
+      const check=validatePromo(req.db,promoCode,productPrice,req.user.id,product.id);
+      if(!check.ok)return res.status(400).json(check);
+      codeDiscount=Number(check.discount||0);promoRecord=check.promo;
+    }
+    const finalTotal=money2(Math.max(0,productPrice-codeDiscount));
+    if(finalTotal<=0)return res.status(400).json({error:'Końcowa kwota zamówienia musi być większa od 0 PLN.'});
     const now=Date.now();
-    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:Number(product.price),image:String(product.image||'/assets/placeholder.png')}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:null,subtotal:Number(product.price),shippingCost:0,total:Number(product.price),paymentStatus:'pending',shippingStage:0,stockCommitted:true,legalVersion:LEGAL_VERSION,termsAcceptedAt:now,privacyAcknowledgedAt:req.body?.privacyAcknowledged===true?now:null,digitalConsentAt:now,digitalConsentText:DIGITAL_CONSENT_TEXT,timeline:[]};
+    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:productPrice,basePrice:money2(product.price),discountPercent:Number(product.discountPercent||0),image:String(product.image||'/assets/placeholder.png')}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:promoCode?{code:promoCode,discount:codeDiscount,type:promoRecord?.type||null,value:promoRecord?.value||0,productId:promoRecord?.productId||null}:null,subtotal:productPrice,shippingCost:0,total:finalTotal,paymentStatus:'pending',shippingStage:0,stockCommitted:true,legalVersion:LEGAL_VERSION,termsAcceptedAt:now,privacyAcknowledgedAt:req.body?.privacyAcknowledged===true?now:null,digitalConsentAt:now,digitalConsentText:DIGITAL_CONSENT_TEXT,timeline:[]};
     orderEvent(order,'created','Zamówienie cyfrowe utworzone','Po potwierdzeniu płatności e-book będzie dostępny natychmiast.',now);
     req.db.orders.push(order);save(req.db);
     res.json({ok:true,order:orderForUser(order)});
@@ -1992,6 +2015,7 @@ function cleanDigitalPayload(body={},existing=null){
   const points=rawPoints.map(x=>String(x||'').trim().slice(0,160)).filter(Boolean).slice(0,4);
   while(points.length<4)points.push(defaultPoints[points.length]);
   const price=Number(body.price??existing?.price??0);
+  const discountPercent=Math.min(99,Math.max(0,Number(body.discountPercent??existing?.discountPercent??0)||0));
   const image=String(body.image??existing?.image??'').trim().slice(0,200000);
   const gallery=(Array.isArray(body.gallery)?body.gallery:(existing?.gallery||[])).map(x=>String(x||'').trim().slice(0,200000)).filter(Boolean).slice(0,10);
   const fileName=path.basename(String(body.fileName??existing?.fileName??'').trim()).slice(0,180);
@@ -2002,10 +2026,33 @@ function cleanDigitalPayload(body={},existing=null){
   if(!name)throw new Error('Podaj nazwę produktu cyfrowego.');
   if(!Number.isFinite(price)||price<0||price>100000)throw new Error('Podaj prawidłową cenę.');
   if(fileName&&!/\.pdf$/i.test(fileName))throw new Error('Plik produktu cyfrowego musi być plikiem PDF.');
-  return {id,position,name,subtitle,description,meta:meta||'STARXV DIGITAL / E-BOOK',points,price:money2(price),image,gallery,fileName,downloadName:downloadName||fileName,active};
+  return {id,position,name,subtitle,description,meta:meta||'STARXV DIGITAL / E-BOOK',points,price:money2(price),discountPercent,image,gallery,fileName,downloadName:downloadName||fileName,active,
+    offeredAt:Number(existing?.offeredAt||0)||null,priceHistory:Array.isArray(existing?.priceHistory)?existing.priceHistory:[],promotionStartedAt:existing?.promotionStartedAt||null,omnibusReferencePrice:existing?.omnibusReferencePrice??null,omnibusReferenceType:existing?.omnibusReferenceType||null};
 }
-app.post('/api/admin/digital-products',adminOnly,(req,res)=>{try{ensureStore(req.db);const data=cleanDigitalPayload(req.body||{});if(req.db.digitalProducts[data.id])return res.status(409).json({error:'Produkt cyfrowy o takim ID już istnieje.'});req.db.digitalProducts[data.id]=data;save(req.db);res.status(201).json({ok:true,product:publicDigitalProduct(data)})}catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu cyfrowego.'})}});
-app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{ensureStore(req.db);const id=String(req.params.id||''),current=req.db.digitalProducts[id];if(!current)return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const data=cleanDigitalPayload({...req.body,id},current);req.db.digitalProducts[id]=data;save(req.db);res.json({ok:true,product:publicDigitalProduct(data)})}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu cyfrowego.'})}});
+app.post('/api/admin/digital-products',adminOnly,(req,res)=>{try{
+  ensureStore(req.db);const data=cleanDigitalPayload(req.body||{});if(req.db.digitalProducts[data.id])return res.status(409).json({error:'Produkt cyfrowy o takim ID już istnieje.'});
+  const now=Date.now();data.offeredAt=now;data.priceHistory=[];data.promotionStartedAt=null;data.omnibusReferencePrice=null;data.omnibusReferenceType=null;
+  // Dla nowego produktu historia zaczyna się od ceny bazowej. Jeśli od razu ustawiono rabat,
+  // zapisujemy bazę jako punkt odniesienia i start promocji jako osobne zdarzenie.
+  data.discountPercent=0;ensureProductPriceTracking(data,now);
+  const requestedDiscount=Math.min(99,Math.max(0,Number(req.body?.discountPercent)||0));
+  if(requestedDiscount>0){recordProductPrice(data,Number(data.price),now-1);data.discountPercent=requestedDiscount;setOmnibusReferenceForPromotion(data,now);recordProductPrice(data,effectiveCatalogPrice(data),now)}
+  req.db.digitalProducts[data.id]=data;save(req.db);res.status(201).json({ok:true,product:publicDigitalProduct(data,req.db)})
+}catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu cyfrowego.'})}});
+app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{
+  ensureStore(req.db);const id=String(req.params.id||''),current=req.db.digitalProducts[id];if(!current)return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});
+  const now=Date.now();ensureProductPriceTracking(current,now);
+  const beforePrice=effectiveCatalogPrice(current),beforeDiscount=Number(current.discountPercent||0),beforeBase=Number(current.price||0);
+  const data=cleanDigitalPayload({...req.body,id},current);
+  const afterPrice=effectiveCatalogPrice(data),afterDiscount=Number(data.discountPercent||0),afterBase=Number(data.price||0);
+  const pricingChanged=beforePrice!==afterPrice||beforeDiscount!==afterDiscount||beforeBase!==afterBase;
+  if(pricingChanged){
+    recordProductPrice(data,beforePrice,now-1);
+    if(afterDiscount>0)setOmnibusReferenceForPromotion(data,now);else clearOmnibusPromotion(data);
+    recordProductPrice(data,afterPrice,now);
+  }
+  req.db.digitalProducts[id]=data;save(req.db);res.json({ok:true,product:publicDigitalProduct(data,req.db)})
+}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu cyfrowego.'})}});
 app.delete('/api/admin/digital-products/:id',adminOnly,(req,res)=>{ensureStore(req.db);const id=String(req.params.id||'');if(!req.db.digitalProducts[id])return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const blocking=(req.db.orders||[]).some(o=>o.orderType==='digital'&&o.digitalProductId===id&&o.paymentStatus==='pending');if(blocking)return res.status(409).json({error:'Nie można usunąć produktu z oczekującym zamówieniem.'});delete req.db.digitalProducts[id];save(req.db);res.json({ok:true})});
 
 app.post('/api/admin/products',adminOnly,(req,res)=>{
@@ -2226,17 +2273,20 @@ app.post('/api/admin/promos',adminOnly,(req,res)=>{
   ensurePromoCodes(req.db);
   const code=String(req.body?.code||'').trim().toUpperCase().replace(/\s+/g,'');
   const type=String(req.body?.type||'percent'),value=Number(req.body?.value),minSubtotal=Math.max(0,Number(req.body?.minSubtotal||0));
+  const productId=String(req.body?.productId||'').trim()||null;
   const usageRaw=req.body?.usageLimit,usageLimit=(usageRaw===null||usageRaw===''||usageRaw===undefined)?null:Math.max(1,Math.floor(Number(usageRaw)));
   if(!/^[A-Z0-9_-]{3,24}$/.test(code))return res.status(400).json({error:'Kod może mieć 3–24 znaki: litery, cyfry, _ lub -.'});
   if(req.db.promoCodes.some(p=>String(p.code||'').toUpperCase()===code))return res.status(409).json({error:'Taki kod już istnieje.'});
   if(!['percent','fixed'].includes(type)||!Number.isFinite(value)||value<=0||(type==='percent'&&value>100))return res.status(400).json({error:'Nieprawidłowa wartość rabatu.'});
   const assignedUserId=String(req.body?.assignedUserId||'').trim()||null;if(assignedUserId&&!req.db.users.some(u=>String(u.id)===assignedUserId))return res.status(400).json({error:'Nie znaleziono wybranego konta klienta.'});
-  const p={id:crypto.randomUUID(),code,type,value:Math.round(value*100)/100,minSubtotal:Math.round(minSubtotal*100)/100,usageLimit,usedCount:0,usedByUserIds:[],assignedUserId,active:req.body?.active!==false,startsAt:req.body?.startsAt||null,endsAt:req.body?.endsAt||null,createdAt:Date.now(),updatedAt:Date.now()};
+  if(productId&&!req.db.digitalProducts?.[productId])return res.status(400).json({error:'Nie znaleziono wybranego produktu Digital.'});
+  const p={id:crypto.randomUUID(),code,type,value:Math.round(value*100)/100,minSubtotal:Math.round(minSubtotal*100)/100,usageLimit,usedCount:0,usedByUserIds:[],assignedUserId,productId,active:req.body?.active!==false,startsAt:req.body?.startsAt||null,endsAt:req.body?.endsAt||null,createdAt:Date.now(),updatedAt:Date.now()};
   req.db.promoCodes.push(p);save(req.db);res.json({ok:true,promo:promoPublic(p)});
 });
 app.patch('/api/admin/promos/:id',adminOnly,(req,res)=>{
   ensurePromoCodes(req.db);const p=req.db.promoCodes.find(x=>x.id===req.params.id);if(!p)return res.status(404).json({error:'Nie znaleziono kodu.'});
   if(req.body?.active!==undefined)p.active=Boolean(req.body.active);
+  if(req.body?.productId!==undefined){const productId=String(req.body.productId||'').trim()||null;if(productId&&!req.db.digitalProducts?.[productId])return res.status(400).json({error:'Nie znaleziono wybranego produktu Digital.'});p.productId=productId}
   if(req.body?.usageLimit!==undefined)p.usageLimit=(req.body.usageLimit===null||req.body.usageLimit==='')?null:Math.max(1,Math.floor(Number(req.body.usageLimit)));
   if(req.body?.minSubtotal!==undefined)p.minSubtotal=Math.max(0,Math.round(Number(req.body.minSubtotal||0)*100)/100);
   if(req.body?.startsAt!==undefined)p.startsAt=req.body.startsAt||null;
