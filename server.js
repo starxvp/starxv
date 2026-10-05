@@ -938,7 +938,7 @@ app.post('/api/support/report',auth,async(req,res)=>{
   const page=String(req.body?.page||'/').trim().slice(0,300);
   const orderId=String(req.body?.orderId||'').trim().slice(0,120);
   if(description.length<5)return res.status(400).json({error:'Opisz problem trochę dokładniej.'});
-  const orderRequired=['Zamówienie','Płatność','Dostawa'].includes(type);
+  const orderRequired=['Zamówienie','Płatność'].includes(type);
   let selectedOrder=null;
   if(orderId){
     ensureStore(req.db);
