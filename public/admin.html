@@ -227,6 +227,7 @@ document.addEventListener('input',e=>{
    <button class="admin-tab" type="button" data-admin-tab="reviews">OPINIE</button>
    <button class="admin-tab" type="button" data-admin-tab="campaigns">KAMPANIE I NOWOŚCI</button>
    <button class="admin-tab" type="button" data-admin-tab="support">ZGŁOSZENIA</button>
+   <button class="admin-tab" type="button" data-admin-tab="faq">FAQ</button>
    <button class="admin-tab" type="button" data-admin-tab="coming-later">COMING LATER</button>
    <button class="admin-tab" type="button" data-admin-tab="settings">USTAWIENIA</button>
  </nav>
@@ -327,7 +328,7 @@ async function api(url,opt={}){const r=await fetch(url,{credentials:'same-origin
 function showLogin(text='Zaloguj się kontem administratora.'){$('#app').classList.add('hidden');$('#login').classList.remove('hidden');$('#loginMsg').textContent=text}
 function showApp(){$('#login').classList.add('hidden');$('#app').classList.remove('hidden')}
 async function boot(){try{const j=await api('/api/admin/me',{cache:'no-store'});$('#who').textContent=j.user.email;showApp();await load()}catch(e){showLogin(e.status===403?'To konto nie ma uprawnień administratora.':e.status===503?e.message:'Zaloguj się kontem administratora.');window.STARXV_ADMIN_INIT_GOOGLE?.()}}
-async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(j.catalog||{}))}catch{}render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();window.STARXV_ADMIN_SETTINGS_LOAD?.();window.STARXV_ADMIN_COMING_LATER_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
+async function load(){try{$('#msg').textContent='Ładowanie…';const j=await api('/api/admin/dashboard');try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(j.catalog||{}))}catch{}render(j);window.STARXV_ADMIN_REVIEWS_LOAD?.();window.STARXV_ADMIN_CAMPAIGNS_LOAD?.();window.STARXV_ADMIN_SETTINGS_LOAD?.();window.STARXV_ADMIN_COMING_LATER_LOAD?.();window.STARXV_ADMIN_FAQ_LOAD?.();$('#msg').textContent=''}catch(e){$('#msg').textContent=e.message}}
 function render(j){const s=j.stats||{};$('#sOrders').textContent=s.orders??0;$('#sPending').textContent=s.pending??0;$('#sRevenue').textContent=money(s.revenue);$('#sStock').textContent=Object.keys(j.digitalProducts||{}).length;renderProducts(j.catalog||{});renderDigitalProducts(j.digitalProducts||{});renderOrders(j.orders||[])}
 
 async function refreshCatalogCache(){
@@ -898,6 +899,74 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
     const tab=e.target.closest?.('#adminTabs [data-admin-tab="settings"]');
     if(tab)setTimeout(loadSettings,0);
   },true);
+})();
+</script>
+
+
+<style id="sx-faq-admin-style">
+#sxFaqAdmin{margin:0}.sx-faq-admin-sub{color:#777;font-size:11px;line-height:1.6;margin:0 0 16px}
+.sx-faq-admin-create{display:grid;grid-template-columns:minmax(0,1.15fr) 110px 140px;gap:10px;padding:16px;border:1px solid #292929;border-radius:16px;background:#0b0b0b}
+.sx-faq-admin-create textarea,.sx-faq-admin-card textarea{width:100%;min-height:95px;resize:vertical;background:#090909;color:#fff;border:1px solid #333;border-radius:10px;padding:10px;font:inherit}
+.sx-faq-admin-create .full{grid-column:1/-1}.sx-faq-admin-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sx-faq-admin-list{display:grid;gap:10px;margin-top:14px}
+.sx-faq-admin-card{padding:15px;border:1px solid #292929;border-radius:15px;background:#101010}
+.sx-faq-admin-card-grid{display:grid;grid-template-columns:minmax(0,1fr) 100px 130px;gap:9px}
+.sx-faq-admin-card-grid .full{grid-column:1/-1}.sx-faq-admin-card label,.sx-faq-admin-create label{display:grid;gap:6px;color:#777;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.sx-faq-visible{display:flex!important;grid-template-columns:auto 1fr!important;align-items:center!important;gap:8px!important}.sx-faq-visible input{width:auto}
+.sx-faq-admin-msg{min-height:18px;color:#777;font-size:10px}
+@media(max-width:760px){.sx-faq-admin-create,.sx-faq-admin-card-grid{grid-template-columns:1fr}.sx-faq-admin-create .full,.sx-faq-admin-card-grid .full{grid-column:auto}}
+</style>
+<section id="sxFaqAdmin" class="admin-panel" data-admin-panel="faq">
+  <h2>FAQ</h2>
+  <div class="sx-faq-admin-sub">Zarządzaj pytaniami widocznymi w sekcji FAQ w Profilu. Możesz dodawać, edytować, ukrywać i usuwać pozycje.</div>
+  <div class="sx-faq-admin-create">
+    <label>Pytanie<input id="sxFaqNewQuestion" maxlength="180" placeholder="np. Gdzie znajdę kupionego eBooka?"></label>
+    <label>Kolejność<input id="sxFaqNewPosition" type="number" min="1" max="9999" value="1"></label>
+    <label class="sx-faq-visible"><input id="sxFaqNewVisible" type="checkbox" checked> WIDOCZNE</label>
+    <label class="full">Odpowiedź<textarea id="sxFaqNewAnswer" maxlength="1800" placeholder="Wpisz odpowiedź..."></textarea></label>
+    <div class="sx-faq-admin-actions full"><button class="btn primary" id="sxFaqAdd" type="button">DODAJ PYTANIE</button><span class="sx-faq-admin-msg" id="sxFaqStatus"></span></div>
+  </div>
+  <div class="sx-faq-admin-list" id="sxFaqAdminList"><div class="meta">Ładowanie…</div></div>
+</section>
+<script id="sx-faq-admin-script">
+(()=>{
+  const root=document.getElementById('sxFaqAdminList'),status=document.getElementById('sxFaqStatus');
+  if(!root)return;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  async function req(url,opt={}){const r=await fetch(url,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Błąd serwera');return d}
+  function render(items){
+    root.innerHTML=items.length?items.map(x=>`<article class="sx-faq-admin-card" data-faq-id="${esc(x.id)}"><div class="sx-faq-admin-card-grid"><label>Pytanie<input data-faq-question maxlength="180" value="${esc(x.question||'')}"></label><label>Kolejność<input data-faq-position type="number" min="1" max="9999" value="${Number(x.position||1)}"></label><label class="sx-faq-visible"><input data-faq-visible type="checkbox" ${x.visible!==false?'checked':''}> WIDOCZNE</label><label class="full">Odpowiedź<textarea data-faq-answer maxlength="1800">${esc(x.answer||'')}</textarea></label><div class="sx-faq-admin-actions full"><button class="btn primary" type="button" data-faq-save>ZAPISZ</button><button class="btn danger" type="button" data-faq-delete>USUŃ</button></div></div></article>`).join(''):'<div class="meta">FAQ jest puste.</div>';
+  }
+  async function load(){
+    try{const d=await req('/api/admin/faq',{cache:'no-store'});render(Array.isArray(d.faq)?d.faq:[])}
+    catch(e){root.innerHTML=`<div class="msg">${esc(e.message||'Nie udało się pobrać FAQ.')}</div>`}
+  }
+  window.STARXV_ADMIN_FAQ_LOAD=load;
+  document.getElementById('sxFaqAdd')?.addEventListener('click',async e=>{
+    const b=e.currentTarget,payload={question:document.getElementById('sxFaqNewQuestion').value,answer:document.getElementById('sxFaqNewAnswer').value,position:Number(document.getElementById('sxFaqNewPosition').value||1),visible:document.getElementById('sxFaqNewVisible').checked};
+    b.disabled=true;status.textContent='Dodawanie…';
+    try{await req('/api/admin/faq',{method:'POST',body:JSON.stringify(payload)});document.getElementById('sxFaqNewQuestion').value='';document.getElementById('sxFaqNewAnswer').value='';document.getElementById('sxFaqNewPosition').value=String(root.querySelectorAll('[data-faq-id]').length+2);status.textContent='Dodano.';await load()}
+    catch(err){status.textContent=err.message}
+    finally{b.disabled=false}
+  });
+  root.addEventListener('click',async e=>{
+    const b=e.target.closest('button');if(!b)return;const card=b.closest('[data-faq-id]');if(!card)return;const id=card.dataset.faqId;
+    if(b.hasAttribute('data-faq-save')){
+      b.disabled=true;
+      try{await req('/api/admin/faq/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify({question:card.querySelector('[data-faq-question]').value,answer:card.querySelector('[data-faq-answer]').value,position:Number(card.querySelector('[data-faq-position]').value||1),visible:card.querySelector('[data-faq-visible]').checked})});status.textContent='Zapisano.';await load()}
+      catch(err){status.textContent=err.message}
+      finally{b.disabled=false}
+    }
+    if(b.hasAttribute('data-faq-delete')){
+      if(!confirm('Usunąć to pytanie FAQ?'))return;
+      b.disabled=true;
+      try{await req('/api/admin/faq/'+encodeURIComponent(id),{method:'DELETE'});status.textContent='Usunięto.';await load()}
+      catch(err){status.textContent=err.message}
+      finally{b.disabled=false}
+    }
+  });
+  document.addEventListener('click',e=>{if(e.target.closest?.('#adminTabs [data-admin-tab="faq"]'))setTimeout(load,0)},true);
+  load();
 })();
 </script>
 

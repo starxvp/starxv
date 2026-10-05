@@ -1047,6 +1047,20 @@ function ensureStore(db){
   if(!db.siteSettings||typeof db.siteSettings!=='object')db.siteSettings={};
   if(!String(db.siteSettings.releaseVersion||'').trim())db.siteSettings.releaseVersion='PRE-LAUNCH 1.0v';
   if(!Array.isArray(db.siteSettings.comingLater))db.siteSettings.comingLater=[];
+  if(!Array.isArray(db.faq)){
+    const now=Date.now();
+    db.faq=[
+      {id:crypto.randomUUID(),question:'Gdzie znajdę kupionego eBooka?',answer:'Wejdź w Profil → Moje zamówienia → Produkty cyfrowe. Przy opłaconym zamówieniu znajdziesz przycisk pobrania zakupionego pliku.',position:1,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Kiedy otrzymam dostęp do produktu cyfrowego?',answer:'Dostęp pojawia się po potwierdzeniu płatności. Jeśli status nie zmieni się od razu, odśwież po chwili sekcję Moje zamówienia.',position:2,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Co zrobić, jeśli płatność się nie powiedzie?',answer:'Nie musisz tworzyć nowego zamówienia. W Profil → Moje zamówienia przy zamówieniu oczekującym na płatność użyj przycisku „ZAPŁAĆ →”, aby ponowić płatność.',position:3,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Jak użyć kodu rabatowego?',answer:'Kod rabatowy wpisz podczas finalizacji zakupu w polu przeznaczonym na kod promocyjny. Po zatwierdzeniu system pokaże naliczony rabat, jeśli kod jest aktywny i spełnia jego warunki.',position:4,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Jak zmienić dane konta?',answer:'W Profilu otwórz „Edytuj dane”. Możesz tam zmienić dane profilu oraz ustawienia logowania dostępne dla Twojej metody logowania.',position:5,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Jak zresetować hasło?',answer:'Na ekranie logowania wybierz „Nie pamiętasz hasła?”. Na adres e-mail konta otrzymasz kod, którym potwierdzisz ustawienie nowego hasła.',position:6,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Kiedy mogę wystawić opinię?',answer:'Opinię o produkcie cyfrowym możesz dodać po opłaceniu zamówienia i otrzymaniu dostępu do produktu.',position:7,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Jak zgłosić problem?',answer:'W Profilu wybierz „Zgłoś problem”, opisz sytuację i wyślij zgłoszenie. Odpowiedź supportu pojawi się w historii zgłoszenia.',position:8,visible:true,createdAt:now,updatedAt:now},
+      {id:crypto.randomUUID(),question:'Jak usunąć konto STARXV?',answer:'W Profilu użyj przycisku „Usuń konto” i potwierdź operację. Usunięcie konta jest trwałe, dlatego przed potwierdzeniem upewnij się, że naprawdę chcesz je usunąć.',position:9,visible:true,createdAt:now,updatedAt:now}
+    ];
+  }
 
   if(!Array.isArray(db.orders))db.orders=[];
   if(!Array.isArray(db.reviews))db.reviews=[];
@@ -1684,6 +1698,37 @@ async function sendCampaignToSubscribers(db,c){
   return {recipientCount:recipients.length,sentCount:results.filter(x=>x.ok).length,failedCount:results.filter(x=>!x.ok).length,errors:results.filter(x=>!x.ok).map(x=>x.error).slice(0,5)};
 }
 
+
+function cleanFaqText(v,max){
+  return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,max);
+}
+function faqPublicItem(x){
+  return {
+    id:String(x.id||''),
+    question:String(x.question||''),
+    answer:String(x.answer||''),
+    position:Number.isFinite(Number(x.position))?Number(x.position):999,
+    visible:x.visible!==false,
+    updatedAt:Number(x.updatedAt||x.createdAt||0)
+  };
+}
+function sortedFaq(db,includeHidden=false){
+  ensureStore(db);
+  return db.faq
+    .filter(x=>includeHidden||x.visible!==false)
+    .slice()
+    .sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||(Number(a.createdAt||0)-Number(b.createdAt||0)))
+    .map(faqPublicItem);
+}
+app.get('/api/faq',(req,res)=>{
+  const db=load();
+  const hadFaq=Array.isArray(db.faq);
+  ensureStore(db);
+  if(!hadFaq)save(db);
+  res.setHeader('Cache-Control','no-store');
+  res.json({ok:true,faq:sortedFaq(db,false)});
+});
+
 // --- STARXV admin panel ---
 function adminEmails(){
   return String(process.env.ADMIN_EMAILS||'').split(',').map(cleanEmail).filter(Boolean);
@@ -1696,6 +1741,69 @@ function adminOnly(req,res,next){
     next();
   });
 }
+
+
+app.get('/api/admin/faq',adminOnly,(req,res)=>{
+  ensureStore(req.db);
+  res.setHeader('Cache-Control','no-store');
+  res.json({ok:true,faq:sortedFaq(req.db,true)});
+});
+
+app.post('/api/admin/faq',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const question=cleanFaqText(req.body?.question,180);
+    const answer=cleanFaqText(req.body?.answer,1800);
+    const position=Math.max(1,Math.min(9999,Math.trunc(Number(req.body?.position)||req.db.faq.length+1)));
+    const visible=req.body?.visible!==false;
+    if(question.length<3)return res.status(400).json({error:'Pytanie musi mieć co najmniej 3 znaki.'});
+    if(answer.length<3)return res.status(400).json({error:'Odpowiedź musi mieć co najmniej 3 znaki.'});
+    const now=Date.now(),item={id:crypto.randomUUID(),question,answer,position,visible,createdAt:now,updatedAt:now};
+    req.db.faq.push(item);
+    await Promise.resolve(save(req.db));
+    res.json({ok:true,item:faqPublicItem(item),faq:sortedFaq(req.db,true)});
+  }catch(err){
+    console.error('FAQ create error:',err);
+    res.status(500).json({error:'Nie udało się dodać pytania FAQ.'});
+  }
+});
+
+app.put('/api/admin/faq/:id',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const item=req.db.faq.find(x=>String(x.id)===String(req.params.id));
+    if(!item)return res.status(404).json({error:'Nie znaleziono pytania FAQ.'});
+    const question=cleanFaqText(req.body?.question,180);
+    const answer=cleanFaqText(req.body?.answer,1800);
+    const position=Math.max(1,Math.min(9999,Math.trunc(Number(req.body?.position)||1)));
+    if(question.length<3)return res.status(400).json({error:'Pytanie musi mieć co najmniej 3 znaki.'});
+    if(answer.length<3)return res.status(400).json({error:'Odpowiedź musi mieć co najmniej 3 znaki.'});
+    item.question=question;
+    item.answer=answer;
+    item.position=position;
+    item.visible=req.body?.visible!==false;
+    item.updatedAt=Date.now();
+    await Promise.resolve(save(req.db));
+    res.json({ok:true,item:faqPublicItem(item),faq:sortedFaq(req.db,true)});
+  }catch(err){
+    console.error('FAQ update error:',err);
+    res.status(500).json({error:'Nie udało się zapisać pytania FAQ.'});
+  }
+});
+
+app.delete('/api/admin/faq/:id',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const before=req.db.faq.length;
+    req.db.faq=req.db.faq.filter(x=>String(x.id)!==String(req.params.id));
+    if(req.db.faq.length===before)return res.status(404).json({error:'Nie znaleziono pytania FAQ.'});
+    await Promise.resolve(save(req.db));
+    res.json({ok:true,faq:sortedFaq(req.db,true)});
+  }catch(err){
+    console.error('FAQ delete error:',err);
+    res.status(500).json({error:'Nie udało się usunąć pytania FAQ.'});
+  }
+});
 
 app.get('/api/admin/site-settings',adminOnly,(req,res)=>{
   ensureStore(req.db);

@@ -2684,6 +2684,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         {title:'Moje zamówienia',meta:'PROFIL / ZAMÓWIENIA',keywords:'zamowienia zamówienia order orders zakupy historia platnosc płatność',icon:'Z',open:openOrders},
         {title:'Zwroty i reklamacje',meta:'POMOC',keywords:'zwrot zwroty reklamacja reklamacje odstapienie odstąpienie pomoc',icon:'R',open:()=>go('/returns.html')},
         {title:'Edytuj dane',meta:'PROFIL / KONTO',keywords:'edytuj dane imie nazwisko data urodzenia email haslo konto profil',icon:'E',open:()=>openProfileFeature('sxAccountSecurityBtn')},
+        {title:'FAQ',meta:'PROFIL / POMOC',keywords:'faq pytania odpowiedzi pomoc ebook platnosc płatność konto haslo hasło rabat opinia',icon:'F',open:()=>openProfileFeature('sxFaqBtn')},
         {title:'Zgłoś problem',meta:'STARXV SUPPORT',keywords:'support problem pomoc zglos zgłoś ticket kontakt techniczny',icon:'S',open:()=>openProfileFeature('sxReportProblemBtn')},
         {title:'Contact',meta:'KONTAKT Z STARXV',keywords:'contact kontakt mail email e-mail kontakt@starxv.pl napisz',icon:'C',open:openContact},
         {title:'Regulamin',meta:'INFORMACJE PRAWNE',keywords:'regulamin terms zasady sklep prawo prawne',icon:'§',open:()=>go('/terms.html')},
@@ -2848,8 +2849,9 @@ const renderCart=()=>{hydrateCartDiscounts();
 
   function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
-    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">EDYTUJ DANE</span><span class="sx-info-rest"> - PROFIL I LOGOWANIE</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div class="sx-profile-section-head">POWIADOMIENIA</div><div class="sx-profile-marketing-mini"><div><span class="sx-profile-link-kicker">DIGITAL / E-MAIL</span><b>NOWE PRODUKTY DIGITAL</b><small>Chcę dostawać informacje o nowych e-bookach i produktach cyfrowych STARXV.</small><div id="sxMarketingStatus">Ładowanie ustawienia…</div></div><label class="sx-switch" aria-label="Powiadomienia o nowych produktach Digital"><input disabled id="sxMarketingToggle" type="checkbox"><span class="sx-switch-track"></span></label></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
+    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">EDYTUJ DANE</span><span class="sx-info-rest"> - PROFIL I LOGOWANIE</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-faq-profile-card" id="sxFaqBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>FAQ</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div class="sx-profile-section-head">POWIADOMIENIA</div><div class="sx-profile-marketing-mini"><div><span class="sx-profile-link-kicker">DIGITAL / E-MAIL</span><b>NOWE PRODUKTY DIGITAL</b><small>Chcę dostawać informacje o nowych e-bookach i produktach cyfrowych STARXV.</small><div id="sxMarketingStatus">Ładowanie ustawienia…</div></div><label class="sx-switch" aria-label="Powiadomienia o nowych produktach Digital"><input disabled id="sxMarketingToggle" type="checkbox"><span class="sx-switch-track"></span></label></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{window.STARXV_OPEN_ORDERS?.()});
+    $('#sxFaqBtn')?.addEventListener('click',()=>window.STARXV_OPEN_FAQ?.());
     window.STARXV_INSTALL_ACCOUNT_SECURITY?.();
     setTimeout(()=>window.STARXV_MARKETING_REFRESH?.(),0);
     $('#sxProfileSearchBtn')?.addEventListener('click',()=>{openOverlay('sxSearchOverlay');setTimeout(()=>$('#sxSearchInput')?.focus(),100)});
@@ -4709,5 +4711,63 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
   window.STARXV_REFRESH_COMING_LATER=load;
 })();
 </script>
+
+<style id="starxv-faq-style">
+.sx-faq-modal{position:fixed;inset:0;z-index:1000002;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.84);backdrop-filter:blur(12px)}
+.sx-faq-modal.open{display:flex}
+.sx-faq-card{width:min(760px,100%);max-height:min(82vh,820px);overflow:auto;padding:28px;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:#090909;color:#fff;box-shadow:0 35px 110px rgba(0,0,0,.72)}
+.sx-faq-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:24px}
+.sx-faq-kicker{color:#b89b3f;font:950 8px/1 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.sx-faq-title{margin:9px 0 0;font:950 clamp(28px,5vw,46px)/.96 Arial,sans-serif;letter-spacing:-.045em}
+.sx-faq-sub{margin:10px 0 0;max-width:560px;color:#777;font-size:10px;line-height:1.6}
+.sx-faq-close{width:38px;height:38px;flex:0 0 auto;border:1px solid #2e2e2e;border-radius:50%;background:#111;color:#fff;font-size:22px;cursor:pointer}
+.sx-faq-list{display:grid;border-top:1px solid #242424}
+.sx-faq-item{border-bottom:1px solid #242424}
+.sx-faq-question{width:100%;display:grid;grid-template-columns:32px minmax(0,1fr) 24px;align-items:center;gap:10px;padding:18px 2px;border:0;background:transparent;color:#fff;text-align:left;cursor:pointer}
+.sx-faq-no{color:#6e5d2d;font-size:8px;font-weight:950;letter-spacing:.1em}
+.sx-faq-question b{font-size:12px;line-height:1.45}
+.sx-faq-plus{color:#777;font-size:18px;transition:.18s}
+.sx-faq-item.open .sx-faq-plus{transform:rotate(45deg);color:#fff}
+.sx-faq-answer{display:none;padding:0 34px 19px 42px;color:#9a9a9a;font-size:11px;line-height:1.75;white-space:pre-wrap}
+.sx-faq-item.open .sx-faq-answer{display:block}
+.sx-faq-state{padding:28px 0;color:#777;font-size:11px;line-height:1.6}
+@media(max-width:620px){.sx-faq-modal{padding:12px}.sx-faq-card{padding:21px 18px;border-radius:18px;max-height:88vh}.sx-faq-question{grid-template-columns:26px minmax(0,1fr) 20px}.sx-faq-answer{padding-left:36px;padding-right:24px}}
+</style>
+<script id="starxv-faq-script">
+(()=>{
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function ensureModal(){
+    let modal=document.getElementById('sxFaqModal');if(modal)return modal;
+    modal=document.createElement('div');modal.id='sxFaqModal';modal.className='sx-faq-modal';modal.setAttribute('aria-hidden','true');
+    modal.innerHTML=`<div class="sx-faq-card" role="dialog" aria-modal="true" aria-labelledby="sxFaqTitle"><div class="sx-faq-head"><div><div class="sx-faq-kicker">STARXV / HELP</div><h2 class="sx-faq-title" id="sxFaqTitle">FAQ</h2><p class="sx-faq-sub">Najczęściej zadawane pytania dotyczące konta, zakupów i produktów cyfrowych STARXV.</p></div><button class="sx-faq-close" type="button" aria-label="Zamknij">×</button></div><div class="sx-faq-list" id="sxFaqList"><div class="sx-faq-state">Ładowanie pytań…</div></div></div>`;
+    document.body.appendChild(modal);
+    const close=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
+    modal.querySelector('.sx-faq-close').onclick=close;
+    modal.addEventListener('click',e=>{if(e.target===modal)close()});
+    modal.querySelector('#sxFaqList').addEventListener('click',e=>{
+      const btn=e.target.closest('.sx-faq-question');if(!btn)return;
+      const item=btn.closest('.sx-faq-item'),open=!item.classList.contains('open');
+      modal.querySelectorAll('.sx-faq-item.open').forEach(x=>x.classList.remove('open'));
+      item.classList.toggle('open',open);
+      btn.setAttribute('aria-expanded',open?'true':'false');
+    });
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
+    return modal;
+  }
+  async function openFaq(){
+    const modal=ensureModal(),list=modal.querySelector('#sxFaqList');
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');
+    list.innerHTML='<div class="sx-faq-state">Ładowanie pytań…</div>';
+    try{
+      const r=await fetch('/api/faq',{credentials:'same-origin',cache:'no-store'}),d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Nie udało się pobrać FAQ.');
+      const faq=Array.isArray(d.faq)?d.faq:[];
+      list.innerHTML=faq.length?faq.map((x,i)=>`<div class="sx-faq-item"><button class="sx-faq-question" type="button" aria-expanded="false"><span class="sx-faq-no">${String(i+1).padStart(2,'0')}</span><b>${esc(x.question||'')}</b><span class="sx-faq-plus">+</span></button><div class="sx-faq-answer">${esc(x.answer||'')}</div></div>`).join(''):'<div class="sx-faq-state">FAQ jest obecnie puste.</div>';
+    }catch(e){list.innerHTML=`<div class="sx-faq-state">${esc(e.message||'Nie udało się pobrać FAQ.')}</div>`}
+  }
+  window.STARXV_OPEN_FAQ=openFaq;
+})();
+</script>
+
 </body>
 </html>
