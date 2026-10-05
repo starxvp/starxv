@@ -955,6 +955,35 @@ body.sx-delete-account-lock{overflow:hidden!important}
 }
 </style>
 
+
+<style id="starxv-password-reset-v2-style">
+.sx-reset-modal{position:fixed;inset:0;z-index:1000900;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.84);backdrop-filter:blur(14px)}
+.sx-reset-modal.open{display:flex}
+.sx-reset-card{position:relative;width:min(590px,100%);max-height:92vh;overflow:auto;padding:34px;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:linear-gradient(155deg,#11100e,#080808 60%);color:#fff;box-shadow:0 34px 120px rgba(0,0,0,.72)}
+.sx-reset-close{position:absolute;right:17px;top:16px;width:40px;height:40px;border:1px solid rgba(255,255,255,.11);border-radius:50%;background:#111;color:#777;font-size:23px;cursor:pointer}
+.sx-reset-close:hover{color:#fff;border-color:rgba(255,255,255,.25)}
+.sx-reset-kicker{padding-right:52px;color:#b89b3f;font:950 8px/1 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.sx-reset-card h2{margin:13px 50px 8px 0;font:950 clamp(32px,6vw,48px)/.95 Arial,sans-serif;letter-spacing:-.05em}
+.sx-reset-card>p{margin:0 0 24px;color:#858585;font:650 10px/1.65 Arial,sans-serif}
+.sx-reset-progress{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 25px}
+.sx-reset-progress span{height:3px;border-radius:99px;background:#252525}.sx-reset-progress span.active{background:#d0af4e}
+.sx-reset-step-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:18px}
+.sx-reset-step-head small{display:block;color:#696969;font:900 8px/1 Arial,sans-serif;letter-spacing:.14em}.sx-reset-step-head b{display:block;margin-top:7px;color:#ece8df;font-size:13px}
+.sx-reset-email-chip{display:inline-flex;max-width:100%;margin-top:7px;padding:6px 9px;border:1px solid #302d24;border-radius:999px;background:#100f0b;color:#d4bd78;font-size:9px;font-weight:800;overflow-wrap:anywhere}
+.sx-reset-change-email{border:0;background:transparent;color:#a8a8a8;text-decoration:underline;text-underline-offset:3px;font:900 8px/1 Arial,sans-serif;letter-spacing:.07em;cursor:pointer;white-space:nowrap}
+.sx-reset-label{display:block;margin:14px 0 7px;color:#777;font:900 8px/1 Arial,sans-serif;letter-spacing:.13em}
+.sx-reset-input{width:100%;min-height:49px;border:1px solid #333;border-radius:11px;background:#0a0a0a;color:#fff;padding:0 14px;outline:none;font:700 11px Arial,sans-serif}
+.sx-reset-input:focus{border-color:#806f3d;box-shadow:0 0 0 3px rgba(184,155,63,.08)}
+.sx-reset-card .auth-submit{width:100%;margin-top:18px}
+.sx-reset-secondary{width:100%;margin-top:9px;padding:13px;border:1px solid #303030;border-radius:10px;background:#111;color:#aaa;font:900 8px/1 Arial,sans-serif;letter-spacing:.08em;cursor:pointer}
+.sx-reset-secondary:hover{color:#fff;background:#171717}
+.sx-reset-message{min-height:19px;margin-top:12px;font:750 9px/1.5 Arial,sans-serif;color:#777}.sx-reset-message.error{color:#dc8d8d}.sx-reset-message.success{color:#b5c998}
+.sx-reset-success{display:none;text-align:center;padding:20px 0 5px}.sx-reset-success.show{display:block}
+.sx-reset-success-icon{width:58px;height:58px;margin:0 auto 15px;display:grid;place-items:center;border:1px solid rgba(184,155,63,.35);border-radius:50%;color:#d0af4e;font-size:25px}
+.sx-reset-success h3{margin:0;font-size:25px}.sx-reset-success p{margin:9px auto 0;max-width:380px;color:#888;font-size:10px;line-height:1.6}
+@media(max-width:600px){.sx-reset-modal{padding:12px}.sx-reset-card{padding:27px 20px;border-radius:18px}.sx-reset-step-head{flex-direction:column}.sx-reset-change-email{padding:0}}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -1195,23 +1224,43 @@ body.sx-delete-account-lock{overflow:hidden!important}
 </div>
 
 <div aria-hidden="true" class="sx-reset-modal" id="sxResetModal">
-<div aria-labelledby="sxResetTitle" aria-modal="true" class="sx-reset-card" role="dialog">
-<button aria-label="Zamknij" class="sx-reset-close" id="sxResetClose" type="button">×</button>
-<div class="sx-reset-kicker">STARXV / ACCOUNT SECURITY</div>
-<h2 id="sxResetTitle">Zresetuj hasło.</h2>
-<p id="sxResetLead">Wpisz adres e-mail przypisany do konta. Wyślemy 6-cyfrowy kod ważny przez 10 minut.</p>
-<div id="sxResetStepEmail">
-<label class="sx-reset-label" for="sxResetEmail">E-MAIL</label><input autocomplete="email" class="sx-reset-input" id="sxResetEmail" placeholder="twoj@email.pl" type="email"/>
-<button class="auth-submit" id="sxResetSend" type="button">WYŚLIJ KOD →</button>
-</div>
-<div hidden="" id="sxResetStepCode">
-<label class="sx-reset-label" for="sxResetCode">KOD Z E-MAILA</label><input autocomplete="one-time-code" class="sx-reset-input" id="sxResetCode" inputmode="numeric" maxlength="6" placeholder="000000"/>
-<label class="sx-reset-label" for="sxResetPassword">NOWE HASŁO</label><input autocomplete="new-password" class="sx-reset-input" id="sxResetPassword" placeholder="minimum 8 znaków" type="password"/>
-<label class="sx-reset-label" for="sxResetPassword2">POWTÓRZ NOWE HASŁO</label><input autocomplete="new-password" class="sx-reset-input" id="sxResetPassword2" placeholder="••••••••" type="password"/>
-<button class="auth-submit" id="sxResetConfirm" type="button">USTAW NOWE HASŁO →</button><button class="sx-reset-secondary" id="sxResetAgain" type="button">WYŚLIJ NOWY KOD</button>
-</div>
-<div class="auth-message" id="sxResetMessage"></div>
-</div>
+  <div aria-labelledby="sxResetTitle" aria-modal="true" class="sx-reset-card" role="dialog">
+    <button aria-label="Zamknij" class="sx-reset-close" id="sxResetClose" type="button">×</button>
+    <div class="sx-reset-kicker">STARXV / ACCOUNT SECURITY</div>
+    <h2 id="sxResetTitle">Zresetuj hasło.</h2>
+    <p>Odzyskaj dostęp do konta przy pomocy adresu e-mail.</p>
+    <div class="sx-reset-progress" aria-hidden="true"><span class="active" id="sxResetProgress1"></span><span id="sxResetProgress2"></span></div>
+
+    <div id="sxResetStepEmail">
+      <div class="sx-reset-step-head"><div><small>KROK 01</small><b>Podaj adres e-mail</b></div></div>
+      <label class="sx-reset-label" for="sxResetEmail">E-MAIL PRZYPISANY DO KONTA</label>
+      <input autocomplete="email" class="sx-reset-input" id="sxResetEmail" placeholder="twoj@email.pl" type="email"/>
+      <button class="auth-submit" id="sxResetSend" type="button">ZRESETUJ HASŁO →</button>
+    </div>
+
+    <div hidden id="sxResetStepCode">
+      <div class="sx-reset-step-head">
+        <div><small>KROK 02</small><b>Kod został wysłany na:</b><span class="sx-reset-email-chip" id="sxResetEmailDisplay">—</span></div>
+        <button class="sx-reset-change-email" id="sxResetChangeEmail" type="button">ZMIEŃ E-MAIL</button>
+      </div>
+      <label class="sx-reset-label" for="sxResetCode">6-CYFROWY KOD</label>
+      <input autocomplete="one-time-code" class="sx-reset-input" id="sxResetCode" inputmode="numeric" maxlength="6" placeholder="000000"/>
+      <label class="sx-reset-label" for="sxResetPassword">NOWE HASŁO</label>
+      <input autocomplete="new-password" class="sx-reset-input" id="sxResetPassword" placeholder="minimum 8 znaków" type="password"/>
+      <label class="sx-reset-label" for="sxResetPassword2">POTWIERDŹ NOWE HASŁO</label>
+      <input autocomplete="new-password" class="sx-reset-input" id="sxResetPassword2" placeholder="powtórz nowe hasło" type="password"/>
+      <button class="auth-submit" id="sxResetConfirm" type="button">USTAW NOWE HASŁO →</button>
+      <button class="sx-reset-secondary" id="sxResetAgain" type="button">WYŚLIJ KOD PONOWNIE</button>
+    </div>
+
+    <div class="sx-reset-success" id="sxResetSuccess">
+      <div class="sx-reset-success-icon">✓</div>
+      <h3>Hasło zmienione.</h3>
+      <p>Nowe hasło zostało przypisane do Twojego konta. Za chwilę wrócisz do logowania.</p>
+    </div>
+
+    <div class="sx-reset-message" id="sxResetMessage"></div>
+  </div>
 </div>
 <div aria-hidden="true" class="orders-modal" id="ordersModal">
 <section aria-labelledby="ordersTitle" aria-modal="true" class="orders-panel" role="dialog">
@@ -2121,7 +2170,14 @@ const renderCart=()=>{hydrateCartDiscounts();
   async function api(path,options={}){
     const res=await fetch('/api'+path,{credentials:'include',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});
     let data={};try{data=await res.json()}catch(e){}
-    if(!res.ok)throw new Error(data.error||'Wystąpił błąd. Spróbuj ponownie.');return data;
+    if(!res.ok){
+      const err=new Error(data.error||'Wystąpił błąd. Spróbuj ponownie.');
+      err.code=data.code||'';
+      err.status=res.status;
+      err.data=data;
+      throw err;
+    }
+    return data;
   }
   function initials(a){return ((a?.firstName?.[0]||'S')+(a?.lastName?.[0]||'X')).toUpperCase()}
   function renderState(){
@@ -2188,7 +2244,21 @@ const renderCart=()=>{hydrateCartDiscounts();
   $('registerSubmit').onclick=async()=>{
     const email=normalize($('registerEmail').value),password=$('registerPassword').value,password2=$('registerPassword2').value;
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<8||password!==password2){setMsg('registerMessage',password!==password2?'Hasła nie są takie same.':'Wpisz poprawny e-mail i hasło minimum 8 znaków.','error');return}
-    try{await api('/auth/register',{method:'POST',body:JSON.stringify({email,password})});pendingEmail=email;$('verifyLead').textContent=`Wpisz 6-cyfrowy kod wysłany na ${email}.`;switchTab('verify');setMsg('verifyMessage','Kod został wysłany. Kod jest ważny 10 minut.','success')}catch(e){setMsg('registerMessage',e.message,'error')}
+    try{
+      await api('/auth/register',{method:'POST',body:JSON.stringify({email,password})});
+      pendingEmail=email;
+      $('verifyLead').textContent=`Wpisz 6-cyfrowy kod wysłany na ${email}.`;
+      switchTab('verify');
+      setMsg('verifyMessage','Kod został wysłany. Kod jest ważny 10 minut.','success');
+    }catch(e){
+      if(e.code==='ACCOUNT_EXISTS'){
+        $('loginEmail').value=email;
+        $('loginPassword').value='';
+        switchTab('login');
+        setMsg('loginMessage','Konto zostało już utworzone. Zaloguj się.','error');
+        setTimeout(()=>$('loginPassword')?.focus(),80);
+      }else setMsg('registerMessage',e.message,'error');
+    }
   };
   $('verifySubmit').onclick=async()=>{
     const code=String($('verifyCode').value||'').replace(/\D/g,'');
@@ -3211,18 +3281,137 @@ const renderCart=()=>{hydrateCartDiscounts();
   window.addEventListener('starxv:auth-changed',()=>{syncCatalog();syncOrders()});
 })();
 </script>
-<script>
+<script id="starxv-password-reset-v2">
 (()=>{
- const modal=document.getElementById('sxResetModal'),close=document.getElementById('sxResetClose'),send=document.getElementById('sxResetSend'),confirmBtn=document.getElementById('sxResetConfirm'),again=document.getElementById('sxResetAgain');if(!modal)return;
- const email=document.getElementById('sxResetEmail'),code=document.getElementById('sxResetCode'),pass=document.getElementById('sxResetPassword'),pass2=document.getElementById('sxResetPassword2'),msg=document.getElementById('sxResetMessage'),stepEmail=document.getElementById('sxResetStepEmail'),stepCode=document.getElementById('sxResetStepCode'),lead=document.getElementById('sxResetLead');let resetEmail='';
- const message=(t,type='')=>{msg.textContent=t;msg.className='auth-message'+(type?' '+type:'')};
- const api=async(path,body)=>{const r=await fetch('/api'+path,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'Wystąpił błąd.');return d};
- const open=()=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false');stepEmail.hidden=false;stepCode.hidden=true;lead.textContent='Wpisz adres e-mail przypisany do konta. Wyślemy 6-cyfrowy kod ważny przez 10 minut.';message('');document.body.style.overflow='hidden';setTimeout(()=>email.focus(),100)};
- const shut=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
- document.querySelectorAll('.sx-forgot-open').forEach(b=>b.addEventListener('click',open));close.onclick=shut;modal.addEventListener('click',e=>{if(e.target===modal)shut()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))shut()});
- async function sendCode(){resetEmail=String(email.value||resetEmail).trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)){message('Wpisz poprawny adres e-mail.','error');return}send.disabled=true;again.disabled=true;try{await api('/auth/forgot-password',{email:resetEmail});stepEmail.hidden=true;stepCode.hidden=false;lead.textContent=`Jeśli konto ${resetEmail} istnieje, kod został wysłany. Wpisz go poniżej.`;message('Sprawdź skrzynkę e-mail. Kod jest ważny 10 minut.','success');code.focus()}catch(e){message(e.message,'error')}finally{send.disabled=false;again.disabled=false}}
- send.onclick=sendCode;again.onclick=sendCode;
- confirmBtn.onclick=async()=>{const c=String(code.value||'').replace(/\D/g,''),p=pass.value,p2=pass2.value;if(c.length!==6){message('Wpisz pełny 6-cyfrowy kod.','error');return}if(p.length<8){message('Nowe hasło musi mieć minimum 8 znaków.','error');return}if(p!==p2){message('Hasła nie są takie same.','error');return}confirmBtn.disabled=true;try{await api('/auth/reset-password',{email:resetEmail,code:c,password:p});message('Hasło zostało zmienione. Możesz się teraz zalogować.','success');setTimeout(()=>{shut();document.querySelectorAll('#loginEmail').forEach(x=>x.value=resetEmail);document.querySelectorAll('#loginPassword').forEach(x=>x.value='')},1100)}catch(e){message(e.message,'error')}finally{confirmBtn.disabled=false}};
+  const $=id=>document.getElementById(id),modal=$('sxResetModal');
+  if(!modal)return;
+
+  const close=$('sxResetClose'),email=$('sxResetEmail'),send=$('sxResetSend'),
+        stepEmail=$('sxResetStepEmail'),stepCode=$('sxResetStepCode'),
+        code=$('sxResetCode'),pass=$('sxResetPassword'),pass2=$('sxResetPassword2'),
+        confirmBtn=$('sxResetConfirm'),again=$('sxResetAgain'),changeEmail=$('sxResetChangeEmail'),
+        emailDisplay=$('sxResetEmailDisplay'),messageEl=$('sxResetMessage'),
+        success=$('sxResetSuccess'),progress1=$('sxResetProgress1'),progress2=$('sxResetProgress2');
+
+  let resetEmail='';
+
+  function message(text='',type=''){
+    messageEl.textContent=text;
+    messageEl.className='sx-reset-message'+(type?' '+type:'');
+  }
+
+  async function api(path,body){
+    const r=await fetch('/api'+path,{
+      method:'POST',credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body||{})
+    });
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok){
+      const e=new Error(d.error||'Wystąpił błąd.');
+      e.code=d.code||'';
+      throw e;
+    }
+    return d;
+  }
+
+  function showEmailStep(){
+    stepEmail.hidden=false;stepCode.hidden=true;success.classList.remove('show');
+    progress1.classList.add('active');progress2.classList.remove('active');
+    message('');code.value='';pass.value='';pass2.value='';
+    setTimeout(()=>email.focus(),80);
+  }
+
+  function showCodeStep(){
+    stepEmail.hidden=true;stepCode.hidden=false;success.classList.remove('show');
+    progress1.classList.add('active');progress2.classList.add('active');
+    emailDisplay.textContent=resetEmail;
+    setTimeout(()=>code.focus(),80);
+  }
+
+  function open(){
+    email.value=String(document.getElementById('loginEmail')?.value||'').trim();
+    resetEmail='';
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden','false');
+    document.body.style.overflow='hidden';
+    showEmailStep();
+  }
+
+  function shut(){
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden','true');
+    document.body.style.overflow='';
+    message('');
+  }
+
+  async function sendCode(){
+    resetEmail=String(email.value||resetEmail).trim().toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(resetEmail)){
+      message('Wpisz poprawny adres e-mail.','error');email.focus();return;
+    }
+    send.disabled=true;again.disabled=true;
+    try{
+      await api('/auth/forgot-password',{email:resetEmail});
+      showCodeStep();
+      message(`Kod do resetu hasła został wysłany na ${resetEmail}. Kod jest ważny 10 minut.`,'success');
+    }catch(e){
+      message(e.message,'error');
+    }finally{
+      send.disabled=false;again.disabled=false;
+    }
+  }
+
+  document.querySelectorAll('.sx-forgot-open').forEach(btn=>btn.addEventListener('click',open));
+  close.onclick=shut;
+  modal.addEventListener('click',e=>{if(e.target===modal)shut()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))shut()});
+
+  send.onclick=sendCode;
+  again.onclick=sendCode;
+
+  changeEmail.onclick=()=>{
+    email.value=resetEmail;
+    resetEmail='';
+    showEmailStep();
+  };
+
+  code.addEventListener('input',()=>{code.value=code.value.replace(/\D/g,'').slice(0,6)});
+
+  confirmBtn.onclick=async()=>{
+    const c=String(code.value||'').replace(/\D/g,''),p=pass.value,p2=pass2.value;
+    if(c.length!==6){message('Kod jest nieprawidłowy. Wpisz pełny 6-cyfrowy kod.','error');code.focus();return}
+    if(p.length<8){message('Nowe hasło musi mieć minimum 8 znaków.','error');pass.focus();return}
+    if(p!==p2){message('Hasła nie są takie same.','error');pass2.focus();return}
+
+    confirmBtn.disabled=true;
+    try{
+      await api('/auth/reset-password',{email:resetEmail,code:c,password:p});
+      stepCode.hidden=true;
+      success.classList.add('show');
+      message('');
+      const loginEmail=document.getElementById('loginEmail');
+      const loginPassword=document.getElementById('loginPassword');
+      if(loginEmail)loginEmail.value=resetEmail;
+      if(loginPassword)loginPassword.value='';
+
+      setTimeout(()=>{
+        shut();
+        document.querySelector('[data-auth-tab="login"]')?.click();
+        const loginMsg=document.getElementById('loginMessage');
+        if(loginMsg){
+          loginMsg.textContent='Hasło zostało zmienione. Zaloguj się nowym hasłem.';
+          loginMsg.className='auth-message success';
+        }
+        setTimeout(()=>loginPassword?.focus(),80);
+      },1350);
+    }catch(e){
+      if(/nieprawidłowy/i.test(e.message))message('Kod jest nieprawidłowy. Sprawdź kod z wiadomości e-mail i spróbuj ponownie.','error');
+      else message(e.message,'error');
+    }finally{
+      confirmBtn.disabled=false;
+    }
+  };
 })();
 </script>
 
@@ -3661,8 +3850,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <script id="starxv-auth-provider-ui">
 document.addEventListener('DOMContentLoaded',()=>{
   let googleClient=null;
-  let googleConfig=null;
   let googleBusy=false;
+  let googleIntent='login';
 
   const setGoogleButtons=(enabled,label)=>{
     document.querySelectorAll('.sx-google-auth').forEach(btn=>{
@@ -3674,15 +3863,23 @@ document.addEventListener('DOMContentLoaded',()=>{
     });
   };
 
+  const showAuthMessage=(viewName,text)=>{
+    const view=document.querySelector(`[data-auth-view="${viewName}"]`);
+    const msg=view?.querySelector('.auth-message');
+    if(msg){msg.textContent=text;msg.className='auth-message error';}
+  };
+
+  const switchAuthTab=name=>document.querySelector(`[data-auth-tab="${name}"]`)?.click();
+
   async function loadGoogleConfig(){
     try{
       const r=await fetch('/api/auth/google-config',{cache:'no-store'});
       const data=await r.json();
-      googleConfig=data;
       if(!data.enabled||!data.clientId){
         setGoogleButtons(false,'GOOGLE — KONFIGURACJA WYMAGANA');
         return;
       }
+
       const waitForGoogle=()=>{
         if(window.google?.accounts?.oauth2){
           googleClient=google.accounts.oauth2.initTokenClient({
@@ -3695,30 +3892,46 @@ document.addEventListener('DOMContentLoaded',()=>{
                 return;
               }
               try{
-                setGoogleButtons(false,'LOGOWANIE…');
-                const login=await fetch('/api/auth/google',{
+                setGoogleButtons(false,googleIntent==='register'?'TWORZENIE KONTA…':'LOGOWANIE…');
+                const response=await fetch('/api/auth/google',{
                   method:'POST',
                   headers:{'Content-Type':'application/json'},
                   credentials:'include',
-                  body:JSON.stringify({accessToken:resp.access_token})
+                  body:JSON.stringify({accessToken:resp.access_token,intent:googleIntent})
                 });
-                const result=await login.json().catch(()=>({}));
-                if(!login.ok)throw new Error(result.error||'Nie udało się zalogować przez Google.');
+                const result=await response.json().catch(()=>({}));
+
+                if(!response.ok){
+                  setGoogleButtons(true,'KONTYNUUJ Z GOOGLE');
+
+                  if(result.code==='ACCOUNT_EXISTS'){
+                    switchAuthTab('login');
+                    const input=document.getElementById('loginEmail');
+                    if(input&&result.email)input.value=result.email;
+                    setTimeout(()=>showAuthMessage('login','Konto zostało już utworzone. Zaloguj się.'),0);
+                    return;
+                  }
+
+                  if(result.code==='ACCOUNT_NOT_FOUND'){
+                    switchAuthTab('register');
+                    setTimeout(()=>showAuthMessage('register',result.error||'Nie znaleziono konta. Utwórz konto.'),0);
+                    return;
+                  }
+
+                  showAuthMessage(googleIntent,result.error||'Nie udało się zalogować przez Google.');
+                  return;
+                }
+
                 if(result.user?.profileSetupRequired)sessionStorage.setItem('starxv-open-profile-setup','1');
                 location.reload();
               }catch(e){
                 setGoogleButtons(true,'KONTYNUUJ Z GOOGLE');
-                const active=document.querySelector('.auth-view.active');
-                const msg=active?.querySelector('.auth-message');
-                if(msg){msg.textContent=e.message;msg.classList.add('show');}
-                else alert(e.message);
+                showAuthMessage(googleIntent,e.message||'Nie udało się zalogować przez Google.');
               }
             }
           });
           setGoogleButtons(true,'KONTYNUUJ Z GOOGLE');
-        }else{
-          setTimeout(waitForGoogle,120);
-        }
+        }else setTimeout(waitForGoogle,120);
       };
       waitForGoogle();
     }catch{
@@ -3740,6 +3953,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.querySelectorAll('.sx-google-auth').forEach(btn=>{
     btn.addEventListener('click',()=>{
       if(googleBusy||!googleClient)return;
+      googleIntent=btn.closest('.auth-view')?.dataset.authView==='register'?'register':'login';
       googleBusy=true;
       googleClient.requestAccessToken({prompt:'select_account'});
       setTimeout(()=>{googleBusy=false;},12000);

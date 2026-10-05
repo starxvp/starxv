@@ -388,6 +388,17 @@ function auth(req,res,next){const t=cookie(req,'starxv_session');if(!t)return re
 function validEmail(v){return v.length<=320&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)}
 function validPassword(v){return v.length>=8&&v.length<=256}
 function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
+function authMethods(user){
+  const explicit=Array.isArray(user?.authProviders)?user.authProviders.map(x=>String(x).toLowerCase()).filter(Boolean):[];
+  if(explicit.length)return Array.from(new Set(explicit));
+  if(user?.googleSub)return ['google'];
+  return ['email'];
+}
+function primaryAuthMethod(user){
+  const methods=authMethods(user);
+  if(methods.length===1)return methods[0];
+  return methods.includes('email')?'email':methods[0]||'email';
+}
 
 function googleClientId(){return String(process.env.GOOGLE_CLIENT_ID||'').trim()}
 async function googleTokenInfo(accessToken){
@@ -530,8 +541,14 @@ app.post('/api/auth/forgot-password',async(req,res)=>{try{
   const email=cleanEmail(req.body?.email),now=Date.now(),db=load();
   db.passwordResets=(db.passwordResets||[]).filter(x=>x.expiresAt>now);
   const generic={ok:true,message:'Jeśli konto z tym adresem istnieje, wysłaliśmy kod resetu hasła.',expiresIn:600};
-  const user=db.users.find(u=>u.email===email);
+  const user=db.users.find(u=>cleanEmail(u.email)===email);
   if(!user){save(db);return res.json(generic)}
+  if(!authMethods(user).includes('email')){
+    return res.status(409).json({
+      error:'To konto zostało utworzone metodą Google. Zaloguj się przez Google — to konto nie ma hasła STARXV do zresetowania.',
+      code:'AUTH_METHOD_GOOGLE'
+    });
+  }
   const previous=db.passwordResets.find(x=>x.email===email);
   if(previous&&now-Number(previous.createdAt||0)<60000){save(db);return res.json(generic)}
   db.passwordResets=db.passwordResets.filter(x=>x.email!==email);
@@ -543,7 +560,8 @@ app.post('/api/auth/reset-password',(req,res)=>{
   const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,''),password=String(req.body?.password||'');
   if(code.length!==6||!validPassword(password))return res.status(400).json({error:'Wpisz poprawny kod i nowe hasło 8–256 znaków.'});
   const db=load(),now=Date.now();db.passwordResets=(db.passwordResets||[]).filter(x=>x.expiresAt>now);
-  const reset=db.passwordResets.find(x=>x.email===email),user=db.users.find(u=>u.email===email);
+  const reset=db.passwordResets.find(x=>x.email===email),user=db.users.find(u=>cleanEmail(u.email)===email);
+  if(user&&!authMethods(user).includes('email'))return res.status(409).json({error:'To konto zostało utworzone metodą Google. Zaloguj się przez Google.',code:'AUTH_METHOD_GOOGLE'});
   if(!reset||!user||reset.userId!==user.id)return res.status(400).json({error:'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.'});
   if(reset.attempts>=5){db.passwordResets=db.passwordResets.filter(x=>x.email!==email);save(db);return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'})}
   if(reset.codeHash!==codeHash(email,code)){reset.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}
@@ -554,7 +572,12 @@ app.post('/api/auth/register',async(req,res)=>{try{
   const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');
   if(!validEmail(email)||!validPassword(password))return res.status(400).json({error:'Wpisz poprawny e-mail i hasło 8–256 znaków.'});
   const db=load();
-  if(db.users.some(u=>u.email===email))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});
+  const existingUser=db.users.find(u=>cleanEmail(u.email)===email);
+  if(existingUser)return res.status(409).json({
+    error:'Konto zostało już utworzone. Zaloguj się.',
+    code:'ACCOUNT_EXISTS',
+    loginMethod:primaryAuthMethod(existingUser)
+  });
   const now=Date.now();
   db.pending=(db.pending||[]).filter(p=>p.expiresAt>now&&p.email!==email);
   const code=String(crypto.randomInt(100000,1000000));
@@ -580,7 +603,19 @@ app.post('/api/auth/verify',(req,res)=>{
   setSession(res,u.id);
   res.json({ok:true,user:publicUser(u)});
 });
-app.post('/api/auth/login',(req,res)=>{const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');if(!validEmail(email)||password.length>256)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});const db=load(),u=db.users.find(x=>x.email===email);if(!u||!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/login',(req,res)=>{
+  const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');
+  if(!validEmail(email)||password.length>256)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.',code:'INVALID_CREDENTIALS'});
+  const db=load(),u=db.users.find(x=>cleanEmail(x.email)===email);
+  if(!u)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.',code:'INVALID_CREDENTIALS'});
+  const methods=authMethods(u);
+  if(!methods.includes('email')){
+    return res.status(409).json({error:'To konto zostało utworzone metodą Google. Zaloguj się przez Google.',code:'AUTH_METHOD_GOOGLE'});
+  }
+  if(!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.',code:'INVALID_CREDENTIALS'});
+  setSession(res,u.id);
+  res.json({ok:true,user:publicUser(u)});
+});
 app.post('/api/auth/logout',(req,res)=>{const t=cookie(req,'starxv_session');if(t)deleteSessionToken(t);res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true})});
 app.get('/api/auth/me',auth,(req,res)=>res.json({user:publicUser(req.user)}));
 
@@ -595,6 +630,7 @@ app.post('/api/auth/google',async(req,res)=>{
     const clientId=googleClientId();
     if(!clientId)return res.status(503).json({error:'Logowanie Google nie jest jeszcze skonfigurowane.'});
 
+    const intent=String(req.body?.intent||'login').toLowerCase()==='register'?'register':'login';
     const accessToken=String(req.body?.accessToken||'').trim();
     const info=await googleTokenInfo(accessToken);
     const audience=String(info.audience||info.issued_to||info.aud||info.azp||'');
@@ -608,34 +644,70 @@ app.post('/api/auth/google',async(req,res)=>{
 
     const db=load();
     let user=db.users.find(u=>cleanEmail(u.email)===email);
-    if(!user){
-      const firstName=cleanName(profile.given_name||String(profile.name||'STARXV').split(' ')[0]||'STARXV');
-      const lastName=cleanName(profile.family_name||String(profile.name||'').split(' ').slice(1).join(' ')||'User');
-      user={
-        id:crypto.randomUUID(),
-        firstName:firstName||'',
-        lastName:lastName||'',
-        birthDate:'',
-        phone:'',
-        phoneVerifiedAt:0,
-        profileSetupRequired:true,
-        email,
-        passwordHash:hashPassword(crypto.randomBytes(32).toString('hex')),
-        createdAt:Date.now(),
-        avatarData:'',
-        favorites:[],
-        addresses:[],
-        defaultAddressId:'',
-        cart:[],
-        googleSub:String(profile.sub||''),
-        authProviders:['google']
-      };
-      db.users.push(user);
-    }else{
-      user.googleSub=String(profile.sub||user.googleSub||'');
-      user.authProviders=Array.from(new Set([...(Array.isArray(user.authProviders)?user.authProviders:[]),'google']));
+
+    if(user){
+      const methods=authMethods(user);
+
+      if(intent==='register'){
+        return res.status(409).json({
+          error:'Konto zostało już utworzone. Zaloguj się.',
+          code:'ACCOUNT_EXISTS',
+          loginMethod:primaryAuthMethod(user),
+          email
+        });
+      }
+
+      if(!methods.includes('google')){
+        return res.status(409).json({
+          error:'To konto zostało utworzone metodą e-mail. Zaloguj się adresem e-mail i hasłem.',
+          code:'AUTH_METHOD_EMAIL',
+          email
+        });
+      }
+
+      const storedSub=String(user.googleSub||'');
+      const incomingSub=String(profile.sub||'');
+      if(storedSub&&incomingSub&&storedSub!==incomingSub){
+        return res.status(401).json({error:'To konto Google nie pasuje do konta STARXV.'});
+      }
+      if(!storedSub)user.googleSub=incomingSub;
+      user.authProviders=['google'];
+      await Promise.resolve(save(db));
+      setSession(res,user.id);
+      return res.json({ok:true,user:publicUser(user)});
     }
-    save(db);
+
+    if(intent==='login'){
+      return res.status(404).json({
+        error:'Nie znaleziono konta STARXV dla tego konta Google. Utwórz konto.',
+        code:'ACCOUNT_NOT_FOUND',
+        email
+      });
+    }
+
+    const firstName=cleanName(profile.given_name||String(profile.name||'').split(' ')[0]||'');
+    const lastName=cleanName(profile.family_name||String(profile.name||'').split(' ').slice(1).join(' ')||'');
+    user={
+      id:crypto.randomUUID(),
+      firstName:firstName||'',
+      lastName:lastName||'',
+      birthDate:'',
+      phone:'',
+      phoneVerifiedAt:0,
+      profileSetupRequired:true,
+      email,
+      passwordHash:hashPassword(crypto.randomBytes(32).toString('hex')),
+      createdAt:Date.now(),
+      avatarData:'',
+      favorites:[],
+      addresses:[],
+      defaultAddressId:'',
+      cart:[],
+      googleSub:String(profile.sub||''),
+      authProviders:['google']
+    };
+    db.users.push(user);
+    await Promise.resolve(save(db));
     setSession(res,user.id);
     res.json({ok:true,user:publicUser(user)});
   }catch(e){
