@@ -1079,9 +1079,45 @@ body.sx-delete-account-lock{overflow:hidden!important}
 .sx-user-title{display:inline-flex;align-items:center;gap:6px;font-size:.86em;font-weight:950;letter-spacing:.07em;white-space:nowrap}
 .sx-user-title::before{content:'·';font-size:1.18em;line-height:1}
 .sx-user-title.owner{color:#d3b354}.sx-user-title.admin{color:#ececec}.sx-user-title.support{color:#d7c7a1}.sx-user-title.team{color:#a99bc7}.sx-user-title.creator{color:#c8a85a}.sx-user-title.moderator{color:#9eafc4}.sx-user-title.custom{color:#bdbdbd}
-.sx-profile-title{display:flex;justify-content:center;margin-top:7px;color:#9b9b9b;font:950 9px/1 Arial,sans-serif;letter-spacing:.1em}
-.sx-profile-title .sx-user-title{font-size:9px}
 .sx-digital-review-author b .sx-user-title,.sx-review-meta b .sx-user-title{margin-left:5px}
+</style>
+
+
+<style id="starxv-profile-title-inline-style">
+#accountProfile .sx-profile-name-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+#accountProfile .sx-profile-name-row .profile-name{
+  margin:0!important;
+}
+#accountProfile .sx-profile-title-inline{
+  display:inline-flex;
+  align-items:center;
+  min-width:0;
+}
+#accountProfile .sx-profile-title-inline[hidden]{
+  display:none!important;
+}
+#accountProfile .sx-profile-title-inline .sx-user-title{
+  margin:0!important;
+  font-size:10px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:.08em;
+}
+#accountProfile .sx-profile-title-inline .sx-user-title::before{
+  content:'·';
+  margin-right:5px;
+  font-size:14px;
+  line-height:1;
+}
+@media(max-width:620px){
+  #accountProfile .sx-profile-name-row{gap:7px}
+  #accountProfile .sx-profile-title-inline .sx-user-title{font-size:9px}
+}
 </style>
 
 </head>
@@ -1292,7 +1328,7 @@ body.sx-delete-account-lock{overflow:hidden!important}
 <div class="auth-note">Konto jest obsługiwane przez backend STARXV. Dane profilu możesz później zmienić w sekcji „Edytuj dane”.</div>
 </div>
 <div class="account-profile" id="accountProfile">
-<div class="profile-hero"><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.25" cy="10.25" r="5.75"></circle><path d="M14.7 14.7 19.4 19.4"></path></svg></button><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="sx-profile-title" id="profileTitle" hidden></div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div><div class="profile-meta-row"><span>WERSJA</span><b class="sx-profile-release" id="sxProfileRelease">PRE-LAUNCH 1.0v</b></div></div></div>
+<div class="profile-hero"><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.25" cy="10.25" r="5.75"></circle><path d="M14.7 14.7 19.4 19.4"></path></svg></button><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="sx-profile-name-row"><div class="profile-name" id="profileName">STARXV USER</div><div class="sx-profile-title-inline" id="profileTitle" hidden></div></div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div><div class="profile-meta-row"><span>WERSJA</span><b class="sx-profile-release" id="sxProfileRelease">PRE-LAUNCH 1.0v</b></div></div></div>
 <div class="profile-actions"><button class="profile-btn" id="profileOrders">MOJE ZAMÓWIENIA →</button><button class="profile-btn sx-delete-account-btn" id="deleteAccountBtn" type="button">USUŃ KONTO</button></div>
 </div>
 </div>
