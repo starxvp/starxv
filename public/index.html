@@ -917,9 +917,6 @@ body.sx-delete-account-lock{overflow:hidden!important}
 
 <style id="starxv-profile-data-editor-style">
 .sx-profile-setup-kicker{margin:0 0 12px;color:#b89b3f;font:950 8px/1 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
-.sx-profile-setup-sms{margin-top:16px;padding:16px;border:1px solid rgba(184,155,63,.22);background:rgba(184,155,63,.04)}
-.sx-profile-setup-sms-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px;color:#888;font-size:8px;letter-spacing:.10em}
-.sx-profile-setup-sms-head b{color:#d6bf78}
 
 .sx-editdata-modal{position:fixed;inset:0;z-index:1000600;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)}
 .sx-editdata-modal.open{display:flex}
@@ -1178,20 +1175,15 @@ body.sx-delete-account-lock{overflow:hidden!important}
 <div class="auth-view" data-auth-view="profile-setup">
   <div class="sx-profile-setup-kicker">STARXV / FINAL STEP</div>
   <h3>Dokończ profil.</h3>
-  <p class="auth-lead">Ustaw dane swojego konta. Numer telefonu jest opcjonalny i zostanie dodany dopiero po potwierdzeniu kodem SMS.</p>
+  <p class="auth-lead">Ustaw podstawowe dane swojego konta STARXV.</p>
   <div class="auth-grid">
     <div class="auth-field"><label>Imię</label><input autocomplete="given-name" id="setupFirstName"/></div>
     <div class="auth-field"><label>Nazwisko</label><input autocomplete="family-name" id="setupLastName"/></div>
     <div class="auth-field full"><label>Data urodzenia</label><input autocomplete="bday" id="setupBirthDate" type="date"/></div>
-    <div class="auth-field full"><label>Numer telefonu <span style="color:#666">(opcjonalnie)</span></label><input autocomplete="tel" id="setupPhone" inputmode="tel" placeholder="+48 123 456 789" type="tel"/></div>
+    
   </div>
   <button class="auth-submit" id="setupSubmit">ZAPISZ DANE →</button>
-  <button class="profile-btn" id="setupSkipPhone" style="width:100%;margin-top:10px" type="button">POMIŃ TELEFON I ZAKOŃCZ</button>
-  <div class="sx-profile-setup-sms" id="setupSmsBox" hidden>
-    <div class="sx-profile-setup-sms-head"><b>WERYFIKACJA SMS</b><span id="setupSmsPhone"></span></div>
-    <div class="auth-grid"><div class="auth-field full"><label>Kod SMS</label><input autocomplete="one-time-code" id="setupSmsCode" inputmode="numeric" maxlength="6" placeholder="000000"/></div></div>
-    <button class="auth-submit" id="setupSmsConfirm">POTWIERDŹ NUMER →</button>
-  </div>
+  <button class="profile-btn" id="setupSkipPhone" style="width:100%;margin-top:10px" type="button">ZAPISZ I ZAKOŃCZ</button>
   <div class="auth-message" id="setupMessage"></div>
 </div>
 <div class="auth-note">Konto jest obsługiwane przez backend STARXV. Dane profilu możesz później zmienić w sekcji „Edytuj dane”.</div>
@@ -2274,42 +2266,20 @@ const renderCart=()=>{hydrateCartDiscounts();
   };
   $('verifyBack').onclick=()=>switchTab('register');
 
-  let setupPendingPhone='';
-  async function saveSetup(skipPhone=false){
-    const firstName=$('setupFirstName').value.trim(),lastName=$('setupLastName').value.trim(),birthDate=$('setupBirthDate').value,phone=skipPhone?'':$('setupPhone').value.trim();
+  async function saveSetup(){
+    const firstName=$('setupFirstName').value.trim(),lastName=$('setupLastName').value.trim(),birthDate=$('setupBirthDate').value;
     if(!firstName||!lastName||!birthDate){setMsg('setupMessage','Uzupełnij imię, nazwisko i datę urodzenia.','error');return}
-    const btn=skipPhone?$('setupSkipPhone'):$('setupSubmit');
-    btn.disabled=true;
+    const buttons=[$('setupSubmit'),$('setupSkipPhone')].filter(Boolean);
+    buttons.forEach(btn=>btn.disabled=true);
     try{
       const saved=await api('/account/profile',{method:'POST',body:JSON.stringify({firstName,lastName,birthDate})});
       currentUser=saved.user;
-      if(phone){
-        const sms=await api('/account/phone/start',{method:'POST',body:JSON.stringify({phone})});
-        setupPendingPhone=sms.phone;
-        $('setupSmsPhone').textContent=sms.phone;
-        $('setupSmsBox').hidden=false;
-        $('setupSmsCode').value='';
-        setMsg('setupMessage',sms.developmentCode?`Kod SMS został wygenerowany. Tryb testowy: ${sms.developmentCode}`:'Kod SMS został wysłany. Jest ważny 10 minut.','success');
-        $('setupSmsCode').focus();
-      }else{
-        currentUser=saved.user;
-        renderState();
-      }
+      renderState();
     }catch(e){setMsg('setupMessage',e.message,'error')}
-    finally{btn.disabled=false}
+    finally{buttons.forEach(btn=>btn.disabled=false)}
   }
-  $('setupSubmit').onclick=()=>saveSetup(false);
-  $('setupSkipPhone').onclick=()=>saveSetup(true);
-  $('setupSmsConfirm').onclick=async()=>{
-    const code=String($('setupSmsCode').value||'').replace(/\D/g,'');
-    if(!setupPendingPhone||code.length!==6){setMsg('setupMessage','Wpisz pełny 6-cyfrowy kod SMS.','error');return}
-    const btn=$('setupSmsConfirm');btn.disabled=true;
-    try{
-      const d=await api('/account/phone/confirm',{method:'POST',body:JSON.stringify({phone:setupPendingPhone,code})});
-      currentUser=d.user;setupPendingPhone='';$('setupSmsBox').hidden=true;renderState();
-    }catch(e){setMsg('setupMessage',e.message,'error')}
-    finally{btn.disabled=false}
-  };
+  $('setupSubmit').onclick=saveSetup;
+  $('setupSkipPhone').onclick=saveSetup;
   $('loginSubmit').onclick=async()=>{const email=normalize($('loginEmail').value),password=$('loginPassword').value;try{const d=await api('/auth/login',{method:'POST',body:JSON.stringify({email,password})});currentUser=d.user;if(currentUser?.profileSetupRequired){$('setupFirstName').value=currentUser.firstName||'';$('setupLastName').value=currentUser.lastName||'';switchTab('profile-setup');setMsg('setupMessage','Dokończ konfigurację konta.','success')}else{setMsg('loginMessage','Zalogowano.','success');renderState()}}catch(e){setMsg('loginMessage',e.message,'error')}};
   $('logoutBtn').onclick=async()=>{try{await api('/auth/logout',{method:'POST',body:'{}'})}catch(e){}currentUser=null;renderState();switchTab('login')};
   const deleteAccountBtn=$('deleteAccountBtn');
@@ -2713,7 +2683,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         {title:'Profil',meta:'TWOJE KONTO',keywords:'profil konto account dane konto starxv',icon:'P',open:openAccount},
         {title:'Moje zamówienia',meta:'PROFIL / ZAMÓWIENIA',keywords:'zamowienia zamówienia order orders zakupy historia platnosc płatność',icon:'Z',open:openOrders},
         {title:'Zwroty i reklamacje',meta:'POMOC',keywords:'zwrot zwroty reklamacja reklamacje odstapienie odstąpienie pomoc',icon:'R',open:()=>go('/returns.html')},
-        {title:'Edytuj dane',meta:'PROFIL / KONTO',keywords:'edytuj dane imie nazwisko data urodzenia telefon email haslo konto profil',icon:'E',open:()=>openProfileFeature('sxAccountSecurityBtn')},
+        {title:'Edytuj dane',meta:'PROFIL / KONTO',keywords:'edytuj dane imie nazwisko data urodzenia email haslo konto profil',icon:'E',open:()=>openProfileFeature('sxAccountSecurityBtn')},
         {title:'Zgłoś problem',meta:'STARXV SUPPORT',keywords:'support problem pomoc zglos zgłoś ticket kontakt techniczny',icon:'S',open:()=>openProfileFeature('sxReportProblemBtn')},
         {title:'Contact',meta:'KONTAKT Z STARXV',keywords:'contact kontakt mail email e-mail kontakt@starxv.pl napisz',icon:'C',open:openContact},
         {title:'Regulamin',meta:'INFORMACJE PRAWNE',keywords:'regulamin terms zasady sklep prawo prawne',icon:'§',open:()=>go('/terms.html')},
@@ -3467,16 +3437,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         <div class="sx-editdata-editor"><div class="sx-editdata-editor-grid"><input id="sxEditBirthDate" type="date" autocomplete="bday"><button class="sx-editdata-save" data-profile-save="birthDate" type="button">ZAPISZ</button></div><div class="sx-editdata-message" data-profile-msg="birthDate"></div></div>
       </div>
 
-      <div class="sx-editdata-row" data-edit-row="phone">
-        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg></div>
-        <div class="sx-editdata-copy"><small>NUMER TELEFONU</small><b id="sxDataPhone">Nie dodano</b><em id="sxDataPhoneStatus">Opcjonalny</em></div>
-        <button class="sx-editdata-pencil" data-edit-toggle="phone" type="button" aria-label="Dodaj lub zmień numer telefonu">✎</button>
-        <div class="sx-editdata-editor">
-          <div class="sx-editdata-editor-grid"><input id="sxEditPhone" autocomplete="tel" inputmode="tel" placeholder="+48 123 456 789"><button class="sx-editdata-save" id="sxPhoneSend" type="button">WYŚLIJ SMS</button></div>
-          <div class="sx-editdata-code" id="sxPhoneCodeBox"><div class="sx-editdata-editor-grid"><input id="sxPhoneCode" inputmode="numeric" maxlength="6" placeholder="Kod SMS 000000"><button class="sx-editdata-save" id="sxPhoneConfirm" type="button">POTWIERDŹ</button></div></div>
-          <div class="sx-editdata-message" id="sxPhoneMessage"></div>
-        </div>
-      </div>
+      
     </div>
   </div>
 </div>
@@ -3485,7 +3446,7 @@ const renderCart=()=>{hydrateCartDiscounts();
 (()=>{
   const modal=document.getElementById('sxAccountSettingsModal');if(!modal)return;
   const $=id=>document.getElementById(id);
-  let user=null,pendingNewEmail='',pendingPhone='';
+  let user=null,pendingNewEmail='';
 
   async function api(path,body){
     const r=await fetch('/api'+path,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
@@ -3502,19 +3463,15 @@ const renderCart=()=>{hydrateCartDiscounts();
     $('sxDataFirstName').textContent=user?.firstName||'Nie ustawiono';
     $('sxDataLastName').textContent=user?.lastName||'Nie ustawiono';
     $('sxDataBirthDate').textContent=fmtDate(user?.birthDate);
-    $('sxDataPhone').textContent=user?.phone||'Nie dodano';
-    $('sxDataPhoneStatus').textContent=user?.phoneVerified?'ZWERYFIKOWANY':'Opcjonalny / niezweryfikowany';
-    $('sxDataPhoneStatus').classList.toggle('ok',!!user?.phoneVerified);
     $('sxEditFirstName').value=user?.firstName||'';
     $('sxEditLastName').value=user?.lastName||'';
     $('sxEditBirthDate').value=user?.birthDate||'';
-    $('sxEditPhone').value=user?.phone||'';
   }
   function closeEditors(){modal.querySelectorAll('.sx-editdata-row').forEach(r=>r.classList.remove('open'))}
   async function open(){
     user=await me();paint();closeEditors();
-    pendingNewEmail='';pendingPhone='';
-    $('sxEmailCodeBox').classList.remove('show');$('sxPhoneCodeBox').classList.remove('show');
+    pendingNewEmail='';
+    $('sxEmailCodeBox').classList.remove('show');
     modal.querySelectorAll('.sx-editdata-message').forEach(x=>message(x,''));
     modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
   }
@@ -3558,22 +3515,6 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(newPassword!==newPassword2){message(msgEl,'Nowe hasła nie są takie same.','error');return}
     $('sxPasswordChange').disabled=true;
     try{await api('/account/change-password',{currentPassword,newPassword});$('sxCurrentPassword').value='';$('sxNewPassword').value='';$('sxNewPassword2').value='';message(msgEl,'Hasło zostało zmienione.','success')}catch(e){message(msgEl,e.message,'error')}finally{$('sxPasswordChange').disabled=false}
-  };
-
-  $('sxPhoneSend').onclick=async()=>{
-    const phone=$('sxEditPhone').value.trim(),msgEl=$('sxPhoneMessage');
-    if(!phone){message(msgEl,'Wpisz numer telefonu.','error');return}
-    $('sxPhoneSend').disabled=true;
-    try{
-      const d=await api('/account/phone/start',{phone});pendingPhone=d.phone;$('sxPhoneCodeBox').classList.add('show');
-      message(msgEl,d.developmentCode?`Tryb testowy — kod SMS: ${d.developmentCode}`:'Kod SMS został wysłany. Jest ważny 10 minut.','success');$('sxPhoneCode').focus();
-    }catch(e){message(msgEl,e.message,'error')}finally{$('sxPhoneSend').disabled=false}
-  };
-  $('sxPhoneConfirm').onclick=async()=>{
-    const code=String($('sxPhoneCode').value||'').replace(/\D/g,''),msgEl=$('sxPhoneMessage');
-    if(!pendingPhone||code.length!==6){message(msgEl,'Wpisz pełny 6-cyfrowy kod SMS.','error');return}
-    $('sxPhoneConfirm').disabled=true;
-    try{const d=await api('/account/phone/confirm',{phone:pendingPhone,code});user=d.user;pendingPhone='';$('sxPhoneCodeBox').classList.remove('show');$('sxPhoneCode').value='';paint();message(msgEl,'Numer telefonu został zweryfikowany i zapisany.','success');window.STARXV_REFRESH_AUTH_USER?.()}catch(e){message(msgEl,e.message,'error')}finally{$('sxPhoneConfirm').disabled=false}
   };
 
   function install(){

@@ -336,20 +336,9 @@ app.use('/api/auth/reset-password',rateLimit('reset',10,15*60*1000));
 app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000));
 app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
 app.use('/api/account/profile',rateLimit('profile-edit',30,15*60*1000));
-app.use('/api/account/phone/start',rateLimit('phone-start',6,15*60*1000));
-app.use('/api/account/phone/confirm',rateLimit('phone-confirm',12,15*60*1000));
 app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
 app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
 function cleanEmail(v){return String(v||'').trim().toLowerCase()}
-function cleanPhone(v){
-  const raw=String(v||'').trim().replace(/[\s().-]/g,'');
-  if(!raw)return '';
-  if(/^\+\d{8,15}$/.test(raw))return raw;
-  const digits=raw.replace(/\D/g,'');
-  if(/^48\d{9}$/.test(digits))return '+'+digits;
-  if(/^\d{9}$/.test(digits))return '+48'+digits;
-  return '';
-}
 function validBirthDate(v){
   const s=String(v||'').trim();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
@@ -362,7 +351,6 @@ function validBirthDate(v){
   return age>=13&&age<=120;
 }
 function publicUser(u){
-  const phone=String(u.phone||'');
   return {
     id:u.id,
     firstName:u.firstName||'',
@@ -371,9 +359,6 @@ function publicUser(u){
     createdAt:u.createdAt,
     avatarData:u.avatarData||'',
     birthDate:u.birthDate||'',
-    phone,
-    phoneVerified:Boolean(phone&&u.phoneVerifiedAt),
-    phoneVerifiedAt:Number(u.phoneVerifiedAt||0),
     profileSetupRequired:Boolean(u.profileSetupRequired)
   };
 }
@@ -501,42 +486,6 @@ Jeśli to nie Ty, zignoruj tę wiadomość.`,
   console.log(`Kod zmiany e-maila STARXV wysłany na ${email}. ID: ${data?.id}`);return {dev:false};
 }
 
-function phoneCodeHash(userId,phone,code){
-  return crypto.createHash('sha256').update(String(userId)+'|'+String(phone)+'|'+String(code)).digest('hex');
-}
-async function sendPhoneVerificationCode(phone,code){
-  const sid=String(process.env.TWILIO_ACCOUNT_SID||'').trim();
-  const token=String(process.env.TWILIO_AUTH_TOKEN||'').trim();
-  const from=String(process.env.TWILIO_FROM_NUMBER||'').trim();
-
-  if(!sid||!token||!from){
-    if(process.env.NODE_ENV==='production')throw new Error('Weryfikacja SMS nie jest jeszcze skonfigurowana.');
-    console.log(`[STARXV DEV SMS] Kod dla ${phone}: ${code}`);
-    return {dev:true};
-  }
-
-  const body=new URLSearchParams({
-    To:phone,
-    From:from,
-    Body:`STARXV: Twój kod weryfikacyjny to ${code}. Kod wygasa po 10 minutach.`
-  });
-
-  const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`,{
-    method:'POST',
-    headers:{
-      'Authorization':'Basic '+Buffer.from(sid+':'+token).toString('base64'),
-      'Content-Type':'application/x-www-form-urlencoded'
-    },
-    body:body.toString()
-  });
-  const data=await r.json().catch(()=>({}));
-  if(!r.ok){
-    console.error('Twilio SMS error:',data);
-    throw new Error('Nie udało się wysłać kodu SMS.');
-  }
-  return {dev:false,sid:data.sid||''};
-}
-
 app.post('/api/auth/forgot-password',async(req,res)=>{try{
   const email=cleanEmail(req.body?.email),now=Date.now(),db=load();
   db.passwordResets=(db.passwordResets||[]).filter(x=>x.expiresAt>now);
@@ -593,7 +542,7 @@ app.post('/api/auth/verify',(req,res)=>{
   if(p.codeHash!==codeHash(email,code)){p.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}
   if(db.users.some(u=>u.email===email))return res.status(409).json({error:'To konto już istnieje.'});
   const u={
-    id:crypto.randomUUID(),firstName:'',lastName:'',birthDate:'',phone:'',phoneVerifiedAt:0,
+    id:crypto.randomUUID(),firstName:'',lastName:'',birthDate:'',
     profileSetupRequired:true,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',
     favorites:[],addresses:[],defaultAddressId:'',cart:[],authProviders:['email']
   };
@@ -692,8 +641,6 @@ app.post('/api/auth/google',async(req,res)=>{
       firstName:firstName||'',
       lastName:lastName||'',
       birthDate:'',
-      phone:'',
-      phoneVerifiedAt:0,
       profileSetupRequired:true,
       email,
       passwordHash:hashPassword(crypto.randomBytes(32).toString('hex')),
@@ -806,64 +753,6 @@ app.post('/api/account/profile',auth,async(req,res)=>{
   }
 });
 
-app.post('/api/account/phone/start',auth,async(req,res)=>{
-  try{
-    const phone=cleanPhone(req.body?.phone),now=Date.now();
-    if(!phone)return res.status(400).json({error:'Wpisz poprawny numer telefonu, np. +48 123 456 789.'});
-    if(String(req.user.phone||'')===phone&&req.user.phoneVerifiedAt)return res.status(400).json({error:'Ten numer jest już zweryfikowany na Twoim koncie.'});
-    if(req.db.users.some(u=>u.id!==req.user.id&&cleanPhone(u.phone)===phone&&u.phoneVerifiedAt)){
-      return res.status(409).json({error:'Ten numer telefonu jest już przypisany do innego konta.'});
-    }
-
-    req.db.phoneChanges=(req.db.phoneChanges||[]).filter(x=>Number(x.expiresAt||0)>now);
-    const previous=req.db.phoneChanges.find(x=>x.userId===req.user.id);
-    if(previous&&now-Number(previous.createdAt||0)<60000){
-      return res.status(429).json({error:'Poczekaj chwilę przed wysłaniem kolejnego kodu SMS.'});
-    }
-
-    req.db.phoneChanges=req.db.phoneChanges.filter(x=>x.userId!==req.user.id);
-    const code=String(crypto.randomInt(100000,1000000));
-    req.db.phoneChanges.push({
-      userId:req.user.id,phone,codeHash:phoneCodeHash(req.user.id,phone,code),
-      expiresAt:now+10*60*1000,attempts:0,createdAt:now
-    });
-    await Promise.resolve(save(req.db));
-    const sent=await sendPhoneVerificationCode(phone,code);
-    res.json({ok:true,expiresIn:600,phone,developmentCode:sent.dev?code:undefined});
-  }catch(e){
-    console.error('Phone verification start error:',e);
-    res.status(e.message==='Weryfikacja SMS nie jest jeszcze skonfigurowana.'?503:500).json({error:e.message||'Nie udało się wysłać kodu SMS.'});
-  }
-});
-
-app.post('/api/account/phone/confirm',auth,async(req,res)=>{
-  const phone=cleanPhone(req.body?.phone),code=String(req.body?.code||'').replace(/\D/g,''),now=Date.now();
-  if(!phone||code.length!==6)return res.status(400).json({error:'Wpisz poprawny numer telefonu i 6-cyfrowy kod.'});
-
-  req.db.phoneChanges=(req.db.phoneChanges||[]).filter(x=>Number(x.expiresAt||0)>now);
-  const change=req.db.phoneChanges.find(x=>x.userId===req.user.id);
-  if(!change||change.phone!==phone)return res.status(400).json({error:'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.'});
-  if(change.attempts>=5){
-    req.db.phoneChanges=req.db.phoneChanges.filter(x=>x.userId!==req.user.id);
-    save(req.db);
-    return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});
-  }
-  if(change.codeHash!==phoneCodeHash(req.user.id,phone,code)){
-    change.attempts++;
-    save(req.db);
-    return res.status(400).json({error:'Nieprawidłowy kod SMS.'});
-  }
-  if(req.db.users.some(u=>u.id!==req.user.id&&cleanPhone(u.phone)===phone&&u.phoneVerifiedAt)){
-    return res.status(409).json({error:'Ten numer telefonu jest już przypisany do innego konta.'});
-  }
-
-  req.user.phone=phone;
-  req.user.phoneVerifiedAt=now;
-  req.db.phoneChanges=req.db.phoneChanges.filter(x=>x.userId!==req.user.id);
-  await Promise.resolve(save(req.db));
-  res.json({ok:true,user:publicUser(req.user)});
-});
-
 // Permanently delete the currently logged-in STARXV account.
 // Existing paid/order records are kept as standalone store records, but the account itself
 // (profile, saved addresses, favorites, avatar and password hash) is removed.
@@ -881,7 +770,6 @@ app.delete('/api/account',auth,(req,res)=>{
   req.db.reviews=(req.db.reviews||[]).filter(r=>r.userId!==userId);
   req.db.users=(req.db.users||[]).filter(u=>u.id!==userId);
   req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==cleanEmail(email));
-  req.db.phoneChanges=(req.db.phoneChanges||[]).filter(x=>x.userId!==userId);
   save(req.db);
 
   invalidateUserSessions(userId);
