@@ -914,6 +914,47 @@ body.sx-delete-account-lock{overflow:hidden!important}
 }
 </style>
 
+
+<style id="starxv-profile-data-editor-style">
+.sx-profile-setup-kicker{margin:0 0 12px;color:#b89b3f;font:950 8px/1 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase}
+.sx-profile-setup-sms{margin-top:16px;padding:16px;border:1px solid rgba(184,155,63,.22);background:rgba(184,155,63,.04)}
+.sx-profile-setup-sms-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px;color:#888;font-size:8px;letter-spacing:.10em}
+.sx-profile-setup-sms-head b{color:#d6bf78}
+
+.sx-editdata-modal{position:fixed;inset:0;z-index:1000600;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)}
+.sx-editdata-modal.open{display:flex}
+.sx-editdata-shell{width:min(760px,100%);max-height:90vh;overflow:auto;padding:28px;border:1px solid rgba(255,255,255,.13);border-radius:22px;background:#090909;color:#fff;box-shadow:0 30px 110px rgba(0,0,0,.68)}
+.sx-editdata-head{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sx-editdata-kicker{color:#b89b3f;font:950 8px/1 Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase}
+.sx-editdata-title{margin-top:8px;font:950 31px/.95 Arial,sans-serif;letter-spacing:-.04em}
+.sx-editdata-sub{margin-top:8px;color:#7c7c7c;font-size:10px;line-height:1.55}
+.sx-editdata-close{width:40px;height:40px;flex:0 0 40px;border:1px solid #2e2e2e;border-radius:50%;background:#111;color:#888;font-size:22px;cursor:pointer}
+.sx-editdata-list{display:grid;gap:0;margin-top:8px}
+.sx-editdata-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:13px;align-items:center;padding:17px 2px;border-bottom:1px solid rgba(255,255,255,.075)}
+.sx-editdata-icon{width:38px;height:38px;display:grid;place-items:center;border:1px solid #2d2d2d;border-radius:11px;color:#c8af64;background:#0d0d0d}
+.sx-editdata-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sx-editdata-copy small{display:block;color:#666;font:900 8px/1 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase}
+.sx-editdata-copy b{display:block;margin-top:6px;color:#eee;font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.sx-editdata-copy em{display:inline-flex;margin-top:5px;color:#8d8d8d;font-size:8px;font-style:normal}
+.sx-editdata-copy em.ok{color:#b7cc9a}
+.sx-editdata-pencil{width:38px;height:38px;border:1px solid #303030;border-radius:10px;background:#111;color:#aaa;cursor:pointer;font-size:15px}
+.sx-editdata-pencil:hover{background:#1a1a1a;color:#fff}
+.sx-editdata-editor{display:none;grid-column:1/-1;padding:14px 0 2px 55px}
+.sx-editdata-row.open .sx-editdata-editor{display:block}
+.sx-editdata-editor-grid{display:grid;grid-template-columns:1fr auto;gap:8px}
+.sx-editdata-editor input{min-height:44px;border:1px solid #333;border-radius:10px;background:#050505;color:#fff;padding:0 12px;outline:none}
+.sx-editdata-save{min-width:125px;border:0;border-radius:10px;background:#f1eee7;color:#080808;padding:0 15px;font-size:8px;font-weight:950;letter-spacing:.08em;cursor:pointer}
+.sx-editdata-secondary{margin-top:8px;border:1px solid #333;border-radius:10px;background:#111;color:#ddd;padding:11px 13px;font-size:8px;font-weight:900;letter-spacing:.07em;cursor:pointer}
+.sx-editdata-message{min-height:17px;margin-top:8px;color:#777;font-size:8px;line-height:1.5}.sx-editdata-message.error{color:#d88f8f}.sx-editdata-message.success{color:#b9cf9d}
+.sx-editdata-code{display:none;margin-top:10px}.sx-editdata-code.show{display:block}
+.sx-editdata-password-grid{display:grid;gap:8px}
+@media(max-width:600px){
+ .sx-editdata-modal{padding:12px}.sx-editdata-shell{padding:22px 18px;border-radius:17px}
+ .sx-editdata-row{grid-template-columns:38px minmax(0,1fr) auto}.sx-editdata-editor{padding-left:0}
+ .sx-editdata-editor-grid{grid-template-columns:1fr}.sx-editdata-save{min-height:44px}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -1096,7 +1137,7 @@ body.sx-delete-account-lock{overflow:hidden!important}
 <div class="sx-auth-provider-note">Przy rejestracji przez e-mail nadal potwierdzisz adres kodem STARXV.</div>
 <div class="sx-auth-email-panel">
 <div class="sx-auth-divider"><span>rejestracja e-mail</span></div>
-<div class="auth-grid"><div class="auth-field"><label>Imię</label><input autocomplete="given-name" id="registerFirstName"/></div><div class="auth-field"><label>Nazwisko</label><input autocomplete="family-name" id="registerLastName"/></div><div class="auth-field full"><label>E-mail</label><input autocomplete="email" id="registerEmail" type="email"/></div><div class="auth-field"><label>Hasło</label><input autocomplete="new-password" id="registerPassword" placeholder="minimum 8 znaków" type="password"/></div><div class="auth-field"><label>Powtórz hasło</label><input autocomplete="new-password" id="registerPassword2" type="password"/></div></div>
+<div class="auth-grid"><div class="auth-field full"><label>E-mail</label><input autocomplete="email" id="registerEmail" type="email"/></div><div class="auth-field"><label>Hasło</label><input autocomplete="new-password" id="registerPassword" placeholder="minimum 8 znaków" type="password"/></div><div class="auth-field"><label>Powtórz hasło</label><input autocomplete="new-password" id="registerPassword2" type="password"/></div></div>
 <button class="auth-submit" id="registerSubmit">WYŚLIJ KOD →</button><div class="auth-message" id="registerMessage"></div>
 </div>
 </div>
@@ -1105,7 +1146,26 @@ body.sx-delete-account-lock{overflow:hidden!important}
 <div class="auth-grid"><div class="auth-field full"><label>Kod weryfikacyjny</label><input autocomplete="one-time-code" id="verifyCode" inputmode="numeric" maxlength="6" placeholder="000000"/></div></div>
 <button class="auth-submit" id="verifySubmit">POTWIERDŹ KOD →</button><button class="profile-btn" id="verifyBack" style="width:100%;margin-top:10px" type="button">WRÓĆ DO REJESTRACJI</button><div class="auth-message" id="verifyMessage"></div>
 </div>
-<div class="auth-note">Konto jest obsługiwane przez backend STARXV. Konto powstaje dopiero po poprawnym potwierdzeniu adresu e-mail.</div>
+<div class="auth-view" data-auth-view="profile-setup">
+  <div class="sx-profile-setup-kicker">STARXV / FINAL STEP</div>
+  <h3>Dokończ profil.</h3>
+  <p class="auth-lead">Ustaw dane swojego konta. Numer telefonu jest opcjonalny i zostanie dodany dopiero po potwierdzeniu kodem SMS.</p>
+  <div class="auth-grid">
+    <div class="auth-field"><label>Imię</label><input autocomplete="given-name" id="setupFirstName"/></div>
+    <div class="auth-field"><label>Nazwisko</label><input autocomplete="family-name" id="setupLastName"/></div>
+    <div class="auth-field full"><label>Data urodzenia</label><input autocomplete="bday" id="setupBirthDate" type="date"/></div>
+    <div class="auth-field full"><label>Numer telefonu <span style="color:#666">(opcjonalnie)</span></label><input autocomplete="tel" id="setupPhone" inputmode="tel" placeholder="+48 123 456 789" type="tel"/></div>
+  </div>
+  <button class="auth-submit" id="setupSubmit">ZAPISZ DANE →</button>
+  <button class="profile-btn" id="setupSkipPhone" style="width:100%;margin-top:10px" type="button">POMIŃ TELEFON I ZAKOŃCZ</button>
+  <div class="sx-profile-setup-sms" id="setupSmsBox" hidden>
+    <div class="sx-profile-setup-sms-head"><b>WERYFIKACJA SMS</b><span id="setupSmsPhone"></span></div>
+    <div class="auth-grid"><div class="auth-field full"><label>Kod SMS</label><input autocomplete="one-time-code" id="setupSmsCode" inputmode="numeric" maxlength="6" placeholder="000000"/></div></div>
+    <button class="auth-submit" id="setupSmsConfirm">POTWIERDŹ NUMER →</button>
+  </div>
+  <div class="auth-message" id="setupMessage"></div>
+</div>
+<div class="auth-note">Konto jest obsługiwane przez backend STARXV. Dane profilu możesz później zmienić w sekcji „Edytuj dane”.</div>
 </div>
 <div class="account-profile" id="accountProfile">
 <div class="profile-hero"><button class="sx-profile-search-fab" id="sxProfileSearchBtn" type="button" aria-label="Otwórz wyszukiwarkę STARXV" title="Wyszukiwarka STARXV"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.25" cy="10.25" r="5.75"></circle><path d="M14.7 14.7 19.4 19.4"></path></svg></button><div class="sx-profile-avatar-wrap"><div class="profile-avatar" id="profileAvatar">SX</div><label class="sx-avatar-edit" for="profileAvatarInput" title="Zmień zdjęcie profilowe">✎</label><input accept="image/*" class="sx-avatar-input" id="profileAvatarInput" type="file"/></div><div class="profile-name" id="profileName">STARXV USER</div><div class="profile-email" id="profileEmail"></div><div class="profile-meta"><div class="profile-meta-row"><span>STATUS</span><b>ZALOGOWANO</b></div><div class="profile-meta-row"><span>KONTO UTWORZONE</span><b id="profileCreated">—</b></div><div class="profile-meta-row"><span>SESJA</span><button class="sx-meta-logout" id="logoutBtn" type="button">WYLOGUJ SIĘ</button></div><div class="profile-meta-row"><span>WERSJA</span><b class="sx-profile-release" id="sxProfileRelease">PRE-LAUNCH 1.0v</b></div></div></div>
@@ -2068,6 +2128,16 @@ const renderCart=()=>{hydrateCartDiscounts();
     const a=currentUser,sub=$('accountSubtitle');
     window.STARXV_AUTH_USER=a||null;
     if(a){
+      if(a.profileSetupRequired){
+        guest.style.display='block';
+        profile.classList.remove('active');
+        badge.classList.remove('show');
+        sub.textContent='Dokończ konfigurację konta';
+        openBtn.setAttribute('aria-label','Dokończ konfigurację konta STARXV');
+        switchTab('profile-setup');
+        window.dispatchEvent(new Event('starxv:auth-changed'));
+        return;
+      }
       guest.style.display='none';profile.classList.add('active');
       document.querySelectorAll('#profileAvatar').forEach(av=>{
         av.textContent=a.avatarData?'':initials(a);
@@ -2080,18 +2150,28 @@ const renderCart=()=>{hydrateCartDiscounts();
         }
         av.classList.toggle('has-photo',!!a.avatarData);
       });
-      document.querySelectorAll('#profileName').forEach(el=>el.textContent=`${a.firstName} ${a.lastName}`);
+      document.querySelectorAll('#profileName').forEach(el=>el.textContent=`${a.firstName||''} ${a.lastName||''}`.trim()||'STARXV USER');
       document.querySelectorAll('#profileEmail').forEach(el=>el.textContent=a.email);
       document.querySelectorAll('#profileCreated').forEach(el=>el.textContent=new Date(a.createdAt).toLocaleDateString('pl-PL'));
-      badge.textContent=initials(a);badge.classList.add('show');sub.textContent='Twoje konto STARXV';openBtn.setAttribute('aria-label',`Konto: ${a.firstName} ${a.lastName}`)
+      badge.textContent=initials(a);badge.classList.add('show');sub.textContent='Twoje konto STARXV';openBtn.setAttribute('aria-label',`Konto: ${a.firstName||''} ${a.lastName||''}`.trim()||'Konto STARXV')
     }
     else{guest.style.display='block';profile.classList.remove('active');badge.classList.remove('show');badge.textContent='';sub.textContent='Zaloguj się lub utwórz konto';openBtn.setAttribute('aria-label','Zaloguj się lub utwórz konto');try{localStorage.removeItem('starxv-favorites')}catch(e){}}
     window.dispatchEvent(new Event('starxv:auth-changed'));
     if(!a)window.dispatchEvent(new Event('starxv:favorites-changed'));
   }
-  function switchTab(name){document.querySelectorAll('[data-auth-tab]').forEach(x=>x.classList.toggle('active',x.dataset.authTab===name));document.querySelectorAll('[data-auth-view]').forEach(x=>x.classList.toggle('active',x.dataset.authView===name));setMsg('loginMessage','');setMsg('registerMessage','');setMsg('verifyMessage','')}
+  function switchTab(name){document.querySelectorAll('[data-auth-tab]').forEach(x=>x.classList.toggle('active',x.dataset.authTab===name));document.querySelectorAll('[data-auth-view]').forEach(x=>x.classList.toggle('active',x.dataset.authView===name));setMsg('loginMessage','');setMsg('registerMessage','');setMsg('verifyMessage','');setMsg('setupMessage','')}
   document.querySelectorAll('[data-auth-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.authTab));
-  async function refreshUser(){try{const d=await api('/auth/me');currentUser=d.user||null}catch(e){currentUser=null}renderState()}
+  async function refreshUser(){
+    try{const d=await api('/auth/me');currentUser=d.user||null}catch(e){currentUser=null}
+    renderState();
+    if(currentUser?.profileSetupRequired&&sessionStorage.getItem('starxv-open-profile-setup')==='1'){
+      sessionStorage.removeItem('starxv-open-profile-setup');
+      modal.setAttribute('aria-hidden','false');
+      document.body.style.overflow='hidden';
+      requestAnimationFrame(()=>modal.classList.add('open'));
+    }
+  }
+  window.STARXV_REFRESH_AUTH_USER=refreshUser;
   let sxKeepWorldOnAccountClose=false;
   function open(){document.getElementById('ordersModal')?.classList.remove('open');document.getElementById('cartModal')?.classList.remove('open');refreshUser();modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>modal.classList.add('open'))}
   function close(){
@@ -2106,13 +2186,61 @@ const renderCart=()=>{hydrateCartDiscounts();
   }
   openBtn.onclick=open;closeBtn.onclick=close;modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
   $('registerSubmit').onclick=async()=>{
-    const firstName=$('registerFirstName').value.trim(),lastName=$('registerLastName').value.trim(),email=normalize($('registerEmail').value),password=$('registerPassword').value,password2=$('registerPassword2').value;
-    if(!firstName||!lastName||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<8||password!==password2){setMsg('registerMessage',password!==password2?'Hasła nie są takie same.':'Uzupełnij dane, wpisz poprawny e-mail i hasło minimum 8 znaków.','error');return}
-    try{await api('/auth/register',{method:'POST',body:JSON.stringify({firstName,lastName,email,password})});pendingEmail=email;$('verifyLead').textContent=`Wpisz 6-cyfrowy kod wysłany na ${email}.`;switchTab('verify');setMsg('verifyMessage','Kod został wysłany. Kod jest ważny 10 minut.','success')}catch(e){setMsg('registerMessage',e.message,'error')}
+    const email=normalize($('registerEmail').value),password=$('registerPassword').value,password2=$('registerPassword2').value;
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||password.length<8||password!==password2){setMsg('registerMessage',password!==password2?'Hasła nie są takie same.':'Wpisz poprawny e-mail i hasło minimum 8 znaków.','error');return}
+    try{await api('/auth/register',{method:'POST',body:JSON.stringify({email,password})});pendingEmail=email;$('verifyLead').textContent=`Wpisz 6-cyfrowy kod wysłany na ${email}.`;switchTab('verify');setMsg('verifyMessage','Kod został wysłany. Kod jest ważny 10 minut.','success')}catch(e){setMsg('registerMessage',e.message,'error')}
   };
-  $('verifySubmit').onclick=async()=>{const code=String($('verifyCode').value||'').replace(/\D/g,'');if(!pendingEmail||code.length!==6){setMsg('verifyMessage','Wpisz pełny 6-cyfrowy kod.','error');return}try{const d=await api('/auth/verify',{method:'POST',body:JSON.stringify({email:pendingEmail,code})});currentUser=d.user;renderState();setMsg('verifyMessage','E-mail potwierdzony. Konto zostało utworzone.','success')}catch(e){setMsg('verifyMessage',e.message,'error')}};
+  $('verifySubmit').onclick=async()=>{
+    const code=String($('verifyCode').value||'').replace(/\D/g,'');
+    if(!pendingEmail||code.length!==6){setMsg('verifyMessage','Wpisz pełny 6-cyfrowy kod.','error');return}
+    try{
+      const d=await api('/auth/verify',{method:'POST',body:JSON.stringify({email:pendingEmail,code})});
+      currentUser=d.user;
+      $('setupFirstName').value=currentUser?.firstName||'';
+      $('setupLastName').value=currentUser?.lastName||'';
+      switchTab('profile-setup');
+      setMsg('setupMessage','E-mail potwierdzony. Uzupełnij ostatni etap konta STARXV.','success');
+    }catch(e){setMsg('verifyMessage',e.message,'error')}
+  };
   $('verifyBack').onclick=()=>switchTab('register');
-  $('loginSubmit').onclick=async()=>{const email=normalize($('loginEmail').value),password=$('loginPassword').value;try{const d=await api('/auth/login',{method:'POST',body:JSON.stringify({email,password})});currentUser=d.user;setMsg('loginMessage','Zalogowano.','success');renderState()}catch(e){setMsg('loginMessage',e.message,'error')}};
+
+  let setupPendingPhone='';
+  async function saveSetup(skipPhone=false){
+    const firstName=$('setupFirstName').value.trim(),lastName=$('setupLastName').value.trim(),birthDate=$('setupBirthDate').value,phone=skipPhone?'':$('setupPhone').value.trim();
+    if(!firstName||!lastName||!birthDate){setMsg('setupMessage','Uzupełnij imię, nazwisko i datę urodzenia.','error');return}
+    const btn=skipPhone?$('setupSkipPhone'):$('setupSubmit');
+    btn.disabled=true;
+    try{
+      const saved=await api('/account/profile',{method:'POST',body:JSON.stringify({firstName,lastName,birthDate})});
+      currentUser=saved.user;
+      if(phone){
+        const sms=await api('/account/phone/start',{method:'POST',body:JSON.stringify({phone})});
+        setupPendingPhone=sms.phone;
+        $('setupSmsPhone').textContent=sms.phone;
+        $('setupSmsBox').hidden=false;
+        $('setupSmsCode').value='';
+        setMsg('setupMessage',sms.developmentCode?`Kod SMS został wygenerowany. Tryb testowy: ${sms.developmentCode}`:'Kod SMS został wysłany. Jest ważny 10 minut.','success');
+        $('setupSmsCode').focus();
+      }else{
+        currentUser=saved.user;
+        renderState();
+      }
+    }catch(e){setMsg('setupMessage',e.message,'error')}
+    finally{btn.disabled=false}
+  }
+  $('setupSubmit').onclick=()=>saveSetup(false);
+  $('setupSkipPhone').onclick=()=>saveSetup(true);
+  $('setupSmsConfirm').onclick=async()=>{
+    const code=String($('setupSmsCode').value||'').replace(/\D/g,'');
+    if(!setupPendingPhone||code.length!==6){setMsg('setupMessage','Wpisz pełny 6-cyfrowy kod SMS.','error');return}
+    const btn=$('setupSmsConfirm');btn.disabled=true;
+    try{
+      const d=await api('/account/phone/confirm',{method:'POST',body:JSON.stringify({phone:setupPendingPhone,code})});
+      currentUser=d.user;setupPendingPhone='';$('setupSmsBox').hidden=true;renderState();
+    }catch(e){setMsg('setupMessage',e.message,'error')}
+    finally{btn.disabled=false}
+  };
+  $('loginSubmit').onclick=async()=>{const email=normalize($('loginEmail').value),password=$('loginPassword').value;try{const d=await api('/auth/login',{method:'POST',body:JSON.stringify({email,password})});currentUser=d.user;if(currentUser?.profileSetupRequired){$('setupFirstName').value=currentUser.firstName||'';$('setupLastName').value=currentUser.lastName||'';switchTab('profile-setup');setMsg('setupMessage','Dokończ konfigurację konta.','success')}else{setMsg('loginMessage','Zalogowano.','success');renderState()}}catch(e){setMsg('loginMessage',e.message,'error')}};
   $('logoutBtn').onclick=async()=>{try{await api('/auth/logout',{method:'POST',body:'{}'})}catch(e){}currentUser=null;renderState();switchTab('login')};
   const deleteAccountBtn=$('deleteAccountBtn');
   const sxDeleteAccountModal=$('sxDeleteAccountModal');
@@ -2515,7 +2643,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         {title:'Profil',meta:'TWOJE KONTO',keywords:'profil konto account dane konto starxv',icon:'P',open:openAccount},
         {title:'Moje zamówienia',meta:'PROFIL / ZAMÓWIENIA',keywords:'zamowienia zamówienia order orders zakupy historia platnosc płatność',icon:'Z',open:openOrders},
         {title:'Zwroty i reklamacje',meta:'POMOC',keywords:'zwrot zwroty reklamacja reklamacje odstapienie odstąpienie pomoc',icon:'R',open:()=>go('/returns.html')},
-        {title:'Zmień hasło / e-mail',meta:'PROFIL / DANE LOGOWANIA',keywords:'haslo hasło email e-mail dane logowania bezpieczenstwo bezpieczeństwo konto',icon:'K',open:()=>openProfileFeature('sxAccountSecurityBtn')},
+        {title:'Edytuj dane',meta:'PROFIL / KONTO',keywords:'edytuj dane imie nazwisko data urodzenia telefon email haslo konto profil',icon:'E',open:()=>openProfileFeature('sxAccountSecurityBtn')},
         {title:'Zgłoś problem',meta:'STARXV SUPPORT',keywords:'support problem pomoc zglos zgłoś ticket kontakt techniczny',icon:'S',open:()=>openProfileFeature('sxReportProblemBtn')},
         {title:'Contact',meta:'KONTAKT Z STARXV',keywords:'contact kontakt mail email e-mail kontakt@starxv.pl napisz',icon:'C',open:openContact},
         {title:'Regulamin',meta:'INFORMACJE PRAWNE',keywords:'regulamin terms zasady sklep prawo prawne',icon:'§',open:()=>go('/terms.html')},
@@ -2680,7 +2808,7 @@ const renderCart=()=>{hydrateCartDiscounts();
 
   function renderAccountDashboard(){
     const profile=$('#accountProfile');if(!profile)return;let dash=$('#sxAccountDashboard');if(!dash){dash=document.createElement('div');dash.id='sxAccountDashboard';dash.className='sx-account-dashboard';profile.appendChild(dash)}
-    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">ZMIEŃ HASŁO/E-MAIL</span><span class="sx-info-rest"> - DANE LOGOWANIA</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div class="sx-profile-section-head">POWIADOMIENIA</div><div class="sx-profile-marketing-mini"><div><span class="sx-profile-link-kicker">DIGITAL / E-MAIL</span><b>NOWE PRODUKTY DIGITAL</b><small>Chcę dostawać informacje o nowych e-bookach i produktach cyfrowych STARXV.</small><div id="sxMarketingStatus">Ładowanie ustawienia…</div></div><label class="sx-switch" aria-label="Powiadomienia o nowych produktach Digital"><input disabled id="sxMarketingToggle" type="checkbox"><span class="sx-switch-track"></span></label></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
+    dash.innerHTML=`<div class="sx-profile-section-head">TWOJE KONTO</div><div class="sx-account-links sx-profile-main-links"><button class="sx-account-order-btn sx-profile-link-card" id="sxAccountOrders" type="button"><span class="sx-profile-link-kicker">ZAMÓWIENIA</span><b>MOJE ZAMÓWIENIA</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-shipreturn-btn sx-profile-link-card" id="sxShippingReturnsBtn" type="button"><span class="sx-profile-link-kicker">POMOC</span><b>ZWROTY I REKLAMACJE</b><span class="sx-profile-link-arrow">→</span></button><button class="sx-account-settings-open sx-profile-link-card sx-profile-link-security" id="sxAccountSecurityBtn" type="button"><span class="sx-profile-link-kicker sx-info-action">KONTO</span><b><span class="sx-info-action">EDYTUJ DANE</span><span class="sx-info-rest"> - PROFIL I LOGOWANIE</span></b><span class="sx-profile-link-arrow">→</span></button><button class="sx-profile-link-card sx-report-problem-card" id="sxReportProblemBtn" type="button"><span class="sx-report-unread-dot" id="sxReportUnreadDot" hidden></span><span class="sx-profile-link-kicker">SUPPORT</span><b>ZGŁOŚ PROBLEM <span class="sx-report-unread-text" id="sxReportUnreadText" hidden>· NOWA ODPOWIEDŹ</span></b><span class="sx-profile-link-arrow">→</span></button></div><div class="sx-profile-section-head">POWIADOMIENIA</div><div class="sx-profile-marketing-mini"><div><span class="sx-profile-link-kicker">DIGITAL / E-MAIL</span><b>NOWE PRODUKTY DIGITAL</b><small>Chcę dostawać informacje o nowych e-bookach i produktach cyfrowych STARXV.</small><div id="sxMarketingStatus">Ładowanie ustawienia…</div></div><label class="sx-switch" aria-label="Powiadomienia o nowych produktach Digital"><input disabled id="sxMarketingToggle" type="checkbox"><span class="sx-switch-track"></span></label></div><div id="sxProfileOwnerGroup" hidden><div class="sx-profile-section-head">STREFA WŁAŚCICIELA</div><div class="sx-account-links sx-profile-owner-links" id="sxProfileOwnerLinks"></div></div>`;
     $('#sxAccountOrders')?.addEventListener('click',()=>{window.STARXV_OPEN_ORDERS?.()});
     window.STARXV_INSTALL_ACCOUNT_SECURITY?.();
     setTimeout(()=>window.STARXV_MARKETING_REFRESH?.(),0);
@@ -3098,65 +3226,174 @@ const renderCart=()=>{hydrateCartDiscounts();
 })();
 </script>
 
-<div aria-hidden="true" class="sx-security-modal" id="sxAccountSettingsModal">
-<div aria-labelledby="sxSecurityTitle" aria-modal="true" class="sx-security-shell" role="dialog">
-<div class="sx-security-head">
-<div><div class="sx-security-kicker">STARXV / ACCOUNT</div><div class="sx-security-title" id="sxSecurityTitle">Dane logowania</div><div class="sx-security-sub">Tutaj możesz bezpiecznie zmienić adres e-mail oraz hasło swojego konta.</div></div>
-<button aria-label="Zamknij" class="sx-security-close" id="sxSecurityClose" type="button">×</button>
+<div aria-hidden="true" class="sx-editdata-modal" id="sxAccountSettingsModal">
+  <div aria-labelledby="sxSecurityTitle" aria-modal="true" class="sx-editdata-shell" role="dialog">
+    <div class="sx-editdata-head">
+      <div><div class="sx-editdata-kicker">STARXV / ACCOUNT</div><div class="sx-editdata-title" id="sxSecurityTitle">Edytuj dane</div><div class="sx-editdata-sub">Zarządzaj danymi profilu i logowania. Każdą pozycję możesz zmienić osobno.</div></div>
+      <button aria-label="Zamknij" class="sx-editdata-close" id="sxSecurityClose" type="button">×</button>
+    </div>
+
+    <div class="sx-editdata-list">
+      <div class="sx-editdata-row" data-edit-row="email">
+        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg></div>
+        <div class="sx-editdata-copy"><small>E-MAIL</small><b id="sxDataEmail">—</b><em>Adres logowania</em></div>
+        <button class="sx-editdata-pencil" data-edit-toggle="email" type="button" aria-label="Zmień e-mail">✎</button>
+        <div class="sx-editdata-editor">
+          <div class="sx-editdata-password-grid"><input id="sxNewEmail" type="email" autocomplete="email" placeholder="Nowy adres e-mail"><input id="sxEmailPassword" type="password" autocomplete="current-password" placeholder="Obecne hasło"></div>
+          <button class="sx-editdata-secondary" id="sxEmailSend" type="button">WYŚLIJ KOD NA NOWY E-MAIL</button>
+          <div class="sx-editdata-code" id="sxEmailCodeBox"><div class="sx-editdata-editor-grid"><input id="sxEmailCode" inputmode="numeric" maxlength="6" placeholder="Kod 000000"><button class="sx-editdata-save" id="sxEmailConfirm" type="button">POTWIERDŹ</button></div></div>
+          <div class="sx-editdata-message" id="sxEmailMessage"></div>
+        </div>
+      </div>
+
+      <div class="sx-editdata-row" data-edit-row="password">
+        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+        <div class="sx-editdata-copy"><small>HASŁO</small><b>••••••••</b><em>Chroni Twoje konto</em></div>
+        <button class="sx-editdata-pencil" data-edit-toggle="password" type="button" aria-label="Zmień hasło">✎</button>
+        <div class="sx-editdata-editor">
+          <div class="sx-editdata-password-grid"><input id="sxCurrentPassword" type="password" autocomplete="current-password" placeholder="Obecne hasło"><input id="sxNewPassword" type="password" autocomplete="new-password" placeholder="Nowe hasło — minimum 8 znaków"><input id="sxNewPassword2" type="password" autocomplete="new-password" placeholder="Powtórz nowe hasło"></div>
+          <button class="sx-editdata-secondary" id="sxPasswordChange" type="button">ZMIEŃ HASŁO</button>
+          <div class="sx-editdata-message" id="sxPasswordMessage"></div>
+        </div>
+      </div>
+
+      <div class="sx-editdata-row" data-edit-row="firstName">
+        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.3-6 7.5-6s6.7 2 7.5 6"/></svg></div>
+        <div class="sx-editdata-copy"><small>IMIĘ</small><b id="sxDataFirstName">—</b></div>
+        <button class="sx-editdata-pencil" data-edit-toggle="firstName" type="button" aria-label="Zmień imię">✎</button>
+        <div class="sx-editdata-editor"><div class="sx-editdata-editor-grid"><input id="sxEditFirstName" autocomplete="given-name"><button class="sx-editdata-save" data-profile-save="firstName" type="button">ZAPISZ</button></div><div class="sx-editdata-message" data-profile-msg="firstName"></div></div>
+      </div>
+
+      <div class="sx-editdata-row" data-edit-row="lastName">
+        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c.8-4 3.3-6 7.5-6s6.7 2 7.5 6"/></svg></div>
+        <div class="sx-editdata-copy"><small>NAZWISKO</small><b id="sxDataLastName">—</b></div>
+        <button class="sx-editdata-pencil" data-edit-toggle="lastName" type="button" aria-label="Zmień nazwisko">✎</button>
+        <div class="sx-editdata-editor"><div class="sx-editdata-editor-grid"><input id="sxEditLastName" autocomplete="family-name"><button class="sx-editdata-save" data-profile-save="lastName" type="button">ZAPISZ</button></div><div class="sx-editdata-message" data-profile-msg="lastName"></div></div>
+      </div>
+
+      <div class="sx-editdata-row" data-edit-row="birthDate">
+        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></div>
+        <div class="sx-editdata-copy"><small>DATA URODZENIA</small><b id="sxDataBirthDate">—</b></div>
+        <button class="sx-editdata-pencil" data-edit-toggle="birthDate" type="button" aria-label="Zmień datę urodzenia">✎</button>
+        <div class="sx-editdata-editor"><div class="sx-editdata-editor-grid"><input id="sxEditBirthDate" type="date" autocomplete="bday"><button class="sx-editdata-save" data-profile-save="birthDate" type="button">ZAPISZ</button></div><div class="sx-editdata-message" data-profile-msg="birthDate"></div></div>
+      </div>
+
+      <div class="sx-editdata-row" data-edit-row="phone">
+        <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M10 5h4M11 18.5h2"/></svg></div>
+        <div class="sx-editdata-copy"><small>NUMER TELEFONU</small><b id="sxDataPhone">Nie dodano</b><em id="sxDataPhoneStatus">Opcjonalny</em></div>
+        <button class="sx-editdata-pencil" data-edit-toggle="phone" type="button" aria-label="Dodaj lub zmień numer telefonu">✎</button>
+        <div class="sx-editdata-editor">
+          <div class="sx-editdata-editor-grid"><input id="sxEditPhone" autocomplete="tel" inputmode="tel" placeholder="+48 123 456 789"><button class="sx-editdata-save" id="sxPhoneSend" type="button">WYŚLIJ SMS</button></div>
+          <div class="sx-editdata-code" id="sxPhoneCodeBox"><div class="sx-editdata-editor-grid"><input id="sxPhoneCode" inputmode="numeric" maxlength="6" placeholder="Kod SMS 000000"><button class="sx-editdata-save" id="sxPhoneConfirm" type="button">POTWIERDŹ</button></div></div>
+          <div class="sx-editdata-message" id="sxPhoneMessage"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="sx-security-grid">
-<section class="sx-security-card">
-<h3>Adres e-mail</h3><p>Na nowy adres wyślemy 6-cyfrowy kod. Zmiana nastąpi dopiero po jego potwierdzeniu.</p>
-<div class="sx-security-current">Aktualny e-mail: <b id="sxSecurityCurrentEmail">—</b></div>
-<label class="sx-security-label" for="sxNewEmail">NOWY E-MAIL</label><input autocomplete="email" class="sx-security-input" id="sxNewEmail" placeholder="nowy@email.pl" type="email"/>
-<label class="sx-security-label" for="sxEmailPassword">OBECNE HASŁO</label><div class="sx-password-field"><input autocomplete="current-password" class="sx-security-input" id="sxEmailPassword" placeholder="••••••••" type="password"/><button aria-label="Pokaż hasło" aria-pressed="false" class="sx-password-eye" data-password-target="sxEmailPassword" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg></button></div>
-<button class="sx-security-btn" id="sxEmailSend" type="button">WYŚLIJ KOD →</button>
-<div class="sx-security-code" id="sxEmailCodeBox"><label class="sx-security-label" for="sxEmailCode">KOD Z E-MAILA</label><input class="sx-security-input" id="sxEmailCode" inputmode="numeric" maxlength="6" placeholder="000000"/><button class="sx-security-btn sx-security-secondary" id="sxEmailConfirm" type="button">POTWIERDŹ NOWY E-MAIL</button></div>
-<div class="sx-security-message" id="sxEmailMessage"></div>
-</section>
-<section class="sx-security-card">
-<h3>Hasło</h3><p>Po zmianie hasła inne aktywne sesje tego konta zostaną wylogowane. Ta sesja pozostanie aktywna.</p>
-<label class="sx-security-label" for="sxCurrentPassword">OBECNE HASŁO</label><div class="sx-password-field"><input autocomplete="current-password" class="sx-security-input" id="sxCurrentPassword" placeholder="••••••••" type="password"/><button aria-label="Pokaż hasło" aria-pressed="false" class="sx-password-eye" data-password-target="sxCurrentPassword" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg></button></div>
-<label class="sx-security-label" for="sxNewPassword">NOWE HASŁO</label><div class="sx-password-field"><input autocomplete="new-password" class="sx-security-input" id="sxNewPassword" placeholder="Minimum 8 znaków" type="password"/><button aria-label="Pokaż hasło" aria-pressed="false" class="sx-password-eye" data-password-target="sxNewPassword" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg></button></div>
-<label class="sx-security-label" for="sxNewPassword2">POWTÓRZ NOWE HASŁO</label><div class="sx-password-field"><input autocomplete="new-password" class="sx-security-input" id="sxNewPassword2" placeholder="••••••••" type="password"/><button aria-label="Pokaż hasło" aria-pressed="false" class="sx-password-eye" data-password-target="sxNewPassword2" type="button"><svg aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewbox="0 0 24 24"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg></button></div>
-<button class="sx-security-btn" id="sxPasswordChange" type="button">ZMIEŃ HASŁO →</button>
-<div class="sx-security-message" id="sxPasswordMessage"></div>
-</section>
-</div>
-<div class="sx-security-note">Dla bezpieczeństwa zmiana adresu e-mail wymaga obecnego hasła i kodu wysłanego na nowy adres. Kod jest ważny przez 10 minut.</div>
-</div>
-</div>
-<script id="starxv-account-security-v1">
+
+<script id="starxv-account-security-v2">
 (()=>{
   const modal=document.getElementById('sxAccountSettingsModal');if(!modal)return;
-  const $=id=>document.getElementById(id),closeBtn=$('sxSecurityClose'),email=$('sxNewEmail'),emailPassword=$('sxEmailPassword'),emailSend=$('sxEmailSend'),codeBox=$('sxEmailCodeBox'),emailCode=$('sxEmailCode'),emailConfirm=$('sxEmailConfirm'),emailMsg=$('sxEmailMessage'),currentEmail=$('sxSecurityCurrentEmail'),currentPassword=$('sxCurrentPassword'),newPassword=$('sxNewPassword'),newPassword2=$('sxNewPassword2'),passwordBtn=$('sxPasswordChange'),passwordMsg=$('sxPasswordMessage');
-  let pendingNewEmail='';
-  const passwordEyeButtons=[...modal.querySelectorAll('.sx-password-eye')];
-  function syncPasswordEye(btn){const input=$(btn.dataset.passwordTarget);if(!input)return;const hasValue=input.value.length>0;btn.classList.toggle('show',hasValue);if(!hasValue){input.type='password';btn.setAttribute('aria-pressed','false');btn.setAttribute('aria-label','Pokaż hasło');}}
-  passwordEyeButtons.forEach(btn=>{const input=$(btn.dataset.passwordTarget);if(!input)return;input.addEventListener('input',()=>syncPasswordEye(btn));btn.addEventListener('click',()=>{if(!input.value)return;const reveal=input.type==='password';input.type=reveal?'text':'password';btn.setAttribute('aria-pressed',reveal?'true':'false');btn.setAttribute('aria-label',reveal?'Ukryj hasło':'Pokaż hasło');});syncPasswordEye(btn)});
-  const syncPasswordEyes=()=>passwordEyeButtons.forEach(syncPasswordEye);
-  const msg=(el,text,type='')=>{el.textContent=text;el.className='sx-security-message'+(type?' '+type:'')};
-  async function api(path,body){const r=await fetch('/api'+path,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});let d={};try{d=await r.json()}catch{}if(!r.ok)throw new Error(d.error||'Wystąpił błąd.');return d}
-  async function getMe(){const r=await fetch('/api/auth/me',{credentials:'include'});if(!r.ok)throw new Error('Musisz się zalogować.');return r.json()}
-  function installButtons(){
-    document.querySelectorAll('.profile-actions .sx-account-settings-open').forEach(b=>b.remove());
-    document.querySelectorAll('.sx-account-settings-open').forEach(b=>{
-      if(b.dataset.sxSecurityBound==='1')return;
-      b.dataset.sxSecurityBound='1';
-      b.addEventListener('click',open);
+  const $=id=>document.getElementById(id);
+  let user=null,pendingNewEmail='',pendingPhone='';
+
+  async function api(path,body){
+    const r=await fetch('/api'+path,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Wystąpił błąd.');return d;
+  }
+  async function me(){
+    const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store'});
+    const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Musisz się zalogować.');return d.user;
+  }
+  const message=(el,text,type='')=>{el.textContent=text;el.className='sx-editdata-message'+(type?' '+type:'')};
+  const fmtDate=s=>{if(!s)return 'Nie ustawiono';try{return new Date(s+'T00:00:00').toLocaleDateString('pl-PL')}catch{return s}};
+  function paint(){
+    $('sxDataEmail').textContent=user?.email||'—';
+    $('sxDataFirstName').textContent=user?.firstName||'Nie ustawiono';
+    $('sxDataLastName').textContent=user?.lastName||'Nie ustawiono';
+    $('sxDataBirthDate').textContent=fmtDate(user?.birthDate);
+    $('sxDataPhone').textContent=user?.phone||'Nie dodano';
+    $('sxDataPhoneStatus').textContent=user?.phoneVerified?'ZWERYFIKOWANY':'Opcjonalny / niezweryfikowany';
+    $('sxDataPhoneStatus').classList.toggle('ok',!!user?.phoneVerified);
+    $('sxEditFirstName').value=user?.firstName||'';
+    $('sxEditLastName').value=user?.lastName||'';
+    $('sxEditBirthDate').value=user?.birthDate||'';
+    $('sxEditPhone').value=user?.phone||'';
+  }
+  function closeEditors(){modal.querySelectorAll('.sx-editdata-row').forEach(r=>r.classList.remove('open'))}
+  async function open(){
+    user=await me();paint();closeEditors();
+    pendingNewEmail='';pendingPhone='';
+    $('sxEmailCodeBox').classList.remove('show');$('sxPhoneCodeBox').classList.remove('show');
+    modal.querySelectorAll('.sx-editdata-message').forEach(x=>message(x,''));
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';
+  }
+  function close(){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';closeEditors()}
+  $('sxSecurityClose').onclick=close;modal.onclick=e=>{if(e.target===modal)close()};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
+
+  modal.querySelectorAll('[data-edit-toggle]').forEach(btn=>btn.onclick=()=>{
+    const row=modal.querySelector(`[data-edit-row="${btn.dataset.editToggle}"]`);
+    const was=row.classList.contains('open');closeEditors();if(!was)row.classList.add('open');
+  });
+
+  modal.querySelectorAll('[data-profile-save]').forEach(btn=>btn.onclick=async()=>{
+    const field=btn.dataset.profileSave;
+    const input=field==='firstName'?$('sxEditFirstName'):field==='lastName'?$('sxEditLastName'):$('sxEditBirthDate');
+    const msgEl=modal.querySelector(`[data-profile-msg="${field}"]`);
+    btn.disabled=true;
+    try{
+      const d=await api('/account/profile',{[field]:input.value});
+      user=d.user;paint();message(msgEl,'Zapisano.','success');window.STARXV_REFRESH_AUTH_USER?.();
+    }catch(e){message(msgEl,e.message,'error')}finally{btn.disabled=false}
+  });
+
+  $('sxEmailSend').onclick=async()=>{
+    const newEmail=String($('sxNewEmail').value||'').trim().toLowerCase(),currentPassword=$('sxEmailPassword').value;
+    const msgEl=$('sxEmailMessage');
+    if(!newEmail||!currentPassword){message(msgEl,'Wpisz nowy e-mail i obecne hasło.','error');return}
+    $('sxEmailSend').disabled=true;
+    try{await api('/account/change-email/start',{newEmail,currentPassword});pendingNewEmail=newEmail;$('sxEmailCodeBox').classList.add('show');message(msgEl,'Kod wysłano na nowy adres e-mail.','success');$('sxEmailCode').focus()}catch(e){message(msgEl,e.message,'error')}finally{$('sxEmailSend').disabled=false}
+  };
+  $('sxEmailConfirm').onclick=async()=>{
+    const code=String($('sxEmailCode').value||'').replace(/\D/g,''),msgEl=$('sxEmailMessage');
+    if(!pendingNewEmail||code.length!==6){message(msgEl,'Wpisz pełny 6-cyfrowy kod.','error');return}
+    $('sxEmailConfirm').disabled=true;
+    try{const d=await api('/account/change-email/confirm',{newEmail:pendingNewEmail,code});user=d.user;pendingNewEmail='';$('sxEmailCodeBox').classList.remove('show');paint();message(msgEl,'Adres e-mail został zmieniony.','success');window.STARXV_REFRESH_AUTH_USER?.()}catch(e){message(msgEl,e.message,'error')}finally{$('sxEmailConfirm').disabled=false}
+  };
+
+  $('sxPasswordChange').onclick=async()=>{
+    const currentPassword=$('sxCurrentPassword').value,newPassword=$('sxNewPassword').value,newPassword2=$('sxNewPassword2').value,msgEl=$('sxPasswordMessage');
+    if(!currentPassword){message(msgEl,'Wpisz obecne hasło.','error');return}
+    if(newPassword.length<8){message(msgEl,'Nowe hasło musi mieć minimum 8 znaków.','error');return}
+    if(newPassword!==newPassword2){message(msgEl,'Nowe hasła nie są takie same.','error');return}
+    $('sxPasswordChange').disabled=true;
+    try{await api('/account/change-password',{currentPassword,newPassword});$('sxCurrentPassword').value='';$('sxNewPassword').value='';$('sxNewPassword2').value='';message(msgEl,'Hasło zostało zmienione.','success')}catch(e){message(msgEl,e.message,'error')}finally{$('sxPasswordChange').disabled=false}
+  };
+
+  $('sxPhoneSend').onclick=async()=>{
+    const phone=$('sxEditPhone').value.trim(),msgEl=$('sxPhoneMessage');
+    if(!phone){message(msgEl,'Wpisz numer telefonu.','error');return}
+    $('sxPhoneSend').disabled=true;
+    try{
+      const d=await api('/account/phone/start',{phone});pendingPhone=d.phone;$('sxPhoneCodeBox').classList.add('show');
+      message(msgEl,d.developmentCode?`Tryb testowy — kod SMS: ${d.developmentCode}`:'Kod SMS został wysłany. Jest ważny 10 minut.','success');$('sxPhoneCode').focus();
+    }catch(e){message(msgEl,e.message,'error')}finally{$('sxPhoneSend').disabled=false}
+  };
+  $('sxPhoneConfirm').onclick=async()=>{
+    const code=String($('sxPhoneCode').value||'').replace(/\D/g,''),msgEl=$('sxPhoneMessage');
+    if(!pendingPhone||code.length!==6){message(msgEl,'Wpisz pełny 6-cyfrowy kod SMS.','error');return}
+    $('sxPhoneConfirm').disabled=true;
+    try{const d=await api('/account/phone/confirm',{phone:pendingPhone,code});user=d.user;pendingPhone='';$('sxPhoneCodeBox').classList.remove('show');$('sxPhoneCode').value='';paint();message(msgEl,'Numer telefonu został zweryfikowany i zapisany.','success');window.STARXV_REFRESH_AUTH_USER?.()}catch(e){message(msgEl,e.message,'error')}finally{$('sxPhoneConfirm').disabled=false}
+  };
+
+  function install(){
+    document.querySelectorAll('.sx-account-settings-open').forEach(btn=>{
+      if(btn.dataset.sxEditDataBound==='1')return;btn.dataset.sxEditDataBound='1';btn.addEventListener('click',()=>open().catch(e=>alert(e.message)));
     });
   }
-  window.STARXV_INSTALL_ACCOUNT_SECURITY=installButtons;
-  async function open(){try{const d=await getMe();currentEmail.textContent=d.user?.email||'—';email.value='';emailPassword.value='';emailCode.value='';currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'');msg(passwordMsg,'');modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}catch(e){alert(e.message)}}
-  function close(){
-    modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
-  }
-  closeBtn.addEventListener('click',close);modal.addEventListener('click',e=>{if(e.target===modal)close()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
-  // Delegacja kliknięcia sprawia, że oczko działa także po ponownym otwarciu / przebudowie widoku profilu.
-  emailSend.addEventListener('click',async()=>{const newEmailValue=String(email.value||'').trim().toLowerCase(),password=emailPassword.value;if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmailValue)){msg(emailMsg,'Wpisz poprawny nowy adres e-mail.','error');return}if(!password){msg(emailMsg,'Wpisz obecne hasło.','error');return}emailSend.disabled=true;try{await api('/account/change-email/start',{newEmail:newEmailValue,currentPassword:password});pendingNewEmail=newEmailValue;codeBox.classList.add('show');msg(emailMsg,`Kod został wysłany na ${newEmailValue}. Jest ważny 10 minut.`,'success');emailCode.focus()}catch(e){msg(emailMsg,e.message,'error')}finally{emailSend.disabled=false}});
-  emailConfirm.addEventListener('click',async()=>{const code=String(emailCode.value||'').replace(/\D/g,'');if(!pendingNewEmail||code.length!==6){msg(emailMsg,'Wpisz pełny 6-cyfrowy kod.','error');return}emailConfirm.disabled=true;try{const d=await api('/account/change-email/confirm',{newEmail:pendingNewEmail,code});const changed=d.user?.email||pendingNewEmail;currentEmail.textContent=changed;document.querySelectorAll('#profileEmail').forEach(el=>el.textContent=changed);email.value='';emailPassword.value='';emailCode.value='';syncPasswordEyes();pendingNewEmail='';codeBox.classList.remove('show');msg(emailMsg,'Adres e-mail został zmieniony.','success');window.dispatchEvent(new Event('starxv:auth-changed'))}catch(e){msg(emailMsg,e.message,'error')}finally{emailConfirm.disabled=false}});
-  passwordBtn.addEventListener('click',async()=>{const old=currentPassword.value,p1=newPassword.value,p2=newPassword2.value;if(!old){msg(passwordMsg,'Wpisz obecne hasło.','error');return}if(p1.length<8){msg(passwordMsg,'Nowe hasło musi mieć minimum 8 znaków.','error');return}if(p1!==p2){msg(passwordMsg,'Nowe hasła nie są takie same.','error');return}passwordBtn.disabled=true;try{await api('/account/change-password',{currentPassword:old,newPassword:p1});currentPassword.value='';newPassword.value='';newPassword2.value='';syncPasswordEyes();msg(passwordMsg,'Hasło zostało zmienione. Inne sesje zostały wylogowane.','success')}catch(e){msg(passwordMsg,e.message,'error')}finally{passwordBtn.disabled=false}});
-  installButtons();document.addEventListener('DOMContentLoaded',installButtons);setTimeout(installButtons,500);
+  window.STARXV_INSTALL_ACCOUNT_SECURITY=install;
+  install();document.addEventListener('DOMContentLoaded',install);setTimeout(install,500);
 })();
 </script>
 <!-- STARXV: ZGŁOŚ PROBLEM -->
@@ -3467,6 +3704,7 @@ document.addEventListener('DOMContentLoaded',()=>{
                 });
                 const result=await login.json().catch(()=>({}));
                 if(!login.ok)throw new Error(result.error||'Nie udało się zalogować przez Google.');
+                if(result.user?.profileSetupRequired)sessionStorage.setItem('starxv-open-profile-setup','1');
                 location.reload();
               }catch(e){
                 setGoogleButtons(true,'KONTYNUUJ Z GOOGLE');

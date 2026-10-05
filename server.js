@@ -335,9 +335,48 @@ app.use('/api/auth/forgot-password',rateLimit('forgot',6,15*60*1000));
 app.use('/api/auth/reset-password',rateLimit('reset',10,15*60*1000));
 app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000));
 app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
+app.use('/api/account/profile',rateLimit('profile-edit',30,15*60*1000));
+app.use('/api/account/phone/start',rateLimit('phone-start',6,15*60*1000));
+app.use('/api/account/phone/confirm',rateLimit('phone-confirm',12,15*60*1000));
 app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
 app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
-function cleanEmail(v){return String(v||'').trim().toLowerCase()}function publicUser(u){return {id:u.id,firstName:u.firstName,lastName:u.lastName,email:u.email,createdAt:u.createdAt,avatarData:u.avatarData||''}}
+function cleanEmail(v){return String(v||'').trim().toLowerCase()}
+function cleanPhone(v){
+  const raw=String(v||'').trim().replace(/[\s().-]/g,'');
+  if(!raw)return '';
+  if(/^\+\d{8,15}$/.test(raw))return raw;
+  const digits=raw.replace(/\D/g,'');
+  if(/^48\d{9}$/.test(digits))return '+'+digits;
+  if(/^\d{9}$/.test(digits))return '+48'+digits;
+  return '';
+}
+function validBirthDate(v){
+  const s=String(v||'').trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(s))return false;
+  const d=new Date(s+'T00:00:00Z');
+  if(Number.isNaN(d.getTime())||d.toISOString().slice(0,10)!==s)return false;
+  const now=new Date(),today=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+  if(d.getTime()>today)return false;
+  const ageDate=new Date(today-d.getTime());
+  const age=Math.abs(ageDate.getUTCFullYear()-1970);
+  return age>=13&&age<=120;
+}
+function publicUser(u){
+  const phone=String(u.phone||'');
+  return {
+    id:u.id,
+    firstName:u.firstName||'',
+    lastName:u.lastName||'',
+    email:u.email,
+    createdAt:u.createdAt,
+    avatarData:u.avatarData||'',
+    birthDate:u.birthDate||'',
+    phone,
+    phoneVerified:Boolean(phone&&u.phoneVerifiedAt),
+    phoneVerifiedAt:Number(u.phoneVerifiedAt||0),
+    profileSetupRequired:Boolean(u.profileSetupRequired)
+  };
+}
 function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')){const hash=crypto.scryptSync(password,salt,64).toString('hex');return `${salt}:${hash}`}
 function checkPassword(password,stored){try{const [salt,hex]=stored.split(':');const a=Buffer.from(hex,'hex'),b=crypto.scryptSync(password,salt,64);return a.length===b.length&&crypto.timingSafeEqual(a,b)}catch{return false}}
 function codeHash(email,code){return crypto.createHash('sha256').update(email+'|'+code).digest('hex')}
@@ -450,6 +489,43 @@ Jeśli to nie Ty, zignoruj tę wiadomość.`,
   if(error){console.error('Resend email change error:',error);throw new Error('Nie udało się wysłać wiadomości.');}
   console.log(`Kod zmiany e-maila STARXV wysłany na ${email}. ID: ${data?.id}`);return {dev:false};
 }
+
+function phoneCodeHash(userId,phone,code){
+  return crypto.createHash('sha256').update(String(userId)+'|'+String(phone)+'|'+String(code)).digest('hex');
+}
+async function sendPhoneVerificationCode(phone,code){
+  const sid=String(process.env.TWILIO_ACCOUNT_SID||'').trim();
+  const token=String(process.env.TWILIO_AUTH_TOKEN||'').trim();
+  const from=String(process.env.TWILIO_FROM_NUMBER||'').trim();
+
+  if(!sid||!token||!from){
+    if(process.env.NODE_ENV==='production')throw new Error('Weryfikacja SMS nie jest jeszcze skonfigurowana.');
+    console.log(`[STARXV DEV SMS] Kod dla ${phone}: ${code}`);
+    return {dev:true};
+  }
+
+  const body=new URLSearchParams({
+    To:phone,
+    From:from,
+    Body:`STARXV: Twój kod weryfikacyjny to ${code}. Kod wygasa po 10 minutach.`
+  });
+
+  const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(sid)}/Messages.json`,{
+    method:'POST',
+    headers:{
+      'Authorization':'Basic '+Buffer.from(sid+':'+token).toString('base64'),
+      'Content-Type':'application/x-www-form-urlencoded'
+    },
+    body:body.toString()
+  });
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){
+    console.error('Twilio SMS error:',data);
+    throw new Error('Nie udało się wysłać kodu SMS.');
+  }
+  return {dev:false,sid:data.sid||''};
+}
+
 app.post('/api/auth/forgot-password',async(req,res)=>{try{
   const email=cleanEmail(req.body?.email),now=Date.now(),db=load();
   db.passwordResets=(db.passwordResets||[]).filter(x=>x.expiresAt>now);
@@ -474,8 +550,36 @@ app.post('/api/auth/reset-password',(req,res)=>{
   user.passwordHash=hashPassword(password);db.passwordResets=db.passwordResets.filter(x=>x.email!==email);save(db);invalidateUserSessions(user.id);
   res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true});
 });
-app.post('/api/auth/register',async(req,res)=>{try{let {firstName,lastName,email,password}=req.body||{};firstName=cleanName(firstName);lastName=cleanName(lastName);email=cleanEmail(email);password=String(password||'');if(!firstName||!lastName||!validEmail(email)||!validPassword(password))return res.status(400).json({error:'Sprawdź dane. Hasło musi mieć 8–256 znaków.'});const db=load();if(db.users.some(u=>u.email===email))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});const now=Date.now();db.pending=(db.pending||[]).filter(p=>p.expiresAt>now&&p.email!==email);const code=String(crypto.randomInt(100000,1000000));db.pending.push({email,firstName,lastName,passwordHash:hashPassword(password),codeHash:codeHash(email,code),expiresAt:now+10*60*1000,attempts:0,createdAt:now});save(db);const sent=await sendCode(email,code);res.json({ok:true,expiresIn:600,developmentCode:sent.dev?code:undefined})}catch(e){console.error(e);res.status(500).json({error:'Nie udało się wysłać kodu. Spróbuj ponownie.'})}});
-app.post('/api/auth/verify',(req,res)=>{const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,'');const db=load(),now=Date.now(),p=db.pending.find(x=>x.email===email);if(!p||p.expiresAt<now)return res.status(400).json({error:'Kod wygasł. Wróć do rejestracji i wyślij nowy.'});if(p.attempts>=5)return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});if(p.codeHash!==codeHash(email,code)){p.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}if(db.users.some(u=>u.email===email))return res.status(409).json({error:'To konto już istnieje.'});const u={id:crypto.randomUUID(),firstName:p.firstName,lastName:p.lastName,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',favorites:[],addresses:[],defaultAddressId:'',cart:[]};db.users.push(u);db.pending=db.pending.filter(x=>x.email!==email);save(db);setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
+app.post('/api/auth/register',async(req,res)=>{try{
+  const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');
+  if(!validEmail(email)||!validPassword(password))return res.status(400).json({error:'Wpisz poprawny e-mail i hasło 8–256 znaków.'});
+  const db=load();
+  if(db.users.some(u=>u.email===email))return res.status(409).json({error:'Konto z tym adresem e-mail już istnieje.'});
+  const now=Date.now();
+  db.pending=(db.pending||[]).filter(p=>p.expiresAt>now&&p.email!==email);
+  const code=String(crypto.randomInt(100000,1000000));
+  db.pending.push({email,passwordHash:hashPassword(password),codeHash:codeHash(email,code),expiresAt:now+10*60*1000,attempts:0,createdAt:now});
+  save(db);
+  const sent=await sendCode(email,code);
+  res.json({ok:true,expiresIn:600,developmentCode:sent.dev?code:undefined});
+}catch(e){console.error(e);res.status(500).json({error:'Nie udało się wysłać kodu. Spróbuj ponownie.'})}});
+app.post('/api/auth/verify',(req,res)=>{
+  const email=cleanEmail(req.body?.email),code=String(req.body?.code||'').replace(/\D/g,''),db=load(),now=Date.now(),p=db.pending.find(x=>x.email===email);
+  if(!p||p.expiresAt<now)return res.status(400).json({error:'Kod wygasł. Wróć do rejestracji i wyślij nowy.'});
+  if(p.attempts>=5)return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});
+  if(p.codeHash!==codeHash(email,code)){p.attempts++;save(db);return res.status(400).json({error:'Nieprawidłowy kod.'})}
+  if(db.users.some(u=>u.email===email))return res.status(409).json({error:'To konto już istnieje.'});
+  const u={
+    id:crypto.randomUUID(),firstName:'',lastName:'',birthDate:'',phone:'',phoneVerifiedAt:0,
+    profileSetupRequired:true,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',
+    favorites:[],addresses:[],defaultAddressId:'',cart:[],authProviders:['email']
+  };
+  db.users.push(u);
+  db.pending=db.pending.filter(x=>x.email!==email);
+  save(db);
+  setSession(res,u.id);
+  res.json({ok:true,user:publicUser(u)});
+});
 app.post('/api/auth/login',(req,res)=>{const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');if(!validEmail(email)||password.length>256)return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});const db=load(),u=db.users.find(x=>x.email===email);if(!u||!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});setSession(res,u.id);res.json({ok:true,user:publicUser(u)})});
 app.post('/api/auth/logout',(req,res)=>{const t=cookie(req,'starxv_session');if(t)deleteSessionToken(t);res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);res.json({ok:true})});
 app.get('/api/auth/me',auth,(req,res)=>res.json({user:publicUser(req.user)}));
@@ -509,8 +613,12 @@ app.post('/api/auth/google',async(req,res)=>{
       const lastName=cleanName(profile.family_name||String(profile.name||'').split(' ').slice(1).join(' ')||'User');
       user={
         id:crypto.randomUUID(),
-        firstName:firstName||'STARXV',
-        lastName:lastName||'User',
+        firstName:firstName||'',
+        lastName:lastName||'',
+        birthDate:'',
+        phone:'',
+        phoneVerifiedAt:0,
+        profileSetupRequired:true,
         email,
         passwordHash:hashPassword(crypto.randomBytes(32).toString('hex')),
         createdAt:Date.now(),
@@ -587,6 +695,103 @@ app.post('/api/account/change-email/confirm',auth,(req,res)=>{
   res.json({ok:true,user:publicUser(req.user)});
 });
 
+
+// --- STARXV account profile: personal data + verified phone -------------------
+app.post('/api/account/profile',auth,async(req,res)=>{
+  try{
+    const body=req.body||{};
+    const hasFirst=Object.prototype.hasOwnProperty.call(body,'firstName');
+    const hasLast=Object.prototype.hasOwnProperty.call(body,'lastName');
+    const hasBirth=Object.prototype.hasOwnProperty.call(body,'birthDate');
+
+    if(hasFirst){
+      const value=cleanName(body.firstName);
+      if(!value||value.length<2)return res.status(400).json({error:'Wpisz poprawne imię.'});
+      req.user.firstName=value;
+    }
+    if(hasLast){
+      const value=cleanName(body.lastName);
+      if(!value||value.length<2)return res.status(400).json({error:'Wpisz poprawne nazwisko.'});
+      req.user.lastName=value;
+    }
+    if(hasBirth){
+      const value=String(body.birthDate||'').trim();
+      if(!validBirthDate(value))return res.status(400).json({error:'Wpisz poprawną datę urodzenia. Konto STARXV wymaga ukończonych 13 lat.'});
+      req.user.birthDate=value;
+    }
+
+    if(req.user.profileSetupRequired){
+      if(!cleanName(req.user.firstName)||!cleanName(req.user.lastName)||!validBirthDate(req.user.birthDate)){
+        return res.status(400).json({error:'Uzupełnij imię, nazwisko i datę urodzenia.'});
+      }
+      req.user.profileSetupRequired=false;
+    }
+
+    await Promise.resolve(save(req.db));
+    res.json({ok:true,user:publicUser(req.user)});
+  }catch(e){
+    res.status(400).json({error:e.message||'Nie udało się zapisać danych.'});
+  }
+});
+
+app.post('/api/account/phone/start',auth,async(req,res)=>{
+  try{
+    const phone=cleanPhone(req.body?.phone),now=Date.now();
+    if(!phone)return res.status(400).json({error:'Wpisz poprawny numer telefonu, np. +48 123 456 789.'});
+    if(String(req.user.phone||'')===phone&&req.user.phoneVerifiedAt)return res.status(400).json({error:'Ten numer jest już zweryfikowany na Twoim koncie.'});
+    if(req.db.users.some(u=>u.id!==req.user.id&&cleanPhone(u.phone)===phone&&u.phoneVerifiedAt)){
+      return res.status(409).json({error:'Ten numer telefonu jest już przypisany do innego konta.'});
+    }
+
+    req.db.phoneChanges=(req.db.phoneChanges||[]).filter(x=>Number(x.expiresAt||0)>now);
+    const previous=req.db.phoneChanges.find(x=>x.userId===req.user.id);
+    if(previous&&now-Number(previous.createdAt||0)<60000){
+      return res.status(429).json({error:'Poczekaj chwilę przed wysłaniem kolejnego kodu SMS.'});
+    }
+
+    req.db.phoneChanges=req.db.phoneChanges.filter(x=>x.userId!==req.user.id);
+    const code=String(crypto.randomInt(100000,1000000));
+    req.db.phoneChanges.push({
+      userId:req.user.id,phone,codeHash:phoneCodeHash(req.user.id,phone,code),
+      expiresAt:now+10*60*1000,attempts:0,createdAt:now
+    });
+    await Promise.resolve(save(req.db));
+    const sent=await sendPhoneVerificationCode(phone,code);
+    res.json({ok:true,expiresIn:600,phone,developmentCode:sent.dev?code:undefined});
+  }catch(e){
+    console.error('Phone verification start error:',e);
+    res.status(e.message==='Weryfikacja SMS nie jest jeszcze skonfigurowana.'?503:500).json({error:e.message||'Nie udało się wysłać kodu SMS.'});
+  }
+});
+
+app.post('/api/account/phone/confirm',auth,async(req,res)=>{
+  const phone=cleanPhone(req.body?.phone),code=String(req.body?.code||'').replace(/\D/g,''),now=Date.now();
+  if(!phone||code.length!==6)return res.status(400).json({error:'Wpisz poprawny numer telefonu i 6-cyfrowy kod.'});
+
+  req.db.phoneChanges=(req.db.phoneChanges||[]).filter(x=>Number(x.expiresAt||0)>now);
+  const change=req.db.phoneChanges.find(x=>x.userId===req.user.id);
+  if(!change||change.phone!==phone)return res.status(400).json({error:'Kod jest nieprawidłowy lub wygasł. Wyślij nowy kod.'});
+  if(change.attempts>=5){
+    req.db.phoneChanges=req.db.phoneChanges.filter(x=>x.userId!==req.user.id);
+    save(req.db);
+    return res.status(429).json({error:'Za dużo błędnych prób. Wyślij nowy kod.'});
+  }
+  if(change.codeHash!==phoneCodeHash(req.user.id,phone,code)){
+    change.attempts++;
+    save(req.db);
+    return res.status(400).json({error:'Nieprawidłowy kod SMS.'});
+  }
+  if(req.db.users.some(u=>u.id!==req.user.id&&cleanPhone(u.phone)===phone&&u.phoneVerifiedAt)){
+    return res.status(409).json({error:'Ten numer telefonu jest już przypisany do innego konta.'});
+  }
+
+  req.user.phone=phone;
+  req.user.phoneVerifiedAt=now;
+  req.db.phoneChanges=req.db.phoneChanges.filter(x=>x.userId!==req.user.id);
+  await Promise.resolve(save(req.db));
+  res.json({ok:true,user:publicUser(req.user)});
+});
+
 // Permanently delete the currently logged-in STARXV account.
 // Existing paid/order records are kept as standalone store records, but the account itself
 // (profile, saved addresses, favorites, avatar and password hash) is removed.
@@ -604,6 +809,7 @@ app.delete('/api/account',auth,(req,res)=>{
   req.db.reviews=(req.db.reviews||[]).filter(r=>r.userId!==userId);
   req.db.users=(req.db.users||[]).filter(u=>u.id!==userId);
   req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==cleanEmail(email));
+  req.db.phoneChanges=(req.db.phoneChanges||[]).filter(x=>x.userId!==userId);
   save(req.db);
 
   invalidateUserSessions(userId);
