@@ -2205,26 +2205,62 @@ app.put('/api/admin/stock',adminOnly,(req,res)=>{
   slot[size]=stock;save(req.db);res.json({ok:true,stock});
 });
 
-app.delete('/api/admin/orders/:id',adminOnly,(req,res)=>{
+app.delete('/api/admin/orders/:id',adminOnly,async(req,res)=>{
   try{
     ensureStore(req.db);
-    const idx=req.db.orders.findIndex(o=>o.id===req.params.id);
+    const idx=req.db.orders.findIndex(o=>String(o.id)===String(req.params.id));
     if(idx<0)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
     const order=req.db.orders[idx];
 
-    // If the order is still pending and has a stock reservation, release it.
     if(String(order.paymentStatus||'pending')!=='paid')releaseStockReservation(req.db,order);
 
-    // Remove return/complaint records tied to the deleted order so no orphan data remains.
     if(Array.isArray(req.db.returnRequests)){
-      req.db.returnRequests=req.db.returnRequests.filter(r=>r.orderId!==order.id);
+      req.db.returnRequests=req.db.returnRequests.filter(r=>String(r.orderId)!==String(order.id));
     }
 
     req.db.orders.splice(idx,1);
-    save(req.db);
+
+    // PostgreSQL zapisuje stan asynchronicznie — czekamy na zapis zanim panel ponownie pobierze dane.
+    await Promise.resolve(save(req.db));
+
     res.json({ok:true,id:order.id,orderNo:order.orderNo});
   }catch(e){
     res.status(400).json({error:e.message||'Nie udało się usunąć zamówienia.'});
+  }
+});
+
+app.post('/api/admin/orders/bulk-delete',adminOnly,async(req,res)=>{
+  try{
+    ensureStore(req.db);
+    const raw=Array.isArray(req.body?.ids)?req.body.ids:[];
+    const ids=[...new Set(raw.map(x=>String(x||'').trim()).filter(Boolean))];
+    if(!ids.length)return res.status(400).json({error:'Nie wybrano żadnych zamówień.'});
+    if(ids.length>250)return res.status(400).json({error:'Możesz usunąć maksymalnie 250 zamówień jednocześnie.'});
+
+    const wanted=new Set(ids);
+    const deleting=req.db.orders.filter(o=>wanted.has(String(o.id)));
+    if(!deleting.length)return res.status(404).json({error:'Nie znaleziono wybranych zamówień.'});
+
+    for(const order of deleting){
+      if(String(order.paymentStatus||'pending')!=='paid')releaseStockReservation(req.db,order);
+    }
+
+    const deletedIds=new Set(deleting.map(o=>String(o.id)));
+    req.db.orders=req.db.orders.filter(o=>!deletedIds.has(String(o.id)));
+
+    if(Array.isArray(req.db.returnRequests)){
+      req.db.returnRequests=req.db.returnRequests.filter(r=>!deletedIds.has(String(r.orderId)));
+    }
+
+    await Promise.resolve(save(req.db));
+
+    res.json({
+      ok:true,
+      deleted:deleting.length,
+      ids:[...deletedIds]
+    });
+  }catch(e){
+    res.status(400).json({error:e.message||'Nie udało się usunąć zaznaczonych zamówień.'});
   }
 });
 

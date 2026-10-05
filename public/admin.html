@@ -82,7 +82,31 @@
 <style id="sx-order-delete-style">
 .orderHeadActions{display:flex;align-items:center;gap:10px;margin-left:auto}
 .orderDeleteBtn{padding:8px 11px;font-size:9px;letter-spacing:.04em;white-space:nowrap}
-@media(max-width:620px){.orderHeadActions{width:100%;justify-content:flex-end}.orderDeleteBtn{padding:8px 10px}}
+.sx-order-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:13px 14px;border:1px solid #272727;border-radius:14px;background:#0b0b0b}
+.sx-order-tools-main,.sx-order-selection-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sx-order-selection-actions[hidden]{display:none!important}
+.sx-order-selected-count{min-width:92px;color:#8b8b8b;font-size:10px;font-weight:850;letter-spacing:.05em}
+.sx-order-select-wrap{display:none;align-items:center;justify-content:center;flex:0 0 auto}
+.sx-order-select-wrap.show{display:flex}
+.sx-order-select{appearance:none;width:21px;height:21px;margin:0;border:1px solid #4a4a4a;border-radius:6px;background:#090909;cursor:pointer;position:relative}
+.sx-order-select:checked{background:#fff;border-color:#fff}
+.sx-order-select:checked:after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#050505;font-size:13px;font-weight:950}
+.order.sx-selected{border-color:#777;background:#151515;box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.orderhead.sx-selecting{align-items:center}
+.sx-order-confirm{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.82);backdrop-filter:blur(10px)}
+.sx-order-confirm.open{display:flex}
+.sx-order-confirm-card{width:min(500px,100%);padding:28px;border:1px solid #303030;border-radius:20px;background:#0b0b0b;box-shadow:0 30px 100px rgba(0,0,0,.65)}
+.sx-order-confirm-kicker{color:#8e8e8e;font-size:8px;font-weight:950;letter-spacing:.16em;text-transform:uppercase}
+.sx-order-confirm-card h3{margin:10px 0 10px;font-size:25px;line-height:1.05;letter-spacing:-.03em}
+.sx-order-confirm-card p{margin:0;color:#8d8d8d;font-size:11px;line-height:1.65}
+.sx-order-confirm-warning{margin-top:17px;padding:12px 13px;border:1px solid #4a2525;border-radius:11px;background:#160b0b;color:#e2a4a4;font-size:9px;line-height:1.55}
+.sx-order-confirm-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}
+.sx-order-confirm-actions .btn{width:100%}
+@media(max-width:620px){
+ .orderHeadActions{width:100%;justify-content:flex-end}.orderDeleteBtn{padding:8px 10px}
+ .sx-order-tools{align-items:stretch}.sx-order-tools-main,.sx-order-selection-actions{width:100%}.sx-order-tools .btn{flex:1}
+ .sx-order-confirm-actions{grid-template-columns:1fr}
+}
 </style>
 
 
@@ -235,7 +259,34 @@ document.addEventListener('input',e=>{
 <div class="productTypePanel" data-product-type-panel="add-digital"><div class="card addProductCard"><div class="addProductIntro">Produkt cyfrowy pojawi się w STARXV Digital. Plik PDF trzymaj w folderze <b>digital</b> na serwerze.</div><div class="productForm"><div class="adminField span3"><label>ID produktu</label><input id="newDigitalId" placeholder="np. zero-to-first-sale"></div><div class="adminField span6"><label>Nazwa produktu</label><input id="newDigitalName" placeholder="np. ZERO TO FIRST SALE"></div><div class="adminField span3"><label>Cena</label><input id="newDigitalPrice" type="number" min="0" step="0.01" placeholder="39.99"></div><div class="adminField span3"><label>Promocja %</label><input id="newDigitalDiscount" type="number" min="0" max="99" step="1" value="0" placeholder="np. 20"><small>0 = brak promocji.</small></div><div class="adminField span3"><label>Cena po promocji</label><div class="sx-digital-promo-preview" id="newDigitalPromoPreview">—</div></div><div class="adminField span3"><label>Pozycja na stronie</label><input id="newDigitalPosition" type="number" min="1" max="999" step="1" value="1" placeholder="1"><small>1 = pierwszy e-book, 2 = drugi itd.</small></div><div class="adminField span6"><label>Podtytuł</label><input id="newDigitalSubtitle" placeholder="Od pomysłu do pierwszej sprzedaży"></div><div class="adminField span6"><label>Plik PDF</label><input id="newDigitalFile" placeholder="ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf"></div><div class="adminField full"><label>Opis</label><textarea id="newDigitalDescription" class="digitalTextarea"></textarea></div><div class="adminField full"><label>Żółty napis nad tytułem</label><input id="newDigitalMeta" value="STARXV DIGITAL / E-BOOK" placeholder="np. STARXV DIGITAL / E-BOOK"></div><div class="adminField span6"><label>Informacja 1 nad ceną</label><input id="newDigitalPoint1" value="Produkt cyfrowy PDF"></div><div class="adminField span6"><label>Informacja 2 nad ceną</label><input id="newDigitalPoint2" value="Dostęp po potwierdzeniu płatności"></div><div class="adminField span6"><label>Informacja 3 nad ceną</label><input id="newDigitalPoint3" value="Przypisany do konta STARXV"></div><div class="adminField span6"><label>Informacja 4 nad ceną</label><input id="newDigitalPoint4" value="Pobieranie z biblioteki zamówień"></div><div class="adminField span6"><label>Zdjęcie główne</label><input id="newDigitalImage" placeholder="/assets/nazwa.png"></div><div class="adminField span6"><label>Drugie zdjęcie / okładka</label><input id="newDigitalImage2" placeholder="/assets/nazwa-cover.png"></div><div class="adminField span6"><label>Nazwa pobieranego pliku</label><input id="newDigitalDownloadName" placeholder="ZERO_TO_FIRST_SALE.pdf"></div><div class="adminField span6"><label>Status</label><label class="digitalStatus"><input id="newDigitalActive" type="checkbox" checked> Aktywny w STARXV Digital</label></div><div class="adminFormActions"><div class="hint">Po zapisaniu dane są dostępne przez API STARXV Digital.</div><button id="addDigitalProduct" class="btn primary">DODAJ PRODUKT CYFROWY</button></div></div></div></div>
  </div>
 <div class="section admin-panel" data-admin-panel="products"><h2>Produkty</h2><div class="productTypeTabs" data-product-type-tabs="products"><button class="productTypeTab active" type="button" data-product-type="physical">PRODUKT FIZYCZNY</button><button class="productTypeTab" type="button" data-product-type="digital">PRODUKT CYFROWY</button></div><div class="productTypePanel active" data-product-type-panel="products-physical"><h2>Produkty, skład, kolory, rozmiary i stany</h2><div id="products" class="products"></div></div><div class="productTypePanel" data-product-type-panel="products-digital"><h2>Produkty cyfrowe / STARXV Digital</h2><div id="digitalProducts" class="digitalProducts"></div></div></div>
- <div class="section admin-panel active" data-admin-panel="orders"><h2>Zamówienia</h2><div id="orders" class="orders"></div></div>
+ <div class="section admin-panel active" data-admin-panel="orders">
+  <h2>Zamówienia</h2>
+  <div class="sx-order-tools" id="sxOrderTools">
+    <div class="sx-order-tools-main">
+      <button class="btn" type="button" id="sxOrderSelectionToggle">ZAZNACZ ZAMÓWIENIA</button>
+      <span class="sx-order-selected-count" id="sxOrderSelectedCount" hidden>0 zaznaczonych</span>
+    </div>
+    <div class="sx-order-selection-actions" id="sxOrderSelectionActions" hidden>
+      <button class="btn" type="button" id="sxOrderSelectAll">ZAZNACZ WSZYSTKIE</button>
+      <button class="btn" type="button" id="sxOrderClearSelection">ODZNACZ</button>
+      <button class="btn danger" type="button" id="sxOrderDeleteSelected" disabled>USUŃ ZAZNACZONE</button>
+    </div>
+  </div>
+  <div id="orders" class="orders"></div>
+</div>
+
+<div class="sx-order-confirm" id="sxOrderDeleteConfirm" aria-hidden="true">
+  <div class="sx-order-confirm-card" role="dialog" aria-modal="true" aria-labelledby="sxOrderDeleteConfirmTitle">
+    <div class="sx-order-confirm-kicker">STARXV / ADMIN / ZAMÓWIENIA</div>
+    <h3 id="sxOrderDeleteConfirmTitle">Potwierdź usunięcie</h3>
+    <p id="sxOrderDeleteConfirmText">Czy na pewno chcesz usunąć to zamówienie?</p>
+    <div class="sx-order-confirm-warning">Tej operacji nie można cofnąć. Zamówienie zostanie trwale usunięte z bazy STARXV.</div>
+    <div class="sx-order-confirm-actions">
+      <button class="btn" type="button" id="sxOrderDeleteCancel">ANULUJ</button>
+      <button class="btn danger" type="button" id="sxOrderDeleteConfirmBtn">USUŃ</button>
+    </div>
+  </div>
+</div>
 
  
 <div class="section admin-panel" data-admin-panel="coming-later" id="sxComingLaterAdmin">
@@ -372,13 +423,70 @@ async function saveDigitalProduct(e){const box=e.currentTarget.closest('[data-di
 async function deleteDigitalProduct(e){const box=e.currentTarget.closest('[data-digital-product]'),id=box.dataset.digitalProduct;if(!confirm('Usunąć ten produkt cyfrowy?'))return;try{e.currentTarget.disabled=true;await api('/api/admin/digital-products/'+encodeURIComponent(id),{method:'DELETE'});$('#msg').textContent='Produkt cyfrowy usunięty.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 $('#addDigitalProduct').onclick=async()=>{const gallery=[$('#newDigitalImage').value.trim(),$('#newDigitalImage2').value.trim()].filter(Boolean),points=[$('#newDigitalPoint1').value,$('#newDigitalPoint2').value,$('#newDigitalPoint3').value,$('#newDigitalPoint4').value];try{$('#addDigitalProduct').disabled=true;await api('/api/admin/digital-products',{method:'POST',body:JSON.stringify({id:$('#newDigitalId').value,name:$('#newDigitalName').value,subtitle:$('#newDigitalSubtitle').value,description:$('#newDigitalDescription').value,meta:$('#newDigitalMeta').value,points,price:Number($('#newDigitalPrice').value),discountPercent:Number($('#newDigitalDiscount').value||0),position:Number($('#newDigitalPosition').value||999),image:$('#newDigitalImage').value,gallery,fileName:$('#newDigitalFile').value,downloadName:$('#newDigitalDownloadName').value,active:$('#newDigitalActive').checked})});$('#msg').textContent='Nowy produkt cyfrowy dodany.';await load()}catch(err){alert(err.message)}finally{$('#addDigitalProduct').disabled=false}};
 function initProductTypeTabs(){document.querySelectorAll('[data-product-type-tabs]').forEach(group=>{const scope=group.dataset.productTypeTabs;group.querySelectorAll('[data-product-type]').forEach(btn=>btn.onclick=()=>{group.querySelectorAll('[data-product-type]').forEach(x=>x.classList.toggle('active',x===btn));document.querySelectorAll(`[data-product-type-panel^="${scope}-"]`).forEach(p=>p.classList.toggle('active',p.dataset.productTypePanel===scope+'-'+btn.dataset.productType))});const digital=group.querySelector('[data-product-type="digital"]');if(digital)digital.click()})}initProductTypeTabs();
+let sxOrderSelectionMode=false;
+let sxSelectedOrders=new Set();
+let sxOrderDeleteResolver=null;
+
+function sxUpdateOrderSelectionUi(){
+ const count=sxSelectedOrders.size;
+ const countEl=$('#sxOrderSelectedCount'),actions=$('#sxOrderSelectionActions'),toggle=$('#sxOrderSelectionToggle'),del=$('#sxOrderDeleteSelected');
+ if(countEl){countEl.hidden=!sxOrderSelectionMode;countEl.textContent=`${count} zaznaczonych`}
+ if(actions)actions.hidden=!sxOrderSelectionMode;
+ if(toggle)toggle.textContent=sxOrderSelectionMode?'ZAKOŃCZ ZAZNACZANIE':'ZAZNACZ ZAMÓWIENIA';
+ if(del)del.disabled=count===0;
+ document.querySelectorAll('[data-order-select]').forEach(cb=>{
+   const id=String(cb.value);
+   cb.checked=sxSelectedOrders.has(id);
+   cb.closest('.order')?.classList.toggle('sx-selected',cb.checked);
+   cb.closest('.sx-order-select-wrap')?.classList.toggle('show',sxOrderSelectionMode);
+ });
+}
+
+function sxSetOrderSelectionMode(enabled){
+ sxOrderSelectionMode=Boolean(enabled);
+ if(!sxOrderSelectionMode)sxSelectedOrders.clear();
+ sxUpdateOrderSelectionUi();
+}
+
+function sxAskOrderDelete(message,buttonText='USUŃ'){
+ return new Promise(resolve=>{
+   const modal=$('#sxOrderDeleteConfirm');
+   $('#sxOrderDeleteConfirmText').textContent=message;
+   $('#sxOrderDeleteConfirmBtn').textContent=buttonText;
+   sxOrderDeleteResolver=resolve;
+   modal.classList.add('open');
+   modal.setAttribute('aria-hidden','false');
+ });
+}
+
+function sxCloseOrderDeleteConfirm(result=false){
+ const modal=$('#sxOrderDeleteConfirm');
+ modal.classList.remove('open');
+ modal.setAttribute('aria-hidden','true');
+ const resolve=sxOrderDeleteResolver;
+ sxOrderDeleteResolver=null;
+ if(resolve)resolve(Boolean(result));
+}
+
 function renderOrders(orders){
- if(!orders.length){$('#orders').innerHTML='<div class="card meta">Brak zamówień.</div>';return}
+ if(!orders.length){
+   $('#orders').innerHTML='<div class="card meta">Brak zamówień.</div>';
+   sxSelectedOrders.clear();
+   sxUpdateOrderSelectionUi();
+   return;
+ }
+ const validIds=new Set(orders.map(o=>String(o.id)));
+ sxSelectedOrders=new Set([...sxSelectedOrders].filter(id=>validIds.has(id)));
+
  $('#orders').innerHTML=orders.map(o=>{
    const address=o.address||{};
    const deliveryText=[`${esc(address.firstName||'')} ${esc(address.lastName||'')}`.trim(),esc(address.street||''),`${esc(address.postal||'')} ${esc(address.city||'')}`.trim()].filter(Boolean).join(', ');
-   return `<div class="order" data-order="${esc(o.id)}">
-     <div class="orderhead">
+   const oid=String(o.id);
+   return `<div class="order ${sxSelectedOrders.has(oid)?'sx-selected':''}" data-order="${esc(oid)}">
+     <div class="orderhead ${sxOrderSelectionMode?'sx-selecting':''}">
+       <label class="sx-order-select-wrap ${sxOrderSelectionMode?'show':''}" title="Zaznacz zamówienie">
+         <input class="sx-order-select" type="checkbox" data-order-select value="${esc(oid)}" ${sxSelectedOrders.has(oid)?'checked':''}>
+       </label>
        <div>
          <b>Zamówienie #${esc(o.orderNo)}</b>
          <div class="meta">${new Date(o.createdAt).toLocaleString('pl-PL')} · ${esc(o.customer?.firstName||'')} ${esc(o.customer?.lastName||'')} · ${esc(o.customer?.email||'')}</div>
@@ -402,26 +510,77 @@ function renderOrders(orders){
      </div>
    </div>`;
  }).join('');
+
  document.querySelectorAll('[data-save-order]').forEach(b=>b.onclick=saveOrder);
  document.querySelectorAll('[data-delete-order]').forEach(b=>b.onclick=deleteOrder);
+ document.querySelectorAll('[data-order-select]').forEach(cb=>cb.onchange=()=>{
+   const id=String(cb.value);
+   if(cb.checked)sxSelectedOrders.add(id);else sxSelectedOrders.delete(id);
+   sxUpdateOrderSelectionUi();
+ });
+ sxUpdateOrderSelectionUi();
 }
 
 async function deleteOrder(e){
- const box=e.currentTarget.closest('[data-order]');
+ const btn=e.currentTarget;
+ const box=btn.closest('[data-order]');
+ const id=String(box?.dataset.order||'');
  const no=box?.querySelector('.orderhead b')?.textContent?.replace('Zamówienie #','')||'';
- if(!confirm(`Usunąć zamówienie #${no}? Tej operacji nie da się cofnąć.`))return;
+ if(!id)return;
+ const ok=await sxAskOrderDelete(`Czy na pewno chcesz trwale usunąć zamówienie #${no}?`);
+ if(!ok)return;
  try{
-   e.currentTarget.disabled=true;
-   e.currentTarget.textContent='USUWANIE…';
-   await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order),{method:'DELETE'});
-   $('#msg').textContent='Zamówienie zostało usunięte.';
+   btn.disabled=true;
+   btn.textContent='USUWANIE…';
+   await api('/api/admin/orders/'+encodeURIComponent(id),{method:'DELETE'});
+   sxSelectedOrders.delete(id);
+   $('#msg').textContent=`Zamówienie #${no} zostało usunięte.`;
    await load();
  }catch(err){
    alert(err.message);
-   e.currentTarget.disabled=false;
-   e.currentTarget.textContent='USUŃ ZAMÓWIENIE';
+   btn.disabled=false;
+   btn.textContent='USUŃ ZAMÓWIENIE';
  }
 }
+
+async function sxDeleteSelectedOrders(){
+ const ids=[...sxSelectedOrders];
+ if(!ids.length)return;
+ const ok=await sxAskOrderDelete(
+   ids.length===1
+     ?'Czy na pewno chcesz trwale usunąć 1 zaznaczone zamówienie?'
+     :`Czy na pewno chcesz trwale usunąć ${ids.length} zaznaczonych zamówień?`,
+   ids.length===1?'USUŃ 1 ZAMÓWIENIE':`USUŃ ${ids.length} ZAMÓWIEŃ`
+ );
+ if(!ok)return;
+ const btn=$('#sxOrderDeleteSelected');
+ try{
+   btn.disabled=true;
+   btn.textContent='USUWANIE…';
+   const result=await api('/api/admin/orders/bulk-delete',{method:'POST',body:JSON.stringify({ids})});
+   sxSelectedOrders.clear();
+   sxOrderSelectionMode=false;
+   $('#msg').textContent=`Usunięto ${Number(result.deleted||ids.length)} zamówień.`;
+   await load();
+ }catch(err){
+   alert(err.message);
+ }finally{
+   btn.textContent='USUŃ ZAZNACZONE';
+   sxUpdateOrderSelectionUi();
+ }
+}
+
+$('#sxOrderSelectionToggle').onclick=()=>sxSetOrderSelectionMode(!sxOrderSelectionMode);
+$('#sxOrderSelectAll').onclick=()=>{
+ document.querySelectorAll('[data-order]').forEach(box=>sxSelectedOrders.add(String(box.dataset.order)));
+ sxUpdateOrderSelectionUi();
+};
+$('#sxOrderClearSelection').onclick=()=>{sxSelectedOrders.clear();sxUpdateOrderSelectionUi()};
+$('#sxOrderDeleteSelected').onclick=sxDeleteSelectedOrders;
+$('#sxOrderDeleteCancel').onclick=()=>sxCloseOrderDeleteConfirm(false);
+$('#sxOrderDeleteConfirmBtn').onclick=()=>sxCloseOrderDeleteConfirm(true);
+$('#sxOrderDeleteConfirm').onclick=e=>{if(e.target===e.currentTarget)sxCloseOrderDeleteConfirm(false)};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sxOrderDeleteConfirm')?.classList.contains('open'))sxCloseOrderDeleteConfirm(false)});
 
 async function saveOrder(e){const box=e.currentTarget.closest('[data-order]');try{e.currentTarget.disabled=true;await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order),{method:'PUT',body:JSON.stringify({paymentStatus:box.querySelector('[data-pay]').value})});$('#msg').textContent='Zamówienie zaktualizowane.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
 async function adminPasswordLogin(){try{$('#loginMsg').textContent='Logowanie…';$('#loginBtn').disabled=true;await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});await boot()}catch(e){$('#loginMsg').textContent=e.message||'Nie udało się zalogować.'}finally{$('#loginBtn').disabled=false}}
