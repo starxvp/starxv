@@ -228,6 +228,7 @@ document.addEventListener('input',e=>{
    <button class="admin-tab" type="button" data-admin-tab="campaigns">KAMPANIE I NOWOŚCI</button>
    <button class="admin-tab" type="button" data-admin-tab="support">ZGŁOSZENIA</button>
    <button class="admin-tab" type="button" data-admin-tab="faq">FAQ</button>
+   <button class="admin-tab" type="button" data-admin-tab="user-titles">TYTUŁY UŻYTK.</button>
    <button class="admin-tab" type="button" data-admin-tab="coming-later">COMING LATER</button>
    <button class="admin-tab" type="button" data-admin-tab="settings">USTAWIENIA</button>
  </nav>
@@ -730,7 +731,7 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
  let reports=[],filter='all';const list=document.getElementById('sxSupportAdminList');
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const lab=s=>s==='resolved'?'ROZWIĄZANE':s==='progress'?'W TRAKCIE':'NOWE';
- function render(){const a=filter==='all'?reports:reports.filter(x=>(x.status||'new')===filter);list.innerHTML=a.length?a.map(r=>`<article class="sx-sa-report" data-admin-ticket="${esc(r.id)}"><div class="sx-sa-top"><div><div class="sx-sa-type">${esc(r.ticketNo||'ZGŁOSZENIE')} · ${esc(r.type||'Inne')}${r.adminUnread?'<span class="sx-admin-unread">NOWA WIADOMOŚĆ</span>':''}</div><div class="sx-sa-meta">${esc(r.email||'')} · ${esc(new Date(r.createdAt).toLocaleString('pl-PL'))} · ${esc(r.page||'/')}</div>${r.orderNo?`<div class="sx-sa-order"><b>ZAMÓWIENIE #${esc(r.orderNo)} · ${esc(r.orderType==='digital'?'CYFROWE':'FIZYCZNE')}</b>${esc(r.orderLabel||'')}</div>`:''}</div><span class="sx-sa-badge">${lab(r.status||'new')}</span></div><div class="sx-admin-thread">${(r.messages||[]).map(m=>`<div class="sx-admin-msg ${m.author==='support'?'support':'customer'}"><b>${m.author==='support'?'STARXV SUPPORT':'KLIENT'}</b><div>${esc(m.text||'')}</div><small>${esc(new Date(m.createdAt).toLocaleString('pl-PL'))}</small></div>`).join('')}</div><div class="sx-sa-actions"><button data-id="${esc(r.id)}" data-status="new">NOWE</button><button data-id="${esc(r.id)}" data-status="progress">W TRAKCIE</button><button data-id="${esc(r.id)}" data-status="resolved">ROZWIĄZANE</button><button data-del="${esc(r.id)}">USUŃ</button></div><div class="sx-sa-reply"><textarea data-reply-box="${esc(r.id)}" maxlength="2000" placeholder="Napisz odpowiedź dla klienta..."></textarea><button data-reply="${esc(r.id)}">WYŚLIJ ODPOWIEDŹ →</button></div></article>`).join(''):'<div class="sx-sa-empty">Brak zgłoszeń w tej kategorii.</div>'}
+ function render(){const a=filter==='all'?reports:reports.filter(x=>(x.status||'new')===filter);list.innerHTML=a.length?a.map(r=>`<article class="sx-sa-report" data-admin-ticket="${esc(r.id)}"><div class="sx-sa-top"><div><div class="sx-sa-type">${esc(r.ticketNo||'ZGŁOSZENIE')} · ${esc(r.type||'Inne')}${r.adminUnread?'<span class="sx-admin-unread">NOWA WIADOMOŚĆ</span>':''}</div><div class="sx-sa-meta">${esc(r.email||'')} · ${esc(new Date(r.createdAt).toLocaleString('pl-PL'))} · ${esc(r.page||'/')}</div>${r.orderNo?`<div class="sx-sa-order"><b>ZAMÓWIENIE #${esc(r.orderNo)} · ${esc(r.orderType==='digital'?'CYFROWE':'FIZYCZNE')}</b>${esc(r.orderLabel||'')}</div>`:''}</div><span class="sx-sa-badge">${lab(r.status||'new')}</span></div><div class="sx-admin-thread">${(r.messages||[]).map(m=>`<div class="sx-admin-msg ${m.author==='support'?'support':'customer'}"><b>${m.author==='support'?`STARXV SUPPORT${m.authorTitle?.label?` · ${esc(m.authorTitle.label)}`:''}`:'KLIENT'}</b><div>${esc(m.text||'')}</div><small>${esc(new Date(m.createdAt).toLocaleString('pl-PL'))}</small></div>`).join('')}</div><div class="sx-sa-actions"><button data-id="${esc(r.id)}" data-status="new">NOWE</button><button data-id="${esc(r.id)}" data-status="progress">W TRAKCIE</button><button data-id="${esc(r.id)}" data-status="resolved">ROZWIĄZANE</button><button data-del="${esc(r.id)}">USUŃ</button></div><div class="sx-sa-reply"><textarea data-reply-box="${esc(r.id)}" maxlength="2000" placeholder="Napisz odpowiedź dla klienta..."></textarea><button data-reply="${esc(r.id)}">WYŚLIJ ODPOWIEDŹ →</button></div></article>`).join(''):'<div class="sx-sa-empty">Brak zgłoszeń w tej kategorii.</div>'}
  async function load(){try{const r=await fetch('/api/admin/support-reports',{cache:'no-store'}),d=await r.json();if(!r.ok)throw 0;reports=Array.isArray(d.reports)?d.reports:[];render()}catch{list.innerHTML='<div class="sx-sa-empty">Nie udało się pobrać zgłoszeń.</div>'}}
  document.querySelectorAll('.sx-sa-filter').forEach(b=>b.onclick=()=>{document.querySelectorAll('.sx-sa-filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.f;render()});
  list.onclick=async e=>{const ticket=e.target.closest('[data-admin-ticket]');if(ticket?.dataset.adminTicket)fetch('/api/admin/support-reports/'+encodeURIComponent(ticket.dataset.adminTicket)+'/read',{method:'POST'}).catch(()=>{});const b=e.target.closest('button');if(!b)return;if(b.dataset.reply){const box=list.querySelector(`[data-reply-box="${CSS.escape(b.dataset.reply)}"]`);const reply=box?.value.trim()||'';if(!reply){alert('Wpisz odpowiedź dla klienta.');return}b.disabled=true;try{const r=await fetch('/api/admin/support-reports/'+encodeURIComponent(b.dataset.reply)+'/reply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reply})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Nie udało się wysłać odpowiedzi.');await load()}catch(err){alert(err.message||'Nie udało się wysłać odpowiedzi.')}finally{b.disabled=false}return}if(b.dataset.status){const r=await fetch('/api/admin/support-reports/'+encodeURIComponent(b.dataset.id),{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:b.dataset.status})});if(r.ok)load()}else if(b.dataset.del&&confirm('Usunąć to zgłoszenie?')){const r=await fetch('/api/admin/support-reports/'+encodeURIComponent(b.dataset.del),{method:'DELETE'});if(r.ok)load()}};
@@ -916,6 +917,85 @@ $('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/au
 .sx-faq-admin-msg{min-height:18px;color:#777;font-size:10px}
 @media(max-width:760px){.sx-faq-admin-create,.sx-faq-admin-card-grid{grid-template-columns:1fr}.sx-faq-admin-create .full,.sx-faq-admin-card-grid .full{grid-column:auto}}
 </style>
+
+<style id="sx-user-titles-admin-style">
+#sxUserTitlesAdmin{margin:0}
+.sx-ut-sub{margin:0 0 16px;color:#777;font-size:11px;line-height:1.6}
+.sx-ut-form{display:grid;grid-template-columns:minmax(230px,1fr) 220px minmax(180px,1fr) auto;gap:9px;align-items:end;padding:16px;border:1px solid #292929;border-radius:16px;background:#0b0b0b}
+.sx-ut-field{display:grid;gap:6px}.sx-ut-field label{color:#777;font-size:8px;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+.sx-ut-custom[hidden]{display:none!important}.sx-ut-list{display:grid;gap:10px;margin-top:14px}
+.sx-ut-card{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:15px;border:1px solid #292929;border-radius:14px;background:#101010}
+.sx-ut-account{min-width:0}.sx-ut-account b{display:block;font-size:12px}.sx-ut-account small{display:block;margin-top:5px;color:#777;font-size:10px;overflow-wrap:anywhere}
+.sx-ut-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font-size:9px;font-weight:950;letter-spacing:.08em}
+.sx-ut-badge:before{content:'·';font-size:14px}.sx-ut-badge.owner{color:#d3b354}.sx-ut-badge.admin{color:#f1f1f1}.sx-ut-badge.support{color:#d7c7a1}.sx-ut-badge.team{color:#a99bc7}.sx-ut-badge.creator{color:#c8a85a}.sx-ut-badge.moderator{color:#9eafc4}.sx-ut-badge.custom{color:#c8c8c8}
+.sx-ut-actions{display:flex;gap:7px;flex-wrap:wrap}.sx-ut-status{min-height:18px;margin-top:10px;color:#888;font-size:10px}
+@media(max-width:850px){.sx-ut-form{grid-template-columns:1fr 1fr}.sx-ut-form .btn{grid-column:1/-1}.sx-ut-card{align-items:flex-start;flex-direction:column}}
+@media(max-width:560px){.sx-ut-form{grid-template-columns:1fr}}
+</style>
+<section id="sxUserTitlesAdmin" class="admin-panel" data-admin-panel="user-titles">
+  <h2>TYTUŁY UŻYTKOWNIKÓW</h2>
+  <div class="sx-ut-sub">Przypisz wizualny tytuł do konkretnego konta STARXV po adresie e-mail. Tytuł jest tylko oznaczeniem profilu — nie nadaje żadnych dodatkowych uprawnień.</div>
+  <div class="sx-ut-form">
+    <div class="sx-ut-field"><label>E-mail konta</label><input id="sxUtEmail" type="email" placeholder="uzytkownik@example.com"></div>
+    <div class="sx-ut-field"><label>Tytuł</label><select id="sxUtKey"><option value="owner">WŁAŚCICIEL — OWNER</option><option value="admin">ADMINISTRATOR — ADMIN</option><option value="support">SUPPORT</option><option value="team">ZESPÓŁ — TEAM</option><option value="creator">TWÓRCA — CREATOR</option><option value="moderator">MODERATOR</option><option value="custom">WŁASNY TYTUŁ</option></select></div>
+    <div class="sx-ut-field sx-ut-custom" id="sxUtCustomWrap" hidden><label>Własny tytuł</label><input id="sxUtCustom" maxlength="32" placeholder="np. FOUNDER"></div>
+    <button class="btn primary" id="sxUtAssign" type="button">PRZYPISZ TYTUŁ</button>
+  </div>
+  <div class="sx-ut-status" id="sxUtStatus"></div>
+  <div class="sx-ut-list" id="sxUtList"><div class="meta">Ładowanie…</div></div>
+</section>
+<script id="sx-user-titles-admin-script">
+(()=>{
+  const list=document.getElementById('sxUtList'),email=document.getElementById('sxUtEmail'),key=document.getElementById('sxUtKey'),custom=document.getElementById('sxUtCustom'),customWrap=document.getElementById('sxUtCustomWrap'),status=document.getElementById('sxUtStatus'),assign=document.getElementById('sxUtAssign');
+  if(!list)return;
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const labelName=x=>x?.label||'';
+  function toggleCustom(){customWrap.hidden=key.value!=='custom'}
+  key.addEventListener('change',toggleCustom);toggleCustom();
+  function render(items){
+    list.innerHTML=items.length?items.map(x=>{
+      const name=[x.firstName,x.lastName].filter(Boolean).join(' ')||'STARXV USER';
+      const role=esc(x.title?.key||'custom');
+      return `<article class="sx-ut-card" data-ut-id="${esc(x.id)}" data-ut-email="${esc(x.email)}" data-ut-key="${role}" data-ut-label="${esc(x.title?.label||'')}"><div class="sx-ut-account"><b>${esc(name)}</b><small>${esc(x.email||'')}</small><span class="sx-ut-badge ${role}">${esc(x.title?.label||'')}</span></div><div class="sx-ut-actions"><button class="btn" type="button" data-ut-edit>EDYTUJ</button><button class="btn danger" type="button" data-ut-remove>USUŃ TYTUŁ</button></div></article>`;
+    }).join(''):'<div class="meta">Nie przypisano jeszcze żadnych tytułów.</div>';
+  }
+  async function load(){
+    try{
+      const r=await fetch('/api/admin/user-titles',{cache:'no-store'}),d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Nie udało się pobrać tytułów.');
+      render(Array.isArray(d.assignments)?d.assignments:[]);
+    }catch(e){list.innerHTML=`<div class="msg">${esc(e.message)}</div>`}
+  }
+  window.STARXV_ADMIN_USER_TITLES_LOAD=load;
+  assign.addEventListener('click',async()=>{
+    const body={email:email.value.trim(),key:key.value,label:custom.value.trim()};
+    assign.disabled=true;status.textContent='Zapisywanie…';
+    try{
+      const r=await fetch('/api/admin/user-titles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),d=await r.json().catch(()=>({}));
+      if(!r.ok)throw new Error(d.error||'Nie udało się przypisać tytułu.');
+      status.textContent='Tytuł został przypisany.';custom.value='';await load();
+    }catch(e){status.textContent=e.message}
+    finally{assign.disabled=false}
+  });
+  list.addEventListener('click',async e=>{
+    const card=e.target.closest('[data-ut-id]');if(!card)return;
+    if(e.target.closest('[data-ut-edit]')){
+      email.value=card.dataset.utEmail||'';key.value=card.dataset.utKey||'custom';toggleCustom();custom.value=key.value==='custom'?(card.dataset.utLabel||''):'';email.focus();return;
+    }
+    if(e.target.closest('[data-ut-remove]')){
+      if(!confirm('Usunąć tytuł z tego konta?'))return;
+      try{
+        const r=await fetch('/api/admin/user-titles/'+encodeURIComponent(card.dataset.utId),{method:'DELETE'}),d=await r.json().catch(()=>({}));
+        if(!r.ok)throw new Error(d.error||'Nie udało się usunąć tytułu.');
+        status.textContent='Tytuł został usunięty.';await load();
+      }catch(err){status.textContent=err.message}
+    }
+  });
+  document.addEventListener('click',e=>{if(e.target.closest?.('#adminTabs [data-admin-tab="user-titles"]'))setTimeout(load,0)},true);
+  load();
+})();
+</script>
+
 <section id="sxFaqAdmin" class="admin-panel" data-admin-panel="faq">
   <h2>FAQ</h2>
   <div class="sx-faq-admin-sub">Zarządzaj pytaniami widocznymi w sekcji FAQ w Profilu. Możesz dodawać, edytować, ukrywać i usuwać pozycje.</div>

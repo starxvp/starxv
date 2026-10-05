@@ -350,6 +350,25 @@ function validBirthDate(v){
   const age=Math.abs(ageDate.getUTCFullYear()-1970);
   return age>=13&&age<=120;
 }
+const ACCOUNT_TITLE_PRESETS={
+  owner:{label:'OWNER',name:'Właściciel'},
+  admin:{label:'ADMIN',name:'Administrator'},
+  support:{label:'SUPPORT',name:'Support'},
+  team:{label:'TEAM',name:'Zespół'},
+  creator:{label:'CREATOR',name:'Twórca'},
+  moderator:{label:'MODERATOR',name:'Moderator'},
+  custom:{label:'',name:'Własny tytuł'}
+};
+function cleanAccountTitleLabel(v){
+  return String(v||'').trim().replace(/\s+/g,' ').slice(0,32);
+}
+function accountTitleData(u){
+  const raw=u?.displayTitle;
+  if(!raw||typeof raw!=='object')return null;
+  const key=Object.prototype.hasOwnProperty.call(ACCOUNT_TITLE_PRESETS,String(raw.key||''))?String(raw.key):'custom';
+  const label=cleanAccountTitleLabel(raw.label||ACCOUNT_TITLE_PRESETS[key]?.label||'');
+  return label?{key,label}:null;
+}
 function publicUser(u){
   return {
     id:u.id,
@@ -359,6 +378,7 @@ function publicUser(u){
     createdAt:u.createdAt,
     avatarData:u.avatarData||'',
     birthDate:u.birthDate||'',
+    title:accountTitleData(u),
     profileSetupRequired:Boolean(u.profileSetupRequired)
   };
 }
@@ -912,6 +932,7 @@ function supportMessages(report){
 function supportForUser(report){
   const messages=supportMessages(report).map(m=>({
     id:m.id,author:m.author==='support'?'support':'customer',
+    title:m.author==='support'&&m.authorTitle?m.authorTitle:null,
     text:String(m.text||''),createdAt:m.createdAt||report.createdAt
   }));
   const lastSupport=[...messages].reverse().find(m=>m.author==='support');
@@ -1170,6 +1191,7 @@ function reviewProductId(v,db){const id=String(v||'').trim();if(REVIEW_PRODUCTS.
 function isDigitalReviewProduct(db,id){return Boolean(db?.digitalProducts?.[String(id||'')])}
 function cleanReviewText(v){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,500)}
 function reviewAuthor(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return u?cleanName(u.firstName||'Klient').slice(0,30)||'Klient':'Klient'}
+function reviewAuthorTitle(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return accountTitleData(u)}
 function deliveredOrderForUser(db,userId,orderId,productId){
   return (db.orders||[]).find(o=>{
     if(String(o.id)!==String(orderId)||o.userId!==userId||o.paymentStatus!=='paid')return false;
@@ -1184,7 +1206,7 @@ function reviewIsVerified(db,r){
   const order=(db.orders||[]).find(o=>String(o.id)===String(r.orderId||'')&&o.userId===r.userId&&o.paymentStatus==='paid'&&(digital?(o.orderType==='digital'&&String(o.digitalProductId||'')===String(r.productId||'')):Number(o.shippingStage||0)>=4));
   return Boolean(order&&reviewPurchaseItem(order,r.productId,r.color,r.size));
 }
-function publicReview(db,r){return {id:r.id,productId:r.productId,productType:isDigitalReviewProduct(db,r.productId)?'digital':'physical',orderId:r.orderId||'',name:reviewAuthor(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
+function publicReview(db,r){return {id:r.id,productId:r.productId,productType:isDigitalReviewProduct(db,r.productId)?'digital':'physical',orderId:r.orderId||'',name:reviewAuthor(db,r.userId),title:reviewAuthorTitle(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
 function orderReviewsForUser(db,order){return (db.reviews||[]).filter(r=>r.userId===order.userId&&String(r.orderId||'')===String(order.id)).map(r=>publicReview(db,r))}
 
 app.get('/api/reviews/:productId',(req,res)=>{
@@ -1741,6 +1763,50 @@ function adminOnly(req,res,next){
     next();
   });
 }
+
+
+function adminTitleUserRow(u){
+  return {
+    id:u.id,
+    email:u.email,
+    firstName:u.firstName||'',
+    lastName:u.lastName||'',
+    title:accountTitleData(u)
+  };
+}
+app.get('/api/admin/user-titles',adminOnly,(req,res)=>{
+  const assignments=(req.db.users||[])
+    .filter(u=>accountTitleData(u))
+    .map(adminTitleUserRow)
+    .sort((a,b)=>String(a.email).localeCompare(String(b.email),'pl'));
+  res.json({
+    ok:true,
+    presets:Object.entries(ACCOUNT_TITLE_PRESETS).map(([key,v])=>({key,label:v.label,name:v.name})),
+    assignments
+  });
+});
+app.post('/api/admin/user-titles',adminOnly,(req,res)=>{
+  const email=cleanEmail(req.body?.email);
+  const key=String(req.body?.key||'').trim().toLowerCase();
+  if(!validEmail(email))return res.status(400).json({error:'Podaj prawidłowy adres e-mail.'});
+  if(!Object.prototype.hasOwnProperty.call(ACCOUNT_TITLE_PRESETS,key))return res.status(400).json({error:'Nieprawidłowy typ tytułu.'});
+  const user=(req.db.users||[]).find(u=>cleanEmail(u.email)===email);
+  if(!user)return res.status(404).json({error:'Nie znaleziono konta STARXV z takim adresem e-mail.'});
+  const label=key==='custom'
+    ?cleanAccountTitleLabel(req.body?.label)
+    :ACCOUNT_TITLE_PRESETS[key].label;
+  if(label.length<2)return res.status(400).json({error:'Wpisz tytuł mający co najmniej 2 znaki.'});
+  user.displayTitle={key,label,assignedAt:Date.now(),assignedBy:req.user.id};
+  save(req.db);
+  res.json({ok:true,user:adminTitleUserRow(user)});
+});
+app.delete('/api/admin/user-titles/:userId',adminOnly,(req,res)=>{
+  const user=(req.db.users||[]).find(u=>String(u.id)===String(req.params.userId));
+  if(!user)return res.status(404).json({error:'Nie znaleziono konta.'});
+  delete user.displayTitle;
+  save(req.db);
+  res.json({ok:true});
+});
 
 
 app.get('/api/admin/faq',adminOnly,(req,res)=>{
@@ -2655,7 +2721,7 @@ app.post('/api/admin/support-reports/:id/reply',adminOnly,async(req,res)=>{
   const reply=String(req.body?.reply||'').trim().slice(0,2000);
   if(reply.length<2)return res.status(400).json({error:'Wpisz odpowiedź dla klienta.'});
   const repliedAt=new Date().toISOString();
-  supportMessages(report).push({id:crypto.randomUUID(),author:'support',text:reply,createdAt:repliedAt});
+  supportMessages(report).push({id:crypto.randomUUID(),author:'support',authorUserId:req.user.id,authorTitle:accountTitleData(req.user),text:reply,createdAt:repliedAt});
   report.customerReadAt=null;
   report.supportReadAt=repliedAt;
   report.closedByCustomer=false;
