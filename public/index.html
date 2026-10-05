@@ -906,7 +906,7 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 .sx-digital-promo-badge.show{display:inline-flex}
 .sx-digital-omnibus{display:none;color:#68655f;font-size:8px;line-height:1.45;max-width:260px}.sx-digital-omnibus.show{display:block}
 .sx-digital-catalog-price-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.sx-digital-catalog-old{color:#666;font-size:10px;text-decoration:line-through}.sx-digital-catalog-promo{display:inline-flex;padding:4px 7px;border-radius:999px;background:#f1eee7;color:#080808;font-size:8px;font-weight:950;letter-spacing:.07em}
+.sx-digital-catalog-old{color:#74716a;font-size:10px;text-decoration:line-through}.sx-digital-catalog-promo{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f1eee7;color:#080808;font-size:8px;font-weight:950;letter-spacing:.08em;box-shadow:0 0 0 1px rgba(255,255,255,.12)}
 .sx-digital-code-box{margin-top:14px;padding:15px;border:1px solid #292824;background:#0b0b0a}
 .sx-digital-code-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:9px}.sx-digital-code-head b{color:#eeeae1;font-size:9px;letter-spacing:.11em}.sx-digital-code-head span{color:#66645f;font-size:8px}
 .sx-digital-code-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}.sx-digital-code-row input{min-width:0;border:1px solid #34332e;background:#080808;color:#f2efe8;padding:12px 13px;font:800 10px Arial,sans-serif;letter-spacing:.08em;text-transform:uppercase;outline:none}.sx-digital-code-row input:focus{border-color:#8f7b42}.sx-digital-code-row button{border:1px solid #34332e;background:#151513;color:#eeeae1;padding:0 15px;font:950 8px Arial,sans-serif;letter-spacing:.09em;cursor:pointer}.sx-digital-code-row button:hover{background:#f1eee7;color:#080808}
@@ -3900,6 +3900,14 @@ window.STARXV_CART_PRICE_HTML=function(item){
  const starsDigital=n=>{const v=Math.max(0,Math.min(5,Number(n)||0));return Array.from({length:5},(_,i)=>i<Math.round(v)?'★':'☆').join('')};
  const moneyDigital=n=>`${Math.max(0,Number(n||0)).toFixed(2).replace('.',',')} PLN`;
  function productSellingPrice(p){return Number(p?.effectivePrice??p?.price??0)}
+ function digitalPromotionState(p){
+   const base=Math.max(0,Number(p?.price||0));
+   const current=Math.max(0,productSellingPrice(p));
+   const discount=Math.max(0,Number(p?.discountPercent||p?.promotion?.discountPercent||0));
+   const active=discount>0&&base>current;
+   const reference=Math.max(0,Number(p?.promotion?.referencePrice||base||0));
+   return {active,base,current,discount,reference,hasLegalReference:Boolean(p?.promotion?.referencePrice)};
+ }
  function clearDigitalCode(){
    appliedPromo=null;
    if(promoInput)promoInput.value='';
@@ -3909,12 +3917,22 @@ window.STARXV_CART_PRICE_HTML=function(item){
  }
  function renderDigitalPrice(){
    if(!product)return;
-   const current=productSellingPrice(product),promotion=product.promotion||{};
-   price.textContent=moneyDigital(current);
-   const active=Boolean(promotion.active&&Number(promotion.referencePrice)>current);
-   if(oldPrice){oldPrice.textContent=active?moneyDigital(promotion.referencePrice):'';oldPrice.classList.toggle('show',active)}
-   if(promoBadge){promoBadge.textContent=active?`-${Number(promotion.discountPercent||product.discountPercent||0)}%`:'';promoBadge.classList.toggle('show',active)}
-   if(omnibus){omnibus.textContent=active?`Najniższa cena z okresu odniesienia: ${moneyDigital(promotion.referencePrice)}`:'';omnibus.classList.toggle('show',active)}
+   const promo=digitalPromotionState(product);
+   price.textContent=moneyDigital(promo.current);
+   if(oldPrice){
+     oldPrice.textContent=promo.active?`było ${moneyDigital(promo.base)}`:'';
+     oldPrice.classList.toggle('show',promo.active);
+   }
+   if(promoBadge){
+     promoBadge.textContent=promo.active?`PROMOCJA -${promo.discount}%`:'';
+     promoBadge.classList.toggle('show',promo.active);
+   }
+   if(omnibus){
+     omnibus.textContent=promo.active&&promo.hasLegalReference
+       ?`Najniższa cena z okresu odniesienia: ${moneyDigital(promo.reference)}`
+       :'';
+     omnibus.classList.toggle('show',Boolean(promo.active&&promo.hasLegalReference));
+   }
  }
  async function applyDigitalCode(){
    if(!product||!promoInput)return;
@@ -3954,7 +3972,7 @@ window.STARXV_CART_PRICE_HTML=function(item){
  function world(name,persist=true){hideGate();const isDigital=name==='digital';digital.hidden=!isDigital;if(main)main.hidden=isDigital;if(nav)nav.hidden=false;document.body.classList.toggle('sx-digital-mode',isDigital);if(persist)sessionStorage.setItem('starxv-world',name);if(isDigital){const q=new URLSearchParams(location.search);if(!q.get('section'))history.replaceState(null,'','/?section=digital');loadDigital()}else{history.replaceState(null,'','/')}}
  function renderCatalog(){
    if(!catalog)return;
-   catalog.innerHTML=products.length?products.map((p,i)=>{const pos=Number.isFinite(Number(p.position))?Number(p.position):(i+1);return `<button class="sx-digital-catalog-card" type="button" data-digital-product-id="${escDigital(p.id)}"><img src="${escDigital(p.image||p.gallery?.[0]||'/assets/placeholder.png')}" alt="${escDigital(p.name||'E-book')}" onerror="this.onerror=null;this.src='/assets/placeholder.png'"><span class="sx-digital-catalog-copy"><small>STARXV DIGITAL / E-BOOK ${String(pos).padStart(2,'0')}</small><strong>${escDigital(p.name||p.id)}</strong><p>${escDigital(p.subtitle||p.description||'Produkt cyfrowy STARXV')}</p></span><span class="sx-digital-catalog-side"><span class="sx-digital-catalog-price-wrap">${p.promotion?.active?`<span class="sx-digital-catalog-promo">-${Number(p.promotion.discountPercent||p.discountPercent||0)}%</span><span class="price">${moneyDigital(productSellingPrice(p))}</span><span class="sx-digital-catalog-old">${moneyDigital(p.promotion.referencePrice||p.price)}</span>`:`<span class="price">${moneyDigital(productSellingPrice(p))}</span>`}</span><span class="sx-digital-catalog-open">ZOBACZ E-BOOK →</span></span></button>`}).join(''):'<div class="sx-digital-review-empty">Brak aktywnych produktów cyfrowych.</div>';
+   catalog.innerHTML=products.length?products.map((p,i)=>{const pos=Number.isFinite(Number(p.position))?Number(p.position):(i+1);return `<button class="sx-digital-catalog-card" type="button" data-digital-product-id="${escDigital(p.id)}"><img src="${escDigital(p.image||p.gallery?.[0]||'/assets/placeholder.png')}" alt="${escDigital(p.name||'E-book')}" onerror="this.onerror=null;this.src='/assets/placeholder.png'"><span class="sx-digital-catalog-copy"><small>STARXV DIGITAL / E-BOOK ${String(pos).padStart(2,'0')}</small><strong>${escDigital(p.name||p.id)}</strong><p>${escDigital(p.subtitle||p.description||'Produkt cyfrowy STARXV')}</p></span><span class="sx-digital-catalog-side"><span class="sx-digital-catalog-price-wrap">${(()=>{const promo=digitalPromotionState(p);return promo.active?`<span class="sx-digital-catalog-promo">PROMOCJA -${promo.discount}%</span><span class="price">${moneyDigital(promo.current)}</span><span class="sx-digital-catalog-old">było ${moneyDigital(promo.base)}</span>`:`<span class="price">${moneyDigital(promo.current)}</span>`})()}</span><span class="sx-digital-catalog-open">ZOBACZ E-BOOK →</span></span></button>`}).join(''):'<div class="sx-digital-review-empty">Brak aktywnych produktów cyfrowych.</div>';
    catalog.querySelectorAll('[data-digital-product-id]').forEach(b=>b.onclick=()=>selectDigitalProduct(b.dataset.digitalProductId,true));
  }
  async function selectDigitalProduct(id,openDetail=false){
