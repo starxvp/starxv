@@ -95,10 +95,28 @@ function pgSessionRow(row){
 let sqliteGetState,sqlitePutState,sqliteGetSession,sqliteInsertSession,sqliteDeleteSession,
     sqliteDeleteUserSessions,sqliteDeleteOtherUserSessions,sqliteDeleteExpiredSessions;
 
+function normalizedDatabaseUrl(){
+  const raw=String(process.env.DATABASE_URL||'').trim();
+  if(!raw)return raw;
+  try{
+    const url=new URL(raw);
+    const sslmode=String(url.searchParams.get('sslmode')||'').toLowerCase();
+    // pg/pg-connection-string currently treats prefer, require and verify-ca
+    // as aliases of verify-full. Make that existing behaviour explicit so
+    // future pg versions do not change it and no deprecation warning is emitted.
+    if(['prefer','require','verify-ca'].includes(sslmode)){
+      url.searchParams.set('sslmode','verify-full');
+    }
+    return url.toString();
+  }catch{
+    return raw;
+  }
+}
+
 async function initPostgres(){
   const {Pool}=require('pg');
   pgPool=new Pool({
-    connectionString:String(process.env.DATABASE_URL||'').trim(),
+    connectionString:normalizedDatabaseUrl(),
     max:5,
     idleTimeoutMillis:30000,
     connectionTimeoutMillis:10000
