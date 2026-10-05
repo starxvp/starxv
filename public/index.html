@@ -989,6 +989,51 @@ body.sx-delete-account-lock{overflow:hidden!important}
 }
 </style>
 
+
+<style id="starxv-digital-hero-gradient">
+#sxDigitalPage .sx-digital-hero{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  background:
+    radial-gradient(900px 520px at 18% 18%, rgba(201,168,61,.10), transparent 62%),
+    radial-gradient(760px 500px at 68% 78%, rgba(95,72,145,.08), transparent 66%),
+    radial-gradient(620px 420px at 42% 48%, rgba(205,150,106,.055), transparent 68%),
+    linear-gradient(135deg,#080808 0%,#0b0a0d 48%,#080808 100%);
+}
+#sxDigitalPage .sx-digital-hero::before{
+  content:"";
+  position:absolute;
+  inset:-18%;
+  z-index:-2;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 26% 38%, rgba(238,211,132,.08), transparent 24%),
+    radial-gradient(circle at 62% 56%, rgba(118,86,164,.065), transparent 25%);
+  filter:blur(46px);
+}
+#sxDigitalPage .sx-digital-hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.012),transparent 28%,rgba(0,0,0,.12) 100%);
+}
+#sxDigitalPage .sx-digital-copy{
+  position:relative;
+  z-index:1;
+}
+@media(max-width:760px){
+  #sxDigitalPage .sx-digital-hero{
+    background:
+      radial-gradient(520px 360px at 22% 18%, rgba(201,168,61,.095), transparent 64%),
+      radial-gradient(440px 320px at 74% 82%, rgba(95,72,145,.065), transparent 68%),
+      linear-gradient(145deg,#080808 0%,#0a090c 52%,#080808 100%);
+  }
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
