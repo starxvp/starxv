@@ -1083,11 +1083,12 @@ body.sx-delete-account-lock{overflow:hidden!important}
 </style>
 
 
+
 <style id="starxv-profile-title-inline-style">
 #accountProfile .sx-profile-name-row{
   display:flex;
   align-items:center;
-  gap:10px;
+  gap:12px;
   flex-wrap:wrap;
 }
 #accountProfile .sx-profile-name-row .profile-name{
@@ -1103,22 +1104,29 @@ body.sx-delete-account-lock{overflow:hidden!important}
 }
 #accountProfile .sx-profile-title-inline .sx-user-title{
   margin:0!important;
-  font-size:10px;
-  line-height:1;
+  font-size:clamp(18px,2vw,25px);
+  line-height:.95;
   font-weight:950;
-  letter-spacing:.08em;
+  letter-spacing:-.02em;
 }
 #accountProfile .sx-profile-title-inline .sx-user-title::before{
   content:'·';
-  margin-right:5px;
-  font-size:14px;
+  margin-right:9px;
+  font-size:.9em;
   line-height:1;
+  transform:translateY(-1px);
 }
 @media(max-width:620px){
-  #accountProfile .sx-profile-name-row{gap:7px}
-  #accountProfile .sx-profile-title-inline .sx-user-title{font-size:9px}
+  #accountProfile .sx-profile-name-row{gap:8px}
+  #accountProfile .sx-profile-title-inline .sx-user-title{
+    font-size:clamp(14px,4.7vw,19px);
+  }
+  #accountProfile .sx-profile-title-inline .sx-user-title::before{
+    margin-right:6px;
+  }
 }
 </style>
+
 
 </head>
 <body>
