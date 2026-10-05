@@ -858,6 +858,62 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 @media(max-width:620px){.sx-digital-code-row{grid-template-columns:1fr}.sx-digital-code-row button{min-height:42px}.sx-digital-catalog-side{align-items:flex-start}.sx-digital-catalog-price-wrap{align-items:flex-start}}
 </style>
 
+
+<style id="starxv-delete-account-modal-style">
+.sx-delete-account-modal{
+  position:fixed;inset:0;z-index:1000800;display:none;align-items:center;justify-content:center;
+  padding:22px;background:rgba(0,0,0,.82);backdrop-filter:blur(12px)
+}
+.sx-delete-account-modal.open{display:flex}
+.sx-delete-account-card{
+  position:relative;width:min(520px,100%);padding:30px;border:1px solid rgba(255,255,255,.13);
+  border-radius:20px;background:#090909;color:#fff;box-shadow:0 32px 110px rgba(0,0,0,.68)
+}
+.sx-delete-account-close{
+  position:absolute;top:15px;right:16px;width:38px;height:38px;border:1px solid rgba(255,255,255,.10);
+  border-radius:50%;background:#111;color:#777;font-size:21px;cursor:pointer
+}
+.sx-delete-account-close:hover{color:#fff;border-color:rgba(255,255,255,.22)}
+.sx-delete-account-kicker{
+  padding-right:46px;color:#9a7777;font:900 8px/1 Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase
+}
+.sx-delete-account-card h2{
+  margin:12px 45px 0 0;font:950 clamp(28px,5vw,42px)/.98 Arial,sans-serif;letter-spacing:-.045em
+}
+.sx-delete-account-card p{
+  margin:16px 0 0;color:#969696;font:650 10px/1.65 Arial,sans-serif
+}
+.sx-delete-account-warning{
+  margin-top:18px;padding:13px 14px;border:1px solid #432323;border-radius:11px;
+  background:#120a0a;color:#c89393;font:700 9px/1.55 Arial,sans-serif
+}
+.sx-delete-account-field{display:grid;gap:7px;margin-top:19px}
+.sx-delete-account-field label{
+  color:#777;font:900 8px/1 Arial,sans-serif;letter-spacing:.13em;text-transform:uppercase
+}
+.sx-delete-account-field input{
+  width:100%;min-height:46px;border:1px solid #333;border-radius:10px;background:#050505;
+  color:#fff;padding:0 13px;font:700 11px Arial,sans-serif;outline:none
+}
+.sx-delete-account-field input:focus{border-color:#6f5050}
+.sx-delete-account-error{
+  min-height:17px;margin-top:8px;color:#d89191;font:750 8px/1.45 Arial,sans-serif
+}
+.sx-delete-account-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+.sx-delete-account-actions button{
+  min-height:46px;border-radius:11px;cursor:pointer;font:950 9px/1 Arial,sans-serif;letter-spacing:.09em
+}
+.sx-delete-account-cancel{border:1px solid #333;background:#111;color:#eee}
+.sx-delete-account-confirm{border:1px solid #5c2929;background:#230d0d;color:#efb1b1}
+.sx-delete-account-confirm:hover{background:#321111}
+.sx-delete-account-confirm:disabled{opacity:.45;cursor:wait}
+body.sx-delete-account-lock{overflow:hidden!important}
+@media(max-width:560px){
+  .sx-delete-account-modal{padding:14px}.sx-delete-account-card{padding:25px 20px;border-radius:17px}
+  .sx-delete-account-actions{grid-template-columns:1fr}
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -1058,6 +1114,26 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </div>
 </div>
 </div>
+
+<div aria-hidden="true" class="sx-delete-account-modal" id="sxDeleteAccountModal">
+  <div aria-labelledby="sxDeleteAccountTitle" aria-modal="true" class="sx-delete-account-card" role="dialog">
+    <button aria-label="Zamknij" class="sx-delete-account-close" id="sxDeleteAccountClose" type="button">×</button>
+    <div class="sx-delete-account-kicker">STARXV / ACCOUNT / DELETE</div>
+    <h2 id="sxDeleteAccountTitle">Usunąć konto?</h2>
+    <p>Ta operacja trwale usunie Twoje konto STARXV. Nie będzie można jej cofnąć.</p>
+    <div class="sx-delete-account-warning">Po usunięciu konta utracisz dostęp do danych konta i powiązanej z nim historii.</div>
+    <div class="sx-delete-account-field">
+      <label for="sxDeleteAccountPassword">HASŁO DO KONTA</label>
+      <input id="sxDeleteAccountPassword" type="password" autocomplete="current-password" placeholder="Wpisz hasło, aby potwierdzić"/>
+    </div>
+    <div class="sx-delete-account-error" id="sxDeleteAccountError"></div>
+    <div class="sx-delete-account-actions">
+      <button class="sx-delete-account-cancel" id="sxDeleteAccountCancel" type="button">ANULUJ</button>
+      <button class="sx-delete-account-confirm" id="sxDeleteAccountConfirm" type="button">USUŃ KONTO</button>
+    </div>
+  </div>
+</div>
+
 <div aria-hidden="true" class="sx-reset-modal" id="sxResetModal">
 <div aria-labelledby="sxResetTitle" aria-modal="true" class="sx-reset-card" role="dialog">
 <button aria-label="Zamknij" class="sx-reset-close" id="sxResetClose" type="button">×</button>
@@ -2039,32 +2115,75 @@ const renderCart=()=>{hydrateCartDiscounts();
   $('loginSubmit').onclick=async()=>{const email=normalize($('loginEmail').value),password=$('loginPassword').value;try{const d=await api('/auth/login',{method:'POST',body:JSON.stringify({email,password})});currentUser=d.user;setMsg('loginMessage','Zalogowano.','success');renderState()}catch(e){setMsg('loginMessage',e.message,'error')}};
   $('logoutBtn').onclick=async()=>{try{await api('/auth/logout',{method:'POST',body:'{}'})}catch(e){}currentUser=null;renderState();switchTab('login')};
   const deleteAccountBtn=$('deleteAccountBtn');
-  if(deleteAccountBtn)deleteAccountBtn.onclick=async()=>{
+  const sxDeleteAccountModal=$('sxDeleteAccountModal');
+  const sxDeleteAccountPassword=$('sxDeleteAccountPassword');
+  const sxDeleteAccountError=$('sxDeleteAccountError');
+  const sxDeleteAccountConfirm=$('sxDeleteAccountConfirm');
+
+  function sxOpenDeleteAccountModal(){
+    if(!currentUser||!sxDeleteAccountModal)return;
+    sxDeleteAccountError.textContent='';
+    sxDeleteAccountPassword.value='';
+    sxDeleteAccountConfirm.disabled=false;
+    sxDeleteAccountConfirm.textContent='USUŃ KONTO';
+    sxDeleteAccountModal.classList.add('open');
+    sxDeleteAccountModal.setAttribute('aria-hidden','false');
+    document.body.classList.add('sx-delete-account-lock');
+    setTimeout(()=>sxDeleteAccountPassword.focus(),80);
+  }
+
+  function sxCloseDeleteAccountModal(){
+    if(!sxDeleteAccountModal)return;
+    sxDeleteAccountModal.classList.remove('open');
+    sxDeleteAccountModal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('sx-delete-account-lock');
+    sxDeleteAccountError.textContent='';
+    sxDeleteAccountPassword.value='';
+  }
+
+  if(deleteAccountBtn)deleteAccountBtn.onclick=sxOpenDeleteAccountModal;
+  $('sxDeleteAccountClose').onclick=sxCloseDeleteAccountModal;
+  $('sxDeleteAccountCancel').onclick=sxCloseDeleteAccountModal;
+  sxDeleteAccountModal.onclick=e=>{if(e.target===sxDeleteAccountModal)sxCloseDeleteAccountModal()};
+
+  sxDeleteAccountPassword.addEventListener('keydown',e=>{
+    if(e.key==='Enter')sxDeleteAccountConfirm.click();
+  });
+
+  sxDeleteAccountConfirm.onclick=async()=>{
     if(!currentUser)return;
-    const ok=confirm('Czy na pewno chcesz trwale usunąć konto STARXV? Tej operacji nie można cofnąć.');
-    if(!ok)return;
-    const password=prompt('Dla bezpieczeństwa wpisz hasło do konta:');
-    if(password===null)return;
-    if(!password){alert('Musisz wpisać hasło.');return;}
-    const finalOk=confirm('Ostatnie potwierdzenie: usunąć konto na stałe?');
-    if(!finalOk)return;
+    const password=String(sxDeleteAccountPassword.value||'');
+    if(!password){
+      sxDeleteAccountError.textContent='Wpisz hasło do konta, aby potwierdzić usunięcie.';
+      sxDeleteAccountPassword.focus();
+      return;
+    }
+
+    sxDeleteAccountError.textContent='';
+    sxDeleteAccountConfirm.disabled=true;
+    sxDeleteAccountConfirm.textContent='USUWANIE…';
     deleteAccountBtn.disabled=true;
-    deleteAccountBtn.textContent='USUWANIE KONTA…';
+
     try{
       await api('/account',{method:'DELETE',body:JSON.stringify({password})});
       try{
         ['starxv-favorites','starxv-addresses','starxv-default-address'].forEach(k=>localStorage.removeItem(k));
       }catch(e){}
+      sxCloseDeleteAccountModal();
       currentUser=null;
       renderState();
       switchTab('login');
-      alert('Konto STARXV zostało usunięte.');
     }catch(e){
-      alert(e.message||'Nie udało się usunąć konta.');
+      sxDeleteAccountError.textContent=e.message||'Nie udało się usunąć konta.';
+      sxDeleteAccountConfirm.disabled=false;
+      sxDeleteAccountConfirm.textContent='USUŃ KONTO';
       deleteAccountBtn.disabled=false;
-      deleteAccountBtn.textContent=(localStorage.getItem('starxv-language')||'pl')==='en'?'DELETE ACCOUNT':'USUŃ KONTO';
     }
   };
+
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Escape'&&sxDeleteAccountModal?.classList.contains('open'))sxCloseDeleteAccountModal();
+  });
   $('profileOrders').onclick=()=>{
     sessionStorage.setItem('starxv-return-to-profile','1');
     sxKeepWorldOnAccountClose=true;close();sxKeepWorldOnAccountClose=false;
