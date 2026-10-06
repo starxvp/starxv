@@ -487,26 +487,148 @@
 </style>
 
 <style id="starxv-digital-hero-art-fill">
-/* STARXV Digital: refined editorial library panel. */
-#sxDigitalPage .sx-digital-art{position:relative!important;overflow:hidden!important;isolation:isolate!important;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 10% 7%,rgba(255,255,255,.68),transparent 34%),radial-gradient(circle at 92% 90%,rgba(136,118,166,.11),transparent 30%),linear-gradient(145deg,#ddd5c7 0%,#d6ccbc 58%,#cec3b3 100%)!important;padding:clamp(38px,4.6vw,70px)!important}
-#sxDigitalPage .sx-digital-art:before{content:"";position:absolute;width:220px;height:220px;right:-110px;top:-102px;border:1px solid rgba(73,61,42,.12);border-radius:50%;box-shadow:0 0 0 42px rgba(255,255,255,.035);pointer-events:none}
-#sxDigitalPage .sx-digital-art>img,#sxDigitalPage .sx-digital-art>span{display:none!important}
-#sxDigitalPage .sx-digital-benefits{position:relative;z-index:1;width:100%;max-width:560px;color:#181715}
-#sxDigitalPage .sx-digital-benefits-head{padding:0 0 28px;border-bottom:1px solid rgba(33,29,24,.16)}
-#sxDigitalPage .sx-digital-benefits-kicker{display:block;margin-bottom:15px;color:#7f6a32;font:950 8px/1 Arial,sans-serif;letter-spacing:.23em;text-transform:uppercase}
-#sxDigitalPage .sx-digital-benefits-head strong{display:block;max-width:430px;color:#171717;font:950 clamp(27px,2.25vw,38px)/.98 Arial,sans-serif;letter-spacing:-.042em}
-#sxDigitalPage .sx-digital-benefits-head p{max-width:470px;margin:13px 0 0;color:#655f55;font:650 10px/1.65 Arial,sans-serif}
-#sxDigitalPage .sx-digital-benefits-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
-#sxDigitalPage .sx-digital-benefit{position:relative;min-height:150px;display:flex;flex-direction:column;justify-content:flex-start;gap:0;padding:18px 18px 17px;border:1px solid rgba(41,35,29,.12);background:rgba(248,244,236,.52);box-shadow:inset 0 1px 0 rgba(255,255,255,.34);transition:transform .18s ease,border-color .18s ease,background .18s ease}
-#sxDigitalPage .sx-digital-benefit:hover{transform:translateY(-2px);border-color:rgba(41,35,29,.2);background:rgba(250,247,241,.67)}
-#sxDigitalPage .sx-digital-benefit-num{display:block;width:auto;margin:0 0 18px;padding:0;border:0;border-radius:0;background:transparent;color:#8a7438;font:950 7px/1 Arial,sans-serif;letter-spacing:.18em}
-#sxDigitalPage .sx-digital-benefit b{display:block;max-width:none;margin:0;color:#171717;font:950 clamp(15px,1.15vw,18px)/1.03 Arial,sans-serif;letter-spacing:-.02em}
-#sxDigitalPage .sx-digital-benefit p{max-width:none;margin:9px 0 0;color:#655f55;font:650 9px/1.6 Arial,sans-serif}
-#sxDigitalPage .sx-benefit-access{background:rgba(246,239,223,.58)}#sxDigitalPage .sx-benefit-library{background:rgba(236,232,221,.56)}#sxDigitalPage .sx-benefit-variety{background:rgba(232,226,236,.48)}#sxDigitalPage .sx-benefit-anywhere{background:rgba(226,232,228,.52)}
-#sxDigitalPage .sx-digital-strip{height:1px!important;min-height:1px!important;padding:0!important;margin:0 70px!important;border:0!important;background:#24231f!important;overflow:hidden!important}#sxDigitalPage .sx-digital-strip>*{display:none!important}
-@media(max-width:900px){#sxDigitalPage .sx-digital-benefits{max-width:none}}
-@media(max-width:760px){#sxDigitalPage .sx-digital-art{padding:36px 24px!important}#sxDigitalPage .sx-digital-benefits-grid{grid-template-columns:1fr 1fr}#sxDigitalPage .sx-digital-benefit{min-height:142px;padding:16px}#sxDigitalPage .sx-digital-benefit-num{margin-bottom:14px}#sxDigitalPage .sx-digital-benefit b{font-size:15px}#sxDigitalPage .sx-digital-strip{margin:0 20px!important}}
-@media(max-width:520px){#sxDigitalPage .sx-digital-benefits-grid{grid-template-columns:1fr}#sxDigitalPage .sx-digital-benefit{min-height:0}}
+/* STARXV Digital: premium editorial library panel. */
+#sxDigitalPage .sx-digital-art{
+  position:relative!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(255,255,255,.72),transparent 36%),
+    radial-gradient(circle at 88% 92%,rgba(145,126,177,.16),transparent 33%),
+    linear-gradient(145deg,#ded6c7 0%,#d6ccbb 55%,#cec3b2 100%)!important;
+  padding:clamp(34px,4vw,62px)!important
+}
+#sxDigitalPage .sx-digital-art:before{
+  content:"";
+  position:absolute;
+  width:210px;
+  height:210px;
+  right:-86px;
+  top:-74px;
+  border:1px solid rgba(77,63,40,.13);
+  border-radius:50%;
+  box-shadow:0 0 0 34px rgba(255,255,255,.05),0 0 0 72px rgba(255,255,255,.025);
+  pointer-events:none
+}
+#sxDigitalPage .sx-digital-art>img,
+#sxDigitalPage .sx-digital-art>span{display:none!important}
+#sxDigitalPage .sx-digital-benefits{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:520px;
+  color:#171717
+}
+#sxDigitalPage .sx-digital-benefits-head{
+  padding:0 0 24px;
+  border-bottom:1px solid rgba(31,27,22,.18)
+}
+#sxDigitalPage .sx-digital-benefits-kicker{
+  display:block;
+  margin-bottom:14px;
+  color:#7f6a32;
+  font:950 8px/1 Arial,sans-serif;
+  letter-spacing:.24em;
+  text-transform:uppercase
+}
+#sxDigitalPage .sx-digital-benefits-head strong{
+  display:block;
+  max-width:390px;
+  color:#171717;
+  font:950 clamp(25px,2.25vw,38px)/.96 Arial,sans-serif;
+  letter-spacing:-.045em
+}
+#sxDigitalPage .sx-digital-benefits-head p{
+  max-width:430px;
+  margin:14px 0 0;
+  color:#665f55;
+  font:650 10px/1.65 Arial,sans-serif
+}
+#sxDigitalPage .sx-digital-benefits-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:14px
+}
+#sxDigitalPage .sx-digital-benefit{
+  position:relative;
+  min-height:152px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:18px;
+  padding:18px;
+  border:1px solid rgba(35,30,25,.12);
+  background:rgba(248,243,234,.46);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.34);
+  transition:transform .18s ease,border-color .18s ease,background .18s ease
+}
+#sxDigitalPage .sx-digital-benefit:hover{
+  transform:translateY(-2px);
+  border-color:rgba(35,30,25,.22);
+  background:rgba(250,247,240,.68)
+}
+#sxDigitalPage .sx-digital-benefit-num{
+  display:inline-flex;
+  width:max-content;
+  align-items:center;
+  padding:5px 7px;
+  border:1px solid rgba(31,27,22,.12);
+  border-radius:999px;
+  color:#77683e;
+  background:rgba(255,255,255,.28);
+  font:950 7px/1 Arial,sans-serif;
+  letter-spacing:.16em
+}
+#sxDigitalPage .sx-digital-benefit b{
+  display:block;
+  max-width:190px;
+  color:#171717;
+  font:950 clamp(15px,1.25vw,19px)/1.04 Arial,sans-serif;
+  letter-spacing:-.025em
+}
+#sxDigitalPage .sx-digital-benefit p{
+  max-width:205px;
+  margin:8px 0 0;
+  color:#625c52;
+  font:650 9px/1.55 Arial,sans-serif
+}
+#sxDigitalPage .sx-benefit-access{background:rgba(246,238,218,.60)}
+#sxDigitalPage .sx-benefit-library{background:rgba(232,229,217,.55)}
+#sxDigitalPage .sx-benefit-variety{background:rgba(229,221,235,.48)}
+#sxDigitalPage .sx-benefit-anywhere{background:rgba(219,228,225,.52)}
+#sxDigitalPage .sx-digital-strip{
+  height:1px!important;
+  min-height:1px!important;
+  padding:0!important;
+  margin:0 70px!important;
+  border:0!important;
+  background:#24231f!important;
+  overflow:hidden!important
+}
+#sxDigitalPage .sx-digital-strip>*{display:none!important}
+@media(max-width:900px){
+  #sxDigitalPage .sx-digital-benefits{max-width:none}
+}
+@media(max-width:760px){
+  #sxDigitalPage .sx-digital-art{padding:34px 24px!important}
+  #sxDigitalPage .sx-digital-benefits-grid{grid-template-columns:1fr 1fr}
+  #sxDigitalPage .sx-digital-benefit{min-height:138px;padding:16px}
+  #sxDigitalPage .sx-digital-benefit b{font-size:15px}
+  #sxDigitalPage .sx-digital-strip{margin:0 20px!important}
+}
+@media(max-width:520px){
+  #sxDigitalPage .sx-digital-benefits-grid{grid-template-columns:1fr}
+  #sxDigitalPage .sx-digital-benefit{
+    min-height:0;
+    gap:13px;
+  }
+  #sxDigitalPage .sx-digital-benefit b,
+  #sxDigitalPage .sx-digital-benefit p{max-width:none}
+}
 </style>
 
 
@@ -1184,18 +1306,18 @@ body.sx-delete-account-lock{overflow:hidden!important}
   </div>
   <div class="sx-digital-home-view" id="sxDigitalHomeView">
   <div class="sx-digital-hero">
-    <div class="sx-digital-copy"><span class="sx-digital-kicker">STARXV DIGITAL / E-BOOKS</span><h1><span class="sx-hero-line">MADE FOR</span><br><i class="sx-hero-line">REAL LIFE.</i></h1><p>Poradniki, wiedza, historie i kolejne formaty — cyfrowa biblioteka STARXV tworzona do czytania po swojemu.</p><a href="#sxDigitalCatalog">DISCOVER E-BOOK →</a></div>
+    <div class="sx-digital-copy"><span class="sx-digital-kicker">STARXV DIGITAL / E-BOOKS</span><h1><span class="sx-hero-line">MADE FOR</span><br><i class="sx-hero-line">REAL LIFE.</i></h1><p>E-booki z różnych kategorii — od praktycznej wiedzy po fikcyjne historie, wszystko w jednym miejscu.</p><a href="#sxDigitalCatalog">DISCOVER E-BOOK →</a></div>
     <div class="sx-digital-art"><div class="sx-digital-benefits">
       <div class="sx-digital-benefits-head">
         <span class="sx-digital-benefits-kicker">STARXV / DIGITAL LIBRARY</span>
-        <strong>Jedno miejsce.<br>Różne rzeczy do odkrycia.</strong>
-        <p>Nie tylko poradniki. STARXV Digital rozwija się jako biblioteka różnych kategorii i historii.</p>
+        <strong>Jedna biblioteka.<br>Wiele kierunków.</strong>
+        <p>Poradniki, wiedza i fikcyjne historie — różne kategorie, jeden cyfrowy katalog.</p>
       </div>
       <div class="sx-digital-benefits-grid">
-        <div class="sx-digital-benefit sx-benefit-access"><span class="sx-digital-benefit-num">ACCESS</span><div><b>Dostęp bez czekania</b><p>Po potwierdzeniu płatności e-book trafia prosto na Twoje konto.</p></div></div>
-        <div class="sx-digital-benefit sx-benefit-library"><span class="sx-digital-benefit-num">LIBRARY</span><div><b>Twoja cyfrowa biblioteka</b><p>Kupione tytuły zostają z Tobą i czekają w zamówieniach STARXV.</p></div></div>
-        <div class="sx-digital-benefit sx-benefit-variety"><span class="sx-digital-benefit-num">VARIETY</span><div><b>Od wiedzy po historie</b><p>Poradniki, inspiracje i fikcja — różne kategorie, jeden katalog.</p></div></div>
-        <div class="sx-digital-benefit sx-benefit-anywhere"><span class="sx-digital-benefit-num">ANYWHERE</span><div><b>Czytaj po swojemu</b><p>Telefon, tablet albo komputer. Wracaj do e-booków wtedy, kiedy chcesz.</p></div></div>
+        <div class="sx-digital-benefit sx-benefit-access"><span class="sx-digital-benefit-num">ACCESS</span><div><b>Dostęp od razu</b><p>Po potwierdzeniu płatności e-book pojawia się na Twoim koncie STARXV.</p></div></div>
+        <div class="sx-digital-benefit sx-benefit-library"><span class="sx-digital-benefit-num">LIBRARY</span><div><b>Zawsze pod ręką</b><p>Kupione e-booki znajdziesz później w swoich zamówieniach i możesz do nich wracać.</p></div></div>
+        <div class="sx-digital-benefit sx-benefit-variety"><span class="sx-digital-benefit-num">VARIETY</span><div><b>Różne kategorie</b><p>Od praktycznych poradników po fabularne historie — wybierasz to, na co masz ochotę.</p></div></div>
+        <div class="sx-digital-benefit sx-benefit-anywhere"><span class="sx-digital-benefit-num">ANYWHERE</span><div><b>Czytaj gdzie chcesz</b><p>Telefon, tablet lub komputer — Twoje e-booki są dostępne tam, gdzie Ci wygodnie.</p></div></div>
       </div>
     </div></div>
   </div>
