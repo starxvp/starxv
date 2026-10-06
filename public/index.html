@@ -639,6 +639,50 @@
 }
 </style>
 
+<style id="starxv-digital-hero-height-watermark-fix">
+/* Keep the existing composition, but restore a taller Digital hero on desktop. */
+@media(min-width:901px){
+  #sxDigitalPage .sx-digital-hero{
+    min-height:980px!important;
+    align-items:stretch!important;
+  }
+  #sxDigitalPage .sx-digital-copy,
+  #sxDigitalPage .sx-digital-art{
+    min-height:980px!important;
+    box-sizing:border-box!important;
+  }
+  #sxDigitalPage .sx-digital-art{
+    padding-top:76px!important;
+    padding-bottom:76px!important;
+  }
+  #sxDigitalPage .sx-digital-benefits{
+    min-height:820px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:flex-start!important;
+  }
+  #sxDigitalPage .sx-digital-benefits-kicker{
+    position:absolute!important;
+    left:auto!important;
+    right:0!important;
+    top:auto!important;
+    bottom:0!important;
+    margin:0!important;
+    color:rgba(103,85,45,.58)!important;
+    font-size:7px!important;
+    letter-spacing:.24em!important;
+    white-space:nowrap!important;
+    pointer-events:none!important;
+  }
+}
+@media(max-width:900px){
+  #sxDigitalPage .sx-digital-benefits-kicker{
+    position:static!important;
+    margin-bottom:14px!important;
+  }
+}
+</style>
+
 
 <style id="starxv-digital-reviews-style">
 .sx-digital-buy{flex-wrap:wrap}.sx-digital-purchase-count{display:inline-flex;align-items:center;min-height:46px;padding:0 2px;color:#777;font-size:9px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
