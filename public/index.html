@@ -504,13 +504,33 @@
 #sxDigitalPage .sx-digital-art:before{
   content:"";
   position:absolute;
-  width:210px;
-  height:210px;
-  right:-86px;
-  top:-74px;
-  border:1px solid rgba(77,63,40,.13);
-  border-radius:50%;
-  box-shadow:0 0 0 34px rgba(255,255,255,.05),0 0 0 72px rgba(255,255,255,.025);
+  width:360px;
+  height:300px;
+  right:-125px;
+  top:-115px;
+  border:0;
+  border-radius:46% 54% 64% 36% / 42% 38% 62% 58%;
+  background:
+    radial-gradient(circle at 30% 35%,rgba(236,196,111,.34),transparent 42%),
+    radial-gradient(circle at 72% 28%,rgba(168,139,196,.24),transparent 40%),
+    radial-gradient(circle at 55% 76%,rgba(150,183,169,.20),transparent 46%),
+    linear-gradient(135deg,rgba(255,255,255,.24),rgba(255,255,255,0));
+  filter:blur(8px);
+  opacity:.92;
+  transform:rotate(-10deg);
+  pointer-events:none
+}
+#sxDigitalPage .sx-digital-art:after{
+  content:"";
+  position:absolute;
+  width:250px;
+  height:170px;
+  right:38px;
+  top:18px;
+  border-radius:52% 48% 40% 60% / 58% 42% 58% 42%;
+  background:linear-gradient(120deg,rgba(255,221,159,.12),rgba(174,151,201,.10) 55%,rgba(135,170,156,.08));
+  filter:blur(26px);
+  opacity:.72;
   pointer-events:none
 }
 #sxDigitalPage .sx-digital-art>img,
