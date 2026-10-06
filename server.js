@@ -1065,8 +1065,17 @@ function ensureStore(db){
 
   if(!db.digitalProducts||typeof db.digitalProducts!=='object'){
     db.digitalProducts={
-      'zero-to-first-sale':{id:'zero-to-first-sale',position:1,name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',meta:'STARXV DIGITAL / E-BOOK',points:['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/placeholder.png',gallery:['/assets/placeholder.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
+      'zero-to-first-sale':{id:'zero-to-first-sale',position:1,categoryId:'praktyczne',name:'ZERO TO FIRST SALE',subtitle:'Od pomysłu do pierwszej sprzedaży',description:'Praktyczny przewodnik od pomysłu do pierwszej sprzedaży.',meta:'STARXV DIGITAL / E-BOOK',points:['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],price:Math.max(0,Number(process.env.ZERO_TO_FIRST_SALE_PRICE||39.99)),image:'/assets/placeholder.png',gallery:['/assets/placeholder.png'],fileName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',downloadName:'ZERO_TO_FIRST_SALE_FINAL_v1.0.pdf',active:true}
     };
+  }
+  if(!Array.isArray(db.digitalCategories)||!db.digitalCategories.length){
+    db.digitalCategories=[
+      {id:'praktyczne',name:'E-BOOKI PRAKTYCZNE',description:'Poradniki, wiedza i materiały do wykorzystania w realnym życiu.',position:1,visible:true},
+      {id:'fikcyjne-historie',name:'FIKCYJNE HISTORIE',description:'Fabularne e-booki i historie STARXV.',position:2,visible:true}
+    ];
+  }
+  for(const p of Object.values(db.digitalProducts||{})){
+    if(!String(p.categoryId||'').trim())p.categoryId='praktyczne';
   }
   // Replace obsolete ZERO TO FIRST SALE local artwork with the generic image-error placeholder.
   // This only touches the two legacy asset paths; real images configured later stay unchanged.
@@ -1486,7 +1495,7 @@ function publicDigitalProduct(p,db){
   const shownDiscount=promoActive?Math.max(1,Math.round((1-effectivePrice/ref)*100)):0;
   const purchaseCount=db?new Set((db.orders||[]).filter(o=>o.orderType==='digital'&&String(o.digitalProductId||'')===String(p.id||'')&&o.paymentStatus==='paid'&&o.userId).map(o=>String(o.userId))).size:0;
   return {
-    id:p.id,position:Number.isFinite(Number(p.position))?Number(p.position):999,name:p.name,subtitle:p.subtitle||'',description:p.description||'',meta:p.meta||'STARXV DIGITAL / E-BOOK',
+    id:p.id,position:Number.isFinite(Number(p.position))?Number(p.position):999,categoryId:String(p.categoryId||'praktyczne'),name:p.name,subtitle:p.subtitle||'',description:p.description||'',meta:p.meta||'STARXV DIGITAL / E-BOOK',
     points:Array.isArray(p.points)?p.points.slice(0,4):['Produkt cyfrowy PDF','Dostęp po potwierdzeniu płatności','Przypisany do konta STARXV','Pobieranie z biblioteki zamówień'],
     price:basePrice,effectivePrice,discountPercent:Number(p.discountPercent||0),
     promotion:{active:promoActive,referencePrice:promoActive?money2(ref):null,referenceType:promoActive?(p.omnibusReferenceType||'30-days'):null,discountPercent:shownDiscount,promotionStartedAt:Number(p.promotionStartedAt||0)||null},
@@ -1494,7 +1503,15 @@ function publicDigitalProduct(p,db){
     available:p.active!==false&&effectivePrice>0&&Boolean(file)&&fs.existsSync(file),purchaseCount
   };
 }
-app.get('/api/digital/products',(req,res)=>{const db=load();ensureStore(db);res.setHeader('Cache-Control','no-store');const products=Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(p=>publicDigitalProduct(p,db)).sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||String(a.name||'').localeCompare(String(b.name||''),'pl'));res.json({ok:true,products});});
+app.get('/api/digital/products',(req,res)=>{
+  const db=load();ensureStore(db);res.setHeader('Cache-Control','no-store');
+  const categories=(db.digitalCategories||[]).filter(c=>c.visible!==false).map(c=>({
+    id:String(c.id||''),name:String(c.name||''),description:String(c.description||''),
+    position:Number.isFinite(Number(c.position))?Number(c.position):999,visible:c.visible!==false
+  })).sort((a,b)=>(a.position-b.position)||a.name.localeCompare(b.name,'pl'));
+  const products=Object.values(db.digitalProducts||{}).filter(p=>p.active!==false).map(p=>publicDigitalProduct(p,db)).sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||String(a.name||'').localeCompare(String(b.name||''),'pl'));
+  res.json({ok:true,categories,products});
+});
 app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60*1000),(req,res)=>{
   try{
     ensureStore(req.db);
@@ -2129,7 +2146,7 @@ app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
   const variants=[];
   for(const [productId,p] of Object.entries(req.db.catalog))for(const [color,c] of Object.entries(p.colors||{}))for(const [size,stock] of Object.entries(c.sizes||{}))variants.push({productId,productName:p.name,color,colorLabel:c.label,size,stock:Number(stock||0)});
   const paid=orders.filter(o=>o.paymentStatus==='paid');
-  res.json({ok:true,catalog:req.db.catalog,digitalProducts:req.db.digitalProducts||{},orders,shipping:shippingPublicConfig(),stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
+  res.json({ok:true,catalog:req.db.catalog,digitalProducts:req.db.digitalProducts||{},digitalCategories:req.db.digitalCategories||[],orders,shipping:shippingPublicConfig(),stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
 });
 
 function cleanSlug(v,label='ID'){
@@ -2161,15 +2178,55 @@ function cleanDigitalPayload(body={},existing=null){
   const downloadName=path.basename(String(body.downloadName??existing?.downloadName??fileName).trim()).slice(0,180);
   const rawPosition=Number(body.position??existing?.position??999);
   const position=Number.isFinite(rawPosition)?Math.max(1,Math.min(999,Math.round(rawPosition))):999;
+  const categoryId=String(body.categoryId??existing?.categoryId??'praktyczne').trim().toLowerCase().slice(0,60)||'praktyczne';
   const active=Object.prototype.hasOwnProperty.call(body,'active')?body.active!==false:existing?.active!==false;
   if(!name)throw new Error('Podaj nazwę produktu cyfrowego.');
   if(!Number.isFinite(price)||price<0||price>100000)throw new Error('Podaj prawidłową cenę.');
   if(fileName&&!/\.pdf$/i.test(fileName))throw new Error('Plik produktu cyfrowego musi być plikiem PDF.');
-  return {id,position,name,subtitle,description,meta:meta||'STARXV DIGITAL / E-BOOK',points,price:money2(price),discountPercent,image,gallery,fileName,downloadName:downloadName||fileName,active,
+  return {id,position,categoryId,name,subtitle,description,meta:meta||'STARXV DIGITAL / E-BOOK',points,price:money2(price),discountPercent,image,gallery,fileName,downloadName:downloadName||fileName,active,
     offeredAt:Number(existing?.offeredAt||0)||null,priceHistory:Array.isArray(existing?.priceHistory)?existing.priceHistory:[],promotionStartedAt:existing?.promotionStartedAt||null,omnibusReferencePrice:existing?.omnibusReferencePrice??null,omnibusReferenceType:existing?.omnibusReferenceType||null};
 }
+
+function cleanDigitalCategoryPayload(body={},existing=null){
+  const id=cleanSlug(body.id??existing?.id,'ID kategorii');
+  const name=String(body.name??existing?.name??'').trim().replace(/\s+/g,' ').slice(0,80);
+  const description=String(body.description??existing?.description??'').trim().slice(0,240);
+  const rawPosition=Number(body.position??existing?.position??999);
+  const position=Number.isFinite(rawPosition)?Math.max(1,Math.min(999,Math.round(rawPosition))):999;
+  const visible=Object.prototype.hasOwnProperty.call(body,'visible')?body.visible!==false:existing?.visible!==false;
+  if(!name)throw new Error('Podaj nazwę kategorii.');
+  return {id,name,description,position,visible};
+}
+app.get('/api/admin/digital-categories',adminOnly,(req,res)=>{
+  ensureStore(req.db);
+  const categories=[...(req.db.digitalCategories||[])].sort((a,b)=>(Number(a.position||999)-Number(b.position||999))||String(a.name||'').localeCompare(String(b.name||''),'pl'));
+  res.json({ok:true,categories});
+});
+app.post('/api/admin/digital-categories',adminOnly,(req,res)=>{try{
+  ensureStore(req.db);const data=cleanDigitalCategoryPayload(req.body||{});
+  if((req.db.digitalCategories||[]).some(c=>c.id===data.id))return res.status(409).json({error:'Kategoria o takim ID już istnieje.'});
+  req.db.digitalCategories.push(data);save(req.db);res.status(201).json({ok:true,category:data});
+}catch(e){res.status(400).json({error:e.message||'Nie udało się dodać kategorii.'})}});
+app.put('/api/admin/digital-categories/:id',adminOnly,(req,res)=>{try{
+  ensureStore(req.db);const id=String(req.params.id||''),category=(req.db.digitalCategories||[]).find(c=>c.id===id);
+  if(!category)return res.status(404).json({error:'Nie znaleziono kategorii.'});
+  const data=cleanDigitalCategoryPayload({...req.body,id},category);
+  Object.assign(category,data);save(req.db);res.json({ok:true,category});
+}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać kategorii.'})}});
+app.delete('/api/admin/digital-categories/:id',adminOnly,(req,res)=>{
+  ensureStore(req.db);const id=String(req.params.id||''),categories=req.db.digitalCategories||[];
+  const current=categories.find(c=>c.id===id);if(!current)return res.status(404).json({error:'Nie znaleziono kategorii.'});
+  const remaining=categories.filter(c=>c.id!==id);
+  if(!remaining.length)return res.status(409).json({error:'Musi pozostać przynajmniej jedna kategoria e-booków.'});
+  const fallback=[...remaining].sort((a,b)=>Number(a.position||999)-Number(b.position||999))[0];
+  let reassigned=0;
+  for(const p of Object.values(req.db.digitalProducts||{})){if(String(p.categoryId||'')===id){p.categoryId=fallback.id;reassigned++}}
+  req.db.digitalCategories=remaining;save(req.db);res.json({ok:true,reassigned,fallbackCategoryId:fallback.id});
+});
+
 app.post('/api/admin/digital-products',adminOnly,(req,res)=>{try{
   ensureStore(req.db);const data=cleanDigitalPayload(req.body||{});if(req.db.digitalProducts[data.id])return res.status(409).json({error:'Produkt cyfrowy o takim ID już istnieje.'});
+  if(!(req.db.digitalCategories||[]).some(c=>c.id===data.categoryId))return res.status(400).json({error:'Wybrana kategoria e-booka nie istnieje.'});
   const now=Date.now();data.offeredAt=now;data.priceHistory=[];data.promotionStartedAt=null;data.omnibusReferencePrice=null;data.omnibusReferenceType=null;
   // Dla nowego produktu historia zaczyna się od ceny bazowej. Jeśli od razu ustawiono rabat,
   // zapisujemy bazę jako punkt odniesienia i start promocji jako osobne zdarzenie.
@@ -2183,6 +2240,7 @@ app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{
   const now=Date.now();ensureProductPriceTracking(current,now);
   const beforePrice=effectiveCatalogPrice(current),beforeDiscount=Number(current.discountPercent||0),beforeBase=Number(current.price||0);
   const data=cleanDigitalPayload({...req.body,id},current);
+  if(!(req.db.digitalCategories||[]).some(c=>c.id===data.categoryId))return res.status(400).json({error:'Wybrana kategoria e-booka nie istnieje.'});
   const afterPrice=effectiveCatalogPrice(data),afterDiscount=Number(data.discountPercent||0),afterBase=Number(data.price||0);
   const pricingChanged=beforePrice!==afterPrice||beforeDiscount!==afterDiscount||beforeBase!==afterBase;
   if(pricingChanged){
