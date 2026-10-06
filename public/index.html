@@ -1362,6 +1362,17 @@ body.sx-delete-account-lock{overflow:hidden!important}
 </style>
 
 
+
+<style id="starxv-later-nav-size-match">
+#sxLaterNav.account-nav-button{
+  flex:0 0 auto!important;
+  box-sizing:border-box!important;
+}
+#sxLaterNav.account-nav-button .account-icon{
+  display:block;
+}
+</style>
+
 </head>
 <body>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
@@ -2978,11 +2989,11 @@ const renderCart=()=>{hydrateCartDiscounts();
 
     const later=document.createElement('button');
     later.id='sxLaterNav';
-    later.className='sx-nav-icon sx-later-nav';
+    later.className='account-nav-button sx-nav-icon sx-later-nav';
     later.type='button';
     later.setAttribute('aria-label','Coming Later');
     later.title='COMING LATER';
-    later.innerHTML='<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.5v5l3.3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sx-later-dot"></span>';
+    later.innerHTML='<svg class="account-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.5v5l3.3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sx-later-dot"></span>';
 
     const accountBtn=nav.querySelector('#openAccount');
     if(accountBtn) accountBtn.insertAdjacentElement('afterend',later);
