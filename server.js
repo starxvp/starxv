@@ -396,6 +396,7 @@ function publicUser(u){
     avatarData:u.avatarData||'',
     birthDate:u.birthDate||'',
     title:accountTitleData(u),
+    authMethod:primaryAuthMethod(u),
     profileSetupRequired:Boolean(u.profileSetupRequired)
   };
 }
@@ -793,25 +794,56 @@ app.post('/api/account/profile',auth,async(req,res)=>{
 // Permanently delete the currently logged-in STARXV account.
 // Existing paid/order records are kept as standalone store records, but the account itself
 // (profile, saved addresses, favorites, avatar and password hash) is removed.
-app.delete('/api/account',auth,(req,res)=>{
-  const password=String(req.body?.password||'');
-  if(!password)return res.status(400).json({error:'Wpisz hasło, aby usunąć konto.'});
-  if(!checkPassword(password,req.user.passwordHash))return res.status(401).json({error:'Nieprawidłowe hasło.'});
+app.delete('/api/account',auth,rateLimit('delete-account',8,15*60*1000),async(req,res)=>{
+  try{
+    const methods=authMethods(req.user);
+    const googleOnly=methods.includes('google')&&!methods.includes('email');
 
-  const userId=req.user.id;
-  const email=req.user.email;
-  ensureStore(req.db);
+    if(googleOnly){
+      const accessToken=String(req.body?.accessToken||'').trim();
+      if(!accessToken)return res.status(400).json({error:'Potwierdź konto przez Google, aby usunąć konto.',code:'GOOGLE_CONFIRM_REQUIRED'});
 
-  // Unpaid draft orders can be discarded; completed/paid records stay in the shop records.
-  req.db.orders=(req.db.orders||[]).filter(o=>!(o.userId===userId && String(o.paymentStatus||'pending')!=='paid'));
-  req.db.reviews=(req.db.reviews||[]).filter(r=>r.userId!==userId);
-  req.db.users=(req.db.users||[]).filter(u=>u.id!==userId);
-  req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==cleanEmail(email));
-  save(req.db);
+      const clientId=googleClientId();
+      if(!clientId)return res.status(503).json({error:'Logowanie Google nie jest skonfigurowane.'});
 
-  invalidateUserSessions(userId);
-  res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);
-  res.json({ok:true});
+      const info=await googleTokenInfo(accessToken);
+      const audience=String(info.audience||info.issued_to||info.aud||info.azp||'');
+      if(audience!==clientId)return res.status(401).json({error:'Nieprawidłowe potwierdzenie Google.'});
+      if(Number(info.expires_in||0)<=0)return res.status(401).json({error:'Potwierdzenie Google wygasło. Spróbuj ponownie.'});
+
+      const profile=await googleUserInfo(accessToken);
+      const verified=profile.email_verified===true||String(profile.email_verified)==='true';
+      const incomingEmail=cleanEmail(profile.email);
+      const incomingSub=String(profile.sub||'');
+      const storedSub=String(req.user.googleSub||'');
+
+      if(!verified||!validEmail(incomingEmail))return res.status(401).json({error:'Google nie potwierdził adresu e-mail.'});
+      if(incomingEmail!==cleanEmail(req.user.email))return res.status(401).json({error:'Wybrane konto Google nie pasuje do konta STARXV.'});
+      if(storedSub&&incomingSub&&storedSub!==incomingSub)return res.status(401).json({error:'Wybrane konto Google nie pasuje do konta STARXV.'});
+    }else{
+      const password=String(req.body?.password||'');
+      if(!password)return res.status(400).json({error:'Wpisz hasło, aby usunąć konto.'});
+      if(!checkPassword(password,req.user.passwordHash))return res.status(401).json({error:'Nieprawidłowe hasło.'});
+    }
+
+    const userId=req.user.id;
+    const email=req.user.email;
+    ensureStore(req.db);
+
+    // Unpaid draft orders can be discarded; completed/paid records stay in the shop records.
+    req.db.orders=(req.db.orders||[]).filter(o=>!(o.userId===userId && String(o.paymentStatus||'pending')!=='paid'));
+    req.db.reviews=(req.db.reviews||[]).filter(r=>r.userId!==userId);
+    req.db.users=(req.db.users||[]).filter(u=>u.id!==userId);
+    req.db.pending=(req.db.pending||[]).filter(p=>cleanEmail(p.email)!==cleanEmail(email));
+    save(req.db);
+
+    invalidateUserSessions(userId);
+    res.setHeader('Set-Cookie',`starxv_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`);
+    res.json({ok:true});
+  }catch(e){
+    console.error('Account delete confirmation error:',e);
+    res.status(401).json({error:e?.message||'Nie udało się potwierdzić usunięcia konta.'});
+  }
 });
 
 // Account preferences stored on the backend (favorites + saved addresses).
