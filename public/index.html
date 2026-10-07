@@ -89,32 +89,6 @@
 </style>
 
 
-<script id="starxv-catalog-cache-bootstrap">
-(()=>{
-  try{
-    const cached=JSON.parse(localStorage.getItem('starxv-catalog-cache')||'null');
-    if(cached&&typeof cached==='object')window.STARXV_CATALOG=cached;
-  }catch{}
-})();
-</script>
-
-
-<style id="starxv-cart-meta-spacing-fix">
-/* Keep product variant info visually attached to the product title/fit. */
-.cart-item-main{display:flex!important;flex-direction:column!important;justify-content:flex-start!important}
-.cart-item-head{margin-bottom:0!important}
-.cart-item-titleblock{display:flex!important;flex-direction:column!important;gap:0!important}
-.cart-item-fit{margin-top:4px!important;margin-bottom:0!important}
-.cart-item-titleblock .cart-item-meta{
-  margin-top:6px!important;
-  margin-bottom:0!important;
-  padding-top:0!important;
-  align-self:flex-start!important;
-}
-.cart-row-bottom{margin-top:auto!important}
-</style>
-
-
 <style id="starxv-terms-footer-link-style">
 .sx-footer-legal>a{
   appearance:none;
@@ -312,106 +286,6 @@
 }
 </style>
 
-
-<style id="starxv-cart-promo-fix">
-.sx-cart-price-wrap{
-  display:flex;
-  flex-direction:column;
-  align-items:flex-end;
-  gap:3px;
-  min-width:150px;
-}
-.sx-cart-current-price{
-  font-size:16px;
-  font-weight:950;
-  color:#fff;
-}
-.sx-cart-promo-badge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  width:max-content;
-  padding:5px 8px;
-  border-radius:999px;
-  background:#fff;
-  color:#000;
-  font-size:8px;
-  line-height:1;
-  font-weight:950;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-}
-.sx-cart-old-price{
-  font-size:10px;
-  color:#686868;
-  text-decoration:line-through;
-  font-weight:700;
-}
-.sx-cart-save{
-  font-size:8px;
-  color:#a8a8a8;
-  font-weight:900;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-}
-.sx-cart-omnibus{
-  max-width:210px;
-  font-size:7px;
-  line-height:1.35;
-  color:#5f5f5f;
-  text-align:right;
-}
-@media(max-width:700px){
-  .sx-cart-price-wrap{min-width:120px}
-  .sx-cart-current-price{font-size:14px}
-  .sx-cart-omnibus{max-width:145px}
-}
-</style>
-
-
-<style id="starxv-cart-promo-final">
-.cart-item-price .sx-cart-discount{
-  order:-1;
-  margin:0 0 3px!important;
-  padding:5px 8px!important;
-  border-radius:999px!important;
-  background:#fff!important;
-  color:#000!important;
-  font-size:8px!important;
-  font-weight:950!important;
-  letter-spacing:.08em!important;
-}
-.cart-item-price .sx-cart-current{font-size:16px!important;font-weight:950!important}
-.cart-item-price .sx-cart-old{margin-top:1px!important}
-.cart-item-price .sx-cart-save{font-size:8px!important;letter-spacing:.06em!important;text-transform:uppercase}
-.cart-item-price .sx-cart-omnibus{max-width:190px!important}
-</style>
-
-
-<style id="starxv-cart-qty-lower">
-/* Give the quantity control its own space below the promotion/price block. */
-.cart-item-side{
-  align-self:stretch!important;
-}
-.cart-row-bottom{
-  padding-top:22px!important;
-}
-.cart-item-side + .cart-row-bottom,
-.cart-item .cart-row-bottom{
-  margin-top:18px!important;
-}
-</style>
-
-<style id="starxv-gpsr-style">
-.sx-gpsr-box{margin-top:18px;border:1px solid rgba(255,255,255,.10);background:#0b0b0b}
-.sx-gpsr-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border:0;background:transparent;color:#fff;cursor:pointer;font:900 9px/1.2 Arial,sans-serif;letter-spacing:.14em;text-align:left}
-.sx-gpsr-plus{font-size:17px;font-weight:400;transition:.18s}.sx-gpsr-box.open .sx-gpsr-plus{transform:rotate(45deg)}
-.sx-gpsr-content{display:none;padding:0 16px 16px}.sx-gpsr-box.open .sx-gpsr-content{display:grid;gap:12px}
-.sx-gpsr-row{display:grid;gap:4px;padding-top:11px;border-top:1px solid rgba(255,255,255,.07)}
-.sx-gpsr-row span{font-size:8px;font-weight:900;letter-spacing:.13em;color:#666}
-.sx-gpsr-row b,.sx-gpsr-row p{margin:0;color:#cfcfcf;font-size:10px;line-height:1.55;font-weight:650;overflow-wrap:anywhere}
-.sx-gpsr-row a{color:inherit}.sx-gpsr-incomplete{color:#777!important;font-style:italic}
-</style>
 
 <style id="starxv-promo-status-style">
 #sxPromoMessage.sx-promo-error{color:#ff5f5f!important;font-weight:800}
@@ -1784,87 +1658,12 @@ body.sx-system-dialog-lock{overflow:hidden!important}
 </div>
 </section>
 </div>
-<div aria-hidden="true" class="sx-info-modal" id="sxShirtSizeGuide"><div aria-labelledby="sxShirtSizeGuideTitle" aria-modal="true" class="sx-info-card" role="dialog"><div class="sx-info-head"><div><small>STARXV / FIT GUIDE</small><h3 id="sxShirtSizeGuideTitle">Tabela rozmiarów</h3></div><button aria-label="Zamknij" class="sx-info-close" data-sx-close="shirtsize" type="button">×</button></div><div class="sx-info-body"><p class="sx-info-lead">Koszulka ma krój oversized fit. Dokładne wymiary produkcyjne wpiszemy po zatwierdzeniu finalnego blanku, żeby nie podawać klientom wymyślonych wartości.</p><table class="sx-size-table"><thead><tr><th>Rozmiar</th><th>Szerokość A</th><th>Długość B</th><th>Rękaw C</th></tr></thead><tbody><tr><td><b>S</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>M</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>L</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>XL</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr></tbody></table><div class="sx-measure-grid"><div class="sx-measure-card"><b>A — SZEROKOŚĆ</b><span>Mierzona na płasko od pachy do pachy.</span></div><div class="sx-measure-card"><b>B — DŁUGOŚĆ</b><span>Od najwyższego punktu ramienia do dolnej krawędzi.</span></div><div class="sx-measure-card"><b>C — RĘKAW</b><span>Od szwu ramienia do końca mankietu.</span></div></div><div class="sx-size-note">Wymiary odzieży mogą różnić się o około 1–2 cm. Przed uruchomieniem sprzedaży uzupełnij wartości na podstawie rzeczywistej koszulki produkcyjnej.</div></div></div></div>
-<div aria-hidden="true" class="cart-modal" id="cartModal">
-<aside aria-labelledby="cartTitle" aria-modal="true" class="cart-panel" role="dialog">
-<div class="cart-header">
-<div class="cart-title-wrap"><div><div class="cart-title" id="cartTitle">TWÓJ KOSZYK</div><div class="cart-subtitle">STARXV / SELECT YOUR PRODUCT</div></div></div>
-<button aria-label="Zamknij koszyk" class="cart-close" id="closeCart">×</button>
-</div>
-<div class="cart-body" id="cartItems"></div>
-<div class="cart-footer">
-<div class="sx-cart-summary-pro">
-<div class="sx-cart-summary-line"><span class="sx-cart-products-label">Produkty (0)</span><strong class="sx-cart-products-total">0 PLN</strong></div>
-<div class="sx-cart-summary-line">
-<span class="sx-cart-delivery-label"><span aria-hidden="true" class="sx-cart-truck"><svg viewbox="0 0 24 24"><path d="M3 6h11v10H3z"></path><path d="M14 10h3.2L21 13.8V16h-7z"></path><circle cx="7" cy="18" r="2"></circle><circle cx="18" cy="18" r="2"></circle></svg></span>Dostawa sugerowana <button aria-label="Jak działa dostawa sugerowana?" class="sx-suggested-info" title="Jak działa dostawa sugerowana?" type="button">i</button></span>
-<strong class="sx-suggested-delivery-price">19,99 PLN</strong>
-</div>
-<div class="sx-cart-summary-divider"></div>
-<div class="sx-cart-total-line"><span>Razem</span><strong id="cartTotal">0 PLN</strong></div>
-<div class="sx-cart-total-note">Kwota zawiera sugerowaną dostawę. Ostateczny koszt zależy od wybranej metody.</div>
-</div>
-<div class="sx-promo"><div class="sx-promo-label">KOD RABATOWY</div><div class="sx-promo-row"><input class="sx-promo-input" id="sxPromoInput" maxlength="24" placeholder="Kod rabatowy"/><button class="sx-promo-btn" id="sxPromoApply" type="button">ZASTOSUJ</button><button aria-label="Usuń kod rabatowy" class="sx-promo-remove" id="sxPromoRemove" type="button">USUŃ</button></div><div class="sx-promo-message" id="sxPromoMessage">Wpisz kod rabatowy, jeśli go masz.</div></div>
-<div class="sx-discount-row" id="sxDiscountRow"><span>RABAT <b id="sxDiscountCode"></b></span><strong id="sxDiscountValue">−0 PLN</strong></div>
-<button class="checkout-btn" disabled="" id="checkoutBtn" type="button">SFINALIZUJ ZAMÓWIENIE →</button>
-</div>
-</aside>
-</div>
-<div aria-live="polite" class="cart-toast" id="cartToast" role="status"></div>
-<div aria-hidden="true" class="sx-category-browser" id="sxCategoryBrowser">
-<div class="sx-category-shell">
-<div class="sx-category-top"><div class="sx-category-brand">STARXV / COLLECTION</div><button aria-label="Zamknij kategorię" class="sx-category-close" id="sxCategoryClose" type="button">×</button></div>
-<div class="sx-category-hero"><div class="sx-category-kicker" id="sxCategoryKicker">KATEGORIA</div><h2 class="sx-category-title" id="sxCategoryTitle">BLUZY.</h2><p class="sx-category-sub" id="sxCategorySub"></p><span class="sx-category-count" id="sxCategoryCount"></span></div>
-<div class="sx-category-grid" id="sxCategoryGrid"></div>
-</div>
-</div>
-<div aria-hidden="true" class="product-modal" id="productModal"><button aria-label="Zamknij" class="modal-close">×</button><div class="product-detail"><div class="gallery"><div class="gallery-track" id="galleryTrack"><div class="gallery-slide"><img alt="Black Hoodie x Graffiti — przód" src=""/></div><div class="gallery-slide"><img alt="Black Hoodie x Graffiti — tył" src=""/></div></div><button aria-label="Poprzednie zdjęcie" class="gallery-arrow prev">‹</button><button aria-label="Następne zdjęcie" class="gallery-arrow next">›</button><div class="gallery-dots"><button aria-label="Przód" class="dot active" data-slide="0"></button><button aria-label="Tył" class="dot" data-slide="1"></button></div><div class="view-label" id="viewLabel">FRONT / 01</div></div><div class="product-copy"><div class="detail-kicker">STARXV / HOODIE 01</div><h2>Black Hoodie x Graffiti - Fantastic Style</h2><div class="fit-tag">[RELAXED FIT]</div><div class="detail-price">129 PLN</div><p>Black hoodie z charakterystycznym niebiesko-różowym graffiti STARXV. Front z logo i detalami na rękawach, tył z dużą koroną w sprayowym stylu.</p><div class="sx-size-row"><div class="size-label">WYBIERZ ROZMIAR</div><button class="sx-size-guide-btn" id="sxSizeGuideBtn" type="button">TABELA ROZMIARÓW ↗</button></div><div class="sizes"><button>S</button><button>M</button><button>L</button><button>XL</button></div><div class="sx-selected-stock" id="hoodieStockText">Wybierz rozmiar, aby zobaczyć dostępność.</div><button class="add-btn">DODAJ DO KOSZYKA <span>→</span></button><div class="detail-notes"><span>STARXV ORIGINAL</span><span>RELAXED FIT</span><span>HOODIE 01</span></div></div></div></div>
-<div aria-hidden="true" class="product-modal" id="shirtModal">
-<button aria-label="Zamknij" class="modal-close" id="shirtClose">×</button>
-<div class="product-detail">
-<div class="shirt-gallery"><img alt="White T-Shirt Different Reality. — przód i tył" id="shirtMainImage" src=""/></div>
-<div class="product-copy">
-<div class="detail-kicker">STARXV / T-SHIRT 01</div>
-<h2 id="shirtTitle">White T-Shirt Different Reality.</h2>
-<div class="fit-tag">[OVERSIZED FIT]</div>
-<div class="detail-price">99 PLN</div>
-<p>Oversized koszulka STARXV. Z przodu napis DIFFERENT REALITY., z tyłu graffiti STARXV. Na jednym zdjęciu widoczny jest jednocześnie przód i tył produktu.</p>
-<div class="size-label" style="margin-top:24px">WYBIERZ KOLOR</div>
-<div class="sx-shirt-colors"><button aria-label="Biały" class="sx-shirt-color active" data-color="white" title="Biały"></button><button aria-label="Jasny niebieski" class="sx-shirt-color" data-color="blue" title="Jasny niebieski"></button><button aria-label="Fioletowy" class="sx-shirt-color" data-color="purple" title="Fioletowy"></button></div>
-<div class="sx-size-row"><div class="size-label">WYBIERZ ROZMIAR</div><button class="sx-size-guide-btn" id="shirtSizeGuide" type="button">TABELA ROZMIARÓW ↗</button></div>
-<div class="sizes" id="shirtSizes"><button>S</button><button>M</button><button>L</button><button>XL</button></div>
-<div class="sx-shirt-stock" id="shirtStockText"></div>
-<button class="add-btn" id="shirtAddBtn">DODAJ DO KOSZYKA <span>→</span></button>
-<button class="sx-shirt-fav" id="shirtFavBtn" type="button">♡ DODAJ DO ULUBIONYCH</button>
-<div class="detail-notes"><span>STARXV ORIGINAL</span><span>OVERSIZED FIT</span><span>T-SHIRT 01</span></div>
-<section class="sx-reviews" id="shirtReviews"></section>
-</div>
-</div>
-</div>
-<div aria-hidden="true" class="confirm-overlay" id="confirmCheckout"><div aria-labelledby="confirmTitle" aria-modal="true" class="confirm-box" role="dialog"><div class="confirm-kicker">STARXV / CHECKOUT</div><h3 id="confirmTitle">Sfinalizować zakup?</h3><p>Do płatności przejdą tylko zaznaczone produkty z koszyka. Przed płatnością podasz dane kontaktowe i wybierzesz adres dostawy.</p><div class="confirm-actions"><button class="confirm-no" id="confirmNo">NIE</button><button class="confirm-yes" id="confirmYes">TAK, DALEJ</button></div></div></div>
-<div aria-hidden="true" class="checkout-overlay" id="checkoutOverlay"><div class="checkout-shell"><div class="checkout-top"><div><div class="checkout-kicker">SECURE CHECKOUT</div><div class="checkout-brand">STARXV</div></div><button aria-label="Zamknij checkout" class="checkout-close" id="checkoutClose">×</button></div><div class="checkout-main"><div><div class="checkout-kicker" id="stageLabel">ETAP 1 Z 4</div><div class="checkout-steps"><div class="checkout-step-dot active"></div><div class="checkout-step-dot"></div><div class="checkout-step-dot"></div><div class="checkout-step-dot"></div></div>
-<section class="checkout-stage active" data-stage="1"><h2>Dane i dostawa.</h2><p>Wybierz zapisany adres albo dodaj nowy. Dane możesz poprawić przed zapisaniem.</p><div class="stage1-address-picker"><div class="stage1-address-head"><strong>ZAPISANE ADRESY</strong><button class="stage1-new-address" id="stage1NewAddress" type="button">+ DODAJ NOWY</button></div><div class="stage1-saved-list" id="stage1SavedAddresses"></div></div><div class="stage1-address-mode" id="stage1AddressMode"><b>NOWY ADRES</b> — uzupełnij dane poniżej.</div><div class="form-grid"><div class="field"><label>Imię</label><input autocomplete="given-name" id="firstName" required=""/></div><div class="field"><label>Nazwisko</label><input autocomplete="family-name" id="lastName" required=""/></div><div class="field"><label>E-mail</label><input autocomplete="email" id="email" required="" type="email"/></div><div class="field"><label>Telefon</label><div class="sx-phone-control"><select aria-label="Kierunkowy kraju" id="phonePrefix"><option value="+48">🇵🇱 +48</option></select><input autocomplete="tel-national" id="phone" inputmode="numeric" maxlength="11" placeholder="123 456 789" required="" type="tel"/></div><small class="sx-field-hint">Numer zostanie zapisany w formacie +48 123 456 789.</small></div><div class="field full sx-autocomplete-field"><label>Ulica i numer</label><input autocomplete="off" id="street" placeholder="Zacznij wpisywać ulicę lub adres…" required=""/><div aria-live="polite" class="sx-address-suggestions" id="streetSuggestions"></div><small class="sx-field-hint">Sugestie są zawężane do wybranego miasta.</small></div><div class="field"><label>Kod pocztowy</label><input autocomplete="postal-code" id="postal" inputmode="numeric" maxlength="6" placeholder="00-000" required=""/><small class="sx-field-hint">Myślnik doda się automatycznie.</small></div><div class="field sx-autocomplete-field"><label>Miasto</label><input autocomplete="off" id="city" placeholder="Zacznij wpisywać miasto…" required=""/><div aria-live="polite" class="sx-address-suggestions" id="citySuggestions"></div></div><div class="field full"><label>Kraj</label><select id="country"><option value="PL">Polska</option></select></div></div><div class="stage-actions"><button class="stage-next" id="saveAddressNext">ZAPISZ ADRES →</button></div></section>
-<section class="checkout-stage" data-stage="2"><h2>Wybierz adres.</h2><p>Możesz mieć zapisanych kilka adresów. Ten, który zaznaczysz i potwierdzisz, stanie się domyślnym adresem dostawy.</p><div class="address-list" id="addressList"></div><div class="stage-actions"><button class="stage-back" data-back="1">← WRÓĆ</button><button class="stage-next" id="confirmAddress">USTAW DOMYŚLNY →</button></div></section>
-<section class="checkout-stage" data-stage="3"><h2>Sposób dostawy.</h2><p>Dostawa na adres zatwierdzony w poprzednim etapie.</p><div class="delivery-choice-grid"><button class="delivery-choice selected" data-delivery="address" type="button"><b>🏠 DOSTAWA NA ADRES</b><span>Wyślemy zamówienie na adres zatwierdzony w etapie 2.</span></button></div><div class="delivery-panel active" id="addressDeliveryPanel"><div class="delivery-current-address" id="deliveryAddressPreview"></div></div><div class="stage-actions"><button class="stage-back" data-back="2">← WRÓĆ</button><button class="stage-next" id="confirmDelivery">ZATWIERDŹ DOSTAWĘ →</button></div></section><section class="checkout-stage" data-stage="4"><h2>Płatność.</h2><p>Płatność zostanie bezpiecznie obsłużona przez SimPay.</p><div class="payment-grid" id="paymentGrid"><div class="pay-card selected" data-method="simpay"><div><b>SimPay</b><span>Dostępne metody płatności wybierzesz w bezpiecznej bramce SimPay</span></div><span class="pay-badge">PLN</span></div></div><div class="stripe-note"><strong>Bezpieczna płatność:</strong> po kliknięciu przycisku STARXV utworzy transakcję i przekieruje Cię do zabezpieczonej bramki SimPay. STARXV nie zapisuje pełnych danych Twojej karty.</div><div class="secure-mark">🔒 SIMPAY • SZYFROWANE POŁĄCZENIE</div>
-<div class="sx-checkout-legal">
-  <label for="sxCheckoutLegalAccept">
-    <input id="sxCheckoutLegalAccept" type="checkbox"/>
-    <span>Akceptuję <a href="/terms.html" target="_blank" rel="noopener">Regulamin STARXV</a> i potwierdzam, że zapoznałem(-am) się z <a href="/privacy.html" target="_blank" rel="noopener">Polityką prywatności</a>.</span>
-  </label>
-  <div class="sx-checkout-legal-note">Złożenie zamówienia wiąże się z obowiązkiem zapłaty.</div>
-</div>
-<div class="stage-actions"><button class="stage-back" data-back="3">← WRÓĆ</button><button class="stage-next" id="payNow" disabled>ZAMÓWIENIE Z OBOWIĄZKIEM ZAPŁATY</button></div></section></div><aside class="order-summary"><h3>Twoje zamówienie</h3><div id="checkoutSummaryItems"></div><div class="summary-total summary-subtotal"><span>PRODUKTY</span><strong id="checkoutSubtotal">0 PLN</strong></div><div class="summary-total summary-shipping-row"><span>DOSTAWA</span><strong id="checkoutShipping">—</strong></div><div class="summary-total summary-grand"><span>RAZEM</span><strong id="checkoutTotal">0 PLN</strong></div><div class="summary-delivery">Szacowana dostawa: 2–5 dni roboczych od potwierdzenia płatności. Dokładne informacje mogą zostać wysłane w potwierdzeniu zamówienia.</div></aside></div></div></div>
-<div class="payment-status" id="paymentStatus"><strong id="paymentStatusTitle"></strong><p id="paymentStatusText"></p></div>
 <script id="starxv-auth-guard">
 (function(){
   window.STARXV_AUTH_USER = null;
   window.STARXV_REQUIRE_AUTH = function(){
     if(window.STARXV_AUTH_USER) return true;
     try{
-      document.getElementById('productModal')?.classList.remove('open');
-      document.getElementById('shirtModal')?.classList.remove('open');
-      document.getElementById('sxDynModal')?.classList.remove('open');
-      document.getElementById('sxFavOverlay')?.classList.remove('open');
-      document.getElementById('cartModal')?.classList.remove('open');
       document.querySelectorAll('[data-auth-tab]').forEach(function(tab){
         tab.classList.toggle('active',tab.dataset.authTab==='login');
       });
@@ -1878,683 +1677,75 @@ body.sx-system-dialog-lock{overflow:hidden!important}
   };
 })();
 </script>
-<script id="starxv-cart-account-persistence">
-(()=>{
-  'use strict';
-  let loading=false;
-  let saveTimer=0;
-
-  function readLocal(){
-    try{
-      const x=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
-      return Array.isArray(x)?x:[];
-    }catch{return[]}
-  }
-
-  async function saveNow(cart){
-    if(!window.STARXV_AUTH_USER)return false;
-    try{
-      const r=await fetch('/api/account/cart',{
-        method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({cart:Array.isArray(cart)?cart:readLocal()})
-      });
-      return r.ok;
-    }catch{return false}
-  }
-
-  window.STARXV_CART_PERSIST=(cart)=>{
-    clearTimeout(saveTimer);
-    saveTimer=setTimeout(()=>saveNow(cart),80);
-  };
-
-  window.STARXV_CART_LOAD=async()=>{
-    if(loading||!window.STARXV_AUTH_USER)return;
-    loading=true;
-    try{
-      const r=await fetch('/api/account/cart',{cache:'no-store'});
-      if(!r.ok)return;
-      const d=await r.json();
-      let cart=Array.isArray(d.cart)?d.cart:[];
-      let pending=[];
-      try{pending=JSON.parse(localStorage.getItem('starxv-cart-pending-remove')||'[]')}catch{}
-      if(Array.isArray(pending)&&pending.length){
-        const next=cart.map(x=>({...x}));
-        for(const ordered of pending){
-          let qty=Math.max(1,Number(ordered.qty||1));
-          for(let i=0;i<next.length&&qty>0;i++){
-            const item=next[i];
-            if(!item)continue;
-            const same=String(item.id||'')===String(ordered.id||'')
-              && String(item.color||'')===String(ordered.color||'')
-              && String(item.size||'').toUpperCase()===String(ordered.size||'').toUpperCase();
-            if(!same)continue;
-            const have=Math.max(1,Number(item.qty||1));
-            if(have<=qty){qty-=have;next[i]=null}
-            else{item.qty=have-qty;qty=0}
-          }
-        }
-        cart=next.filter(Boolean);
-        localStorage.setItem('starxv-cart',JSON.stringify(cart));
-        const saved=await saveNow(cart);
-        if(saved)localStorage.removeItem('starxv-cart-pending-remove');
-      }else{
-        localStorage.setItem('starxv-cart',JSON.stringify(cart));
-      }
-      window.dispatchEvent(new CustomEvent('starxv:cart-updated',{detail:{cart}}));
-    }catch{}finally{loading=false}
-  };
-
-  window.addEventListener('starxv:auth-changed',()=>{
-    if(window.STARXV_AUTH_USER) setTimeout(()=>window.STARXV_CART_LOAD(),60);
-  });
-  document.addEventListener('DOMContentLoaded',()=>{
-    if(window.STARXV_AUTH_USER)setTimeout(()=>window.STARXV_CART_LOAD(),100);
-  });
-})();
-</script>
-<script>
-(()=>{
-  const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',fit:'[RELAXED FIT]',price:129};window.STARXV_HOODIE_PRODUCT=PRODUCT;
-  const m=document.getElementById('productModal'),c=document.querySelector('.product-card'),t=document.getElementById('galleryTrack'),dots=[...document.querySelectorAll('.dot')],label=document.getElementById('viewLabel');
-  const cartModal=document.getElementById('cartModal'),openCartBtn=document.getElementById('openCart'),closeCartBtn=document.getElementById('closeCart'),cartItems=document.getElementById('cartItems'),cartCount=document.getElementById('cartCount'),cartTotal=document.getElementById('cartTotal'),checkoutBtn=document.getElementById('checkoutBtn'),checkoutHint=document.getElementById('checkoutHint'),toast=document.getElementById('cartToast'),cartFooter=cartModal?.querySelector('.cart-footer');
-  const addBtn=document.querySelector('.add-btn'),sizeButtons=[...document.querySelectorAll('.sizes button')];
-  let i=0,selectedSize='',selectedColor='black',cart=[];
-  const COLOR_META={black:{label:'Czarny',name:'Black Hoodie x Graffiti - Fantastic Style'},pink:{label:'Różowy',name:'Pink Hoodie x Graffiti - Fantastic Style'},blue:{label:'Jasny niebieski',name:'Light Blue Hoodie x Graffiti - Fantastic Style'}};
-  const VARIANT_STOCK={black:{S:8,M:12,L:6,XL:4},pink:{S:5,M:7,L:3,XL:2},blue:{S:4,M:6,L:5,XL:3}};
-  window.STARXV_VARIANT_STOCK=VARIANT_STOCK;window.STARXV_SELECTED_COLOR=selectedColor;
-  const COLOR_IMAGES={'black': {'front': '', 'back': ''}, 'pink': {'front': '', 'back': ''}, 'blue': {'front': '', 'back': ''}};
-  try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch(e){cart=[]}
-  cart=cart.map(x=>({...x,selected:x.selected!==false}));
-  const save=()=>{localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart)};
-  const money=n=>`${Number(n||0).toFixed(Number(n||0)%1?2:0)} PLN`;
-  const PROMO_KEY='starxv-promo';
-  const getPromo=()=>{try{const p=JSON.parse(localStorage.getItem(PROMO_KEY)||'null');return p&&p.code?p:null}catch{return null}};
-  const discountedTotal=n=>{const p=getPromo();if(!p)return n;const d=p.type==='fixed'?Number(p.value||0):Number(n||0)*(Number(p.value||0)/100);return Math.max(0,Math.round((Number(n||0)-Math.min(Number(n||0),d))*100)/100)};
-  window.STARXV_GET_PROMO=getPromo;window.STARXV_DISCOUNT_TOTAL=discountedTotal;
-  const showToast=msg=>{toast.textContent=msg;toast.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(()=>toast.classList.remove('show'),1800)};
-
-  const show=n=>{const count=Math.max(1,t?.children?.length||1),allDots=[...document.querySelectorAll('#productModal .gallery-dots .dot')];i=(n+count)%count;t.style.transform=`translateX(-${i*100}%)`;allDots.forEach((d,x)=>d.classList.toggle('active',x===i));label.textContent=`ZDJĘCIE ${String(i+1).padStart(2,'0')} / ${String(count).padStart(2,'0')}`};
-  const openProduct=()=>{m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';show(0)};
-  const closeProduct=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true');if(!cartModal.classList.contains('open'))document.body.style.overflow=''};
-  const openCart=()=>{closeProduct();hydrateCartDiscounts();renderCart();cartModal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>cartModal.classList.add('open'));const sync=window.STARXV_SYNC_CATALOG?.();if(sync&&typeof sync.then==='function'){sync.then(()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}))}catch{}hydrateCartDiscounts();renderCart()}).catch(()=>{})}};
-  const closeCart=()=>{cartModal.classList.remove('open');cartModal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
-  window.addEventListener('starxv:cart-updated',()=>{try{const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(Array.isArray(stored))cart=stored.map(x=>({...x,selected:x.selected!==false}));}catch{}renderCart();});
-  const promoInput=document.getElementById('sxPromoInput'),promoApply=document.getElementById('sxPromoApply'),promoRemove=document.getElementById('sxPromoRemove'),promoMessage=document.getElementById('sxPromoMessage'),discountRow=document.getElementById('sxDiscountRow'),discountCode=document.getElementById('sxDiscountCode'),discountValue=document.getElementById('sxDiscountValue');
-  const clearPromoStatus=()=>{promoMessage?.classList.remove('ok','sx-promo-error','sx-promo-min');discountRow?.classList.remove('sx-promo-status-row','sx-promo-used-row')};const showPromoStatus=(code,message,kind='error')=>{clearPromoStatus();if(promoMessage){promoMessage.textContent=message;promoMessage.classList.add(kind==='used'?'sx-promo-error':'sx-promo-min')}if(discountRow){discountRow.classList.add('show','sx-promo-status-row');if(kind==='used')discountRow.classList.add('sx-promo-used-row')}if(discountCode)discountCode.textContent=code||'';if(discountValue)discountValue.textContent=message};const syncPromoUI=base=>{const p=getPromo();clearPromoStatus();if(p){if(promoInput)promoInput.value=p.code;if(promoMessage){promoMessage.textContent=`Aktywny kod ${p.code}: ${p.type==='fixed'?`−${money(Number(p.value||0))}`:`−${Number(p.value||0)}%`}`;promoMessage.classList.add('ok')}if(discountRow)discountRow.classList.add('show');if(discountCode)discountCode.textContent=p.code;if(discountValue)discountValue.textContent=`−${money(base-discountedTotal(base))}`}else{if(promoMessage){promoMessage.textContent='Wpisz kod rabatowy, jeśli go masz.'}if(discountRow)discountRow.classList.remove('show')}if(promoRemove)promoRemove.classList.toggle('show',!!(promoInput?.value||'').trim())};
-  if(promoApply)promoApply.onclick=async()=>{const code=(promoInput?.value||'').trim().toUpperCase();if(!code){localStorage.removeItem(PROMO_KEY);renderCart();showToast('Kod rabatowy usunięty');return}const base=cart.filter(x=>x.selected!==false).reduce((s,x)=>s+Number(x.price||0)*Number(x.qty||1),0);promoApply.disabled=true;try{const r=await fetch('/api/promos/validate?code='+encodeURIComponent(code)+'&subtotal='+encodeURIComponent(base),{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok||!d.ok){const err=new Error(d.error||'Ten kod jest nieprawidłowy lub nieaktywny.');err.promoData=d;throw err}localStorage.setItem(PROMO_KEY,JSON.stringify(d.promo));renderCart();showToast(`Kod ${d.promo.code} zastosowany`)}catch(e){localStorage.removeItem(PROMO_KEY);const d=e.promoData||null;renderCart();if(d?.errorCode==='PROMO_ALREADY_USED')showPromoStatus(code,'Rabat został już wykorzystany na tym koncie.','used');else if(d?.errorCode==='PROMO_MIN_SUBTOTAL')showPromoStatus(code,`Rabat można użyć od ${money(Number(d.minSubtotal||0))} wartości zamówienia.`,'min');else{clearPromoStatus();if(promoMessage){promoMessage.textContent=e.message||'Ten kod jest nieprawidłowy lub nieaktywny.';promoMessage.classList.add('sx-promo-error')}}}finally{promoApply.disabled=false}};
-  if(promoInput)promoInput.addEventListener('input',()=>{if(promoRemove)promoRemove.classList.toggle('show',!!promoInput.value.trim())});
-  if(promoRemove)promoRemove.onclick=()=>{if(promoInput)promoInput.value='';localStorage.removeItem(PROMO_KEY);promoRemove.classList.remove('show');renderCart();showToast('Kod rabatowy usunięty')};
-
-  
-  const hydrateCartDiscounts=()=>{
-    try{
-      let catalog=window.STARXV_CATALOG||{};
-      if(!Object.keys(catalog).length){
-        try{catalog=JSON.parse(localStorage.getItem('starxv-catalog-cache')||'{}')||{};window.STARXV_CATALOG=catalog}catch{}
-      }
-      let changed=false;
-      for(const item of cart){
-        const p=catalog[item.id];
-        if(!p)continue;
-        const base=Number(p.price||0);
-        const effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base;
-        const omnibus=p.omnibus||{};
-        const discount=Number(p.discountPercent??omnibus.discountPercent??0);
-        const ref=Number(omnibus.referencePrice||0);
-        if(Number(item.price)!==effective||Number(item.basePrice||0)!==base||Number(item.discountPercent||0)!==discount||Number(item.omnibusReferencePrice||0)!==ref){
-          item.price=effective;
-          item.basePrice=base;
-          item.discountPercent=discount;
-          item.omnibusReferencePrice=ref;
-          changed=true;
-        }
-      }
-      if(changed){
-        localStorage.setItem('starxv-cart',JSON.stringify(cart));
-        window.STARXV_CART_PERSIST?.(cart);
-      }
-    }catch(e){}
-  };
-const renderCart=()=>{hydrateCartDiscounts();
-    if(!window.STARXV_AUTH_USER){
-      cart=[];
-      if(cartCount) cartCount.textContent='0';
-      if(cartFooter) cartFooter.style.display='none';
-      cartItems.innerHTML=`<div class="cart-guest-lock"><div class="cart-guest-lock-inner">
-        <div class="cart-guest-lock-icon">🔒</div>
-        <strong>Koszyk jest zablokowany.</strong>
-        <p>Koszyk odblokuje się po zarejestrowaniu lub zalogowaniu na konto STARXV.</p>
-        <button class="cart-guest-auth-btn" id="cartGuestAuthBtn" type="button">ZAREJESTRUJ SIĘ / ZALOGUJ →</button>
-      </div></div>`;
-      document.getElementById('cartGuestAuthBtn')?.addEventListener('click',()=>{
-        closeCart();
-        setTimeout(()=>window.STARXV_REQUIRE_AUTH?.(),120);
-      });
-      return;
-    }
-    if(cartFooter) cartFooter.style.display='';
-    // Synchronize products added by other product modules (e.g. T-shirts).
-    try{
-      const stored=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
-      if(Array.isArray(stored)) cart=stored.map(x=>({...x,selected:x.selected!==false}));
-    }catch(e){}
-    const newCount=cart.reduce((sum,x)=>sum+x.qty,0);if(cartCount.textContent!==String(newCount)){cartCount.textContent=newCount;openCartBtn.animate([{transform:'scale(1)'},{transform:'scale(1.12)'},{transform:'scale(1)'}],{duration:360,easing:'ease-out'});}else cartCount.textContent=newCount;
-    if(!cart.length){
-      cartItems.innerHTML='<div class="cart-empty"><div><strong>Koszyk jest pusty.</strong><span>Wybierz rozmiar oraz kolor produktu i dodaj produkt do koszyka.</span></div></div>';
-      cartTotal.textContent='0 PLN';syncPromoUI(0);checkoutBtn.disabled=true;save();return;
-    }
-    const imgFor=x=>x.image||((COLOR_IMAGES[x.color||'black']||COLOR_IMAGES.black).front);
-    const allQty=cart.reduce((sum,x)=>sum+x.qty,0);
-    const allSelected=cart.length>0&&cart.every(x=>x.selected);
-    cartItems.innerHTML=`<div class="sx-cart-select-all"><input class="sx-select-all-check" id="sxSelectAllCart" type="checkbox" ${allSelected?'checked':''} aria-label="Zaznacz wszystkie produkty"><label for="sxSelectAllCart">Zaznacz wszystkie (${allQty})</label></div>`+cart.map((x,idx)=>`<div class="cart-item" data-index="${idx}">
-      <input class="cart-check" type="checkbox" ${x.selected?'checked':''} aria-label="Zaznacz ${x.name}, rozmiar ${x.size}">
-      <div class="cart-thumb"><img src="${imgFor(x)}" alt="${x.name}"></div>
-      <div class="cart-item-main">
-        <div class="cart-item-head"><div class="cart-item-titleblock"><div class="cart-item-name">${x.name}</div><div class="cart-item-fit">${x.fit}</div><div class="cart-item-meta"><span>${x.colorLabel||COLOR_META[x.color||'black']?.label||x.color||'Czarny'}</span><span>/</span><span>${x.size}</span></div></div><div class="cart-item-side"><strong class="cart-item-price"><span class="sx-cart-current">${money(x.price*x.qty)}</span>${Number(x.discountPercent||0)>0&&Number(x.basePrice||0)>Number(x.price)?`<span class="sx-cart-discount">PROMOCJA −${Number(x.discountPercent)}%</span><span class="sx-cart-old">było ${money(Number(x.basePrice)*x.qty)}</span><span class="sx-cart-save">OSZCZĘDZASZ ${money((Number(x.basePrice)-Number(x.price))*x.qty)}</span>${Number(x.omnibusReferencePrice||0)>0?`<span class="sx-cart-omnibus">Najniższa cena ${Number(x.omnibusReferencePrice||0)===Number(x.basePrice||0)?'z 30 dni przed obniżką':'z okresu wymaganego przepisami'}: ${money(Number(x.omnibusReferencePrice)*x.qty)}</span>`:''}`:''}</strong><button class="remove-item" type="button" aria-label="Usuń ${x.name}">×</button></div></div>
-        <div class="cart-row-bottom"><div class="qty"><button class="qty-minus" aria-label="Zmniejsz ilość">−</button><span>${x.qty}</span><button class="qty-plus" aria-label="Zwiększ ilość">+</button></div></div>
-      </div></div>`).join('');
-    const sxSelectAll=cartItems.querySelector('.sx-select-all-check');
-    if(sxSelectAll){
-      const selectedCount=cart.filter(x=>x.selected).length;
-      sxSelectAll.indeterminate=selectedCount>0&&selectedCount<cart.length;
-      sxSelectAll.onchange=e=>{cart.forEach(x=>x.selected=e.target.checked);save();renderCart()};
-    }
-    cartItems.querySelectorAll('.cart-item').forEach(row=>{
-      const idx=+row.dataset.index;
-      row.querySelector('.cart-check').onchange=e=>{cart[idx].selected=e.target.checked;save();updateSummary()};
-      row.querySelector('.qty-minus').onclick=()=>{cart[idx].qty--;if(cart[idx].qty<=0)cart.splice(idx,1);save();renderCart()};
-      row.querySelector('.qty-plus').onclick=()=>{const x=cart[idx],limit=Number(x.stockLimit??VARIANT_STOCK[x.color||'black']?.[x.size]??0);if(x.qty>=limit){showToast(`Maksymalnie ${limit} szt. dla tego koloru i rozmiaru`);return}cart[idx].qty++;save();renderCart()};
-      row.querySelector('.remove-item').onclick=()=>{cart.splice(idx,1);save();renderCart();showToast('Usunięto z koszyka')};
-    });
-    updateSummary();save();
-  };
-  const updateSummary=()=>{
-    const selected=cart.filter(x=>x.selected);
-    const selectedQty=selected.reduce((s,x)=>s+x.qty,0);
-    const total=selected.reduce((sum,x)=>sum+x.price*x.qty,0),finalTotal=discountedTotal(total);
-    let suggestedMethod='address';
-    suggestedMethod='address';
-    const suggestedPrices=window.STARXV_SUGGESTED_DELIVERY_PRICES||{address:19.99};
-    const suggestedDelivery=Number(suggestedPrices[suggestedMethod]??19.99);
-    const grandTotal=selected.length?finalTotal+suggestedDelivery:0;
-    cartTotal.textContent=money(grandTotal);syncPromoUI(total);
-    document.querySelectorAll('.sx-cart-products-label').forEach(el=>el.textContent=`Produkty (${selectedQty})`);
-    document.querySelectorAll('.sx-cart-products-total').forEach(el=>el.textContent=money(finalTotal));
-    const sxSelectAll=cartItems?.querySelector('.sx-select-all-check');
-    if(sxSelectAll){sxSelectAll.checked=cart.length>0&&selected.length===cart.length;sxSelectAll.indeterminate=selected.length>0&&selected.length<cart.length;}
-    checkoutBtn.disabled=selected.length===0;
-  };
-  window.addEventListener('starxv:suggested-delivery-updated',()=>updateSummary());
-  const addToCart=()=>{
-    if(!window.STARXV_REQUIRE_AUTH?.())return;
-    if(!selectedSize){showToast('Najpierw wybierz rozmiar');sizeButtons[0]?.focus();return}
-    const variant=COLOR_META[selectedColor]||COLOR_META.black;
-    const limit=Number(VARIANT_STOCK[selectedColor]?.[selectedSize]??0);
-    const existing=cart.find(x=>x.id===PRODUCT.id&&x.size===selectedSize&&(x.color||'black')===selectedColor);
-    const currentQty=existing?.qty||0;
-    if(limit<=0){showToast('Ten kolor i rozmiar jest obecnie niedostępny');return}
-    if(currentQty>=limit){showToast(`W magazynie jest tylko ${limit} szt. tego wariantu`);return}
-    if(existing){existing.qty++;existing.selected=true}else cart.push({...PRODUCT,name:variant.name,color:selectedColor,size:selectedSize,qty:1,selected:true});
-    save();renderCart();addBtn.classList.add('added');addBtn.firstChild.nodeValue='DODANO DO KOSZYKA ';setTimeout(()=>{addBtn.classList.remove('added');addBtn.firstChild.nodeValue='DODAJ DO KOSZYKA '},1100);showToast(`Dodano: ${variant.label} / ${selectedSize}`);
-  };
-
-  const setupColors=()=>{
-    const gallery=document.querySelector('.gallery');
-    if(!gallery||document.getElementById('sxColorPicker'))return;
-    const picker=document.createElement('div');picker.id='sxColorPicker';picker.className='sx-color-picker';
-    picker.innerHTML='<button class="sx-color-dot active" data-color="black" aria-label="Czarny" title="Czarny"></button><button class="sx-color-dot" data-color="pink" aria-label="Różowy" title="Różowy"></button><button class="sx-color-dot" data-color="blue" aria-label="Jasny niebieski" title="Jasny niebieski"></button>';
-    gallery.appendChild(picker);
-    const applyColor=color=>{selectedColor=color;window.STARXV_SELECTED_COLOR=color;const meta=COLOR_META[color]||COLOR_META.black;const data=COLOR_IMAGES[color]||COLOR_IMAGES.black;const imgs=(Array.isArray(data.gallery)&&data.gallery.length?data.gallery:[data.front,data.back]).filter(Boolean).slice(0,10);if(imgs.length){t.innerHTML=imgs.map((src,n)=>`<div class="gallery-slide"><img alt="${meta.name} — zdjęcie ${n+1}" src="${src}"/></div>`).join('');const dotsBox=document.querySelector('#productModal .gallery-dots');if(dotsBox){dotsBox.innerHTML=imgs.map((_,n)=>`<button aria-label="Zdjęcie ${n+1}" class="dot ${n===0?'active':''}" data-slide="${n}"></button>`).join('');dotsBox.querySelectorAll('.dot').forEach(d=>d.onclick=()=>show(+d.dataset.slide))}document.querySelector('#productModal .sx-thumbs')?.remove();show(0)}document.querySelectorAll('.sx-color-dot').forEach(b=>b.classList.toggle('active',b.dataset.color===color));const h=document.querySelector('.product-copy h2');if(h)h.textContent=meta.name;const cardImg=document.querySelector('.product-card .product-visual img');if(cardImg&&color==='black'&&imgs[0])cardImg.src=imgs[0];if(typeof window.STARXV_REFRESH_STOCK==='function')window.STARXV_REFRESH_STOCK();};
-    picker.querySelectorAll('.sx-color-dot').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();applyColor(b.dataset.color)}));
-    window.STARXV_APPLY_COLOR=applyColor;applyColor('black');
-  };
-  const initialCardImg=document.querySelector('.product-card .product-visual img');if(initialCardImg)initialCardImg.src=COLOR_IMAGES.black.front;
-  setupColors();
-  // Shared variant data for checkout / orders outside this module.
-  window.STARXV_COLOR_META=COLOR_META;
-  window.STARXV_COLOR_IMAGES=COLOR_IMAGES;
-
-  c.addEventListener('click',openProduct);c.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openProduct()}});
-  document.querySelector('.modal-close').onclick=closeProduct;
-  document.querySelector('.gallery-arrow.next').onclick=()=>show(i+1);document.querySelector('.gallery-arrow.prev').onclick=()=>show(i-1);dots.forEach(d=>d.onclick=()=>show(+d.dataset.slide));
-  sizeButtons.forEach(b=>b.onclick=()=>{sizeButtons.forEach(x=>x.classList.remove('selected'));b.classList.add('selected');selectedSize=b.textContent.trim()});
-  addBtn.onclick=addToCart;openCartBtn.onclick=openCart;closeCartBtn.onclick=closeCart;
-  window.addEventListener('starxv:auth-changed',()=>{if(cartModal.classList.contains('open'))renderCart();});
-  cartModal.addEventListener('click',e=>{if(e.target===cartModal)closeCart()});
-  checkoutBtn.onclick=()=>{if(checkoutBtn.disabled)return;window.STARXV_OPEN_CHECKOUT_CONFIRM?.();};
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(cartModal.classList.contains('open'))closeCart();else if(m.classList.contains('open'))closeProduct()}if(!m.classList.contains('open'))return;if(e.key==='ArrowRight')show(i+1);if(e.key==='ArrowLeft')show(i-1)});
-  let sx=0;document.querySelector('.gallery').addEventListener('touchstart',e=>sx=e.touches[0].clientX,{passive:true});document.querySelector('.gallery').addEventListener('touchend',e=>{let dx=e.changedTouches[0].clientX-sx;if(Math.abs(dx)>45)show(i+(dx<0?1:-1))},{passive:true});
-  window.addEventListener('starxv:auth-changed',renderCart);
-  window.addEventListener('starxv:cart-changed',()=>{try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{cart=[]}renderCart();});
-  renderCart();
-})();
-</script>
-<script>
-(()=>{
-  const confirmBox=document.getElementById('confirmCheckout'),confirmNo=document.getElementById('confirmNo'),confirmYes=document.getElementById('confirmYes');
-  const checkout=document.getElementById('checkoutOverlay'),checkoutClose=document.getElementById('checkoutClose'),stageLabel=document.getElementById('stageLabel');
-  const steps=[...document.querySelectorAll('.checkout-step-dot')],stages=[...document.querySelectorAll('.checkout-stage')];
-  const statusBox=document.getElementById('paymentStatus'),statusTitle=document.getElementById('paymentStatusTitle'),statusText=document.getElementById('paymentStatusText');
-  const summaryItems=document.getElementById('checkoutSummaryItems'),summarySubtotal=document.getElementById('checkoutSubtotal'),summaryShipping=document.getElementById('checkoutShipping'),summaryTotal=document.getElementById('checkoutTotal');
-  const $=id=>document.getElementById(id), fields=['firstName','lastName','email','phone','street','postal','city'];
-  let stage=1,selectedAddressId=null,paymentPreference='simpay',deliveryMethod='address',shippingConfig={courierPrice:19.99,freeShippingFrom:0,currency:'PLN'};
-  const money=n=>`${n} PLN`;
-  const getCart=()=>{try{return JSON.parse(localStorage.getItem('starxv-cart')||'[]')}catch{return[]}};
-  const selectedItems=()=>getCart().filter(x=>x.selected!==false);
-  const getAddresses=()=>{try{return JSON.parse(localStorage.getItem('starxv-addresses')||'[]')}catch{return[]}};
-  const saveAddresses=a=>localStorage.setItem('starxv-addresses',JSON.stringify(a));
-  const getDefaultId=()=>localStorage.getItem('starxv-default-address');
-  let stage1EditingAddressId=null;
-  const addressText=a=>`${a.street||''}, ${a.postal||''} ${a.city||''}`.replace(/^,\s*/, '');
-  const fillAddressForm=a=>{
-    if(!a)return;
-    ['firstName','lastName','email','street','postal','city'].forEach(k=>{if($(k))$(k).value=a[k]||''});
-    if($('phone'))$('phone').value=formatPolishPhone(a.phone||'');
-    if($('phonePrefix'))$('phonePrefix').value='+48';
-    stage1EditingAddressId=a.id;
-    selectedAddressId=a.id;
-    const mode=$('stage1AddressMode');if(mode)mode.innerHTML=`<b>WYBRANY ZAPISANY ADRES</b> — możesz go poprawić przed przejściem dalej.`;
-    renderStage1Addresses();
-  };
-  const clearAddressForm=()=>{
-    ['firstName','lastName','email','phone','street','postal','city'].forEach(k=>{if($(k))$(k).value=''});
-    if($('phonePrefix'))$('phonePrefix').value='+48';
-    stage1EditingAddressId=null;
-    const mode=$('stage1AddressMode');if(mode)mode.innerHTML='<b>NOWY ADRES</b> — uzupełnij dane poniżej.';
-    renderStage1Addresses();
-    setTimeout(()=>$('firstName')?.focus(),0);
-  };
-  const deleteSavedAddress=id=>{
-    let addresses=getAddresses().filter(a=>a.id!==id);saveAddresses(addresses);
-    if(getDefaultId()===id){if(addresses[0])localStorage.setItem('starxv-default-address',addresses[0].id);else localStorage.removeItem('starxv-default-address')}
-    if(selectedAddressId===id)selectedAddressId=addresses[0]?.id||null;
-    if(stage1EditingAddressId===id){stage1EditingAddressId=null;clearAddressForm()}
-    renderAddresses();renderStage1Addresses();
-  };
-  const renderStage1Addresses=()=>{
-    const list=$('stage1SavedAddresses');if(!list)return;
-    const addresses=getAddresses(),def=getDefaultId();
-    if(!addresses.length){list.innerHTML='<div class="stage1-saved-empty">Nie masz jeszcze zapisanych adresów. Kliknij „Dodaj nowy” i uzupełnij formularz.</div>';return}
-    list.innerHTML=addresses.map(a=>`<div class="stage1-saved-card ${a.id===stage1EditingAddressId?'selected':''}" data-id="${a.id}"><div class="stage1-saved-main"><b>${a.firstName||''} ${a.lastName||''}${a.id===def?' · DOMYŚLNY':''}</b><span>${addressText(a)}<br>${a.email||''}${a.phone?' • '+a.phone:''}</span></div><button class="stage1-delete-address" type="button" aria-label="Usuń adres" title="Usuń adres">×</button></div>`).join('');
-    list.querySelectorAll('.stage1-saved-main').forEach(el=>el.onclick=()=>{const card=el.closest('.stage1-saved-card');fillAddressForm(addresses.find(a=>a.id===card.dataset.id))});
-    list.querySelectorAll('.stage1-delete-address').forEach(btn=>btn.onclick=async e=>{e.stopPropagation();const id=btn.closest('.stage1-saved-card').dataset.id;if(await sxConfirm('Zapisany adres zostanie usunięty z Twojego konta.',{title:'Usunąć adres?',confirmText:'USUŃ'}))deleteSavedAddress(id)});
-  };
-
-  const showStatus=(type,title,text,ms=4200)=>{statusBox.className=`payment-status ${type} show`;statusTitle.textContent=title;statusText.textContent=text;clearTimeout(showStatus.t);showStatus.t=setTimeout(()=>statusBox.classList.remove('show'),ms)};
-  const setStage=n=>{stage=n;stages.forEach(s=>s.classList.toggle('active',+s.dataset.stage===n));steps.forEach((s,i)=>{s.classList.toggle('active',i===n-1);s.classList.toggle('done',i<n-1)});stageLabel.textContent=`ETAP ${n} Z 4`;window.scrollTo({top:0,behavior:'smooth'});if(n===3)renderDeliveryAddress()};
-  window.STARXV_CHECKOUT_SET_STAGE=setStage;
-  const renderSummary=()=>{const items=selectedItems(),COLOR_META=window.STARXV_COLOR_META||{black:{label:'Czarny'},pink:{label:'Różowy'},blue:{label:'Jasny niebieski'}},COLOR_IMAGES=window.STARXV_COLOR_IMAGES||{};summaryItems.innerHTML=items.map(x=>{const color=x.color||'black',cm=COLOR_META[color]||COLOR_META.black,img=x.image||((COLOR_IMAGES[color]||COLOR_IMAGES.black)||{}).front||'';return `<div class="summary-item"><img src="${img}" alt=""><div><div class="summary-item-name">${x.name}</div><div class="summary-item-meta">${x.fit}<br>Kolor: ${cm.label} • Rozmiar: ${x.size} • Ilość: ${x.qty}<br>${money(x.price*x.qty)}</div></div></div>`}).join('');const base=items.reduce((s,x)=>s+x.price*x.qty,0),afterDiscount=window.STARXV_DISCOUNT_TOTAL?window.STARXV_DISCOUNT_TOTAL(base):base,free=Number(shippingConfig.freeShippingFrom||0)>0&&afterDiscount>=Number(shippingConfig.freeShippingFrom||0),shipping=free?0:Number(shippingConfig.courierPrice||0);summarySubtotal.textContent=money(afterDiscount);summaryShipping.textContent=shipping===0?'0 PLN':money(shipping);summaryTotal.textContent=money(Math.round((afterDiscount+shipping)*100)/100);document.querySelectorAll('[data-delivery]').forEach(btn=>{let x=btn.querySelector('.delivery-choice-price');if(!x){x=document.createElement('span');x.className='delivery-choice-price';btn.appendChild(x)}x.textContent=free?'DARMOWA':money(Number(shippingConfig.courierPrice||0))})};
-  const renderAddresses=()=>{const list=$('addressList'),addresses=getAddresses(),def=getDefaultId();if(!addresses.length){list.innerHTML='<div style="color:#777;font-size:12px">Brak zapisanych adresów. Wróć do poprzedniego etapu i dodaj adres.</div>';return}if(!selectedAddressId)selectedAddressId=def||addresses[0].id;list.innerHTML=addresses.map(a=>`<div class="address-card ${a.id===selectedAddressId?'selected':''}" data-id="${a.id}"><div class="address-radio"></div><strong>${a.firstName} ${a.lastName}</strong><p>${a.street}<br>${a.postal} ${a.city}, Polska<br>${a.email} • ${a.phone}</p>${a.id===def?'<span class="address-default">DOMYŚLNY ADRES</span>':''}</div>`).join('');list.querySelectorAll('.address-card').forEach(el=>el.onclick=()=>{selectedAddressId=el.dataset.id;renderAddresses()})};
-  // Etap 3 — dostawa na adres.
-  const renderDeliveryAddress=()=>{const a=getAddresses().find(x=>x.id===selectedAddressId);$('deliveryAddressPreview').innerHTML=a?`<strong>${a.firstName} ${a.lastName}</strong><br>${a.street}<br>${a.postal} ${a.city}, Polska`:'<strong>Brak wybranego adresu.</strong><br>Wróć do etapu 2 i wybierz adres.'};
-  async function loadShippingConfig(){try{const r=await fetch('/api/shipping/config',{credentials:'include'}),d=await r.json();if(r.ok)shippingConfig={...shippingConfig,...d}}catch(e){}renderSummary()}
-  const setDeliveryMethod=()=>{deliveryMethod='address';document.querySelectorAll('.delivery-choice').forEach(x=>x.classList.toggle('selected',x.dataset.delivery==='address'));$('addressDeliveryPanel')?.classList.add('active');renderDeliveryAddress();renderSummary()};
-  document.querySelectorAll('.delivery-choice').forEach(x=>x.addEventListener('click',setDeliveryMethod));
-  localStorage.removeItem('starxv-selected-locker');
-  try{const old=JSON.parse(localStorage.getItem('starxv-delivery-choice')||'null');if(old?.type&&old.type!=='address')localStorage.removeItem('starxv-delivery-choice')}catch{localStorage.removeItem('starxv-delivery-choice')}
-  setDeliveryMethod();
-  loadShippingConfig();
-
-  const onlyDigits=v=>String(v||'').replace(/\D/g,'');
-  const formatPolishPhone=v=>{
-    let d=onlyDigits(v);
-    if(d.startsWith('48')&&d.length>9)d=d.slice(2);
-    d=d.slice(0,9);
-    return d.replace(/(\d{3})(?=\d)/g,'$1 ').trim();
-  };
-  const normalizePhoneForSave=()=>`${$('phonePrefix')?.value||'+48'} ${formatPolishPhone($('phone')?.value||'')}`.trim();
-  const formatPostalCode=v=>{
-    const d=onlyDigits(v).slice(0,5);
-    return d.length<=2?d:`${d.slice(0,2)}-${d.slice(2)}`;
-  };
-
-  $('phone')?.addEventListener('input',e=>{
-    const pos=e.target.selectionStart||0;
-    e.target.value=formatPolishPhone(e.target.value);
-    try{e.target.setSelectionRange(e.target.value.length,e.target.value.length)}catch{}
-  });
-  $('phone')?.addEventListener('paste',()=>setTimeout(()=>{$('phone').value=formatPolishPhone($('phone').value)},0));
-  $('postal')?.addEventListener('input',e=>{e.target.value=formatPostalCode(e.target.value)});
-  $('postal')?.addEventListener('paste',()=>setTimeout(()=>{$('postal').value=formatPostalCode($('postal').value)},0));
-
-  const sxAddressAutocomplete={
-    timers:new Map(),
-    controllers:new Map(),
-    selectedCity:'',
-    hide(list){if(list){list.classList.remove('open');list.innerHTML=''}},
-    escape(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))},
-    async search(kind,q,city=''){
-      const key=kind;
-      clearTimeout(this.timers.get(key));
-      this.controllers.get(key)?.abort?.();
-      return new Promise(resolve=>{
-        this.timers.set(key,setTimeout(async()=>{
-          const ctl=new AbortController();this.controllers.set(key,ctl);
-          try{
-            const url=new URL('/api/address/autocomplete',location.origin);
-            url.searchParams.set('type',kind);url.searchParams.set('q',q);
-            if(city)url.searchParams.set('city',city);
-            const r=await fetch(url,{credentials:'same-origin',cache:'no-store',signal:ctl.signal});
-            const j=await r.json().catch(()=>({}));
-            if(!r.ok)throw new Error(j.error||'Brak podpowiedzi.');
-            resolve(Array.isArray(j.results)?j.results:[]);
-          }catch(e){if(e.name!=='AbortError')resolve([])}
-        },220));
-      });
-    },
-    render(list,results,onPick){
-      if(!list)return;
-      if(!results.length){this.hide(list);return}
-      list.innerHTML=results.map((r,i)=>{
-        const primary=this.escape(r.label||r.formatted||'');
-        const secondary=this.escape([r.postcode,r.city,r.state].filter(Boolean).join(' · '));
-        return `<button type="button" class="sx-address-suggestion" data-i="${i}" role="option"><span>${primary}</span>${secondary?`<small>${secondary}</small>`:''}</button>`;
-      }).join('');
-      list.classList.add('open');
-      list.querySelectorAll('.sx-address-suggestion').forEach(btn=>btn.addEventListener('mousedown',e=>{e.preventDefault();onPick(results[Number(btn.dataset.i)])}));
-    }
-  };
-
-  const cityInput=$('city'),cityList=$('citySuggestions'),streetInput=$('street'),streetList=$('streetSuggestions');
-  cityInput?.addEventListener('input',async()=>{
-    const q=cityInput.value.trim();
-    sxAddressAutocomplete.selectedCity='';
-    if(q.length<1){sxAddressAutocomplete.hide(cityList);return}
-    cityList.innerHTML='<div class="sx-address-searching">Szukam miast…</div>';cityList.classList.add('open');
-    const results=await sxAddressAutocomplete.search('city',q);
-    if(cityInput.value.trim()!==q)return;
-    sxAddressAutocomplete.render(cityList,results,r=>{
-      const city=(r.city||r.label||'').trim();
-      cityInput.value=city;
-      sxAddressAutocomplete.selectedCity=city;
-      cityInput.dataset.addressVerified='1';
-      if(r.postcode&&!$('postal').value)$('postal').value=formatPostalCode(r.postcode);
-      sxAddressAutocomplete.hide(cityList);
-      streetInput?.focus();
-    });
-  });
-  cityInput?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&cityList?.classList.contains('open')){
-      const first=cityList.querySelector('.sx-address-suggestion');if(first){e.preventDefault();first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}
-    }else if(e.key==='Escape')sxAddressAutocomplete.hide(cityList);
-  });
-
-  streetInput?.addEventListener('input',async()=>{
-    const q=streetInput.value.trim(),city=cityInput?.value.trim()||'';
-    streetInput.dataset.addressVerified='';
-    if(q.length<1||city.length<1){sxAddressAutocomplete.hide(streetList);return}
-    streetList.innerHTML='<div class="sx-address-searching">Szukam ulic i adresów…</div>';streetList.classList.add('open');
-    const results=await sxAddressAutocomplete.search('address',q,city);
-    if(streetInput.value.trim()!==q)return;
-    sxAddressAutocomplete.render(streetList,results,r=>{
-      const street=[r.street,r.housenumber].filter(Boolean).join(' ').trim()||r.label||r.formatted||'';
-      streetInput.value=street;
-      streetInput.dataset.addressVerified='1';
-      if(r.city)cityInput.value=r.city;
-      if(r.city){sxAddressAutocomplete.selectedCity=r.city;cityInput.dataset.addressVerified='1'}
-      if(r.postcode)$('postal').value=formatPostalCode(r.postcode);
-      sxAddressAutocomplete.hide(streetList);
-    });
-  });
-  streetInput?.addEventListener('keydown',e=>{
-    if(e.key==='Enter'&&streetList?.classList.contains('open')){
-      const first=streetList.querySelector('.sx-address-suggestion');if(first){e.preventDefault();first.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}
-    }else if(e.key==='Escape')sxAddressAutocomplete.hide(streetList);
-  });
-  document.addEventListener('mousedown',e=>{
-    if(!e.target.closest('.sx-autocomplete-field')){
-      sxAddressAutocomplete.hide(cityList);sxAddressAutocomplete.hide(streetList);
-    }
-  });
-
-  const validate=()=>{let ok=true;fields.forEach(id=>{const el=$(id),val=el.value.trim();let valid=!!val;if(id==='email')valid=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);if(id==='postal')valid=/^\d{2}-\d{3}$/.test(val);if(id==='phone')valid=onlyDigits(val).length===9;el.classList.toggle('invalid',!valid);if(!valid)ok=false});return ok};
-  const saveCurrentAddress=()=>{if(!validate()){showStatus('error','Sprawdź dane','Uzupełnij wymagane pola. Telefon musi mieć 9 cyfr, e-mail poprawny format, a kod pocztowy format 00-000.');return false}const address={id:stage1EditingAddressId||('addr_'+Date.now()),firstName:$('firstName').value.trim(),lastName:$('lastName').value.trim(),email:$('email').value.trim(),phone:normalizePhoneForSave(),street:$('street').value.trim(),postal:$('postal').value.trim(),city:$('city').value.trim(),country:'PL'};let addresses=getAddresses();if(stage1EditingAddressId){const i=addresses.findIndex(a=>a.id===stage1EditingAddressId);if(i>=0)addresses[i]=address;else addresses.push(address);selectedAddressId=address.id}else{const dupe=addresses.find(a=>a.street===address.street&&a.postal===address.postal&&a.city===address.city&&a.email===address.email);if(dupe){selectedAddressId=dupe.id}else{addresses.push(address);selectedAddressId=address.id}}saveAddresses(addresses);stage1EditingAddressId=selectedAddressId;renderAddresses();renderStage1Addresses();return true};
-  const openCheckout=()=>{confirmBox.classList.remove('open');confirmBox.setAttribute('aria-hidden','true');document.getElementById('cartModal')?.classList.remove('open');checkout.setAttribute('aria-hidden','false');renderSummary();renderDeliveryAddress();setDeliveryMethod(deliveryMethod);setStage(1);requestAnimationFrame(()=>checkout.classList.add('open'));document.body.style.overflow='hidden'};
-  window.STARXV_OPEN_CHECKOUT=openCheckout;
-  const closeCheckout=()=>{checkout.classList.remove('open');checkout.setAttribute('aria-hidden','true');document.body.style.overflow=''};
-  window.STARXV_OPEN_CHECKOUT_CONFIRM=()=>{if(!selectedItems().length)return;confirmBox.setAttribute('aria-hidden','false');requestAnimationFrame(()=>confirmBox.classList.add('open'))};
-  confirmNo.onclick=()=>{confirmBox.classList.remove('open');confirmBox.setAttribute('aria-hidden','true')};confirmYes.onclick=openCheckout;confirmBox.addEventListener('click',e=>{if(e.target===confirmBox)confirmNo.click()});checkoutClose.onclick=closeCheckout;
-  $('stage1NewAddress')?.addEventListener('click',clearAddressForm);
-  renderStage1Addresses();
-  const initialStage1Address=getAddresses().find(a=>a.id===getDefaultId())||getAddresses()[0];if(initialStage1Address)fillAddressForm(initialStage1Address);
-  $('saveAddressNext').onclick=()=>{if(saveCurrentAddress())setStage(2)};
-  document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>setStage(+b.dataset.back));
-  $('confirmAddress').onclick=()=>{if(!selectedAddressId){showStatus('error','Wybierz adres','Zaznacz adres dostawy przed przejściem dalej.');return}localStorage.setItem('starxv-default-address',selectedAddressId);renderAddresses();setStage(3)};
-  $('confirmDelivery').onclick=()=>{const address=getAddresses().find(a=>a.id===selectedAddressId);if(!address){showStatus('error','Brak adresu','Wróć do etapu 2 i wybierz adres dostawy.');return}const delivery={type:'address',address};localStorage.setItem('starxv-delivery-choice',JSON.stringify(delivery));setStage(4)};
-  document.querySelectorAll('.pay-card').forEach(card=>card.onclick=()=>{document.querySelectorAll('.pay-card').forEach(c=>c.classList.remove('selected'));card.classList.add('selected');paymentPreference=card.dataset.method});
-
-  const removeOrderedItemsFromCart=async(orderedItems)=>{
-    try{
-      const orderedList=(Array.isArray(orderedItems)?orderedItems:[]).map(x=>({
-        id:String(x.id||''),
-        color:String(x.color||''),
-        size:String(x.size||'').toUpperCase(),
-        qty:Math.max(1,Number(x.qty||1))
-      }));
-      if(!orderedList.length)return null;
-
-      // Marker prevents an older server-side cart from restoring ordered items
-      // if account synchronization happens before the empty cart is saved.
-      localStorage.setItem('starxv-cart-pending-remove',JSON.stringify(orderedList));
-
-      let current=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
-      if(!Array.isArray(current))current=[];
-      const remaining=current.map(item=>({...item}));
-
-      for(const ordered of orderedList){
-        let qty=ordered.qty;
-        for(let i=0;i<remaining.length&&qty>0;i++){
-          const item=remaining[i];
-          if(!item)continue;
-          const same=String(item.id||'')===ordered.id
-            && String(item.color||'')===ordered.color
-            && String(item.size||'').toUpperCase()===ordered.size;
-          if(!same)continue;
-          const have=Math.max(1,Number(item.qty||1));
-          if(have<=qty){qty-=have;remaining[i]=null}
-          else{item.qty=have-qty;qty=0}
-        }
-      }
-
-      const next=remaining.filter(Boolean);
-      localStorage.setItem('starxv-cart',JSON.stringify(next));
-      window.dispatchEvent(new CustomEvent('starxv:cart-updated',{detail:{cart:next}}));
-
-      const count=document.getElementById('cartCount');
-      if(count)count.textContent=String(next.reduce((sum,x)=>sum+Number(x.qty||1),0));
-
-      // Save immediately to the user's account instead of waiting for the
-      // normal debounced cart sync. This is important before payment starts.
-      let serverSaved=false;
-      if(window.STARXV_AUTH_USER){
-        try{
-          const r=await fetch('/api/account/cart',{
-            method:'PUT',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({cart:next})
-          });
-          serverSaved=r.ok;
-        }catch{}
-      }else{
-        serverSaved=true;
-      }
-
-      if(serverSaved)localStorage.removeItem('starxv-cart-pending-remove');
-      else window.STARXV_CART_PERSIST?.(next);
-
-      return next;
-    }catch(e){
-      console.warn('STARXV remove ordered cart items:',e);
-      return null;
-    }
-  };
-
-  $('payNow').onclick=async()=>{if(!$('sxCheckoutLegalAccept')?.checked){showStatus('error','Potwierdź wymagane informacje','Przed złożeniem zamówienia zaakceptuj Regulamin i potwierdź zapoznanie się z Polityką prywatności.');return}const items=selectedItems(),address=getAddresses().find(a=>a.id===selectedAddressId);let delivery=null;try{delivery=JSON.parse(localStorage.getItem('starxv-delivery-choice')||'null')}catch{}if(!items.length||!address||!delivery){showStatus('error','Brak danych','Koszyk, adres albo sposób dostawy nie jest gotowy.');return}const btn=$('payNow');btn.disabled=true;btn.textContent='ŁĄCZENIE Z SIMPAY...';try{const prep=await fetch('/api/orders/prepare',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,address,delivery,paymentPreference,promo:(window.STARXV_GET_PROMO?.()||null)})});const prepared=await prep.json().catch(()=>({}));if(!prep.ok)throw new Error(prepared.error||'Nie udało się sprawdzić stanu magazynowego.');if(prepared.order){
-          summaryShipping.textContent=money(Number(prepared.order.shippingCost||0));
-          summaryTotal.textContent=money(Number(prepared.order.total||0));
-          // Zamówienie istnieje już w „Moich zamówieniach”, więc jego pozycje
-          // od razu usuwamy z koszyka — również gdy płatność pozostaje nieopłacona.
-          await removeOrderedItemsFromCart(items);
-          window.STARXV_SYNC_ORDERS?.();
-          window.STARXV_SYNC_CATALOG?.();
-        }const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,address,delivery,paymentPreference,orderId:prepared.order?.id})});const data=await res.json().catch(()=>({}));if(!res.ok||!data.url)throw new Error(data.error||'Zamówienie zostało zapisane jako oczekujące, ale płatności nie są jeszcze podłączone.');
-        window.location.href=data.url}catch(err){showStatus('error','Płatność nie została uruchomiona',location.protocol==='file:'?'Prawdziwa płatność SimPay wymaga uruchomienia backendu i konfiguracji SimPay na serwerze.':(err.message||'Spróbuj ponownie za chwilę.'));btn.disabled=!$('sxCheckoutLegalAccept')?.checked;btn.textContent='ZAMÓWIENIE Z OBOWIĄZKIEM ZAPŁATY'}};
-  const params=new URLSearchParams(location.search),paymentResult=params.get('payment'),paymentOrderId=params.get('order');
-  if((paymentResult==='success'||paymentResult==='return')&&paymentOrderId){
-    (async()=>{
-      showStatus('success','Sprawdzamy płatność','Wróciłeś z SimPay. Czekamy na bezpieczne potwierdzenie płatności z serwera…',9000);
-      let confirmed=false;
-      for(let i=0;i<8;i++){
-        try{
-          const r=await fetch('/api/orders/'+encodeURIComponent(paymentOrderId)+'/payment-status',{credentials:'include'});
-          const d=await r.json().catch(()=>({}));
-          if(r.ok&&d.confirmed){confirmed=true;break}
-        }catch(e){}
-        await new Promise(r=>setTimeout(r,900));
-      }
-      if(confirmed){
-        try{
-          const r=await fetch('/api/orders',{credentials:'same-origin'});
-          const d=await r.json().catch(()=>({}));
-          const paidOrder=(Array.isArray(d.orders)?d.orders:[]).find(o=>String(o.id)===String(paymentOrderId));
-          if(paidOrder?.items)await removeOrderedItemsFromCart(paidOrder.items);
-        }catch(e){}
-        showStatus('success','Płatność potwierdzona','Dziękujemy za zakup. Otwieramy „Moje zamówienia”…',2600);
-        try{
-          sessionStorage.setItem('starxv-orders-return-digital','1');
-          sessionStorage.removeItem('starxv-return-to-profile');
-          sessionStorage.removeItem('starxv-active-view-v2');
-          document.getElementById('checkoutOverlay')?.classList.remove('open');
-          document.getElementById('checkoutOverlay')?.setAttribute('aria-hidden','true');
-          document.body.style.overflow='';
-          await window.STARXV_SYNC_ORDERS?.();
-          setTimeout(()=>{
-            const ordersBtn=document.getElementById('openOrders');
-            if(ordersBtn)ordersBtn.click();
-            else if(typeof window.STARXV_OPEN_ORDERS==='function')window.STARXV_OPEN_ORDERS();
-          },180);
-        }catch(e){console.warn('STARXV payment return:',e)}
-      }else{
-        showStatus('success','Płatność jest weryfikowana','SimPay weryfikuje transakcję. Status zamówienia zaktualizuje się po potwierdzeniu płatności.',7000);
-      }
-      history.replaceState({},'',location.pathname);
-    })();
-  }else if(paymentResult==='failed'){
-    showStatus('error','Płatność się nie udała','Nie pobrano środków. Możesz spróbować ponownie.',5200);history.replaceState({},'',location.pathname)
-  }else if(paymentResult==='cancelled'){
-    showStatus('error','Płatność anulowana','Zamówienie nie zostało opłacone. Możesz wrócić do koszyka i spróbować ponownie.',4200);history.replaceState({},'',location.pathname)
-  }
-})();
-</script>
 <script>
 (()=>{
   const modal=document.getElementById('ordersModal'),closeBtn=document.getElementById('closeOrders'),body=document.getElementById('ordersBody'),count=document.getElementById('ordersCount'),refresh=document.getElementById('ordersRefresh');
   if(!modal||!body)return;
-  const KEY='starxv-orders',PENDING='starxv-pending-order';
-  const COLOR_META=window.STARXV_COLOR_META||{black:{label:'Czarny'},pink:{label:'Różowy'},blue:{label:'Jasny niebieski'}};
-  const COLOR_IMAGES=window.STARXV_COLOR_IMAGES||{};
-  let orders=[],activeFilter='all',activeType='digital',paymentExpiryTimer=null,paymentExpiryRefreshing=false;
+  let orders=[],activeFilter='all',paymentExpiryTimer=null,paymentExpiryRefreshing=false;
   const money=n=>`${Number(n||0).toLocaleString('pl-PL',{minimumFractionDigits:0,maximumFractionDigits:2})} PLN`;
+  const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const statusClass=s=>s==='paid'?'paid':s==='pending'?'pending':s==='failed'?'failed':'cancelled';
   const paymentExpiryHtml=o=>['pending','failed'].includes(o.paymentStatus)&&Number(o.paymentExpiresAt)>Date.now()?`<div class="sx-payment-expiry"><b>24H NA POTWIERDZENIE PŁATNOŚCI</b>Zamówienie wygaśnie i zniknie z „Moich zamówień”, jeśli płatność nie zostanie potwierdzona w ciągu 24 godzin.<br><strong data-payment-expiry="${Number(o.paymentExpiresAt)}">--:--:--</strong></div>`:'';
   const expiryClock=ms=>{const total=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(total/3600),m=Math.floor((total%3600)/60),s=total%60;return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`};
   function startPaymentExpiryTimer(){
     if(paymentExpiryTimer){clearInterval(paymentExpiryTimer);paymentExpiryTimer=null}
     const tick=()=>{
-      const nodes=[...body.querySelectorAll('[data-payment-expiry]')];
-      if(!nodes.length)return;
+      const nodes=[...body.querySelectorAll('[data-payment-expiry]')];if(!nodes.length)return;
       let expired=false;
       for(const el of nodes){const left=Number(el.dataset.paymentExpiry||0)-Date.now();el.textContent=expiryClock(left);if(left<=0)expired=true}
-      if(expired&&!paymentExpiryRefreshing){
-        paymentExpiryRefreshing=true;
-        fetchOrders().then(()=>render()).finally(()=>{paymentExpiryRefreshing=false});
-      }
+      if(expired&&!paymentExpiryRefreshing){paymentExpiryRefreshing=true;fetchOrders().then(render).finally(()=>{paymentExpiryRefreshing=false})}
     };
-    tick();
-    paymentExpiryTimer=setInterval(tick,1000);
+    tick();paymentExpiryTimer=setInterval(tick,1000);
   }
-  const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const localLoad=()=>{try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(x)?x:[]}catch{return[]}};
-  const localSave=x=>localStorage.setItem(KEY,JSON.stringify(x));
-  const stages=['Nowe','Przygotowanie','Nadane','W drodze','Dostarczone'];
-  const stageIndex=o=>o.paymentStatus==='paid'?Math.max(0,Math.min(4,Number(o.shippingStage||0))):-1;
-  const statusText=s=>s==='paid'?'ZAPŁACONE':s==='failed'?'PŁATNOŚĆ NIEUDANA':s==='cancelled'?'ANULOWANE':'OCZEKUJE NA PŁATNOŚĆ';
-  const statusClass=s=>s==='paid'?'paid':s==='pending'?'pending':s==='failed'?'failed':'cancelled';
   const reviewLookup=(o,x)=>(o.reviews||[]).find(r=>String(r.productId)===String(x.id)&&String(r.color||'')===String(x.color||'')&&String(r.size||'').toUpperCase()===String(x.size||'').toUpperCase());
   function ensureReviewModal(){
     let m=document.getElementById('sxOrderReviewModal');if(m)return m;
-    m=document.createElement('div');m.id='sxOrderReviewModal';m.className='sx-order-review-modal';m.setAttribute('aria-hidden','true');m.innerHTML=`<div class="sx-order-review-panel" role="dialog" aria-modal="true" aria-label="Opinia o produkcie"><div class="sx-order-review-head"><div><small id="sxOrderReviewKicker">STARXV · OPINIA PO DOSTAWIE</small><h3 id="sxOrderReviewTitle">Napisz opinię</h3></div><button class="sx-order-review-close" type="button" aria-label="Zamknij">×</button></div><div class="sx-order-review-product" id="sxOrderReviewProduct"></div><form id="sxOrderReviewForm"><div class="sx-order-review-stars" id="sxOrderReviewStars"><button type="button" data-rating="1">★</button><button type="button" data-rating="2">★</button><button type="button" data-rating="3">★</button><button type="button" data-rating="4">★</button><button type="button" data-rating="5">★</button></div><input type="hidden" id="sxOrderReviewRating" value="5"><textarea id="sxOrderReviewText" maxlength="500" placeholder="Napisz, co sądzisz o produkcie..."></textarea><div class="sx-order-review-actions"><button class="sx-order-review-delete" id="sxOrderReviewDelete" type="button" hidden>USUŃ</button><button class="sx-order-review-save" type="submit">ZAPISZ OPINIĘ</button></div><div class="sx-order-review-status" id="sxOrderReviewStatus"></div></form></div>`;document.body.appendChild(m);
-    const close=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true')};m.querySelector('.sx-order-review-close').onclick=close;m.addEventListener('click',e=>{if(e.target===m)close()});return m;
+    m=document.createElement('div');m.id='sxOrderReviewModal';m.className='sx-order-review-modal';m.setAttribute('aria-hidden','true');
+    m.innerHTML=`<div class="sx-order-review-panel" role="dialog" aria-modal="true" aria-label="Opinia o produkcie"><div class="sx-order-review-head"><div><small id="sxOrderReviewKicker">STARXV DIGITAL · OPINIA PO ZAKUPIE</small><h3 id="sxOrderReviewTitle">Napisz opinię</h3></div><button class="sx-order-review-close" type="button" aria-label="Zamknij">×</button></div><div class="sx-order-review-product" id="sxOrderReviewProduct"></div><form id="sxOrderReviewForm"><div class="sx-order-review-stars" id="sxOrderReviewStars"><button type="button" data-rating="1">★</button><button type="button" data-rating="2">★</button><button type="button" data-rating="3">★</button><button type="button" data-rating="4">★</button><button type="button" data-rating="5">★</button></div><input type="hidden" id="sxOrderReviewRating" value="5"><textarea id="sxOrderReviewText" maxlength="500" placeholder="Napisz, co sądzisz o produkcie..."></textarea><div class="sx-order-review-actions"><button class="sx-order-review-delete" id="sxOrderReviewDelete" type="button" hidden>USUŃ</button><button class="sx-order-review-save" type="submit">ZAPISZ OPINIĘ</button></div><div class="sx-order-review-status" id="sxOrderReviewStatus"></div></form></div>`;
+    document.body.appendChild(m);
+    const close=()=>{m.classList.remove('open');m.setAttribute('aria-hidden','true')};
+    m.querySelector('.sx-order-review-close').onclick=close;m.addEventListener('click',e=>{if(e.target===m)close()});return m;
   }
   function openOrderReview(order,item){
-    if(order.paymentStatus!=='paid'||((order.orderType||'physical')!=='digital'&&Number(order.shippingStage||0)<4))return;
+    if(order.paymentStatus!=='paid')return;
     const m=ensureReviewModal(),existing=reviewLookup(order,item),title=m.querySelector('#sxOrderReviewTitle'),prod=m.querySelector('#sxOrderReviewProduct'),rating=m.querySelector('#sxOrderReviewRating'),text=m.querySelector('#sxOrderReviewText'),status=m.querySelector('#sxOrderReviewStatus'),del=m.querySelector('#sxOrderReviewDelete'),form=m.querySelector('#sxOrderReviewForm'),stars=[...m.querySelectorAll('#sxOrderReviewStars button')];
-    title.textContent=existing?'Edytuj opinię':'Napisz opinię';const digital=(order.orderType||'physical')==='digital';const kicker=m.querySelector('#sxOrderReviewKicker');if(kicker)kicker.textContent=digital?'STARXV DIGITAL · OPINIA PO ZAKUPIE':'STARXV · OPINIA PO DOSTAWIE';prod.innerHTML=digital?`<b>${safe(item.name||'STARXV DIGITAL')}</b><br>Produkt cyfrowy · PDF<br>Zamówienie #${safe(order.orderNo||String(order.id||'').slice(-8))}`:`<b>${safe(item.name||'STARXV PRODUCT')}</b><br>Kolor: ${safe(item.colorLabel||(COLOR_META[item.color]||{}).label||item.color||'—')} · Rozmiar: ${safe(item.size||'—')}<br>Zamówienie #${safe(order.orderNo||String(order.id||'').slice(-8))}`;rating.value=String(existing?.rating||5);text.value=existing?.text||'';status.textContent='';del.hidden=!existing;
+    title.textContent=existing?'Edytuj opinię':'Napisz opinię';
+    prod.innerHTML=`<b>${safe(item.name||'STARXV DIGITAL')}</b><br>Produkt cyfrowy · PDF<br>Zamówienie #${safe(order.orderNo||String(order.id||'').slice(-8))}`;
+    rating.value=String(existing?.rating||5);text.value=existing?.text||'';status.textContent='';del.hidden=!existing;
     const paint=n=>stars.forEach(b=>b.classList.toggle('on',Number(b.dataset.rating)<=n));paint(Number(rating.value));stars.forEach(b=>b.onclick=()=>{rating.value=b.dataset.rating;paint(Number(b.dataset.rating))});
-    form.onsubmit=async e=>{e.preventDefault();const reviewText=text.value.trim();if(reviewText.length<3){status.textContent='Opinia musi mieć co najmniej 3 znaki.';return}const saveBtn=form.querySelector('.sx-order-review-save');saveBtn.disabled=true;status.textContent='Zapisywanie…';try{const r=await fetch('/api/reviews/'+encodeURIComponent(item.id),{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:order.id,color:item.color,size:item.size,rating:Number(rating.value)||5,text:reviewText})}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się zapisać opinii.');await fetchOrders();render();m.classList.remove('open');m.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('starxv:reviews-changed',{detail:{productId:item.id}}))}catch(err){status.textContent=err.message||'Nie udało się zapisać opinii.'}finally{saveBtn.disabled=false}};
+    form.onsubmit=async e=>{e.preventDefault();const reviewText=text.value.trim();if(reviewText.length<3){status.textContent='Opinia musi mieć co najmniej 3 znaki.';return}const saveBtn=form.querySelector('.sx-order-review-save');saveBtn.disabled=true;status.textContent='Zapisywanie…';try{const r=await fetch('/api/reviews/'+encodeURIComponent(item.id),{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:order.id,color:item.color||'digital',size:item.size||'PDF',rating:Number(rating.value)||5,text:reviewText})}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się zapisać opinii.');await fetchOrders();render();m.classList.remove('open');m.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('starxv:reviews-changed',{detail:{productId:item.id}}))}catch(err){status.textContent=err.message||'Nie udało się zapisać opinii.'}finally{saveBtn.disabled=false}};
     del.onclick=async()=>{if(!existing||!await sxConfirm('Twoja opinia zostanie trwale usunięta.',{title:'Usunąć opinię?',confirmText:'USUŃ'}))return;del.disabled=true;status.textContent='Usuwanie…';try{const r=await fetch('/api/reviews/by-id/'+encodeURIComponent(existing.id),{method:'DELETE',credentials:'include'}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się usunąć opinii.');await fetchOrders();render();m.classList.remove('open');m.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('starxv:reviews-changed',{detail:{productId:item.id}}))}catch(err){status.textContent=err.message||'Nie udało się usunąć opinii.'}finally{del.disabled=false}};
     m.classList.add('open');m.setAttribute('aria-hidden','false');setTimeout(()=>text.focus(),50);
   }
   async function fetchOrders(){
     body.innerHTML='<div class="orders-loading">ŁADOWANIE ZAMÓWIEŃ…</div>';
-    try{
-      const res=await fetch('/api/orders',{credentials:'include'});
-      if(res.ok){const data=await res.json();orders=Array.isArray(data.orders)?data.orders:[];return}
-    }catch(e){}
-    orders=localLoad();
+    try{const res=await fetch('/api/orders',{credentials:'include'});if(res.ok){const data=await res.json();orders=(Array.isArray(data.orders)?data.orders:[]).filter(o=>o.orderType==='digital');return}}catch{}
+    orders=[];
   }
-  function typedOrders(){return orders.filter(o=>(o.orderType||'physical')===activeType)}
-  function filtered(){return typedOrders().filter(o=>activeFilter==='all'?true:activeFilter==='other'?['failed','cancelled'].includes(o.paymentStatus):o.paymentStatus===activeFilter)}
+  function filtered(){return orders.filter(o=>activeFilter==='all'?true:activeFilter==='other'?['failed','cancelled'].includes(o.paymentStatus):o.paymentStatus===activeFilter)}
   function updateStats(){
-    const current=typedOrders(),paid=current.filter(o=>o.paymentStatus==='paid');
-    document.getElementById('ordersStatAll').textContent=current.length;
+    const paid=orders.filter(o=>o.paymentStatus==='paid');
+    document.getElementById('ordersStatAll').textContent=orders.length;
     document.getElementById('ordersStatPaid').textContent=paid.length;
-    document.getElementById('ordersStatPending').textContent=current.filter(o=>o.paymentStatus==='pending').length;
+    document.getElementById('ordersStatPending').textContent=orders.filter(o=>o.paymentStatus==='pending').length;
     document.getElementById('ordersStatSpent').textContent=money(paid.reduce((s,o)=>s+Number(o.total||0),0));
-    if(count)count.textContent=current.length;
+    if(count)count.textContent=orders.length;
   }
   function render(){
-    updateStats();
-    const current=typedOrders();
-    const list=filtered().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
-    if(!list.length){
-      const typeName=activeType==='digital'?'produktów cyfrowych':'produktów fizycznych';
-      body.innerHTML=`<div class="orders-empty"><div><strong>${current.length?'Brak zamówień w tej kategorii.':`Nie masz jeszcze ${typeName}.`}</strong><span>${current.length?'Wybierz inny filtr, aby zobaczyć pozostałe zamówienia.':activeType==='digital'?'Kupione e-booki pojawią się tutaj i po opłaceniu będzie można je pobrać.':'Gdy złożysz zamówienie na produkt fizyczny STARXV, pojawi się tutaj razem ze statusem płatności i przesyłki.'}</span></div></div>`;
-      if(paymentExpiryTimer){clearInterval(paymentExpiryTimer);paymentExpiryTimer=null}
-      return;
-    }
+    updateStats();const list=filtered().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+    if(!list.length){body.innerHTML=`<div class="orders-empty"><div><strong>${orders.length?'Brak zamówień w tej kategorii.':'Nie masz jeszcze produktów cyfrowych.'}</strong><span>${orders.length?'Wybierz inny filtr, aby zobaczyć pozostałe zamówienia.':'Kupione e-booki pojawią się tutaj i po opłaceniu będzie można je pobrać.'}</span></div></div>`;if(paymentExpiryTimer){clearInterval(paymentExpiryTimer);paymentExpiryTimer=null}return}
     body.innerHTML=list.map(o=>{
-      const isDigital=(o.orderType||'physical')==='digital';
-      if(isDigital){
-        const x=(o.items||[])[0]||{};
-        const img=String(x.image||'/assets/placeholder.png');
-        const productId=o.digitalProductId||x.id||'zero-to-first-sale';
-        const paid=o.paymentStatus==='paid';
-        const canCancel=['pending','failed'].includes(o.paymentStatus);
-        const digitalState=paid?'OPŁACONO':o.paymentStatus==='failed'?'PŁATNOŚĆ NIEUDANA':o.paymentStatus==='cancelled'?'ANULOWANO':'OCZEKUJE NA PŁATNOŚĆ';
-        const access=paid
-          ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button></div>`
-          : `<div class="digital-payment-wait">${o.paymentStatus==='pending'?'Dostęp do pliku pojawi się automatycznie po potwierdzeniu płatności.':'Plik nie jest dostępny, ponieważ płatność nie została potwierdzona.'}${paymentExpiryHtml(o)}<br><button class="order-pay-btn" type="button" data-pay-order="${safe(o.id)}">ZAPŁAĆ →</button><div class="order-payment-error" data-pay-error="${safe(o.id)}"></div></div>`;
-        return `<article class="order-card digital-order"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${digitalState}</div></div><div class="order-main-grid"><div class="order-items"><div class="order-item"><img class="order-thumb" src="${safe(img)}" alt=""><div><div class="order-item-name">${safe(x.name||'ZERO TO FIRST SALE')}</div><div class="digital-order-meta">STARXV DIGITAL • PDF • PRODUKT CYFROWY</div></div><div class="order-item-price">${money(Number(x.price||o.total||0)*Number(x.qty||1))}</div></div></div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div><div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa cyfrowa: 0 PLN</div>${access}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}</article>`;
-      }
-
-      const idx=stageIndex(o),paid=o.paymentStatus==='paid';
-      const canReview=paid&&Number(o.shippingStage||0)>=4;
-      const items=(o.items||[]).map(x=>{const color=x.color||'black',cm=COLOR_META[color]||{label:x.colorLabel||color},img=x.image||((COLOR_IMAGES[color]||COLOR_IMAGES.black||{}).front)||'',existingReview=reviewLookup(o,x);return `<div class="order-item">${img?`<img class="order-thumb" src="${safe(img)}" alt="">`:'<div class="order-thumb"></div>'}<div><div class="order-item-name">${safe(x.name||'STARXV PRODUCT')}</div><div class="order-item-meta">${safe(x.fit||'')}<br>Kolor: ${safe(x.colorLabel||cm.label||color)} • Rozmiar: ${safe(x.size)} • Ilość: ${Number(x.qty||1)}</div>${canReview?`<button class="order-review-btn ${existingReview?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id)}" data-review-color="${safe(x.color||'')}" data-review-size="${safe(x.size||'')}">${existingReview?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button>`:''}</div><div class="order-item-price">${money(Number(x.price||0)*Number(x.qty||1))}</div></div>`}).join('');
-      const a=o.address||{},shipTitle=paid?stages[idx]:(o.paymentStatus==='cancelled'?'Anulowane':o.paymentStatus==='failed'?'Płatność nieudana':'Oczekuje na płatność');
-      const shipNote=paid?(idx===0?'Zamówienie zostało przyjęte do realizacji.':idx===1?'Produkty są przygotowywane do wysyłki.':idx===2?'Przesyłka została nadana.':idx===3?'Przesyłka jest w drodze.':'Zamówienie zostało dostarczone.'):(o.paymentStatus==='cancelled'?'To zamówienie nie będzie realizowane.':o.paymentStatus==='failed'?'Płatność nie została potwierdzona.':'Realizacja rozpocznie się po potwierdzeniu płatności.');
-      const delivery=a.street?`<div class="order-address"><b>ADRES DOSTAWY</b><br>${safe(a.firstName||'')} ${safe(a.lastName||'')} • ${safe(a.street)}, ${safe(a.postal)} ${safe(a.city)}</div>`:'';
-      const canCancel=['pending','failed'].includes(o.paymentStatus);
-      return `<article class="order-card"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${statusText(o.paymentStatus)}</div></div><div class="order-main-grid"><div class="order-items">${items||'<div class="order-item-meta">Brak pozycji.</div>'}</div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div>${Number(o.shippingCost||0)>=0?`<div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa: ${money(o.shippingCost||0)}</div>`:''}<div class="shipment"><div class="shipment-label">STATUS REALIZACJI</div><div class="shipment-current">${shipTitle}</div><div class="shipment-note">${shipNote}</div>${paymentExpiryHtml(o)}${!paid&&o.paymentStatus!=='cancelled'?`<button class="order-pay-btn" type="button" data-pay-order="${safe(o.id)}">ZAPŁAĆ →</button><div class="order-payment-error" data-pay-error="${safe(o.id)}"></div>`:'' }${o.trackingNumber?`<div style="margin-top:10px;padding:10px 11px;border:1px solid rgba(255,255,255,.08);border-radius:11px;font-size:8px;line-height:1.55;color:#8a8a8a"><b style="color:#fff">NUMER PRZESYŁKI • ${safe(o.trackingNumber)}</b>${o.carrierStatus?`<br>Status: ${safe(o.carrierStatus)}`:''}</div>`:''}<div class="tracking">${stages.map((x,i)=>`<div class="track-step ${i<=idx?'done':''}">${x}</div>`).join('')}</div><div class="order-history"><div class="order-history-title">HISTORIA ZAMÓWIENIA</div><div class="order-history-list">${(Array.isArray(o.timeline)?o.timeline:[]).slice().reverse().map(ev=>`<div class="order-history-event"><div class="order-history-event-title">${safe(ev.title||'Aktualizacja')}</div>${ev.note?`<div class="order-history-event-note">${safe(ev.note)}</div>`:''}<div class="order-history-event-date">${new Date(Number(ev.at)||Date.now()).toLocaleString('pl-PL')}</div></div>`).join('')||`<div class="order-history-event"><div class="order-history-event-title">Zamówienie utworzone</div><div class="order-history-event-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div>`}</div><div class="order-last-update">OSTATNIA AKTUALIZACJA: ${new Date(o.updatedAt||o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div></div>${delivery}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}${o.paymentStatus==='paid'&&Number(o.shippingStage||0)>=4?`<div class="order-actions"><button class="return-btn" type="button" data-return-order="${encodeURIComponent(JSON.stringify(o))}">ZGŁOŚ ZWROT / REKLAMACJĘ</button></div>`:''}</article>`;
+      const x=(o.items||[])[0]||{},img=String(x.image||'/assets/placeholder.png'),productId=o.digitalProductId||x.id||'zero-to-first-sale',paid=o.paymentStatus==='paid',canCancel=['pending','failed'].includes(o.paymentStatus);
+      const state=paid?'OPŁACONO':o.paymentStatus==='failed'?'PŁATNOŚĆ NIEUDANA':o.paymentStatus==='cancelled'?'ANULOWANO':'OCZEKUJE NA PŁATNOŚĆ';
+      const access=paid
+        ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button></div>`
+        : `<div class="digital-payment-wait">${o.paymentStatus==='pending'?'Dostęp do pliku pojawi się automatycznie po potwierdzeniu płatności.':'Plik nie jest dostępny, ponieważ płatność nie została potwierdzona.'}${paymentExpiryHtml(o)}<br><button class="order-pay-btn" type="button" data-pay-order="${safe(o.id)}">ZAPŁAĆ →</button><div class="order-payment-error" data-pay-error="${safe(o.id)}"></div></div>`;
+      return `<article class="order-card digital-order"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${state}</div></div><div class="order-main-grid"><div class="order-items"><div class="order-item"><img class="order-thumb" src="${safe(img)}" alt=""><div><div class="order-item-name">${safe(x.name||'STARXV DIGITAL')}</div><div class="digital-order-meta">STARXV DIGITAL • PDF • PRODUKT CYFROWY</div></div><div class="order-item-price">${money(Number(x.price||o.total||0)*Number(x.qty||1))}</div></div></div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div><div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa cyfrowa: 0 PLN</div>${access}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}</article>`;
     }).join('');
     startPaymentExpiryTimer();
   }
   async function open(){
-    document.getElementById('cartModal')?.classList.remove('open');
-    activeType='digital';
-    activeFilter='all';
-    document.querySelectorAll('.orders-type-tab').forEach(x=>x.classList.toggle('active',x.dataset.orderType==='digital'));
-    document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));
+    activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));
     const returnToDigital=sessionStorage.getItem('starxv-orders-return-digital')==='1';
     if(closeBtn)closeBtn.innerHTML=returnToDigital?'<i>←</i> WRÓĆ DO DIGITAL':'<i>←</i> WRÓĆ DO PROFILU';
     modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>modal.classList.add('open'));
@@ -2564,67 +1755,26 @@ const renderCart=()=>{hydrateCartDiscounts();
   function close(){
     if(paymentExpiryTimer){clearInterval(paymentExpiryTimer);paymentExpiryTimer=null}
     modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
-    const backToDigital=sessionStorage.getItem('starxv-orders-return-digital')==='1';
-    const backToProfile=sessionStorage.getItem('starxv-return-to-profile')==='1';
-
-    if(backToDigital){
-      sessionStorage.removeItem('starxv-orders-return-digital');
-      sessionStorage.removeItem('starxv-return-to-profile');
-      history.replaceState({sxDigitalHome:true},'','/?section=digital');
-      const digitalNav=document.getElementById('sxNavDigital');
-      if(digitalNav)digitalNav.click();
-      else window.location.href='/?section=digital';
-      return;
-    }
-
-    if(backToProfile){
-      sessionStorage.removeItem('starxv-return-to-profile');
-      if(location.hash==='#orders')history.replaceState(null,'',location.pathname+location.search);
-    }else if(location.hash==='#orders'){
-      history.back();
-    }
+    const backToDigital=sessionStorage.getItem('starxv-orders-return-digital')==='1',backToProfile=sessionStorage.getItem('starxv-return-to-profile')==='1';
+    if(backToDigital){sessionStorage.removeItem('starxv-orders-return-digital');sessionStorage.removeItem('starxv-return-to-profile');history.replaceState({sxDigitalHome:true},'','/?section=digital');const digitalNav=document.getElementById('sxNavDigital');if(digitalNav)digitalNav.click();else window.location.href='/?section=digital';return}
+    if(backToProfile){sessionStorage.removeItem('starxv-return-to-profile');if(location.hash==='#orders')history.replaceState(null,'',location.pathname+location.search)}else if(location.hash==='#orders')history.back();
   }
-  window.STARXV_OPEN_ORDERS=open;
-  closeBtn?.addEventListener('click',close);
-  refresh?.addEventListener('click',async()=>{await fetchOrders();render()});
-  document.getElementById('ordersTypeTabs')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-type="digital"]');if(!b)return;activeType='digital';activeFilter='all';document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x.dataset.orderFilter==='all'));render()});
+  window.STARXV_OPEN_ORDERS=open;closeBtn?.addEventListener('click',close);refresh?.addEventListener('click',async()=>{await fetchOrders();render()});
   document.getElementById('ordersFilters')?.addEventListener('click',e=>{const b=e.target.closest('[data-order-filter]');if(!b)return;activeFilter=b.dataset.orderFilter;document.querySelectorAll('.orders-filter').forEach(x=>x.classList.toggle('active',x===b));render()});
   body.addEventListener('click',async e=>{
     const reviewBtn=e.target.closest('[data-review-order]');
-    if(reviewBtn){const order=orders.find(o=>String(o.id)===String(reviewBtn.dataset.reviewOrder));const item=order?.items?.find(x=>String(x.id)===String(reviewBtn.dataset.reviewProduct)&&String(x.color||'')===String(reviewBtn.dataset.reviewColor||'')&&String(x.size||'').toUpperCase()===String(reviewBtn.dataset.reviewSize||'').toUpperCase());if(order&&item)openOrderReview(order,item);return}
+    if(reviewBtn){const order=orders.find(o=>String(o.id)===String(reviewBtn.dataset.reviewOrder));const item=order?.items?.find(x=>String(x.id)===String(reviewBtn.dataset.reviewProduct));if(order&&item)openOrderReview(order,item);return}
     const payBtn=e.target.closest('[data-pay-order]');
-    if(payBtn){
-      const id=payBtn.dataset.payOrder,err=body.querySelector(`[data-pay-error="${CSS.escape(id)}"]`);
-      if(err)err.textContent='';
-      const oldPayText=payBtn.textContent;payBtn.disabled=true;payBtn.textContent='PRZEKIEROWANIE…';
-      try{
-        const r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:id})});
-        let data={};try{data=await r.json()}catch{}
-        if(!r.ok)throw new Error(data.error||'Nie udało się uruchomić płatności.');
-        if(!data.url)throw new Error('Brak linku do płatności.');
-        location.href=data.url;
-      }catch(ex){if(err)err.textContent=ex.message||'Nie udało się uruchomić płatności.';payBtn.disabled=false;payBtn.textContent=oldPayText}
-      return;
-    }
+    if(payBtn){const id=payBtn.dataset.payOrder,err=body.querySelector(`[data-pay-error="${CSS.escape(id)}"]`);if(err)err.textContent='';const old=payBtn.textContent;payBtn.disabled=true;payBtn.textContent='PRZEKIEROWANIE…';try{const r=await fetch('/api/create-checkout-session',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:id})}),data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||'Nie udało się uruchomić płatności.');if(!data.url)throw new Error('Brak linku do płatności.');location.href=data.url}catch(ex){if(err)err.textContent=ex.message||'Nie udało się uruchomić płatności.';payBtn.disabled=false;payBtn.textContent=old}return}
     const btn=e.target.closest('[data-cancel-order]');if(!btn)return;
-    const id=btn.dataset.cancelOrder;
-    const order=orders.find(o=>String(o.id)===String(id));
-    if(!order)return;
+    const id=btn.dataset.cancelOrder,order=orders.find(o=>String(o.id)===String(id));if(!order)return;
     const no=order.orderNo||String(order.id||'').slice(-8);
     if(!await sxConfirm(`Zamówienie #${no} zostanie anulowane.`,{title:'Anulować zamówienie?',confirmText:'ANULUJ ZAMÓWIENIE'}))return;
-    const oldText=btn.textContent;btn.disabled=true;btn.textContent='ANULOWANIE…';
-    try{
-      const res=await fetch('/api/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:'{}'});
-      let data={};try{data=await res.json()}catch{}
-      if(!res.ok)throw new Error(data.error||'Nie udało się anulować zamówienia.');
-      const i=orders.findIndex(o=>String(o.id)===String(id));if(i>=0)orders[i]=data.order||{...orders[i],paymentStatus:'cancelled'};
-      render();
-    }catch(err){sxAlert(err.message||'Nie udało się anulować zamówienia.');btn.disabled=false;btn.textContent=oldText}
+    const old=btn.textContent;btn.disabled=true;btn.textContent='ANULOWANIE…';
+    try{const res=await fetch('/api/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:'{}'}),data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||'Nie udało się anulować zamówienia.');const i=orders.findIndex(o=>String(o.id)===String(id));if(i>=0)orders[i]=data.order||{...orders[i],paymentStatus:'cancelled'};render()}catch(err){sxAlert(err.message||'Nie udało się anulować zamówienia.');btn.disabled=false;btn.textContent=old}
   });
   window.addEventListener('popstate',()=>{if(location.hash!=='#orders'&&modal.classList.contains('open')){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
-
-  // Orders are authoritative on the backend. The browser never marks an order as paid by itself.
   if(location.hash==='#orders')open();
 })();
 </script>
@@ -2703,7 +1853,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   }
   window.STARXV_REFRESH_AUTH_USER=refreshUser;
   let sxKeepWorldOnAccountClose=false;
-  function open(){document.getElementById('ordersModal')?.classList.remove('open');document.getElementById('cartModal')?.classList.remove('open');refreshUser();modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>modal.classList.add('open'))}
+  function open(){document.getElementById('ordersModal')?.classList.remove('open');refreshUser();modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';requestAnimationFrame(()=>modal.classList.add('open'))}
   function close(){
     modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow='';
     if(!sxKeepWorldOnAccountClose){
@@ -3140,7 +2290,6 @@ const renderCart=()=>{hydrateCartDiscounts();
 })();
 </script>
 <div aria-hidden="true" class="sx-overlay" id="sxSearchOverlay"><div class="sx-panel"><div class="sx-panel-head"><h3>WYSZUKIWARKA</h3><button aria-label="Zamknij wyszukiwarkę" class="sx-close" data-sx-close="sxSearchOverlay" type="button">×</button></div><div class="sx-panel-body"><div class="sx-searchbox"><input autocomplete="off" id="sxSearchInput" placeholder="Szukaj w STARXV..."/></div><div id="sxSearchResults"></div></div></div></div>
-<div aria-hidden="true" class="sx-overlay" id="sxFavOverlay"><div class="sx-panel"><div class="sx-panel-head"><h3>ULUBIONE</h3><button aria-label="Zamknij ulubione" class="sx-close" data-sx-close="sxFavOverlay" type="button">×</button></div><div class="sx-panel-body" id="sxFavBody"></div></div></div>
 <div aria-hidden="true" class="sx-overlay" id="sxLaterOverlay">
   <div class="sx-panel sx-later-panel">
     <div class="sx-panel-head">
@@ -3157,10 +2306,7 @@ const renderCart=()=>{hydrateCartDiscounts();
 <div class="sx-cookie" id="sxCookie"><div class="sx-cookie-copy"><b>Cookies w STARXV</b><span>STARXV wykorzystuje niezbędne pliki cookies oraz lokalną pamięć przeglądarki do obsługi logowania, ustawień, sesji użytkownika i prawidłowego działania strony. Część danych zalogowanego użytkownika może być synchronizowana z kontem STARXV.</span></div><div class="sx-cookie-actions"><button class="sx-cookie-accept" data-cookie="acknowledged">ROZUMIEM</button></div></div>
 <script>
 (()=>{
-  const PRODUCT={id:'black-hoodie-graffiti',name:'Black Hoodie x Graffiti - Fantastic Style',price:129,fit:'RELAXED FIT'};window.STARXV_HOODIE_SEARCH_PRODUCT=PRODUCT;
-  const STOCK=window.STARXV_VARIANT_STOCK||{black:{S:8,M:12,L:6,XL:4},pink:{S:5,M:7,L:3,XL:2},blue:{S:4,M:6,L:5,XL:3}};
-  const currentStock=()=>STOCK[window.STARXV_SELECTED_COLOR||'black']||STOCK.black;
-  const FAV_KEY='starxv-favorites', REVIEW_KEY='starxv-reviews', CONSENT_KEY='starxv-cookie-consent';
+  const CONSENT_KEY='starxv-cookie-consent';
   const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
   const read=(k,d)=>{try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch{return d}};
   const openOverlay=id=>{
@@ -3169,11 +2315,6 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(e){e.classList.add('open');e.setAttribute('aria-hidden','false')}
   };
   const closeOverlay=id=>{const e=document.getElementById(id);if(e){e.classList.remove('open');e.setAttribute('aria-hidden','true')}};
-  const getCard=()=>$('.product-card');
-  const getProductImage=()=>$('.product-card .product-visual img')?.src||$('#galleryTrack img')?.src||'';
-  const isFav=()=>read(FAV_KEY,[]).includes(PRODUCT.id);
-  const setFav=on=>{let a=read(FAV_KEY,[]);a=on?[...new Set([...a,PRODUCT.id])]:a.filter(x=>x!==PRODUCT.id);localStorage.setItem(FAV_KEY,JSON.stringify(a));renderFavState();renderFavPanel();renderAccountDashboard()};
-  const toggleFav=()=>{window.STARXV_OPEN_COMING_LATER?.()};
   function setTheme(theme){
     const t=theme==='light'?'light':'dark';
     localStorage.setItem('starxv-theme',t);
@@ -3190,7 +2331,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   function applyLanguageUI(){
     const l=localStorage.getItem('starxv-language')||'pl';
     const map=l==='en'?{
-      '#profileOrders':'MY ORDERS →','#logoutBtn':'LOG OUT','#deleteAccountBtn':'DELETE ACCOUNT','.account-title':'Your account','.account-subtitle':'Profile and local account'
+      '#profileOrders':'MY ORDERS →','#logoutBtn':'LOG OUT','#deleteAccountBtn':'DELETE ACCOUNT','.account-title':'Your account','.account-subtitle':'Profile and STARXV account'
     }:{
       '#profileOrders':'MOJE ZAMÓWIENIA →','#logoutBtn':'WYLOGUJ SIĘ','#deleteAccountBtn':'USUŃ KONTO','.account-title':'Twoje konto','.account-subtitle':'Profil i konto lokalne'
     };
@@ -3202,7 +2343,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     const nav=$('.nav-actions'); if(!nav||$('#sxLaterNav'))return;
 
     // Future product tools stay hidden from the main navigation for now.
-    ['#sxSearchBtn','#sxFavNav','#openCart'].forEach(sel=>{
+    ['#sxFavNav','#openCart'].forEach(sel=>{
       const el=nav.querySelector(sel);
       if(el){
         el.style.display='none';
@@ -3321,76 +2462,6 @@ const renderCart=()=>{hydrateCartDiscounts();
     render();
   }
 
-  function openProduct(){getCard()?.click()}
-  function enhanceCard(){
-    const card=getCard(),visual=card&&$('.product-visual',card); if(!card||!visual)return;
-    if(!$('#sxCardFav')){const b=document.createElement('button');b.id='sxCardFav';b.className='sx-fav-btn';b.type='button';b.setAttribute('aria-label','Dodaj do ulubionych');b.textContent='♡';b.onclick=e=>{e.stopPropagation();toggleFav()};visual.appendChild(b)}
-    if(!$('#sxQuick')){const q=document.createElement('button');q.id='sxQuick';q.className='sx-quick-btn';q.type='button';q.textContent='QUICK VIEW';q.onclick=e=>{e.stopPropagation();openProduct()};visual.appendChild(q)}
-  }
-  function stockHTML(){return `<div class="sx-stock-label"><span class="sx-stock-dot"></span>Stan magazynowy</div>${Object.entries(currentStock()).map(([s,n])=>`<span class="sx-stock-chip ${n===0?'out':(n<=5?'low':'')}">${s}: ${n} szt.${n===0?' · BRAK':''}</span>`).join('')}`}
-  function refreshStockUI(){
-    setupStockAvailability();
-    const selected=$('#productModal .sizes button.selected');
-    const text=$('#hoodieStockText');
-    if(text){if(selected){const size=selected.textContent.trim(),n=Number(currentStock()[size]??0);text.innerHTML=`Dostępność rozmiaru ${size}: <b>${n} szt.</b>`}else{text.textContent='Wybierz rozmiar, aby zobaczyć dostępność.'}}
-  }
-  window.STARXV_REFRESH_STOCK=refreshStockUI;
-  $$('#productModal .sizes button').forEach(btn=>btn.addEventListener('click',()=>setTimeout(refreshStockUI,0)));
-  function setupStockAvailability(){
-    const buttons=$$('.sizes button');
-    const add=$('.add-btn');
-    buttons.forEach(btn=>{
-      const size=btn.textContent.trim();
-      const amount=Number(currentStock()[size]??0);
-      const out=amount<=0;
-      btn.disabled=out;
-      btn.classList.toggle('sx-size-out',out);
-      btn.setAttribute('aria-disabled',out?'true':'false');
-      if(out){btn.classList.remove('selected');btn.title=`Rozmiar ${size} jest niedostępny`;}
-      else btn.title=`Rozmiar ${size} — ${amount} szt. w magazynie`;
-    });
-    if(add&&!add.dataset.stockGuard){
-      add.dataset.stockGuard='1';
-      add.addEventListener('click',e=>{
-        const selected=$('.sizes button.selected');
-        if(selected&&Number(currentStock()[selected.textContent.trim()]??0)<=0){
-          e.preventDefault();e.stopImmediatePropagation();
-          if(typeof showToast==='function')showToast('Ten rozmiar jest obecnie niedostępny');
-        }
-      },true);
-    }
-  }
-  function renderFavState(){const favs=read(FAV_KEY,[]),on=favs.includes(PRODUCT.id),b=$('#sxCardFav'),m=$('#sxModalFav'),count=$('#sxFavCount');if(b){b.classList.toggle('active',on);b.textContent=on?'♥':'♡'}if(m){m.classList.toggle('active',on);m.innerHTML=`${on?'♥':'♡'} ${on?'W ULUBIONYCH':'DODAJ DO ULUBIONYCH'}`}if(count){count.textContent=String(favs.length);count.style.display=favs.length?'block':'none'}}
-  function renderFavPanel(){const body=$('#sxFavBody');if(!body)return;const favs=read(FAV_KEY,[]);if(!favs.length){body.innerHTML='<div class="sx-fav-empty">Nie masz jeszcze ulubionych produktów.<br><span class="sx-muted">Kliknij ♡ przy produkcie, aby go tutaj zapisać.</span></div>';return}const rows=[];if(favs.includes(PRODUCT.id))rows.push(`<div class="sx-fav-row"><img src="${getProductImage()}"><div class="grow"><b>${PRODUCT.name}</b><div class="sx-muted">${PRODUCT.fit} · ${PRODUCT.price} PLN</div></div><button data-fav-open="hoodie">ZOBACZ</button><button data-fav-remove="${PRODUCT.id}">USUŃ</button></div>`);if(favs.includes('oversized-white-shirt')){const simg=document.getElementById('shirtMainImage')?.src||document.querySelector('#shirtCard img')?.src||'';const sname=document.getElementById('shirtTitle')?.textContent||'White T-Shirt Different Reality.';rows.push(`<div class="sx-fav-row"><img src="${simg}"><div class="grow"><b>${sname}</b><div class="sx-muted">OVERSIZED FIT · 99 PLN</div></div><button data-fav-open="shirt">ZOBACZ</button><button data-fav-remove="oversized-white-shirt">USUŃ</button></div>`)}body.innerHTML=rows.join('');body.querySelector('[data-fav-open="hoodie"]')?.addEventListener('click',()=>{closeOverlay('sxFavOverlay');openProduct()});body.querySelector('[data-fav-open="shirt"]')?.addEventListener('click',()=>{closeOverlay('sxFavOverlay');document.getElementById('shirtCard')?.click()});body.querySelectorAll('[data-fav-remove]').forEach(btn=>btn.addEventListener('click',()=>{let a=read(FAV_KEY,[]).filter(x=>x!==btn.dataset.favRemove);localStorage.setItem(FAV_KEY,JSON.stringify(a));renderFavState();renderFavPanel();window.dispatchEvent(new Event('starxv:favorites-changed'))}))}
-  window.addEventListener('starxv:favorites-changed',()=>{renderFavState();renderFavPanel();renderAccountDashboard()});
-
-  function enhanceModal(){
-    const modal=$('#productModal'); if(!modal)return;
-    const target=$('.product-detail',modal)||modal;
-    const info=$('.product-info,.product-content,.product-copy',modal)||target;
-    if(!$('#sxModalFav')){const b=document.createElement('button');b.id='sxModalFav';b.className='sx-modal-fav';b.type='button';b.onclick=toggleFav;info.appendChild(b)}
-    const gallery=$('.gallery',modal),track=$('#galleryTrack');
-    if(gallery&&track&&!$('.sx-thumbs',gallery)){const imgs=$$('img',track);if(imgs.length){const thumbs=document.createElement('div');thumbs.className='sx-thumbs';imgs.forEach((img,i)=>{const b=document.createElement('button');b.className='sx-thumb'+(i===0?' active':'');b.innerHTML=`<img src="${img.src}" alt="Miniatura ${i+1}">`;b.onclick=e=>{e.stopPropagation();const dots=$$('.gallery-dot,.dot',modal);if(dots[i])dots[i].click();else{track.style.transform=`translateX(-${i*100}%)`} $$('.sx-thumb',thumbs).forEach((x,j)=>x.classList.toggle('active',j===i))};thumbs.appendChild(b)});gallery.appendChild(thumbs);imgs.forEach(img=>img.addEventListener('click',()=>{const lb=$('#sxLightbox');if(lb){$('img',lb).src=img.src;lb.classList.add('open')}}))}}
-    if(!$('#sxReviews')){const r=document.createElement('section');r.id='sxReviews';r.className='sx-reviews';info.appendChild(r);renderReviews()}
-    renderFavState();
-    setupStockAvailability();
-  }
-
-  async function renderReviews(){
-    const box=$('#sxReviews');if(!box)return;
-    box.innerHTML='<div class="sx-review-empty">Ładowanie opinii…</div>';
-    let list=[];
-    try{const r=await fetch('/api/reviews/'+encodeURIComponent(PRODUCT.id),{cache:'no-store',credentials:'same-origin'}),j=await r.json();if(r.ok)list=Array.isArray(j.reviews)?j.reviews:[]}catch{}
-    const avg=list.length?(list.reduce((sum,r)=>sum+Number(r.rating||0),0)/list.length).toFixed(1):'—';
-    const reviewWord=list.length===1?'opinia':(list.length>=2&&list.length<=4?'opinie':'opinii');
-    const formatDate=v=>{if(!v)return'';try{return new Intl.DateTimeFormat('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v))}catch(e){return''}};
-    const starDisplay=(value)=>{const filled=Math.max(0,Math.min(5,Math.round(Number(value)||0)));return `<span class="sx-star-filled">${'★'.repeat(filled)}</span><span class="sx-star-empty">${'★'.repeat(5-filled)}</span>`};
-    const rows=list.map(r=>{const name=esc(r.name||'Klient'),initial=esc((r.name||'K').trim().charAt(0).toUpperCase()||'K'),rating=Math.max(1,Math.min(5,Number(r.rating)||5)),date=formatDate(r.updatedAt||r.createdAt),variant=(r.colorLabel||r.color||r.size)?`<span class="sx-review-variant">Kolor: ${esc(r.colorLabel||r.color||'—')} · Rozmiar: ${esc(r.size||'—')}</span>`:'';return `<div class="sx-review-item"><div class="sx-review-item-head"><div class="sx-review-author"><div class="sx-review-avatar">${initial}</div><div class="sx-review-meta"><b>${name}${r.title?.label?`<span class="sx-user-title ${esc(r.title.key||'custom')}">${esc(r.title.label)}</span>`:''}</b>${variant}${date?`<span class="sx-review-date">${date}</span>`:''}</div></div><span class="sx-review-stars">${starDisplay(rating)}</span></div><p>${esc(r.text||'')}</p></div>`}).join('');
-    box.innerHTML=`<div class="sx-reviews-top"><div><div class="sx-reviews-title">Opinie o HOODIE 01</div><div class="sx-rating-line"><div class="sx-rating-big">${avg}</div><div class="sx-stars">${starDisplay(Number(avg))}</div></div></div><div class="sx-review-count">${list.length?`${list.length} ${reviewWord}`:'Brak opinii'}</div></div><div class="sx-review-list">${rows||'<div class="sx-review-empty">Ten produkt nie ma jeszcze opinii.</div>'}</div>`;
-  }
-  window.addEventListener('starxv:reviews-changed',e=>{if(!e.detail?.productId||e.detail.productId===PRODUCT.id)renderReviews()});
-  function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-
 
   let sxDeployInfo=null;
   async function sxLoadDeployInfo(){
@@ -3452,11 +2523,10 @@ const renderCart=()=>{hydrateCartDiscounts();
   function commonEvents(){
     $$('[data-sx-close]').forEach(b=>b.onclick=()=>closeOverlay(b.dataset.sxClose));$$('.sx-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeOverlay(o.id)}));$('#sxLightbox')?.addEventListener('click',e=>{e.currentTarget.classList.remove('open')});document.addEventListener('keydown',e=>{if(e.key==='Escape'){$$('.sx-overlay.open').forEach(x=>closeOverlay(x.id));$('#sxLightbox')?.classList.remove('open')}});
     $('#openAccount')?.addEventListener('click',()=>setTimeout(renderAccountDashboard,50));
-    const pm=$('#productModal');if(pm)new MutationObserver(()=>{if(pm.classList.contains('open')||pm.getAttribute('aria-hidden')==='false')enhanceModal()}).observe(pm,{attributes:true,attributeFilter:['class','aria-hidden']});
   }
 
   function init(){applySavedTheme();
-  makeNav();setupSearch();enhanceCard();enhanceModal();setupStockAvailability();renderFavPanel();renderFavState();renderAccountDashboard();cookie();commonEvents()}
+  makeNav();setupSearch();renderAccountDashboard();cookie();commonEvents()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 
@@ -3610,47 +2680,6 @@ const renderCart=()=>{hydrateCartDiscounts();
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&browser.classList.contains('open'))shut()});
 })();
 </script>
-<script id="sxTshirtScript">
-(()=>{
- const PRODUCT={id:'oversized-white-shirt',name:'White T-Shirt Different Reality.',fit:'[OVERSIZED FIT]',price:99};window.STARXV_SHIRT_PRODUCT=PRODUCT;
- const IMAGES={white:'',blue:'',purple:''};
- const META={white:{label:'Biały',name:'White T-Shirt Different Reality.'},blue:{label:'Jasny niebieski',name:'Light Blue T-Shirt Different Reality.'},purple:{label:'Fioletowy',name:'Purple T-Shirt Different Reality.'}};
- const STOCK={white:{S:8,M:12,L:8,XL:5},blue:{S:6,M:8,L:6,XL:4},purple:{S:5,M:7,L:5,XL:3}};window.STARXV_SHIRT_STOCK=STOCK;window.STARXV_REFRESH_SHIRT_STOCK=()=>refreshStock();
- const modal=document.getElementById('shirtModal'),card=document.getElementById('shirtCard'),close=document.getElementById('shirtClose'),img=document.getElementById('shirtMainImage'),title=document.getElementById('shirtTitle'),add=document.getElementById('shirtAddBtn'),sizes=[...document.querySelectorAll('#shirtSizes button')],stockText=document.getElementById('shirtStockText');
- if(!modal||!card)return;
- let color='white',size='';
- const toast=msg=>{const t=document.getElementById('cartToast');if(!t)return;t.textContent=msg;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1800)};
- const open=()=>{modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'};
- const shut=()=>{modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''};
- card.addEventListener('click',e=>{if(e.target.closest('.sx-fav-btn'))return;open()});card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}});close.onclick=shut;modal.addEventListener('click',e=>{if(e.target===modal)shut()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))shut()});
- function refreshStock(){const n=size?STOCK[color][size]:null;stockText.innerHTML=size?`Dostępność rozmiaru ${size}: <b>${n} szt.</b> — ${META[color].label}`:`Wybierz rozmiar, aby zobaczyć dostępność.`;sizes.forEach(b=>{const n=STOCK[color][b.textContent.trim()]||0;b.classList.toggle('sx-size-out',n<=0);b.disabled=n<=0})}
- document.querySelectorAll('.sx-shirt-color').forEach(b=>b.onclick=()=>{color=b.dataset.color;img.src=IMAGES[color];title.textContent=META[color].name;document.querySelectorAll('.sx-shirt-color').forEach(x=>x.classList.toggle('active',x===b));refreshStock()});
- sizes.forEach(b=>b.onclick=()=>{sizes.forEach(x=>x.classList.remove('selected'));b.classList.add('selected');size=b.textContent.trim();refreshStock()});
- add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!size){toast('Najpierw wybierz rozmiar');return};const limit=STOCK[color][size]||0;if(limit<=0){toast('Ten wariant jest niedostępny');return};let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{cart=[]}const existing=cart.find(x=>x.id===PRODUCT.id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){toast(`W magazynie jest tylko ${limit} szt. tego wariantu`);return}if(existing){existing.qty++;existing.selected=true;existing.image=IMAGES[color];existing.stockLimit=limit}else cart.push({...PRODUCT,name:META[color].name,color,size,qty:1,selected:true,image:IMAGES[color],stockLimit:limit,colorLabel:META[color].label});localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);document.getElementById('cartCount').textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);toast(`Dodano: ${META[color].label} / ${size}`);add.classList.add('added');add.innerHTML='DODANO DO KOSZYKA <span>✓</span>';setTimeout(()=>{add.classList.remove('added');add.innerHTML='DODAJ DO KOSZYKA <span>→</span>'},1100)};
- const FKEY='starxv-favorites';const fav=document.getElementById('shirtFavBtn'),cardFav=document.getElementById('shirtCardFav');const readFav=()=>{try{const a=JSON.parse(localStorage.getItem(FKEY)||'[]');return Array.isArray(a)?a:[]}catch{return[]}};const paintFav=()=>{const on=readFav().includes(PRODUCT.id);if(fav){fav.classList.toggle('active',on);fav.textContent=on?'♥ W ULUBIONYCH':'♡ DODAJ DO ULUBIONYCH'}if(cardFav){cardFav.classList.toggle('active',on);cardFav.textContent=on?'♥':'♡';cardFav.setAttribute('aria-label',on?'Usuń koszulkę z ulubionych':'Dodaj koszulkę do ulubionych')}};const toggleShirtFav=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;let a=readFav();a=a.includes(PRODUCT.id)?a.filter(x=>x!==PRODUCT.id):[...a,PRODUCT.id];localStorage.setItem(FKEY,JSON.stringify(a));paintFav();window.dispatchEvent(new Event('starxv:favorites-changed'));toast(a.includes(PRODUCT.id)?'Dodano do ulubionych':'Usunięto z ulubionych')};if(fav)fav.onclick=toggleShirtFav;if(cardFav)cardFav.onclick=e=>{e.stopPropagation();toggleShirtFav()};paintFav();
- document.getElementById('shirtSizeGuide').onclick=()=>{const m=document.getElementById('sxShirtSizeGuide');m.classList.add('open');m.setAttribute('aria-hidden','false');};
- const shirtSizeModal=document.getElementById('sxShirtSizeGuide');
- shirtSizeModal?.querySelector('[data-sx-close="shirtsize"]')?.addEventListener('click',()=>{shirtSizeModal.classList.remove('open');shirtSizeModal.setAttribute('aria-hidden','true');});
- shirtSizeModal?.addEventListener('click',e=>{if(e.target===shirtSizeModal){shirtSizeModal.classList.remove('open');shirtSizeModal.setAttribute('aria-hidden','true');}});
- const RKEY='starxv-reviews-shirt';
- const reviewBox=document.getElementById('shirtReviews');
- const esc=x=>String(x).replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
- async function renderShirtReviews(){
-   if(!reviewBox)return;reviewBox.innerHTML='<div class="sx-review-empty">Ładowanie opinii…</div>';
-   const productId='oversized-white-shirt';let a=[];
-   try{const r=await fetch('/api/reviews/'+encodeURIComponent(productId),{cache:'no-store',credentials:'same-origin'}),j=await r.json();if(r.ok)a=Array.isArray(j.reviews)?j.reviews:[]}catch{}
-   const avg=a.length?(a.reduce((sum,r)=>sum+Number(r.rating||0),0)/a.length).toFixed(1):'—';
-   const reviewWord=a.length===1?'opinia':(a.length>=2&&a.length<=4?'opinie':'opinii');
-   const formatDate=v=>{if(!v)return'';try{return new Intl.DateTimeFormat('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date(v))}catch{return''}};
-   const starDisplay=(value)=>{const filled=Math.max(0,Math.min(5,Math.round(Number(value)||0)));return `<span class="sx-star-filled">${'★'.repeat(filled)}</span><span class="sx-star-empty">${'★'.repeat(5-filled)}</span>`};
-   const rows=a.map(r=>{const name=esc(r.name||'Klient'),initial=esc((r.name||'K').trim().charAt(0).toUpperCase()||'K'),rating=Math.max(1,Math.min(5,Number(r.rating)||5)),date=formatDate(r.updatedAt||r.createdAt),variant=(r.colorLabel||r.color||r.size)?`<span class="sx-review-variant">Kolor: ${esc(r.colorLabel||r.color||'—')} · Rozmiar: ${esc(r.size||'—')}</span>`:'';return `<div class="sx-review-item"><div class="sx-review-item-head"><div class="sx-review-author"><div class="sx-review-avatar">${initial}</div><div class="sx-review-meta"><b>${name}${r.title?.label?`<span class="sx-user-title ${esc(r.title.key||'custom')}">${esc(r.title.label)}</span>`:''}</b>${variant}${date?`<span class="sx-review-date">${date}</span>`:''}</div></div><span class="sx-review-stars">${starDisplay(rating)}</span></div><p>${esc(r.text||'')}</p></div>`}).join('');
-   reviewBox.innerHTML=`<div class="sx-reviews-top"><div><div class="sx-reviews-title">Opinie o T-SHIRT 01</div><div class="sx-rating-line"><div class="sx-rating-big">${avg}</div><div class="sx-stars">${starDisplay(Number(avg))}</div></div></div><div class="sx-review-count">${a.length?`${a.length} ${reviewWord}`:'Brak opinii'}</div></div><div class="sx-review-list">${rows||'<div class="sx-review-empty">Ten produkt nie ma jeszcze opinii.</div>'}</div>`;
- }
- window.addEventListener('starxv:reviews-changed',e=>{if(!e.detail?.productId||e.detail.productId==='oversized-white-shirt')renderShirtReviews()});
- renderShirtReviews();
- refreshStock();
-})();
-</script>
 <script id="starxv-backend-preferences-sync">
 (()=>{
   'use strict';
@@ -3735,114 +2764,6 @@ const renderCart=()=>{hydrateCartDiscounts();
 </script>
 
 
-<script id="starxv-dynamic-catalog-v2">
-(()=>{
- const STATIC_IDS=new Set();
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const placeholder=`<div class="sx-dyn-placeholder">STARXV</div>`;
- let catalog={};
- function inferCategory(p){const c=String(p?.category||'');if(['hoodies','tshirts','other'].includes(c))return c;const n=String(p?.name||'').toLowerCase();return /shirt|tee|koszul/.test(n)?'tshirts':/hood|bluz/.test(n)?'hoodies':'other'}
- function ensureSection(){let sec=document.getElementById('sxDynamicCatalog');if(sec)return sec;const shop=document.getElementById('shop');if(!shop)return null;sec=document.createElement('section');sec.id='sxDynamicCatalog';sec.innerHTML=`<div class="sx-dyn-head"><div><div class="section-kicker">02 / Katalog</div><h2>NOWE<br>PRODUKTY.</h2></div><p>Produkty dodane z panelu administratora pojawiają się tutaj automatycznie.</p></div><div class="products" id="sxDynamicProducts"></div>`;shop.insertAdjacentElement('afterend',sec);return sec}
- function productGallery(p,color){const imgs=p?.colors?.[color]?.images||{};const g=Array.isArray(imgs.gallery)?imgs.gallery.filter(Boolean).slice(0,10):[];return g.length?g:[imgs.front,imgs.back].filter(Boolean)}
- function productImage(p,color,side='front'){const imgs=p?.colors?.[color]?.images||{},g=productGallery(p,color);return String(side==='back'?(g[1]||imgs.back||g[0]||p?.image||''):(g[0]||imgs.front||p?.image||'')).trim()}
- function imgHTML(p,name,color='',side='front'){const src=productImage(p,color,side);return src?`<img src="${esc(src)}" alt="${esc(name)}" onerror="this.outerHTML='${placeholder.replace(/'/g,"\\'")}'">`:placeholder}
- function render(){const sec=ensureSection();if(!sec)return;const grid=document.getElementById('sxDynamicProducts');const entries=Object.entries(catalog).filter(([id])=>!STATIC_IDS.has(id));if(!entries.length){sec.style.display='none';return}sec.style.display='block';grid.innerHTML=entries.map(([id,p])=>`<article class="card product-card sx-dyn-card" role="button" tabindex="0" data-product-id="${esc(id)}" data-category="${esc(inferCategory(p))}" aria-label="Otwórz ${esc(p.name)}">${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},ref=Number(o.referencePrice||0),d=Number(p.discountPercent??o.discountPercent??0),active=Boolean(d>0&&cur<b);return active?`<span class="sx-card-promo-flag">PROMOCJA −${d}%</span>`:''})()}<div class="product-visual">${imgHTML(p,p.name,Object.keys(p.colors||{})[0]||'','front')}</div><div class="card-info"><div><div class="card-name">${esc(p.name)}</div><div class="card-meta">[${esc(p.fit||'STARXV')}]</div></div><div class="price ${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},d=Number(p.discountPercent??o.discountPercent??0);return Boolean(d>0&&cur<b)?'sx-has-promo':''})()}">${(()=>{const b=Number(p.price||0),cur=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):b,o=p.omnibus||{},ref=Number(o.referencePrice||0),d=Number(p.discountPercent??o.discountPercent??0),active=Boolean(d>0&&cur<b),lbl=o.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką';return active?`<span class="sx-promo-current"><span class="sx-card-promo-price">${cur.toFixed(cur%1?2:0)} PLN</span></span><span class="sx-card-old-price">było ${b.toFixed(b%1?2:0)} PLN</span><span class="sx-card-save">OSZCZĘDZASZ ${(b-cur).toFixed(2).replace(/\.00$/,'')} PLN</span>${ref>0?`<span class="sx-omnibus-line">${lbl}: ${ref.toFixed(ref%1?2:0)} PLN</span>`:''}`:`${cur.toFixed(cur%1?2:0)} PLN`})()}</div></div></article>`).join('');grid.querySelectorAll('[data-product-id]').forEach(el=>{const open=()=>openProduct(el.dataset.productId);el.onclick=open;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}})}
- function ensureModal(){let m=document.getElementById('sxDynModal');if(m)return m;m=document.createElement('div');m.id='sxDynModal';m.className='sx-dyn-modal';m.setAttribute('aria-hidden','true');m.innerHTML=`<div class="sx-dyn-box"><button class="sx-dyn-close" type="button">×</button><div class="sx-dyn-media" id="sxDynMedia"></div><div class="sx-dyn-copy"><div class="detail-kicker">STARXV / CATALOG</div><h2 id="sxDynName"></h2><div class="fit-tag" id="sxDynFit"></div><div class="sx-dyn-price" id="sxDynPrice"></div><div class="sx-dyn-price-old" id="sxDynPriceOld" hidden></div><div class="sx-dyn-discount" id="sxDynDiscount" hidden></div><div class="sx-dyn-omnibus" id="sxDynOmnibus" hidden></div><div class="sx-dyn-composition" id="sxDynComposition" hidden></div><div class="size-label">KOLOR</div><div class="sx-dyn-colors" id="sxDynColors"></div><div class="size-label">ROZMIAR</div><div class="sx-dyn-sizes" id="sxDynSizes"></div><div class="sx-dyn-stock" id="sxDynStock"></div><div class="sx-dyn-actions"><button class="sx-dyn-add" id="sxDynAdd">DODAJ DO KOSZYKA →</button><button class="sx-dyn-fav" id="sxDynFav">♡</button></div></div></div>`;document.body.appendChild(m);m.querySelector('.sx-dyn-close').onclick=closeModal;m.onclick=e=>{if(e.target===m)closeModal()};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&m.classList.contains('open'))closeModal()});return m}
- function closeModal(){const m=document.getElementById('sxDynModal');if(m){m.classList.remove('open');m.setAttribute('aria-hidden','true');document.body.style.overflow=''}}
- function openProduct(id){const p=catalog[id];if(!p)return;const m=ensureModal();m.dataset.productId=id;let color='',size='';const colors=Object.entries(p.colors||{});const media=document.getElementById('sxDynMedia');document.getElementById('sxDynName').textContent=p.name||id;document.getElementById('sxDynFit').textContent=`[${p.fit||'STARXV'}]`;const basePrice=Number(p.price||0);const promoPrice=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):basePrice;const omni=p.omnibus||{},ref=Number(omni.referencePrice||0),promoActive=Boolean(omni.active&&ref>promoPrice),discount=promoActive?Number(omni.discountPercent||0):0;const priceEl=document.getElementById('sxDynPrice');const oldPriceEl=document.getElementById('sxDynPriceOld');const discountEl=document.getElementById('sxDynDiscount');const omnibusEl=document.getElementById('sxDynOmnibus');if(priceEl)priceEl.textContent=`${promoPrice.toFixed(promoPrice%1?2:0)} PLN`;if(oldPriceEl){oldPriceEl.hidden=!promoActive;oldPriceEl.textContent=promoActive?`${ref.toFixed(ref%1?2:0)} PLN`:''}if(discountEl){discountEl.hidden=!promoActive;discountEl.textContent=promoActive?`PROMOCJA −${discount}%`:''}if(omnibusEl){omnibusEl.hidden=!promoActive;omnibusEl.textContent=promoActive?`${omni.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką'}: ${ref.toFixed(ref%1?2:0)} PLN`:''}const comp=document.getElementById('sxDynComposition');if(comp){const txt=String(p.composition||'').trim();comp.hidden=!txt;comp.innerHTML=txt?`<span>SKŁAD</span><b>${esc(txt)}</b>`:''}const cbox=document.getElementById('sxDynColors'),sbox=document.getElementById('sxDynSizes'),stock=document.getElementById('sxDynStock'),add=document.getElementById('sxDynAdd'),fav=document.getElementById('sxDynFav');
-   function favs(){try{const a=JSON.parse(localStorage.getItem('starxv-favorites')||'[]');return Array.isArray(a)?a:[]}catch{return[]}}
-   function paintFav(){fav.textContent=favs().includes(id)?'♥':'♡'}
-   fav.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;let a=favs();a=a.includes(id)?a.filter(x=>x!==id):[...a,id];localStorage.setItem('starxv-favorites',JSON.stringify(a));paintFav();window.dispatchEvent(new Event('starxv:favorites-changed'))};paintFav();
-   function paintSizes(){const sizes=Object.entries(p.colors?.[color]?.sizes||{});sbox.innerHTML=sizes.map(([sz,n])=>`<button class="sx-dyn-chip ${size===sz?'active':''}" data-size="${esc(sz)}" ${Number(n)<=0?'disabled':''}>${esc(sz)}</button>`).join('')||'<span class="sx-dyn-stock">Brak rozmiarów</span>';sbox.querySelectorAll('[data-size]').forEach(b=>b.onclick=()=>{size=b.dataset.size;paintSizes();paintStock()});paintStock()}
-   function paintStock(){if(!color){stock.textContent='Wybierz kolor.';return}if(!size){stock.textContent='Wybierz rozmiar.';return}const n=Number(p.colors?.[color]?.sizes?.[size]||0);stock.textContent=n>0?`Dostępne: ${n} szt.`:'Niedostępne'}
-   function paintMedia(){const imgs=productGallery(p,color);if(!imgs.length){const fallback=productImage(p,color,'front');if(!fallback){media.innerHTML=placeholder;return}imgs.push(fallback)}media.innerHTML=`<div class="sx-dyn-gallery">${imgs.map((src,n)=>`<img src="${esc(src)}" alt="${esc(p.name)} — zdjęcie ${n+1}">`).join('')}</div>`}
-   function paintColors(){cbox.innerHTML=colors.map(([key,c])=>`<button class="sx-dyn-chip ${color===key?'active':''}" data-color="${esc(key)}">${esc(c.label||key)}</button>`).join('')||'<span class="sx-dyn-stock">Brak kolorów</span>';cbox.querySelectorAll('[data-color]').forEach(b=>b.onclick=()=>{color=b.dataset.color;size='';paintMedia();paintColors();paintSizes()})}
-   add.onclick=()=>{if(!window.STARXV_REQUIRE_AUTH?.())return;if(!color||!size){stock.textContent='Najpierw wybierz kolor i rozmiar.';return}const limit=Number(p.colors?.[color]?.sizes?.[size]||0);if(limit<=0){stock.textContent='Ten wariant jest niedostępny.';return}let cart=[];try{cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');if(!Array.isArray(cart))cart=[]}catch{}const existing=cart.find(x=>x.id===id&&x.color===color&&x.size===size);if((existing?.qty||0)>=limit){stock.textContent=`W magazynie jest tylko ${limit} szt.`;return}const image=productImage(p,color,'front');const colorLabel=p.colors?.[color]?.label||color;if(existing){const base=Number(p.price||0),effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base,omni=p.omnibus||{},disc=Number(p.discountPercent??omni.discountPercent??0),ref=Number(omni.referencePrice||0);existing.qty++;existing.selected=true;existing.stockLimit=limit;existing.price=Math.round(effective*100)/100;existing.basePrice=base;existing.discountPercent=disc;existing.omnibusReferencePrice=ref}else{const base=Number(p.price||0),effective=Number.isFinite(Number(p.effectivePrice))?Number(p.effectivePrice):base,omni=p.omnibus||{},disc=Number(p.discountPercent??omni.discountPercent??0),ref=Number(omni.referencePrice||0);cart.push({id,name:p.name,fit:p.fit||'',price:Math.round(effective*100)/100,basePrice:base,discountPercent:disc,omnibusReferencePrice:ref,color,size,qty:1,selected:true,image,stockLimit:limit,colorLabel})}localStorage.setItem('starxv-cart',JSON.stringify(cart));window.STARXV_CART_PERSIST?.(cart);const cc=document.getElementById('cartCount');if(cc)cc.textContent=cart.reduce((a,x)=>a+Number(x.qty||0),0);add.textContent='DODANO ✓';setTimeout(()=>add.textContent='DODAJ DO KOSZYKA →',900)};
-   color=colors[0]?.[0]||'';paintMedia();paintColors();paintSizes();m.classList.add('open');m.setAttribute('aria-hidden','false');document.body.style.overflow='hidden'}
- async function sync(){try{const r=await fetch('/api/store/catalog',{cache:'no-store'});if(!r.ok)return;const j=await r.json();catalog=j.catalog||{};render()}catch(e){console.warn('STARXV dynamic catalog',e)}}
- window.STARXV_RENDER_DYNAMIC_CATALOG=sync;document.addEventListener('DOMContentLoaded',sync);setInterval(sync,15000);
-})();
-</script>
-<script id="starxv-backend-orders-stock-v1">
-(()=>{
-  const copySizes=(target,source)=>{if(!target||!source)return;for(const [size,n] of Object.entries(source))target[size]=Number(n||0)};
-  async function syncCatalog(){
-    try{
-      const r=await fetch('/api/store/catalog',{credentials:'same-origin'});if(!r.ok)return;const j=await r.json(),c=j.catalog||{};window.STARXV_CATALOG=c;try{localStorage.setItem('starxv-catalog-cache',JSON.stringify(c))}catch{}
-      const effectivePrice=p=>{const base=Number(p?.price||0),price=Number.isFinite(Number(p?.effectivePrice))?Number(p.effectivePrice):base,o=p?.omnibus||{},ref=Number(o.referencePrice||0),rawDisc=Number(p?.discountPercent??o.discountPercent??0),active=Boolean(rawDisc>0&&price<base),disc=active?rawDisc:0;return {base,disc,price,ref,active,referenceType:o.referenceType||'30-days'}};
-      const priceHTML=p=>{const x=effectivePrice(p);const lbl=x.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką';return x.active?`<span class="sx-static-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span><span class="sx-static-discount">PROMOCJA −${x.disc}%</span><span class="sx-static-old-price">było ${Number(x.base).toFixed(x.base%1?2:0)} PLN</span>${x.ref>0?`<span class="sx-omnibus-line">${lbl}: ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span>`:''}`:`${Number(x.price).toFixed(x.price%1?2:0)} PLN`};
-      const applyStatic=(id,p,cardSel,modalSel,productObj,searchObj)=>{
-        if(!p)return;
-        const x=effectivePrice(p);
-        if(productObj){productObj.price=x.price;productObj.basePrice=x.base;productObj.discountPercent=x.disc;productObj.omnibusReferencePrice=x.ref||0}
-        if(searchObj){searchObj.price=x.price;searchObj.basePrice=x.base;searchObj.discountPercent=x.disc;searchObj.omnibusReferencePrice=x.ref||0}
-        const cardPrice=document.querySelector(cardSel);
-        if(cardPrice){
-          cardPrice.innerHTML=x.active
-            ? `<span class="sx-promo-current"><span class="sx-card-promo-price">${Number(x.price).toFixed(x.price%1?2:0)} PLN</span></span><span class="sx-card-old-price">było ${Number(x.base).toFixed(x.base%1?2:0)} PLN</span><span class="sx-card-save">OSZCZĘDZASZ ${(Number(x.base)-Number(x.price)).toFixed(2).replace(/\.00$/,'')} PLN</span>${x.ref>0?`<span class="sx-omnibus-line">${x.referenceType==='since-offer'?'Najniższa cena od wprowadzenia produktu':'Najniższa cena z 30 dni przed obniżką'}: ${Number(x.ref).toFixed(x.ref%1?2:0)} PLN</span>`:''}`
-            : `${Number(x.price).toFixed(x.price%1?2:0)} PLN`;
-          cardPrice.classList.toggle('sx-has-promo',x.active);
-          const card=cardPrice.closest('.product-card');
-          if(card){
-            let flag=card.querySelector('.sx-card-promo-flag');
-            if(x.active){
-              if(!flag){flag=document.createElement('span');flag.className='sx-card-promo-flag';card.appendChild(flag)}
-              flag.textContent=`PROMOCJA −${x.disc}%`;
-            }else if(flag){flag.remove()}
-          }
-        }
-        const modalPrice=document.querySelector(modalSel);
-        if(modalPrice){modalPrice.innerHTML=priceHTML(p);modalPrice.classList.toggle('sx-has-promo',x.disc>0)}
-      };
-
-      const h=c['black-hoodie-graffiti'];
-      if(h){
-        if(window.STARXV_VARIANT_STOCK){for(const color of ['black','pink','blue'])copySizes(window.STARXV_VARIANT_STOCK[color],h.colors?.[color]?.sizes);window.STARXV_REFRESH_STOCK?.()}
-        if(window.STARXV_COLOR_IMAGES){for(const color of ['black','pink','blue']){const ci=h.colors?.[color]?.images;if(ci){const g=Array.isArray(ci.gallery)&&ci.gallery.length?ci.gallery.filter(Boolean).slice(0,10):[ci.front,ci.back].filter(Boolean);window.STARXV_COLOR_IMAGES[color]={front:g[0]||'',back:g[1]||'',gallery:g}}}window.STARXV_APPLY_COLOR?.(window.STARXV_SELECTED_COLOR||'black')}
-        applyStatic('black-hoodie-graffiti',h,'#shop .product-card .price','#productModal .detail-price',window.STARXV_HOODIE_PRODUCT,window.STARXV_HOODIE_SEARCH_PRODUCT);
-      }
-
-      const t=c['oversized-white-shirt'];
-      if(t){
-        if(window.STARXV_SHIRT_STOCK){for(const color of ['white','blue','purple'])copySizes(window.STARXV_SHIRT_STOCK[color],t.colors?.[color]?.sizes);window.STARXV_REFRESH_SHIRT_STOCK?.()};window.dispatchEvent(new Event('starxv:cart-updated'))
-        applyStatic('oversized-white-shirt',t,'#shirtCard .price','#shirtModal .detail-price',window.STARXV_SHIRT_PRODUCT,null);
-      }
-
-      // Reprice items already in the cart so totals/checkout also use the current product promotion.
-      try{
-        const cart=JSON.parse(localStorage.getItem('starxv-cart')||'[]');
-        if(Array.isArray(cart)){
-          let changed=false;
-          for(const item of cart){
-            const p=c[item.id];
-            if(!p)continue;
-            const x=effectivePrice(p);
-            if(Number(item.price)!==Number(x.price)||Number(item.discountPercent||0)!==Number(x.disc)||Number(item.basePrice||0)!==Number(x.base)||Number(item.omnibusReferencePrice||0)!==Number(x.ref||0)){
-              item.price=x.price;
-              item.basePrice=x.base;
-              item.discountPercent=x.disc;
-              item.omnibusReferencePrice=x.ref||0;
-              changed=true;
-            }
-          }
-          if(changed){
-            localStorage.setItem('starxv-cart',JSON.stringify(cart));
-            window.STARXV_CART_PERSIST?.(cart);
-            window.dispatchEvent(new Event('starxv:cart-updated'));
-          }
-        }
-      }catch{}
-    }catch(e){console.warn('STARXV inventory sync:',e)}
-  }
-  async function syncOrders(){
-    try{const r=await fetch('/api/orders',{credentials:'same-origin'});if(r.status===401)return false;if(!r.ok)return false;const j=await r.json();localStorage.setItem('starxv-orders',JSON.stringify(Array.isArray(j.orders)?j.orders:[]));return true}catch{return false}
-  }
-  window.STARXV_SYNC_CATALOG=syncCatalog;window.STARXV_SYNC_ORDERS=syncOrders;
-  syncCatalog();syncOrders();setInterval(syncCatalog,15000);
-  const btn=document.getElementById('openOrders');if(btn){const old=btn.onclick;btn.onclick=async e=>{await syncOrders();return old?.call(btn,e)}}
-  window.addEventListener('starxv:auth-changed',()=>{syncCatalog();syncOrders()});
-})();
-</script>
 <script id="starxv-password-reset-v2">
 (()=>{
   const $=id=>document.getElementById(id),modal=$('sxResetModal');
@@ -4164,7 +3085,7 @@ const renderCart=()=>{hydrateCartDiscounts();
   let supportOrders=[];
   const statusLabel=s=>s==='resolved'?'ROZWIĄZANE':s==='progress'?'W TRAKCIE':'NOWE';
   const paymentLabel=s=>({paid:'OPŁACONE',pending:'OCZEKUJE NA PŁATNOŚĆ',failed:'PŁATNOŚĆ NIEUDANA',cancelled:'ANULOWANE'}[String(s||'').toLowerCase()]||String(s||'').toUpperCase()||'—');
-  const orderTypeLabel=o=>(o?.orderType||'physical')==='digital'?'CYFROWE':'FIZYCZNE';
+  const orderTypeLabel=o=>'CYFROWE';
   const orderTitle=o=>{const names=(o?.items||[]).map(x=>x?.name).filter(Boolean);return names.length?names.slice(0,2).join(' + '):'Zamówienie'};
   const needsOrder=()=>['Zamówienie','Płatność','Dostawa'].includes(typeSelect?.value||'');
   function syncOrderVisibility(){if(!orderWrap)return;const show=needsOrder();orderWrap.hidden=!show;if(!show){if(orderSelect)orderSelect.value='';if(orderSummary){orderSummary.hidden=true;orderSummary.innerHTML=''}}}
@@ -4174,12 +3095,10 @@ const renderCart=()=>{hydrateCartDiscounts();
     try{
       const r=await fetch('/api/orders',{cache:'no-store'}),d=await r.json();if(!r.ok)throw 0;
       supportOrders=Array.isArray(d.orders)?d.orders:[];
-      const digital=supportOrders.filter(o=>(o.orderType||'physical')==='digital');
-      const physical=supportOrders.filter(o=>(o.orderType||'physical')!=='digital');
+      const digital=supportOrders.filter(o=>o.orderType==='digital');
       const opt=o=>`<option value="${esc(o.id)}">#${esc(o.orderNo||o.id)} · ${esc(orderTitle(o))} · ${esc(paymentLabel(o.paymentStatus))}</option>`;
       let html='<option value="">— wybierz zamówienie —</option>';
       if(digital.length)html+=`<optgroup label="PRODUKTY CYFROWE">${digital.map(opt).join('')}</optgroup>`;
-      if(physical.length)html+=`<optgroup label="PRODUKTY FIZYCZNE">${physical.map(opt).join('')}</optgroup>`;
       if(!supportOrders.length)html='<option value="">Brak zamówień na tym koncie</option>';
       orderSelect.innerHTML=html;orderSelect.disabled=!supportOrders.length;renderOrderSummary();
     }catch{orderSelect.innerHTML='<option value="">Nie udało się pobrać zamówień</option>';orderSelect.disabled=true}
@@ -4508,45 +3427,6 @@ document.addEventListener('DOMContentLoaded',()=>{
 </div>
 </div>
 </div>
-<script id="starxv-suggested-delivery-script-v1">
-(()=>{
-  const DEFAULT_PRICES={address:19.99};
-  let prices={...DEFAULT_PRICES};
-  window.STARXV_SUGGESTED_DELIVERY_PRICES=prices;
-  const money=v=>`${Number(v||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2})} PLN`;
-  const getLastMethod=()=> 'address';
-  const update=()=>{
-    const method=getLastMethod();
-    window.STARXV_SUGGESTED_DELIVERY_PRICES={...prices};
-    document.querySelectorAll('.sx-suggested-delivery-price').forEach(el=>el.textContent=money(prices[method]));
-    window.dispatchEvent(new Event('starxv:suggested-delivery-updated'));
-  };
-  const loadPrices=async()=>{
-    try{
-      const r=await fetch('/api/shipping/config',{credentials:'include'});
-      const d=await r.json();
-      if(r.ok){
-        const courier=Number(d.courierPrice);
-        if(Number.isFinite(courier)&&courier>=0)prices.address=courier;
-      }
-    }catch{}
-    update();
-  };
-  const modal=document.getElementById('sxSuggestedDeliveryModal');
-  const open=()=>{if(!modal)return;modal.classList.add('open');modal.setAttribute('aria-hidden','false')};
-  const close=()=>{if(!modal)return;modal.classList.remove('open');modal.setAttribute('aria-hidden','true')};
-  document.querySelectorAll('.sx-suggested-info').forEach(btn=>btn.addEventListener('click',open));
-  document.getElementById('sxSuggestedDeliveryClose')?.addEventListener('click',close);
-  modal?.addEventListener('click',e=>{if(e.target===modal)close()});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal?.classList.contains('open'))close()});
-  document.getElementById('confirmDelivery')?.addEventListener('click',()=>setTimeout(update,0));
-  window.addEventListener('storage',e=>{if(e.key==='starxv-delivery-choice')update()});
-  update();
-  loadPrices();
-})();
-</script>
-
-
 <script id="starxv-view-persistence-v2">
 (()=>{
   'use strict';
@@ -4558,19 +3438,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   const visibleModal=(selector)=>[...document.querySelectorAll(selector)].find(isOpen)||null;
 
   function getState(){
-    const checkout=document.getElementById('checkoutOverlay');
-    if(isOpen(checkout)){
-      return {
-        type:'checkout',
-        stage:Number(document.querySelector('.checkout-stage.active')?.dataset.stage||1),
-        delivery:document.querySelector('.delivery-choice.selected')?.dataset.delivery||'address',
-        payment:document.querySelector('.pay-card.selected')?.dataset.method||'auto'
-      };
-    }
-
-    const cart=document.getElementById('cartModal');
-    if(isOpen(cart))return {type:'cart'};
-
     const orders=visibleModal('#ordersModal');
     if(orders){
       return {type:'orders',filter:orders.querySelector('.orders-filter.active')?.dataset.orderFilter||'all'};
@@ -4580,25 +3447,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(account){
       return {type:'account',auth:account.querySelector('.auth-view.active')?.dataset.authView||'login'};
     }
-
-    const category=document.getElementById('sxCategoryBrowser');
-    if(isOpen(category)){
-      let key=category.dataset.category||'';
-      if(!key){
-        const txt=(document.getElementById('sxCategoryTitle')?.textContent||'').toUpperCase();
-        key=txt.includes('KOSZUL')?'tshirts':'hoodies';
-      }
-      return {type:'category',category:key};
-    }
-
-    const hoodie=document.getElementById('productModal');
-    if(isOpen(hoodie))return {type:'product',product:'hoodie'};
-
-    const shirt=document.getElementById('shirtModal');
-    if(isOpen(shirt))return {type:'product',product:'shirt'};
-
-    const dyn=document.getElementById('sxDynModal');
-    if(isOpen(dyn))return {type:'dynamic-product',productId:dyn.dataset.productId||''};
 
     const search=document.getElementById('sxSearchOverlay');
     if(isOpen(search))return {type:'search',query:document.getElementById('sxSearchInput')?.value||''};
@@ -4651,9 +3499,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     if(!state?.type){restoring=false;return}
 
     switch(state.type){
-      case 'cart':
-        retry(()=>click('#openCart'));
-        break;
 
       case 'account':
         retry(()=>{
@@ -4687,17 +3532,8 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
         break;
 
-      case 'category':
-        retry(()=>click(`.sx-category-open[data-category="${CSS.escape(state.category||'hoodies')}"]`));
-        break;
 
-      case 'product':
-        retry(()=>state.product==='shirt'?click('#shirtCard'):click('#shop .product-card'));
-        break;
 
-      case 'dynamic-product':
-        retry(()=>state.productId?click(`[data-product-id="${CSS.escape(state.productId)}"]`):false);
-        break;
 
       case 'search':
         retry(()=>{
@@ -4714,25 +3550,7 @@ document.addEventListener('DOMContentLoaded',()=>{
         });
         break;
 
-      case 'favorites':
-        retry(()=>click('#sxFavNav'));
-        break;
 
-      case 'checkout':
-        retry(()=>{
-          if(typeof window.STARXV_OPEN_CHECKOUT!=='function')return false;
-          window.STARXV_OPEN_CHECKOUT();
-          setTimeout(()=>{
-            if(state.delivery)document.querySelector(`.delivery-choice[data-delivery="${CSS.escape(state.delivery)}"]`)?.click();
-            if(state.payment)document.querySelector(`.pay-card[data-method="${CSS.escape(state.payment)}"]`)?.click();
-            if(typeof window.STARXV_CHECKOUT_SET_STAGE==='function'){
-              window.STARXV_CHECKOUT_SET_STAGE(Math.max(1,Math.min(4,Number(state.stage)||1)));
-            }
-            done();
-          },250);
-          return true;
-        });
-        break;
 
       case 'info':
         retry(()=>{
@@ -4827,74 +3645,6 @@ window.STARXV_CART_PRICE_HTML=function(item){
     ${ref>0?`<span class="sx-cart-omnibus">${label}: ${fmt(ref)} PLN</span>`:''}
   </div>`;
 };
-</script>
-
-
-<script id="starxv-cart-promo-enhancer">
-(function(){
-  function fmt(n){n=Number(n||0);return n.toFixed(n%1?2:0)}
-  function enhance(){
-    try{
-      const items=(typeof cart!=='undefined'&&Array.isArray(cart))?cart:
-                  (typeof window.cart!=='undefined'&&Array.isArray(window.cart))?window.cart:[];
-      const rows=[...document.querySelectorAll('.cart-item')];
-      rows.forEach((row,i)=>{
-        const item=items[i];
-        if(!item) return;
-        const base=Number(item.basePrice ?? item.originalPrice ?? item.catalogPrice ?? item.price ?? 0);
-        const current=Number(item.effectivePrice ?? item.unitPrice ?? item.price ?? base);
-        const discount=Number(item.discountPercent ?? item.discount ?? 0);
-        if(!(discount>0&&current<base)) return;
-        const priceEl=row.querySelector('.cart-item-price,.cart-price,.price');
-        if(!priceEl) return;
-        const omnibus=item.omnibus||{};
-        const ref=Number(omnibus.referencePrice ?? item.omnibusReferencePrice ?? 0);
-        const lbl=(omnibus.referenceType||item.omnibusReferenceType)==='since-offer'
-          ? 'Najniższa cena od wprowadzenia produktu'
-          : 'Najniższa cena z 30 dni przed obniżką';
-        priceEl.innerHTML=`<div class="sx-cart-price-wrap">
-          <span class="sx-cart-promo-badge">PROMOCJA −${discount}%</span>
-          <span class="sx-cart-current-price">${fmt(current)} PLN</span>
-          <span class="sx-cart-old-price">było ${fmt(base)} PLN</span>
-          <span class="sx-cart-save">OSZCZĘDZASZ ${fmt(base-current)} PLN</span>
-          ${ref>0?`<span class="sx-cart-omnibus">${lbl}: ${fmt(ref)} PLN</span>`:''}
-        </div>`;
-      });
-    }catch(e){}
-  }
-  document.addEventListener('starxv:cart-updated',()=>setTimeout(enhance,0));
-  document.addEventListener('click',()=>setTimeout(enhance,0));
-  new MutationObserver(()=>enhance()).observe(document.body,{childList:true,subtree:true});
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',enhance);
-  else enhance();
-})();
-</script>
-
-<script id="starxv-gpsr-product-info">
-(function(){
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function html(p,id){
-  const a=String(p?.gpsrManufacturer||'').trim(),b=String(p?.gpsrManufacturerAddress||'').trim(),e=String(p?.gpsrManufacturerEmail||'').trim(),pid=String(p?.gpsrProductId||id||'').trim(),s=String(p?.gpsrSafety||'').trim();
-  return `<div class="sx-gpsr-box"><button class="sx-gpsr-toggle" type="button" aria-expanded="false"><span>PRODUCENT I BEZPIECZEŃSTWO PRODUKTU</span><span class="sx-gpsr-plus">+</span></button><div class="sx-gpsr-content">
-  <div class="sx-gpsr-row"><span>PRODUCENT</span><b class="${a?'':'sx-gpsr-incomplete'}">${a?esc(a):'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</b></div>
-  <div class="sx-gpsr-row"><span>ADRES POCZTOWY PRODUCENTA</span><b class="${b?'':'sx-gpsr-incomplete'}">${b?esc(b):'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</b></div>
-  <div class="sx-gpsr-row"><span>KONTAKT ELEKTRONICZNY</span><b class="${e?'':'sx-gpsr-incomplete'}">${e?`<a href="mailto:${esc(e)}">${esc(e)}</a>`:'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</b></div>
-  <div class="sx-gpsr-row"><span>IDENTYFIKATOR PRODUKTU</span><b>${esc(pid||id||'—')}</b></div>
-  <div class="sx-gpsr-row"><span>INFORMACJE / OSTRZEŻENIA BEZPIECZEŃSTWA</span><p class="${s?'':'sx-gpsr-incomplete'}">${s?esc(s):'Do uzupełnienia przed rozpoczęciem sprzedaży.'}</p></div>
-  </div></div>`;
- }
- function place(modal,p,id){
-  if(!modal||!p)return;const copy=modal.querySelector('.product-copy,.sx-dyn-copy,.product-info,.product-content')||modal;
-  let old=copy.querySelector('.sx-gpsr-box'),wrap=document.createElement('div');wrap.innerHTML=html(p,id);let box=wrap.firstElementChild;
-  if(old){if(old.classList.contains('open'))box.classList.add('open');old.replaceWith(box)}else{const actions=copy.querySelector('.sx-dyn-actions,.add-btn,.product-actions');actions?copy.insertBefore(box,actions):copy.appendChild(box)}
-  const btn=box.querySelector('.sx-gpsr-toggle');btn.onclick=()=>{const on=box.classList.toggle('open');btn.setAttribute('aria-expanded',on?'true':'false')};
- }
- function refresh(){const c=window.STARXV_CATALOG||{};place(document.getElementById('productModal'),c['black-hoodie-graffiti'],'black-hoodie-graffiti');place(document.getElementById('shirtModal'),c['oversized-white-shirt'],'oversized-white-shirt');const d=document.getElementById('sxDynModal'),id=d?.dataset?.productId;if(d&&id&&c[id])place(d,c[id],id)}
- window.STARXV_REFRESH_GPSR=refresh;
- document.addEventListener('DOMContentLoaded',()=>setTimeout(refresh,500));
- document.addEventListener('click',e=>{if(e.target.closest?.('.product-card,[data-product-id]'))setTimeout(refresh,120)});
- setInterval(refresh,2000);
-})();
 </script>
 
 

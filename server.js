@@ -7,7 +7,6 @@ const express=require('express');const fs=require('fs');const path=require('path
 const app=express(),PORT=Number(process.env.PORT||3000);
 const LEGAL_VERSION='2026-10-01';
 const DIGITAL_CONSENT_TEXT='Żądam rozpoczęcia dostarczania zakupionej treści cyfrowej przed upływem 14-dniowego terminu do odstąpienia od umowy i przyjmuję do wiadomości, że po rozpoczęciu dostarczania treści cyfrowej utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.';
-const PHYSICAL_SALES_ENABLED=/^(1|true|yes)$/i.test(String(process.env.PHYSICAL_SALES_ENABLED||''));
 const DATA_DIR=path.join(__dirname,'data');
 const LEGACY_DATA=path.join(DATA_DIR,'store.json');
 const SQLITE_FILE=path.join(DATA_DIR,'starxv.sqlite');
@@ -354,7 +353,6 @@ app.use('/api/auth/reset-password',rateLimit('reset',10,15*60*1000));
 app.use('/api/account/change-password',rateLimit('change-password',10,15*60*1000));
 app.use('/api/account/change-email',rateLimit('change-email',10,15*60*1000));
 app.use('/api/account/profile',rateLimit('profile-edit',30,15*60*1000));
-app.use('/api/orders/prepare',rateLimit('prepare-order',40,10*60*1000));
 app.use('/api/create-checkout-session',rateLimit('checkout',25,10*60*1000));
 function cleanEmail(v){return String(v||'').trim().toLowerCase()}
 function validBirthDate(v){
@@ -607,7 +605,7 @@ app.post('/api/auth/verify',(req,res)=>{
   const u={
     id:crypto.randomUUID(),firstName:'',lastName:'',birthDate:'',
     profileSetupRequired:true,email,passwordHash:p.passwordHash,createdAt:now,avatarData:'',
-    favorites:[],addresses:[],defaultAddressId:'',cart:[],authProviders:['email']
+    authProviders:['email']
   };
   db.users.push(u);
   db.pending=db.pending.filter(x=>x.email!==email);
@@ -871,64 +869,12 @@ app.delete('/api/account',auth,rateLimit('delete-account',8,15*60*1000),async(re
   }
 });
 
-// Account preferences stored on the backend (favorites + saved addresses).
+// Account preferences stored on the backend.
 function accountPreferences(u){
-  return {
-    favorites:Array.isArray(u.favorites)?u.favorites:[],
-    addresses:Array.isArray(u.addresses)?u.addresses:[],
-    defaultAddressId:String(u.defaultAddressId||''),
-    cart:Array.isArray(u.cart)?u.cart:[],
-    marketingEmails:u.marketingEmails===true
-  };
-}
-function cleanFavorites(value){
-  if(!Array.isArray(value)) return [];
-  return [...new Set(value.map(x=>String(x||'').trim()).filter(Boolean))].slice(0,200);
-}
-function cleanCart(value){
-  if(!Array.isArray(value)) return [];
-  return value.slice(0,50).map(x=>({
-    id:String(x?.id||'').trim().slice(0,120),
-    name:String(x?.name||'').trim().slice(0,180),
-    fit:String(x?.fit||'').trim().slice(0,80),
-    price:Math.max(0,Math.min(100000,Number(x?.price)||0)),
-    color:String(x?.color||'').trim().slice(0,80),
-    colorLabel:String(x?.colorLabel||'').trim().slice(0,100),
-    size:String(x?.size||'').trim().toUpperCase().slice(0,20),
-    qty:Math.max(1,Math.min(20,Number(x?.qty||1)|0)),
-    selected:x?.selected!==false,
-    stockLimit:Math.max(0,Math.min(100000,Number(x?.stockLimit)||0)),
-    image:String(x?.image||'').trim().slice(0,2048)
-  })).filter(x=>x.id&&x.color&&x.size);
-}
-function cleanAddresses(value){
-  if(!Array.isArray(value)) return [];
-  return value.slice(0,20).map(a=>({
-    id:String(a?.id||crypto.randomUUID()).slice(0,120),
-    firstName:String(a?.firstName||'').trim().slice(0,80),
-    lastName:String(a?.lastName||'').trim().slice(0,80),
-    email:cleanEmail(a?.email).slice(0,160),
-    phone:String(a?.phone||'').trim().slice(0,40),
-    street:String(a?.street||'').trim().slice(0,160),
-    postal:String(a?.postal||'').trim().slice(0,20),
-    city:String(a?.city||'').trim().slice(0,100)
-  }));
+  return {marketingEmails:u.marketingEmails===true};
 }
 app.get('/api/account/preferences',auth,(req,res)=>{
   res.json({ok:true,preferences:accountPreferences(req.user)});
-});
-
-// Dedicated cart endpoints: cart persistence should not depend on the broader
-// preferences synchronization used by favorites and addresses.
-app.get('/api/account/cart',auth,(req,res)=>{
-  res.json({ok:true,cart:Array.isArray(req.user.cart)?req.user.cart:[]});
-});
-app.put('/api/account/cart',auth,(req,res)=>{
-  const i=req.db.users.findIndex(x=>x.id===req.user.id);
-  if(i<0)return res.status(401).json({error:'Sesja wygasła.'});
-  req.db.users[i].cart=cleanCart(req.body?.cart);
-  save(req.db);
-  res.json({ok:true,cart:req.db.users[i].cart});
 });
 
 
@@ -1082,7 +1028,7 @@ app.post('/api/support/report',auth,async(req,res)=>{
         to:'kontakt@starxv.pl',
         replyTo:req.user.email,
         subject:`STARXV — zgłoszenie problemu: ${type}${report.orderNo?' · #'+report.orderNo:''}`,
-        text:`Nowe zgłoszenie STARXV\n\nTyp: ${type}\nKonto: ${req.user.email}${report.orderNo?`\nZamówienie: #${report.orderNo} · ${report.orderType==='digital'?'CYFROWE':'FIZYCZNE'}${report.orderLabel?' · '+report.orderLabel:''}`:''}\nStrona: ${page}\nData: ${report.createdAt}\n\nOpis:\n${description}`
+        text:`Nowe zgłoszenie STARXV\n\nTyp: ${type}\nKonto: ${req.user.email}${report.orderNo?`\nZamówienie: #${report.orderNo} · CYFROWE${report.orderLabel?' · '+report.orderLabel:''}`:''}\nStrona: ${page}\nData: ${report.createdAt}\n\nOpis:\n${description}`
       });
     }catch(err){console.error('Support report email error:',err?.message||err)}
   }
@@ -1094,30 +1040,21 @@ app.put('/api/account/preferences',auth,(req,res)=>{
   if(i<0)return res.status(401).json({error:'Sesja wygasła.'});
   const current=req.db.users[i];
   const body=req.body||{};
-  if(Object.prototype.hasOwnProperty.call(body,'favorites')) current.favorites=cleanFavorites(body.favorites);
-  if(Object.prototype.hasOwnProperty.call(body,'addresses')) current.addresses=cleanAddresses(body.addresses);
-  if(Object.prototype.hasOwnProperty.call(body,'defaultAddressId')) current.defaultAddressId=String(body.defaultAddressId||'').slice(0,120);
-  if(Object.prototype.hasOwnProperty.call(body,'cart')) current.cart=cleanCart(body.cart);
   if(Object.prototype.hasOwnProperty.call(body,'marketingEmails')) current.marketingEmails=body.marketingEmails===true;
-  const ids=new Set((current.addresses||[]).map(a=>a.id));
-  if(current.defaultAddressId&&!ids.has(current.defaultAddressId)) current.defaultAddressId='';
   save(req.db);
   res.json({ok:true,preferences:accountPreferences(current)});
 });
 
 
-// --- STARXV backend catalog, inventory and orders ---
-const DEFAULT_CATALOG={};
+// --- STARXV Digital store --------------------------------------------------------
 function ensureStore(db){
-  // Keep the physical-product system, but start with an empty catalog.
-  if(!db.catalog||typeof db.catalog!=='object')db.catalog=JSON.parse(JSON.stringify(DEFAULT_CATALOG));
-
-  // One-time cleanup of the old clothing demo products from existing persistent databases.
-  if(!db.starxvMigrations||typeof db.starxvMigrations!=='object')db.starxvMigrations={};
-  if(!db.starxvMigrations.removedLegacyClothing20260929){
-    delete db.catalog['black-hoodie-graffiti'];
-    delete db.catalog['oversized-white-shirt'];
-    db.starxvMigrations.removedLegacyClothing20260929=true;
+  // Remove obsolete physical-store state from the persistent account/store model.
+  if(Object.prototype.hasOwnProperty.call(db,'catalog'))delete db.catalog;
+  for(const u of (db.users||[])){
+    delete u.favorites;
+    delete u.addresses;
+    delete u.defaultAddressId;
+    delete u.cart;
   }
 
   if(!db.digitalProducts||typeof db.digitalProducts!=='object'){
@@ -1217,20 +1154,6 @@ function setOmnibusReferenceForPromotion(p,now=Date.now()){
   p.omnibusReferenceType=(now-offeredAt)<STARXV_PRICE_WINDOW_MS?'since-offer':'30-days';
 }
 function clearOmnibusPromotion(p){p.promotionStartedAt=null;p.omnibusReferencePrice=null;p.omnibusReferenceType=null}
-function publicProduct(p){
-  ensureProductPriceTracking(p);
-  const {priceHistory,...rest}=p;
-  const current=effectiveCatalogPrice(p),ref=Number(p.omnibusReferencePrice);
-  const active=Number(p.discountPercent||0)>0&&Number.isFinite(ref)&&ref>current;
-  const percent=active?Math.max(1,Math.round((1-current/ref)*100)):0;
-  return {...rest,effectivePrice:current,omnibus:{active,referencePrice:active?money2(ref):null,referenceType:active?(p.omnibusReferenceType||'30-days'):null,discountPercent:percent,trackingStartedAt:Number(p.offeredAt||0),promotionStartedAt:Number(p.promotionStartedAt||0)||null}};
-}
-function publicCatalog(db){ensureStore(db);const out={};for(const [id,p] of Object.entries(db.catalog||{}))out[id]=publicProduct(p);return out}
-function safeOrderAddress(a){return {id:String(a?.id||'').slice(0,120),firstName:String(a?.firstName||'').trim().slice(0,80),lastName:String(a?.lastName||'').trim().slice(0,80),email:cleanEmail(a?.email).slice(0,160),phone:String(a?.phone||'').trim().slice(0,40),street:String(a?.street||'').trim().slice(0,160),postal:String(a?.postal||'').trim().slice(0,20),city:String(a?.city||'').trim().slice(0,100)} }
-function normalizeOrderItems(db,items){
-  ensureStore(db);if(!Array.isArray(items)||!items.length)throw new Error('Koszyk jest pusty.');if(items.length>30)throw new Error('Za dużo pozycji w koszyku.');
-  return items.map(raw=>{const id=String(raw?.id||''),color=String(raw?.color||''),size=String(raw?.size||'').toUpperCase(),qty=Math.max(1,Math.min(20,Number(raw?.qty||1)|0));const product=db.catalog[id],variant=product?.colors?.[color],stock=Number(variant?.sizes?.[size]);if(!product||!variant||!Number.isFinite(stock))throw new Error('Nieprawidłowy wariant produktu.');if(qty>stock)throw new Error(`Brak wystarczającego stanu: ${product.name} ${variant.label} / ${size}. Dostępne: ${stock} szt.`);const pub=publicProduct(product);return {id,name:product.name,fit:product.fit,color,colorLabel:variant.label,size,qty,price:Number(pub.effectivePrice),basePrice:Number(product.price),discountPercent:Number(pub.omnibus?.discountPercent||0),omnibusReferencePrice:Number(pub.omnibus?.referencePrice||0)||null,stockLimit:stock,image:String(raw?.image||'').slice(0,5_500_000)}})
-}
 function orderEvent(order,key,title,note='',at=Date.now()){
   if(!Array.isArray(order.timeline))order.timeline=[];
   const last=order.timeline[order.timeline.length-1];
@@ -1246,11 +1169,6 @@ function ensureOrderTimeline(order){
     if(order.paymentStatus==='cancelled')orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie nie będzie dalej realizowane.',order.cancelledAt||order.updatedAt||Date.now());
     if(order.paymentStatus==='failed')orderEvent(order,'payment_failed','Płatność nieudana','Płatność nie została potwierdzona.',order.updatedAt||Date.now());
     if(order.paymentStatus==='expired')orderEvent(order,'expired','Zamówienie wygasło','Płatność nie została potwierdzona w ciągu 24 godzin.',order.expiredAt||order.updatedAt||Date.now());
-    if(order.paymentStatus==='paid'&&Number(order.shippingStage||0)>0){
-      const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
-      const stage=Math.max(0,Math.min(4,Number(order.shippingStage||0)));
-      orderEvent(order,`shipping_${stage}`,names[stage],'Aktualny etap realizacji zamówienia.',order.updatedAt||Date.now());
-    }
   }
   return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
 }
@@ -1264,7 +1182,6 @@ function expirePendingOrders(db,userId=''){
     if(!['pending','failed'].includes(String(order.paymentStatus||'')))continue;
     const expiresAt=orderPaymentExpiresAt(order);
     if(!expiresAt||expiresAt>now)continue;
-    releaseStockReservation(db,order);
     order.paymentExpiresAt=expiresAt;
     order.paymentStatus='expired';
     order.expiredAt=now;
@@ -1275,43 +1192,35 @@ function expirePendingOrders(db,userId=''){
   if(changed)save(db);
   return changed;
 }
-function orderForUser(o,db){let items=Array.isArray(o.items)?o.items.map(x=>({...x})):[];if((o.orderType||'physical')==='digital'&&db){const current=db.digitalProducts?.[String(o.digitalProductId||items[0]?.id||'')];if(current){items=items.map((x,i)=>i===0?{...x,name:current.name||x.name,image:String(current.image||x.image||'')}:x)}}return {id:o.id,orderNo:o.orderNo,orderType:o.orderType||'physical',createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,paymentExpiresAt:orderPaymentExpiresAt(o),items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),digitalProductId:String(o.digitalProductId||''),digitalAccess:o.orderType==='digital'&&o.paymentStatus==='paid',trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
-function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
-function reserveStockForOrder(db,order){
-  if(order.stockCommitted||order.stockReserved)return;
-  for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error(`Brak wystarczającego stanu: ${x.name} ${x.colorLabel||x.color} / ${x.size}.`)}
-  for(const x of order.items){db.catalog[x.id].colors[x.color].sizes[x.size]-=Number(x.qty)}
-  order.stockReserved=true;order.stockReservedAt=Date.now();
+function orderForUser(o,db){
+  let items=Array.isArray(o.items)?o.items.map(x=>({...x})):[];
+  const current=db?.digitalProducts?.[String(o.digitalProductId||items[0]?.id||'')];
+  if(current)items=items.map((x,i)=>i===0?{...x,name:current.name||x.name,image:String(current.image||x.image||'')}:x);
+  return {
+    id:o.id,orderNo:o.orderNo,orderType:'digital',createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,
+    paymentExpiresAt:orderPaymentExpiresAt(o),items,address:o.address,paymentPreference:o.paymentPreference||'simpay',
+    paymentStatus:o.paymentStatus||'pending',subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),
+    shippingCost:0,total:Number(o.total||0),digitalProductId:String(o.digitalProductId||''),
+    digitalAccess:o.paymentStatus==='paid',timeline:ensureOrderTimeline(o)
+  };
 }
-function releaseStockReservation(db,order){
-  if(!order.stockReserved||order.stockCommitted)return;
-  for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(slot&&Object.prototype.hasOwnProperty.call(slot,x.size))slot[x.size]=Number(slot[x.size]||0)+Number(x.qty)}
-  order.stockReserved=false;order.stockReservedReleasedAt=Date.now();
-}
-app.get('/api/store/catalog',(req,res)=>{const db=load();ensureStore(db);save(db);res.json({ok:true,catalog:publicCatalog(db)})});
+
 
 // --- Product reviews: shared backend storage ---------------------------------
-const REVIEW_PRODUCTS=new Set(['black-hoodie-graffiti','oversized-white-shirt']);
-function reviewProductId(v,db){const id=String(v||'').trim();if(REVIEW_PRODUCTS.has(id))return id;return db?.digitalProducts?.[id]?id:''}
-function isDigitalReviewProduct(db,id){return Boolean(db?.digitalProducts?.[String(id||'')])}
+function reviewProductId(v,db){const id=String(v||'').trim();return db?.digitalProducts?.[id]?id:''}
 function cleanReviewText(v){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,500)}
 function reviewAuthor(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return u?cleanName(u.firstName||'Klient').slice(0,30)||'Klient':'Klient'}
 function reviewAuthorTitle(db,userId){const u=(db.users||[]).find(x=>x.id===userId);return accountTitleData(u)}
 function deliveredOrderForUser(db,userId,orderId,productId){
-  return (db.orders||[]).find(o=>{
-    if(String(o.id)!==String(orderId)||o.userId!==userId||o.paymentStatus!=='paid')return false;
-    if(isDigitalReviewProduct(db,productId))return o.orderType==='digital'&&String(o.digitalProductId||'')===String(productId||'');
-    return (o.orderType||'physical')!=='digital'&&Number(o.shippingStage||0)>=4;
-  });
+  return (db.orders||[]).find(o=>String(o.id)===String(orderId)&&o.userId===userId&&o.paymentStatus==='paid'&&o.orderType==='digital'&&String(o.digitalProductId||'')===String(productId||''));
 }
 function reviewPurchaseItem(order,productId,color,size){return (order?.items||[]).find(i=>String(i.id)===String(productId)&&String(i.color||'')===String(color||'')&&String(i.size||'').toUpperCase()===String(size||'').toUpperCase())}
 function reviewKey(r){return [String(r.orderId||''),String(r.productId||''),String(r.color||''),String(r.size||'').toUpperCase()].join('|')}
 function reviewIsVerified(db,r){
-  const digital=isDigitalReviewProduct(db,r.productId);
-  const order=(db.orders||[]).find(o=>String(o.id)===String(r.orderId||'')&&o.userId===r.userId&&o.paymentStatus==='paid'&&(digital?(o.orderType==='digital'&&String(o.digitalProductId||'')===String(r.productId||'')):Number(o.shippingStage||0)>=4));
+  const order=(db.orders||[]).find(o=>String(o.id)===String(r.orderId||'')&&o.userId===r.userId&&o.paymentStatus==='paid'&&o.orderType==='digital'&&String(o.digitalProductId||'')===String(r.productId||''));
   return Boolean(order&&reviewPurchaseItem(order,r.productId,r.color,r.size));
 }
-function publicReview(db,r){return {id:r.id,productId:r.productId,productType:isDigitalReviewProduct(db,r.productId)?'digital':'physical',orderId:r.orderId||'',name:reviewAuthor(db,r.userId),title:reviewAuthorTitle(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
+function publicReview(db,r){return {id:r.id,productId:r.productId,productType:'digital',orderId:r.orderId||'',name:reviewAuthor(db,r.userId),title:reviewAuthorTitle(db,r.userId),rating:Math.max(1,Math.min(5,Number(r.rating)||5)),text:String(r.text||''),color:String(r.color||''),colorLabel:String(r.colorLabel||r.color||''),size:String(r.size||''),createdAt:Number(r.createdAt||Date.now()),updatedAt:Number(r.updatedAt||r.createdAt||Date.now()),verifiedPurchase:reviewIsVerified(db,r)}}
 function orderReviewsForUser(db,order){return (db.reviews||[]).filter(r=>r.userId===order.userId&&String(r.orderId||'')===String(order.id)).map(r=>publicReview(db,r))}
 
 app.get('/api/reviews/:productId',(req,res)=>{
@@ -1329,8 +1238,7 @@ app.post('/api/reviews/:productId',rateLimit('review-write',15,15*60*1000),auth,
   const text=cleanReviewText(req.body?.text),rating=Number(req.body?.rating),orderId=String(req.body?.orderId||''),color=String(req.body?.color||''),size=String(req.body?.size||'').toUpperCase();
   if(text.length<3)return res.status(400).json({error:'Opinia musi mieć co najmniej 3 znaki.'});
   if(!Number.isInteger(rating)||rating<1||rating>5)return res.status(400).json({error:'Wybierz ocenę od 1 do 5.'});
-  const digital=isDigitalReviewProduct(req.db,productId);
-  const order=deliveredOrderForUser(req.db,req.user.id,orderId,productId);if(!order)return res.status(403).json({error:digital?'Opinię o produkcie cyfrowym możesz dodać po opłaceniu zamówienia i otrzymaniu dostępu.':'Opinię możesz dodać dopiero po dostarczeniu opłaconego zamówienia.'});
+  const order=deliveredOrderForUser(req.db,req.user.id,orderId,productId);if(!order)return res.status(403).json({error:'Opinię o produkcie cyfrowym możesz dodać po opłaceniu zamówienia i otrzymaniu dostępu.'});
   const item=reviewPurchaseItem(order,productId,color,size);if(!item)return res.status(400).json({error:'Nie znaleziono tego wariantu produktu w zamówieniu.'});
   const now=Date.now();let r=req.db.reviews.find(x=>x.userId===req.user.id&&String(x.orderId||'')===orderId&&x.productId===productId&&String(x.color||'')===String(item.color||'')&&String(x.size||'').toUpperCase()===String(item.size||'').toUpperCase());
   if(r){r.text=text;r.rating=rating;r.updatedAt=now;r.visible=true;r.color=String(item.color||'');r.colorLabel=String(item.colorLabel||item.color||'');r.size=String(item.size||'').toUpperCase()}
@@ -1347,7 +1255,7 @@ app.delete('/api/reviews/:productId',auth,(req,res)=>{
   const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(r=>!(r.productId===productId&&r.userId===req.user.id&&(!orderId||String(r.orderId||'')===orderId)&&(!color||String(r.color||'')===color)&&(!size||String(r.size||'').toUpperCase()===size)));
   if(req.db.reviews.length===before)return res.status(404).json({error:'Nie masz opinii dla tego produktu.'});save(req.db);res.json({ok:true});
 });
-app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);expirePendingOrders(req.db,req.user.id);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id&&o.paymentStatus!=='expired').map(o=>({...orderForUser(o,req.db),reviews:orderReviewsForUser(req.db,o)})).sort((a,b)=>b.createdAt-a.createdAt)})});
+app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);expirePendingOrders(req.db,req.user.id);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id&&o.orderType==='digital'&&o.paymentStatus!=='expired').map(o=>({...orderForUser(o,req.db),reviews:orderReviewsForUser(req.db,o)})).sort((a,b)=>b.createdAt-a.createdAt)})});
 
 
 function ensurePromoCodes(db){
@@ -1390,31 +1298,6 @@ function ensureReturnRequests(db){if(!Array.isArray(db.returnRequests))db.return
 function nextReturnNo(db){const nums=ensureReturnRequests(db).map(x=>Number(String(x.returnNo||'').replace(/\D/g,''))||0);return `RT-${Math.max(1000,...nums)+1}`}
 function returnForUser(r){return {id:r.id,returnNo:r.returnNo,orderId:r.orderId,orderNo:r.orderNo,type:r.type,reason:r.reason,details:r.details||'',items:r.items||[],status:r.status||'new',adminReply:r.adminReply||'',createdAt:r.createdAt,updatedAt:r.updatedAt||r.createdAt}}
 app.get('/api/returns',auth,(req,res)=>{ensureReturnRequests(req.db);res.json({ok:true,returns:req.db.returnRequests.filter(r=>r.userId===req.user.id).map(returnForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
-app.post('/api/orders/:id/return-request',auth,(req,res)=>{
-  try{
-    ensureStore(req.db);ensureReturnRequests(req.db);
-    const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
-    if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
-    if(order.paymentStatus!=='paid'||Number(order.shippingStage||0)<4)return res.status(409).json({error:'Zwrot lub reklamację można zgłosić po dostarczeniu opłaconego zamówienia.'});
-    const type=String(req.body?.type||'return');if(!['return','complaint'].includes(type))return res.status(400).json({error:'Nieprawidłowy typ zgłoszenia.'});
-    const reason=String(req.body?.reason||'').trim().slice(0,120),details=String(req.body?.details||'').trim().slice(0,1500);
-    if(reason.length<2)return res.status(400).json({error:'Wybierz powód zgłoszenia.'});
-    const requested=Array.isArray(req.body?.items)?req.body.items:[];
-    const items=[];
-    for(const q of requested){
-      const oi=(order.items||[]).find(x=>String(x.id)===String(q.id)&&String(x.color)===String(q.color)&&String(x.size)===String(q.size));
-      if(!oi)continue;const qty=Math.max(1,Math.min(Number(oi.qty||1),Math.floor(Number(q.qty||1))));
-      items.push({id:oi.id,name:oi.name,color:oi.color,colorLabel:oi.colorLabel||oi.color,size:oi.size,qty,price:Number(oi.price||0)});
-    }
-    if(!items.length)return res.status(400).json({error:'Wybierz co najmniej jeden produkt.'});
-    const active=req.db.returnRequests.find(r=>r.userId===req.user.id&&r.orderId===order.id&&!['rejected','completed'].includes(r.status||'new'));
-    if(active)return res.status(409).json({error:`Dla tego zamówienia istnieje już aktywne zgłoszenie ${active.returnNo}.`});
-    const now=Date.now(),rr={id:crypto.randomUUID(),returnNo:nextReturnNo(req.db),userId:req.user.id,email:cleanEmail(order.address?.email||req.user.email),orderId:order.id,orderNo:order.orderNo,type,reason,details,items,status:'new',adminReply:'',createdAt:now,updatedAt:now};
-    req.db.returnRequests.push(rr);save(req.db);
-    res.json({ok:true,request:returnForUser(rr)});
-  }catch(e){res.status(400).json({error:e.message||'Nie udało się wysłać zgłoszenia.'})}
-});
-
 app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   ensureStore(req.db);
   const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
@@ -1423,7 +1306,6 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   if(order.paymentStatus==='expired')return res.status(410).json({error:'To zamówienie wygasło po 24 godzinach bez potwierdzenia płatności.'});
   if(order.paymentStatus==='cancelled')return res.json({ok:true,order:orderForUser(order)});
   if(order.paymentStatus==='paid')return res.status(409).json({error:'Opłaconego zamówienia nie można anulować automatycznie. Skontaktuj się z obsługą STARXV.'});
-  releaseStockReservation(req.db,order);
   order.paymentStatus='cancelled';
   order.cancelledAt=Date.now();
   order.updatedAt=Date.now();
@@ -1431,17 +1313,12 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   save(req.db);sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,async(req,res)=>{try{if(!PHYSICAL_SALES_ENABLED)return res.status(503).json({error:'Sprzedaż produktów fizycznych nie jest jeszcze aktywna.'});ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal,req.user.id);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',paymentExpiresAt:now+ORDER_PAYMENT_TTL_MS,shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
-  if(order.orderType!=='digital'){
-    if(order.stockReserved){order.stockReserved=false;order.stockCommitted=true;order.stockCommittedAt=Date.now()}
-    else decrementStockForOrder(db,order);
-  }
-  order.paymentStatus='paid';order.shippingStage=0;order.updatedAt=Date.now();
+  order.paymentStatus='paid';order.updatedAt=Date.now();
   if(order.promo?.code&&!order.promoCounted){ensurePromoCodes(db);const pc=db.promoCodes.find(p=>String(p.code||'').toUpperCase()===String(order.promo.code||'').toUpperCase());if(pc){pc.usedCount=Number(pc.usedCount||0)+1;if(!Array.isArray(pc.usedByUserIds))pc.usedByUserIds=[];if(order.userId&&!pc.usedByUserIds.some(id=>String(id)===String(order.userId)))pc.usedByUserIds.push(order.userId);pc.updatedAt=Date.now()}order.promoCounted=true;}
-  orderEvent(order,'paid','Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.',order.updatedAt);
+  orderEvent(order,'paid','Płatność potwierdzona','Płatność została zaakceptowana. Produkt cyfrowy jest dostępny na koncie STARXV.',order.updatedAt);
 }
 
 
@@ -1481,16 +1358,6 @@ async function sendPaidOrderEmail(db,order){
       if(error)console.error('Resend digital confirmation error:',error);
       return;
     }
-    const itemLines=(order.items||[]).map(x=>`${x.name} — ${x.colorLabel||x.color} / ${x.size} × ${x.qty}`).join('\n');
-    const total=Number(order.total||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const shipping=Number(order.shippingCost||0).toLocaleString('pl-PL',{minimumFractionDigits:2,maximumFractionDigits:2});
-    const {error}=await resend.emails.send({
-      from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,
-      subject:`STARXV — potwierdzenie zamówienia #${order.orderNo}`,
-      text:`Dziękujemy za zamówienie #${order.orderNo}.\n\nPłatność została potwierdzona.\n\n${itemLines}\n\nDostawa: ${shipping} PLN\nRazem: ${total} PLN\n\nStatus zamówienia możesz sprawdzić w profilu STARXV.`,
-      html:`<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px"><h1 style="font-size:28px;margin:0 0 26px">STARXV</h1><p>Płatność za zamówienie <b>#${order.orderNo}</b> została potwierdzona.</p><div style="margin:24px 0;padding:18px;border:1px solid #ddd">${(order.items||[]).map(x=>`<div style="margin:8px 0"><b>${String(x.name||'STARXV').replace(/[<>&]/g,'')}</b><br><span style="color:#666">${String(x.colorLabel||x.color||'').replace(/[<>&]/g,'')} / ${String(x.size||'').replace(/[<>&]/g,'')} × ${Number(x.qty||1)}</span></div>`).join('')}<hr style="border:0;border-top:1px solid #ddd;margin:18px 0"><div style="color:#666;margin-bottom:6px">Dostawa: ${shipping} PLN</div><b>Razem: ${total} PLN</b></div><p style="color:#666">Aktualny status realizacji znajdziesz w sekcji „Moje zamówienia” na swoim koncie.</p></div>`
-    });
-    if(error)console.error('Resend order confirmation error:',error);
   }catch(e){console.error('Order confirmation email error:',e.message)}
 }
 
@@ -1504,13 +1371,16 @@ async function sendOrderUpdateEmail(db,order,eventKey,opts={}){
     const u=(db.users||[]).find(x=>x.id===order.userId);
     const to=cleanEmail(order.address?.email||u?.email);
     if(!to)return false;
-    const tracking=String(order.trackingNumber||'').trim();
-    const t={created:['Zamówienie zostało utworzone','Otrzymaliśmy Twoje zamówienie. Oczekujemy na potwierdzenie płatności.'],paid:['Płatność potwierdzona','Płatność została zaakceptowana. Zamówienie trafiło do realizacji.'],preparing:['Przygotowujemy zamówienie','Twoje produkty są przygotowywane do wysyłki.'],shipped:['Paczka została nadana',tracking?`Przesyłka została nadana. Numer przesyłki: ${tracking}`:'Przesyłka została nadana przewoźnikowi.'],transit:['Paczka jest w drodze',tracking?`Przesyłka jest w drodze. Numer przesyłki: ${tracking}`:'Przesyłka jest w drodze.'],delivered:['Zamówienie dostarczone','Przesyłka została oznaczona jako dostarczona. Dziękujemy za zakupy w STARXV.'],tracking:['Numer przesyłki',tracking?`Twój numer przesyłki: ${tracking}`:'Do zamówienia został dodany numer przesyłki.'],cancelled:['Zamówienie anulowane','Zamówienie zostało anulowane i nie będzie dalej realizowane.']};
-    const [title,body]=t[eventKey]||['Aktualizacja zamówienia','Status Twojego zamówienia został zaktualizowany.'];
+    const t={
+      created:['Zamówienie zostało utworzone','Otrzymaliśmy Twoje zamówienie cyfrowe. Oczekujemy na potwierdzenie płatności.'],
+      paid:['Płatność potwierdzona','Płatność została zaakceptowana. Produkt cyfrowy jest dostępny na Twoim koncie.'],
+      cancelled:['Zamówienie anulowane','Zamówienie zostało anulowane i nie będzie dalej realizowane.']
+    };
+    const [title,body]=t[eventKey]||['Aktualizacja zamówienia','Status Twojego zamówienia cyfrowego został zaktualizowany.'];
     const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
     const base=String(process.env.PUBLIC_URL||'https://starxv.pl').replace(/\/+$/,'');
     const resend=new Resend(key);
-    const {error}=await resend.emails.send({from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,subject:`STARXV — ${title} #${order.orderNo}`,text:`STARXV\n\n${title}\nZamówienie #${order.orderNo}\n\n${body}${tracking?`\n\nNumer przesyłki: ${tracking}`:''}\n\nStatus zamówienia: ${base}`,html:`<div style="background:#090909;color:#fff;font-family:Arial,sans-serif;padding:36px 20px"><div style="max-width:560px;margin:auto"><div style="font-size:25px;font-weight:900;letter-spacing:5px;margin-bottom:30px">STARXV</div><div style="font-size:10px;color:#777;letter-spacing:2px">ZAMÓWIENIE #${esc(order.orderNo)}</div><h1 style="font-size:22px;margin:10px 0 14px">${esc(title)}</h1><p style="font-size:14px;line-height:1.7;color:#bbb">${esc(body)}</p>${tracking?`<div style="border:1px solid #292929;padding:14px;margin:22px 0"><span style="font-size:10px;color:#777">NUMER PRZESYŁKI</span><br><b>${esc(tracking)}</b></div>`:''}<a href="${esc(base)}" style="display:inline-block;background:#fff;color:#000;text-decoration:none;padding:12px 18px;font-size:11px;font-weight:900;margin-top:12px">SPRAWDŹ ZAMÓWIENIE →</a><div style="font-size:10px;color:#555;margin-top:30px">STARXV • kontakt@starxv.pl</div></div></div>`});
+    const {error}=await resend.emails.send({from:process.env.MAIL_FROM||'STARXV <no-reply@starxv.pl>',to,subject:`STARXV — ${title} #${order.orderNo}`,text:`STARXV\n\n${title}\nZamówienie #${order.orderNo}\n\n${body}\n\nStatus zamówienia: ${base}`,html:`<div style="background:#090909;color:#fff;font-family:Arial,sans-serif;padding:36px 20px"><div style="max-width:560px;margin:auto"><div style="font-size:25px;font-weight:900;letter-spacing:5px;margin-bottom:30px">STARXV</div><div style="font-size:10px;color:#777;letter-spacing:2px">ZAMÓWIENIE #${esc(order.orderNo)}</div><h1 style="font-size:22px;margin:10px 0 14px">${esc(title)}</h1><p style="font-size:14px;line-height:1.7;color:#bbb">${esc(body)}</p><a href="${esc(base)}" style="display:inline-block;background:#fff;color:#000;text-decoration:none;padding:12px 18px;font-size:11px;font-weight:900;margin-top:12px">SPRAWDŹ ZAMÓWIENIE →</a><div style="font-size:10px;color:#555;margin-top:30px">STARXV • kontakt@starxv.pl</div></div></div>`});
     if(error){console.error('Resend order update error:',error);return false}
     order.mailEvents[dedupe]=Date.now();save(db);return true;
   }catch(e){console.error('Order update email error:',e.message);return false}
@@ -1693,14 +1563,12 @@ app.post('/api/create-checkout-session',auth,async(req,res)=>{
     const orderId=String(req.body?.orderId||'');
     const order=req.db.orders.find(o=>o.id===orderId&&o.userId===req.user.id);
     if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
-    if(order.orderType!=='digital'&&!PHYSICAL_SALES_ENABLED)return res.status(409).json({error:'Sprzedaż produktów fizycznych nie jest jeszcze aktywna.'});
     if(order.paymentStatus==='paid')return res.status(409).json({error:'To zamówienie jest już opłacone.'});
     if(order.paymentStatus==='cancelled')return res.status(409).json({error:'To zamówienie zostało anulowane.'});
     if(order.paymentStatus==='expired')return res.status(410).json({error:'To zamówienie wygasło po 24 godzinach bez potwierdzenia płatności. Utwórz nowe zamówienie.'});
     const amount=Math.round(Number(order.total)*100)/100;
     if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
     if(order.paymentStatus==='failed')order.paymentStatus='pending';
-    if(order.orderType!=='digital')reserveStockForOrder(req.db,order);
     const c=simpayConfig(),base=paymentBaseUrl(req);
     const payload={
       amount,
@@ -1714,10 +1582,10 @@ app.post('/api/create-checkout-session',auth,async(req,res)=>{
     };
     let data;
     try{data=await simpayRequest('/payment/'+encodeURIComponent(c.serviceId)+'/transactions',{method:'POST',body:JSON.stringify(payload)})}
-    catch(e){if(order.orderType!=='digital')releaseStockReservation(req.db,order);save(req.db);throw e}
+    catch(e){save(req.db);throw e}
     const transactionId=String(data?.data?.transactionId||'');
     const redirectUrl=String(data?.data?.redirectUrl||'');
-    if(!transactionId||!/^https:\/\//i.test(redirectUrl)){if(order.orderType!=='digital')releaseStockReservation(req.db,order);save(req.db);throw new Error('SimPay nie zwrócił poprawnego linku płatności.')}
+    if(!transactionId||!/^https:\/\//i.test(redirectUrl)){save(req.db);throw new Error('SimPay nie zwrócił poprawnego linku płatności.')}
     order.simpayTransactionId=transactionId;
     order.simpayCreatedAt=Date.now();
     order.paymentProvider='simpay';
@@ -1761,8 +1629,7 @@ app.post('/api/simpay/ipn',async(req,res)=>{
       order.simpayPaidAt=Date.now();
     }else if(['transaction_failure','transaction_cancelled','transaction_expired'].includes(status)){
       if(order.paymentStatus!=='paid'){
-        releaseStockReservation(db,order);
-        order.paymentStatus='failed';
+            order.paymentStatus='failed';
       }
     }
     order.simpayStatus=status;
@@ -2126,123 +1993,9 @@ app.get('/api/admin/deploy/info',deployOwnerOnly,(req,res)=>{
   });
 });
 
-// --- STARXV physical delivery fallback (address only) ---------------------------------
-function envMoney(name,fallback){
-  const raw=String(process.env[name]??'').trim().replace(',','.');
-  const n=raw===''?fallback:Number(raw);
-  return Number.isFinite(n)&&n>=0?Math.round(n*100)/100:fallback;
-}
-function shippingPublicConfig(){
-  return {carrier:'courier',currency:'PLN',courierPrice:envMoney('SHIPPING_COURIER_PRICE',19.99),freeShippingFrom:envMoney('FREE_SHIPPING_FROM',0)};
-}
-function shippingCostFor(delivery,discountedSubtotal){
-  const c=shippingPublicConfig(),base=Math.max(0,Number(discountedSubtotal||0));
-  if(c.freeShippingFrom>0&&base>=c.freeShippingFrom)return 0;
-  return c.courierPrice;
-}
-function normalizeAndValidateDelivery(raw,address){
-  return {type:'address',address:{firstName:address.firstName,lastName:address.lastName,street:address.street,postal:address.postal,city:address.city,country:'PL'}};
-}
-
-// --- Production address autocomplete (Geoapify, server-side API key) -------------------
-const addressAutocompleteCache=new Map();
-function geoapifyKey(){return String(process.env.GEOAPIFY_API_KEY||'').trim()}
-function normalizeAddressQuery(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,120)}
-function pruneAddressCache(){
-  const now=Date.now();
-  for(const [k,v] of addressAutocompleteCache)if(v.expires<=now)addressAutocompleteCache.delete(k);
-}
-setInterval(pruneAddressCache,10*60*1000).unref?.();
-
-app.get('/api/address/autocomplete',rateLimit('address-autocomplete',180,10*60*1000),async(req,res)=>{
-  try{
-    const key=geoapifyKey();
-    if(!key)return res.status(503).json({error:'Autouzupełnianie adresu nie jest jeszcze skonfigurowane.'});
-    const mode=String(req.query?.type||'').toLowerCase();
-    const q=normalizeAddressQuery(req.query?.q);
-    const city=normalizeAddressQuery(req.query?.city);
-    if(!['city','address'].includes(mode))return res.status(400).json({error:'Nieprawidłowy typ wyszukiwania.'});
-    if(q.length<1)return res.json({ok:true,results:[]});
-
-    const cacheKey=[mode,q.toLowerCase(),city.toLowerCase()].join('|');
-    const cached=addressAutocompleteCache.get(cacheKey);
-    if(cached&&cached.expires>Date.now())return res.json({ok:true,results:cached.results});
-
-    const params=new URLSearchParams({
-      text:mode==='city'?q:[q,city].filter(Boolean).join(', '),
-      format:'json',
-      lang:'pl',
-      filter:'countrycode:pl',
-      limit:'8',
-      apiKey:key
-    });
-    if(mode==='city')params.set('type','city');
-
-    const upstream=await fetch('https://api.geoapify.com/v1/geocode/autocomplete?'+params.toString(),{
-      headers:{'Accept':'application/json','User-Agent':'STARXV/1.0 (+https://starxv.pl)'},
-      signal:AbortSignal.timeout(7000)
-    });
-    const payload=await upstream.json().catch(()=>({}));
-    if(!upstream.ok)throw Object.assign(new Error('Usługa podpowiedzi adresów jest chwilowo niedostępna.'),{status:502});
-
-    let results=(Array.isArray(payload?.results)?payload.results:[]).map(x=>({
-      id:String(x.place_id||x.datasource?.raw?.place_id||x.formatted||crypto.randomUUID()).slice(0,300),
-      label:String(mode==='city'?(x.city||x.name||x.formatted):(x.address_line1||x.formatted||x.name)||'').trim().slice(0,300),
-      formatted:String(x.formatted||'').trim().slice(0,400),
-      city:String(x.city||x.town||x.village||x.municipality||'').trim().slice(0,120),
-      postcode:String(x.postcode||'').trim().slice(0,20),
-      street:String(x.street||'').trim().slice(0,180),
-      housenumber:String(x.housenumber||'').trim().slice(0,40),
-      state:String(x.state||'').trim().slice(0,120),
-      resultType:String(x.result_type||'').trim().slice(0,40)
-    })).filter(x=>x.label||x.formatted);
-
-    if(mode==='city'){
-      const seen=new Set();
-      results=results.filter(x=>{
-        const k=(x.city||x.label).toLowerCase()+'|'+x.state.toLowerCase();
-        if(seen.has(k))return false;seen.add(k);return true;
-      });
-    }else if(city){
-      const wanted=city.toLocaleLowerCase('pl-PL');
-      const exact=results.filter(x=>(x.city||'').toLocaleLowerCase('pl-PL')===wanted);
-      if(exact.length)results=exact;
-    }
-
-    results=results.slice(0,8);
-    addressAutocompleteCache.set(cacheKey,{results,expires:Date.now()+10*60*1000});
-    if(addressAutocompleteCache.size>500)pruneAddressCache();
-    res.setHeader('Cache-Control','private, max-age=60');
-    res.json({ok:true,results});
-  }catch(e){
-    console.error('Address autocomplete error:',e?.message||e);
-    const status=Number(e?.status)||502;
-    res.status(status>=400&&status<600?status:502).json({error:'Nie udało się pobrać podpowiedzi adresu. Możesz wpisać adres ręcznie.'});
-  }
-});
-
-app.get('/api/shipping/config',(req,res)=>res.json({ok:true,...shippingPublicConfig()}));
-app.post('/api/admin/orders/:id/shipment/manual',adminOnly,(req,res)=>{try{
-  ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id);
-  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
-  const tracking=String(req.body?.trackingNumber||'').trim().replace(/\s+/g,'');
-  if(!/^[A-Za-z0-9-]{8,40}$/.test(tracking))return res.status(400).json({error:'Wpisz poprawny numer przesyłki.'});
-  const beforeStage=Number(order.shippingStage||0),beforeTracking=String(order.trackingNumber||'');
-  order.trackingNumber=tracking;order.carrier='Przewoźnik';order.carrierStatus='Numer dodany ręcznie';order.shippingStage=Math.max(2,beforeStage);order.trackingUpdatedAt=Date.now();order.updatedAt=Date.now();
-  if(order.shippingStage!==beforeStage)orderEvent(order,'shipping_2','Nadane',`Numer przesyłki: ${tracking}`,order.updatedAt);
-  save(req.db);
-  if(beforeTracking!==tracking)sendOrderUpdateEmail(req.db,order,'tracking',{dedupeKey:`tracking_${tracking}`});
-  if(order.shippingStage!==beforeStage)sendOrderUpdateEmail(req.db,order,'shipped',{dedupeKey:'shipping_2'});
-  res.json({ok:true,order:adminOrder(req.db,order)});
-}catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać numeru przesyłki.'})}});
-
 function adminOrder(db,o){
   const u=(db.users||[]).find(x=>x.id===o.userId);
-  return {
-    ...orderForUser(o),
-    customer:u?{firstName:u.firstName,lastName:u.lastName,email:u.email}:{firstName:'',lastName:'',email:''},
-    stockCommitted:Boolean(o.stockCommitted)
-  };
+  return {...orderForUser(o,db),customer:u?{firstName:u.firstName,lastName:u.lastName,email:u.email}:{firstName:'',lastName:'',email:''}};
 }
 app.get('/api/admin/me',adminOnly,(req,res)=>res.json({ok:true,user:publicUser(req.user)}));
 
@@ -2267,13 +2020,10 @@ app.patch('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);con
 app.delete('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(x=>x.id!==req.params.id);if(req.db.reviews.length===before)return res.status(404).json({error:'Nie znaleziono opinii.'});save(req.db);res.json({ok:true})});
 
 app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
-  ensureStore(req.db);
-  expirePendingOrders(req.db);
-  const orders=req.db.orders.filter(o=>o.paymentStatus!=='expired').map(o=>adminOrder(req.db,o)).sort((a,b)=>b.createdAt-a.createdAt);
-  const variants=[];
-  for(const [productId,p] of Object.entries(req.db.catalog))for(const [color,c] of Object.entries(p.colors||{}))for(const [size,stock] of Object.entries(c.sizes||{}))variants.push({productId,productName:p.name,color,colorLabel:c.label,size,stock:Number(stock||0)});
+  ensureStore(req.db);expirePendingOrders(req.db);
+  const orders=req.db.orders.filter(o=>o.orderType==='digital'&&o.paymentStatus!=='expired').map(o=>adminOrder(req.db,o)).sort((a,b)=>b.createdAt-a.createdAt);
   const paid=orders.filter(o=>o.paymentStatus==='paid');
-  res.json({ok:true,catalog:req.db.catalog,digitalProducts:req.db.digitalProducts||{},digitalCategories:req.db.digitalCategories||[],orders,shipping:shippingPublicConfig(),stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100,stock:variants.reduce((sum,v)=>sum+v.stock,0)}});
+  res.json({ok:true,digitalProducts:req.db.digitalProducts||{},digitalCategories:req.db.digitalCategories||[],orders,stats:{orders:orders.length,pending:orders.filter(o=>o.paymentStatus==='pending').length,paid:paid.length,revenue:Math.round(paid.reduce((sum,o)=>sum+Number(o.total||0),0)*100)/100}});
 });
 
 function cleanSlug(v,label='ID'){
@@ -2379,164 +2129,12 @@ app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{
 }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu cyfrowego.'})}});
 app.delete('/api/admin/digital-products/:id',adminOnly,(req,res)=>{ensureStore(req.db);expirePendingOrders(req.db);const id=String(req.params.id||'');if(!req.db.digitalProducts[id])return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const blocking=(req.db.orders||[]).some(o=>o.orderType==='digital'&&o.digitalProductId===id&&o.paymentStatus==='pending');if(blocking)return res.status(409).json({error:'Nie można usunąć produktu z oczekującym zamówieniem.'});delete req.db.digitalProducts[id];save(req.db);res.json({ok:true})});
 
-app.post('/api/admin/products',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);
-    const id=cleanSlug(req.body?.id,'ID produktu');
-    if(req.db.catalog[id])return res.status(409).json({error:'Produkt o takim ID już istnieje.'});
-    const name=String(req.body?.name||'').trim().slice(0,160);
-    const fit=String(req.body?.fit||'').trim().slice(0,80);
-    const category=['hoodies','tshirts','other'].includes(String(req.body?.category||''))?String(req.body.category):'other';
-    const image=String(req.body?.image||'').trim().slice(0,200000);
-    const composition=String(req.body?.composition||'').trim().slice(0,500);
-    const gpsrManufacturer=String(req.body?.gpsrManufacturer||'').trim().slice(0,200);
-    const gpsrManufacturerAddress=String(req.body?.gpsrManufacturerAddress||'').trim().slice(0,300);
-    const gpsrManufacturerEmail=String(req.body?.gpsrManufacturerEmail||'').trim().slice(0,320);
-    const gpsrProductId=String(req.body?.gpsrProductId||id).trim().slice(0,120);
-    const gpsrSafety=String(req.body?.gpsrSafety||'').trim().slice(0,1500);
-    const discountPercent=Math.min(99,Math.max(0,Number(req.body?.discountPercent)||0));
-    const price=Number(req.body?.price);
-    if(!name)return res.status(400).json({error:'Podaj nazwę produktu.'});
-    if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});
-    const now=Date.now();
-    req.db.catalog[id]={name,price:Math.round(price*100)/100,fit,category,image,composition,gpsrManufacturer,gpsrManufacturerAddress,gpsrManufacturerEmail,gpsrProductId,gpsrSafety,discountPercent,colors:{},offeredAt:now,priceHistory:[],promotionStartedAt:null,omnibusReferencePrice:null,omnibusReferenceType:null};
-    ensureProductPriceTracking(req.db.catalog[id],now);
-    // A brand-new product has no price before its first announced reduction. Until a genuine prior price exists,
-    // the storefront will show the current selling price without a promotional claim.
-    save(req.db);res.status(201).json({ok:true,id,product:req.db.catalog[id]});
-  }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać produktu.'})}
-});
-app.put('/api/admin/products/:id',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);const id=String(req.params.id||''),p=req.db.catalog[id];
-    if(!p)return res.status(404).json({error:'Nie znaleziono produktu.'});
-    const now=Date.now();ensureProductPriceTracking(p,now);
-    const beforePrice=effectiveCatalogPrice(p),beforeDiscount=Number(p.discountPercent||0),beforeBase=Number(p.price||0);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'name')){const name=String(req.body.name||'').trim().slice(0,160);if(!name)return res.status(400).json({error:'Nazwa nie może być pusta.'});p.name=name}
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'fit'))p.fit=String(req.body.fit||'').trim().slice(0,80);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'category')){const category=String(req.body.category||'');if(!['hoodies','tshirts','other'].includes(category))return res.status(400).json({error:'Nieprawidłowa kategoria.'});p.category=category}
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'image'))p.image=String(req.body.image||'').trim().slice(0,200000);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'composition'))p.composition=String(req.body.composition||'').trim().slice(0,500);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrManufacturer'))p.gpsrManufacturer=String(req.body.gpsrManufacturer||'').trim().slice(0,200);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrManufacturerAddress'))p.gpsrManufacturerAddress=String(req.body.gpsrManufacturerAddress||'').trim().slice(0,300);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrManufacturerEmail'))p.gpsrManufacturerEmail=String(req.body.gpsrManufacturerEmail||'').trim().slice(0,320);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrProductId'))p.gpsrProductId=String(req.body.gpsrProductId||id).trim().slice(0,120);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'gpsrSafety'))p.gpsrSafety=String(req.body.gpsrSafety||'').trim().slice(0,1500);
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'discountPercent'))p.discountPercent=Math.min(99,Math.max(0,Number(req.body.discountPercent)||0));
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'price')){const price=Number(req.body.price);if(!Number.isFinite(price)||price<0||price>100000)return res.status(400).json({error:'Podaj prawidłową cenę.'});p.price=Math.round(price*100)/100}
-    const afterPrice=effectiveCatalogPrice(p),afterDiscount=Number(p.discountPercent||0),afterBase=Number(p.price||0);
-    const pricingChanged=beforePrice!==afterPrice||beforeDiscount!==afterDiscount||beforeBase!==afterBase;
-    if(pricingChanged){
-      recordProductPrice(p,beforePrice,now-1);
-      if(afterDiscount>0)setOmnibusReferenceForPromotion(p,now);else clearOmnibusPromotion(p);
-      recordProductPrice(p,afterPrice,now);
-    }
-    save(req.db);res.json({ok:true,product:p,publicProduct:publicProduct(p)});
-  }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu.'})}
-});
-app.delete('/api/admin/products/:id',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);
-    const id=String(req.params.id||'');
-    const product=req.db.catalog[id];
-    if(!product)return res.status(404).json({error:'Nie znaleziono produktu.'});
-
-    // A pending order may still need this product when payment is confirmed.
-    // Keep the catalog entry until that order is paid or cancelled.
-    const blockingOrder=(req.db.orders||[]).find(o=>
-      !o.stockCommitted && String(o.paymentStatus||'pending')==='pending' &&
-      Array.isArray(o.items) && o.items.some(x=>String(x.id||'')===id)
-    );
-    if(blockingOrder){
-      return res.status(409).json({error:`Nie można usunąć produktu, bo znajduje się w oczekującym zamówieniu #${blockingOrder.orderNo||''}. Najpierw oznacz zamówienie jako opłacone albo anulowane.`});
-    }
-
-    delete req.db.catalog[id];
-    save(req.db);
-    res.json({ok:true,id});
-  }catch(e){
-    res.status(400).json({error:e.message||'Nie udało się usunąć produktu.'});
-  }
-});
-
-app.post('/api/admin/products/:id/colors',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);const id=String(req.params.id||'');const p=req.db.catalog[id];
-    if(!p)return res.status(404).json({error:'Nie znaleziono produktu.'});
-    const color=cleanSlug(req.body?.color,'ID koloru');
-    if(p.colors?.[color])return res.status(409).json({error:'Ten kolor już istnieje.'});
-    const label=String(req.body?.label||'').trim().slice(0,80);if(!label)return res.status(400).json({error:'Podaj nazwę koloru.'});
-    if(!p.colors||typeof p.colors!=='object')p.colors={};p.colors[color]={label,sizes:{}};
-    save(req.db);res.status(201).json({ok:true,color,variant:p.colors[color]});
-  }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać koloru.'})}
-});
-
-app.put('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
-    if(!c)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
-    const cleanImage=v=>String(v||'').trim().slice(0,5_500_000);
-    const rawGallery=Array.isArray(req.body?.gallery)?req.body.gallery:[];
-    let gallery=rawGallery.map(cleanImage).filter(Boolean).slice(0,10);
-    if(!gallery.length){gallery=[cleanImage(req.body?.front),cleanImage(req.body?.back)].filter(Boolean)}
-    c.images={front:gallery[0]||'',back:gallery[1]||'',gallery};
-    save(req.db);res.json({ok:true,color,variant:c});
-  }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać zdjęć koloru.'})}
-});
-
-
-app.delete('/api/admin/products/:id/colors/:color',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);
-    const id=String(req.params.id||''),color=String(req.params.color||'');
-    const product=req.db.catalog?.[id],variant=product?.colors?.[color];
-    if(!product||!variant)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
-
-    // Do not remove a variant still referenced by a pending order.
-    const blockingOrder=(req.db.orders||[]).find(o=>
-      !o.stockCommitted && String(o.paymentStatus||'pending')==='pending' &&
-      Array.isArray(o.items) && o.items.some(x=>String(x.id||'')===id&&String(x.color||'')===color)
-    );
-    if(blockingOrder){
-      return res.status(409).json({error:`Nie można usunąć tego koloru, bo znajduje się w oczekującym zamówieniu #${blockingOrder.orderNo||''}.`});
-    }
-
-    delete product.colors[color];
-    save(req.db);
-    res.json({ok:true,productId:id,color});
-  }catch(e){
-    res.status(400).json({error:e.message||'Nie udało się usunąć koloru.'});
-  }
-});
-
-app.post('/api/admin/products/:id/colors/:color/sizes',adminOnly,(req,res)=>{
-  try{
-    ensureStore(req.db);const id=String(req.params.id||''),color=String(req.params.color||'');const c=req.db.catalog?.[id]?.colors?.[color];
-    if(!c)return res.status(404).json({error:'Nie znaleziono produktu lub koloru.'});
-    const size=cleanSize(req.body?.size);if(Object.prototype.hasOwnProperty.call(c.sizes||{},size))return res.status(409).json({error:'Ten rozmiar już istnieje.'});
-    const stock=Number(req.body?.stock??0);if(!Number.isInteger(stock)||stock<0||stock>9999)return res.status(400).json({error:'Stan musi być liczbą całkowitą od 0 do 9999.'});
-    if(!c.sizes||typeof c.sizes!=='object')c.sizes={};c.sizes[size]=stock;save(req.db);res.status(201).json({ok:true,size,stock});
-  }catch(e){res.status(400).json({error:e.message||'Nie udało się dodać rozmiaru.'})}
-});
-
-app.put('/api/admin/stock',adminOnly,(req,res)=>{
-  ensureStore(req.db);
-  const productId=String(req.body?.productId||''),color=String(req.body?.color||''),size=String(req.body?.size||'').toUpperCase();
-  const stock=Number(req.body?.stock);
-  const slot=req.db.catalog?.[productId]?.colors?.[color]?.sizes;
-  if(!slot||!Object.prototype.hasOwnProperty.call(slot,size))return res.status(404).json({error:'Nie znaleziono tego wariantu produktu.'});
-  if(!Number.isInteger(stock)||stock<0||stock>9999)return res.status(400).json({error:'Stan musi być liczbą całkowitą od 0 do 9999.'});
-  slot[size]=stock;save(req.db);res.json({ok:true,stock});
-});
-
 app.delete('/api/admin/orders/:id',adminOnly,async(req,res)=>{
   try{
     ensureStore(req.db);
     const idx=req.db.orders.findIndex(o=>String(o.id)===String(req.params.id));
     if(idx<0)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
     const order=req.db.orders[idx];
-
-    if(String(order.paymentStatus||'pending')!=='paid')releaseStockReservation(req.db,order);
 
     if(Array.isArray(req.db.returnRequests)){
       req.db.returnRequests=req.db.returnRequests.filter(r=>String(r.orderId)!==String(order.id));
@@ -2565,10 +2163,6 @@ app.post('/api/admin/orders/bulk-delete',adminOnly,async(req,res)=>{
     const deleting=req.db.orders.filter(o=>wanted.has(String(o.id)));
     if(!deleting.length)return res.status(404).json({error:'Nie znaleziono wybranych zamówień.'});
 
-    for(const order of deleting){
-      if(String(order.paymentStatus||'pending')!=='paid')releaseStockReservation(req.db,order);
-    }
-
     const deletedIds=new Set(deleting.map(o=>String(o.id)));
     req.db.orders=req.db.orders.filter(o=>!deletedIds.has(String(o.id)));
 
@@ -2591,33 +2185,21 @@ app.post('/api/admin/orders/bulk-delete',adminOnly,async(req,res)=>{
 app.put('/api/admin/orders/:id',adminOnly,(req,res)=>{
   try{
     ensureStore(req.db);
-    const order=req.db.orders.find(o=>o.id===req.params.id);
-    if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+    const order=req.db.orders.find(o=>o.id===req.params.id&&o.orderType==='digital');
+    if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia cyfrowego.'});
     const beforePayment=String(order.paymentStatus||'pending');
-    const beforeStage=Number(order.shippingStage||0);
     const requestedStatus=String(req.body?.paymentStatus||'');
     if(requestedStatus){
       if(!['pending','paid','cancelled'].includes(requestedStatus))return res.status(400).json({error:'Nieprawidłowy status płatności.'});
       if(order.paymentStatus==='paid'&&requestedStatus!=='paid')return res.status(400).json({error:'Opłaconego zamówienia nie można cofnąć w tym panelu.'});
       if(order.paymentStatus==='cancelled'&&requestedStatus!=='cancelled')return res.status(400).json({error:'Anulowanego zamówienia nie można ponownie aktywować w tym panelu.'});
-      if(requestedStatus==='paid')markOrderPaid(req.db,order);else{if(requestedStatus==='cancelled')releaseStockReservation(req.db,order);order.paymentStatus=requestedStatus;}
-    }
-    if(Object.prototype.hasOwnProperty.call(req.body||{},'shippingStage')){
-      const stage=Number(req.body.shippingStage);
-      if(!Number.isInteger(stage)||stage<0||stage>4)return res.status(400).json({error:'Etap wysyłki musi być od 0 do 4.'});
-      order.shippingStage=stage;
+      if(requestedStatus==='paid')markOrderPaid(req.db,order);else order.paymentStatus=requestedStatus;
     }
     order.updatedAt=Date.now();
-    if(beforePayment!==order.paymentStatus&&order.paymentStatus==='cancelled')orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie zostało anulowane przez obsługę sklepu.',order.updatedAt);
-    if(beforeStage!==Number(order.shippingStage||0)&&order.paymentStatus==='paid'){
-      const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
-      const notes=['Zamówienie zostało przyjęte do realizacji.','Produkty są przygotowywane do wysyłki.','Przesyłka została nadana.','Przesyłka jest w drodze.','Przesyłka została dostarczona.'];
-      const st=Number(order.shippingStage||0);
-      orderEvent(order,`shipping_${st}`,names[st]||'Aktualizacja realizacji',notes[st]||'Status zamówienia został zaktualizowany.',order.updatedAt);
-      const mailKey={1:'preparing',2:'shipped',3:'transit',4:'delivered'}[st];
-      if(mailKey)sendOrderUpdateEmail(req.db,order,mailKey,{dedupeKey:`shipping_${st}`});
+    if(beforePayment!==order.paymentStatus&&order.paymentStatus==='cancelled'){
+      orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie zostało anulowane przez obsługę sklepu.',order.updatedAt);
+      sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
     }
-    if(beforePayment!==order.paymentStatus&&order.paymentStatus==='cancelled')sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
     save(req.db);res.json({ok:true,order:adminOrder(req.db,order)});
   }catch(e){res.status(400).json({error:e.message||'Nie udało się zaktualizować zamówienia.'})}
 });
