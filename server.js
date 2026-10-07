@@ -1298,51 +1298,6 @@ function ensureReturnRequests(db){if(!Array.isArray(db.returnRequests))db.return
 function nextReturnNo(db){const nums=ensureReturnRequests(db).map(x=>Number(String(x.returnNo||'').replace(/\D/g,''))||0);return `RT-${Math.max(1000,...nums)+1}`}
 function returnForUser(r){return {id:r.id,returnNo:r.returnNo,orderId:r.orderId,orderNo:r.orderNo,type:r.type,reason:r.reason,details:r.details||'',items:r.items||[],status:r.status||'new',adminReply:r.adminReply||'',createdAt:r.createdAt,updatedAt:r.updatedAt||r.createdAt}}
 app.get('/api/returns',auth,(req,res)=>{ensureReturnRequests(req.db);res.json({ok:true,returns:req.db.returnRequests.filter(r=>r.userId===req.user.id).map(returnForUser).sort((a,b)=>b.createdAt-a.createdAt)})});
-
-app.post('/api/orders/:id/return-request',auth,rateLimit('digital-return-request',8,15*60*1000),(req,res)=>{
-  ensureStore(req.db);ensureReturnRequests(req.db);
-  const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id&&o.orderType==='digital');
-  if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia cyfrowego.'});
-  if(order.paymentStatus!=='paid')return res.status(409).json({error:'Zgłoszenie można wysłać po potwierdzeniu płatności za produkt cyfrowy.'});
-
-  const type=String(req.body?.type||'complaint').trim();
-  if(!['complaint','return'].includes(type))return res.status(400).json({error:'Nieprawidłowy rodzaj zgłoszenia.'});
-
-  const reason=String(req.body?.reason||'').trim().slice(0,180);
-  const details=String(req.body?.details||'').trim().slice(0,1500);
-  if(reason.length<2)return res.status(400).json({error:'Wybierz powód zgłoszenia.'});
-
-  const publicOrder=orderForUser(order,req.db);
-  const items=(publicOrder.items||[]).map(x=>({
-    id:String(x.id||''),
-    name:String(x.name||'Produkt cyfrowy').slice(0,180),
-    qty:Math.max(1,Number(x.qty||1)),
-    format:'PDF'
-  }));
-
-  const now=Date.now();
-  const request={
-    id:crypto.randomUUID(),
-    returnNo:nextReturnNo(req.db),
-    orderId:order.id,
-    orderNo:order.orderNo,
-    userId:req.user.id,
-    email:req.user.email,
-    orderType:'digital',
-    type,
-    reason,
-    details,
-    items,
-    status:'new',
-    adminReply:'',
-    createdAt:now,
-    updatedAt:now
-  };
-  req.db.returnRequests.unshift(request);
-  req.db.returnRequests=req.db.returnRequests.slice(0,1000);
-  save(req.db);
-  res.status(201).json({ok:true,request:returnForUser(request)});
-});
 app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   ensureStore(req.db);
   const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
@@ -1476,7 +1431,7 @@ function simpayAmountMatches(order,data){
 
 
 // --- STARXV DIGITAL ------------------------------------------------------------
-// Metadata is managed from Admin and persisted in the STARXV database.
+// Metadata is managed from Admin and persisted in the same database as the physical catalog.
 // PDF files stay outside /public, so they cannot be downloaded by guessing a URL.
 function digitalFilePath(p){
   const fileName=path.basename(String(p?.fileName||''));
@@ -1697,9 +1652,9 @@ app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);ex
 
 
 // --- STARXV marketing/news campaigns -----------------------------------------
-const CAMPAIGN_TYPES=new Set(['newsletter','site_update','new_product','other']);
+const CAMPAIGN_TYPES=new Set(['newsletter','site_update','new_product','new_variant','restock','other']);
 function campaignType(v){const x=String(v||'').trim();return CAMPAIGN_TYPES.has(x)?x:'other'}
-function campaignTypeLabel(v){return ({newsletter:'NEWSLETTER',site_update:'ZMIANY NA STRONIE',new_product:'NOWY PRODUKT DIGITAL',other:'NOWOŚĆ STARXV'})[campaignType(v)]||'NOWOŚĆ STARXV'}
+function campaignTypeLabel(v){return ({newsletter:'NEWSLETTER',site_update:'ZMIANY NA STRONIE',new_product:'NOWY PRODUKT',new_variant:'NOWY WARIANT',restock:'POWRÓT DO MAGAZYNU',other:'NOWOŚĆ STARXV'})[campaignType(v)]||'NOWOŚĆ STARXV'}
 function cleanCampaignText(v,max=3000){return String(v||'').trim().replace(/\r\n?/g,'\n').slice(0,max)}
 function emailEscape(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function cleanCampaignUrl(v){
