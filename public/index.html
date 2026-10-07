@@ -1492,7 +1492,6 @@ body.sx-system-dialog-lock{overflow:hidden!important}
 <a href="#">TikTok</a>
 </div>
 </footer>
-<div aria-hidden="true" class="sx-info-modal" id="sxSizeGuide"><div aria-labelledby="sxSizeGuideTitle" aria-modal="true" class="sx-info-card" role="dialog"><div class="sx-info-head"><div><small>STARXV / FIT GUIDE</small><h3 id="sxSizeGuideTitle">Tabela rozmiarów</h3></div><button aria-label="Zamknij" class="sx-info-close" data-sx-close="size" type="button">×</button></div><div class="sx-info-body"><p class="sx-info-lead">Bluza ma krój relaxed fit. Dokładne wymiary produkcyjne wpiszemy po zatwierdzeniu finalnego blanku, żeby nie podawać klientom wymyślonych wartości.</p><table class="sx-size-table"><thead><tr><th>Rozmiar</th><th>Szerokość A</th><th>Długość B</th><th>Rękaw C</th></tr></thead><tbody><tr><td><b>S</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>M</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>L</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr><tr><td><b>XL</b></td><td>— cm</td><td>— cm</td><td>— cm</td></tr></tbody></table><div class="sx-measure-grid"><div class="sx-measure-card"><b>A — SZEROKOŚĆ</b><span>Mierzona na płasko od pachy do pachy.</span></div><div class="sx-measure-card"><b>B — DŁUGOŚĆ</b><span>Od najwyższego punktu ramienia do dolnej krawędzi.</span></div><div class="sx-measure-card"><b>C — RĘKAW</b><span>Od szwu ramienia do końca mankietu.</span></div></div><div class="sx-size-note">Wymiary odzieży mogą różnić się o około 1–2 cm. Przed uruchomieniem sprzedaży uzupełnij wartości na podstawie rzeczywistej bluzy produkcyjnej.</div></div></div></div>
 <div aria-hidden="true" class="sx-info-modal" id="sxLegalModal"><div aria-labelledby="sxLegalTitle" aria-modal="true" class="sx-info-card" role="dialog"><div class="sx-info-head"><div><small>STARXV / INFORMACJE</small><h3 id="sxLegalTitle">Regulamin</h3></div><button aria-label="Zamknij" class="sx-info-close" data-sx-close="legal" type="button">×</button></div><div class="sx-info-body" id="sxLegalBody"></div></div></div>
 <div aria-hidden="true" class="account-modal" id="accountModal">
 <div aria-labelledby="accountTitle" aria-modal="true" class="account-panel" role="dialog">
@@ -1738,7 +1737,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
       const x=(o.items||[])[0]||{},img=String(x.image||'/assets/placeholder.png'),productId=o.digitalProductId||x.id||'zero-to-first-sale',paid=o.paymentStatus==='paid',canCancel=['pending','failed'].includes(o.paymentStatus);
       const state=paid?'OPŁACONO':o.paymentStatus==='failed'?'PŁATNOŚĆ NIEUDANA':o.paymentStatus==='cancelled'?'ANULOWANO':'OCZEKUJE NA PŁATNOŚĆ';
       const access=paid
-        ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button></div>`
+        ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button><button class="order-review-btn" type="button" data-return-order="${safe(encodeURIComponent(JSON.stringify(o)))}">ZWROT / REKLAMACJA</button></div>`
         : `<div class="digital-payment-wait">${o.paymentStatus==='pending'?'Dostęp do pliku pojawi się automatycznie po potwierdzeniu płatności.':'Plik nie jest dostępny, ponieważ płatność nie została potwierdzona.'}${paymentExpiryHtml(o)}<br><button class="order-pay-btn" type="button" data-pay-order="${safe(o.id)}">ZAPŁAĆ →</button><div class="order-payment-error" data-pay-error="${safe(o.id)}"></div></div>`;
       return `<article class="order-card digital-order"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${state}</div></div><div class="order-main-grid"><div class="order-items"><div class="order-item"><img class="order-thumb" src="${safe(img)}" alt=""><div><div class="order-item-name">${safe(x.name||'STARXV DIGITAL')}</div><div class="digital-order-meta">STARXV DIGITAL • PDF • PRODUKT CYFROWY</div></div><div class="order-item-price">${money(Number(x.price||o.total||0)*Number(x.qty||1))}</div></div></div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div><div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa cyfrowa: 0 PLN</div>${access}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}</article>`;
     }).join('');
@@ -2531,39 +2530,6 @@ body.sx-system-dialog-lock{overflow:hidden!important}
 })();
 
 </script>
-
-<!-- STARXV: SKŁAD I KONSERWACJA / DROP 01 -->
-
-<script id="starxv-care-script">
-(function(){
-  function addCare(){
-    document.querySelectorAll('.product-copy').forEach(function(copy){
-      if(copy.querySelector('.sx-care-accordion')) return;
-      var title=copy.querySelector('h2');
-      if(!title) return;
-      var isHoodie=/Black Hoodie x Graffiti/i.test(title.textContent);
-      var isShirt=/White T-Shirt Different Reality./i.test(title.textContent);
-      if(!isHoodie && !isShirt) return;
-      var box=document.createElement('div');
-      box.className='sx-care-accordion';
-      var material=isHoodie ? '80% bawełna, 20% poliester' : '100% bawełna';
-      box.innerHTML=`<button class="sx-care-toggle" type="button" aria-expanded="false"><span>SKŁAD I KONSERWACJA</span><span class="sx-care-plus">+</span></button><div class="sx-care-content"><div class="sx-care-block"><span class="sx-care-label">MATERIAŁ</span><p>${material}</p></div><div class="sx-care-block"><span class="sx-care-label">KONSERWACJA</span><ul class="sx-care-list"><li>Prać w temperaturze maks. 30°C</li><li>Prać na lewej stronie</li><li>Prać z podobnymi kolorami</li><li>Nie wybielać</li><li>Nie suszyć w suszarce bębnowej</li><li>Prasować w niskiej temperaturze</li><li>Nie prasować bezpośrednio po nadruku</li><li>Nie czyścić chemicznie</li></ul></div></div>`;
-      if(isShirt){
-        var addBtn=copy.querySelector('#shirtAddBtn');
-        if(addBtn) addBtn.insertAdjacentElement('afterend',box); else copy.appendChild(box);
-      }else{
-        var notes=copy.querySelector('.detail-notes');
-        if(notes) copy.insertBefore(box,notes); else copy.appendChild(box);
-      }
-      var btn=box.querySelector('.sx-care-toggle');
-      btn.addEventListener('click',function(){var open=box.classList.toggle('open');btn.setAttribute('aria-expanded',String(open));});
-    });
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',addCare); else addCare();
-  var obs=new MutationObserver(function(){addCare()});
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
 <!-- STARXV: DOSTAWA I ZWROTY W PROFILU -->
 
 <script id="starxv-shipping-returns-script">
@@ -2638,46 +2604,6 @@ body.sx-system-dialog-lock{overflow:hidden!important}
       closeOverlayById('sxFavOverlay');
     }
   });
-})();
-</script>
-<script id="sxCategoryBrowserScript">
-(()=>{
-  const browser=document.getElementById('sxCategoryBrowser');
-  const grid=document.getElementById('sxCategoryGrid');
-  const title=document.getElementById('sxCategoryTitle');
-  const kicker=document.getElementById('sxCategoryKicker');
-  const sub=document.getElementById('sxCategorySub');
-  const count=document.getElementById('sxCategoryCount');
-  const close=document.getElementById('sxCategoryClose');
-  if(!browser||!grid)return;
-  const categories={
-    hoodies:{title:'BLUZY.',kicker:'STARXV / BLUZY',sub:'Wszystkie aktualnie dostępne bluzy STARXV w jednym miejscu.',source:()=>[document.querySelector('#shop .product-card'),...document.querySelectorAll('#sxDynamicProducts [data-category="hoodies"]')].filter(Boolean)},
-    tshirts:{title:'KOSZULKI.',kicker:'STARXV / KOSZULKI',sub:'Wszystkie aktualnie dostępne koszulki STARXV w jednym miejscu.',source:()=>[document.getElementById('shirtCard'),...document.querySelectorAll('#sxDynamicProducts [data-category="tshirts"]')].filter(Boolean)}
-  };
-  const shut=()=>{browser.classList.remove('open');browser.setAttribute('aria-hidden','true');document.body.style.overflow=''};
-  const openCategory=key=>{
-    const data=categories[key];if(!data)return;
-    browser.dataset.category=key;
-    const originals=data.source();
-    title.textContent=data.title;kicker.textContent=data.kicker;sub.textContent=data.sub;
-    count.textContent=`${originals.length} ${originals.length===1?'PRODUKT':'PRODUKTY'}`;
-    grid.innerHTML='';
-    if(!originals.length){grid.innerHTML='<div class="sx-category-empty-note">W tej kategorii nie ma jeszcze dostępnych produktów.</div>'}
-    originals.forEach((original,idx)=>{
-      const clone=original.cloneNode(true);
-      clone.removeAttribute('id');clone.querySelectorAll('[id]').forEach(x=>x.removeAttribute('id'));
-      clone.setAttribute('tabindex','0');clone.setAttribute('role','button');
-      const launch=()=>{shut();setTimeout(()=>original.click(),20)};
-      clone.addEventListener('click',e=>{e.preventDefault();launch()});
-      clone.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();launch()}});
-      grid.appendChild(clone);
-    });
-    browser.classList.add('open');browser.setAttribute('aria-hidden','false');document.body.style.overflow='hidden';browser.scrollTop=0;
-  };
-  document.querySelectorAll('.sx-category-open').forEach(btn=>btn.addEventListener('click',()=>openCategory(btn.dataset.category)));
-  close?.addEventListener('click',shut);
-  browser.addEventListener('click',e=>{if(e.target===browser)shut()});
-  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&browser.classList.contains('open'))shut()});
 })();
 </script>
 <script id="starxv-backend-preferences-sync">
@@ -3113,7 +3039,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
       const hasUnread=a.some(x=>x.unread);
       const dot=$('#sxReportUnreadDot'),txt=$('#sxReportUnreadText');
       if(dot)dot.hidden=!hasUnread;if(txt)txt.hidden=!hasUnread;
-      box.innerHTML=a.length?a.map(x=>`<div class="sx-report-history-item" data-ticket="${esc(x.id)}"><div class="sx-report-history-top"><div class="sx-report-ticket">${esc(x.ticketNo||'ZGŁOSZENIE')}${x.unread?' · NOWA ODPOWIEDŹ':''}</div><span class="sx-report-history-status">${statusLabel(x.status)}</span></div><div class="sx-report-history-type">${esc(x.type||'Inne')}${x.orderNo?` · ZAMÓWIENIE #${esc(x.orderNo)} · ${esc(x.orderType==='digital'?'CYFROWE':'FIZYCZNE')}`:''}</div><div class="sx-report-history-date">${esc(new Date(x.createdAt).toLocaleString('pl-PL'))}</div><div class="sx-ticket-thread">${(x.messages||[]).map(m=>`<div class="sx-ticket-msg ${m.author==='support'?'support':'customer'}"><b>${m.author==='support'?`STARXV SUPPORT${m.title?.label?` · ${esc(m.title.label)}`:''}`:'TY'}</b><div>${esc(m.text||'')}</div><small>${esc(new Date(m.createdAt).toLocaleString('pl-PL'))}</small></div>`).join('')}</div>${x.status!=='resolved'&&!x.closedByCustomer?`<div class="sx-ticket-reply"><textarea maxlength="2000" data-customer-reply="${esc(x.id)}" placeholder="Napisz odpowiedź..."></textarea><div class="sx-ticket-actions"><button type="button" data-send-customer="${esc(x.id)}">WYŚLIJ →</button><button type="button" data-close-ticket="${esc(x.id)}">ZAMKNIJ ZGŁOSZENIE</button></div></div>`:`<div class="sx-ticket-actions"><button type="button" data-reopen-ticket="${esc(x.id)}">OTWÓRZ PONOWNIE</button></div>`}</div>`).join(''):'<div class="sx-report-history-empty">Nie masz jeszcze żadnych zgłoszeń.</div>';
+      box.innerHTML=a.length?a.map(x=>`<div class="sx-report-history-item" data-ticket="${esc(x.id)}"><div class="sx-report-history-top"><div class="sx-report-ticket">${esc(x.ticketNo||'ZGŁOSZENIE')}${x.unread?' · NOWA ODPOWIEDŹ':''}</div><span class="sx-report-history-status">${statusLabel(x.status)}</span></div><div class="sx-report-history-type">${esc(x.type||'Inne')}${x.orderNo?` · ZAMÓWIENIE #${esc(x.orderNo)} · CYFROWE`:''}</div><div class="sx-report-history-date">${esc(new Date(x.createdAt).toLocaleString('pl-PL'))}</div><div class="sx-ticket-thread">${(x.messages||[]).map(m=>`<div class="sx-ticket-msg ${m.author==='support'?'support':'customer'}"><b>${m.author==='support'?`STARXV SUPPORT${m.title?.label?` · ${esc(m.title.label)}`:''}`:'TY'}</b><div>${esc(m.text||'')}</div><small>${esc(new Date(m.createdAt).toLocaleString('pl-PL'))}</small></div>`).join('')}</div>${x.status!=='resolved'&&!x.closedByCustomer?`<div class="sx-ticket-reply"><textarea maxlength="2000" data-customer-reply="${esc(x.id)}" placeholder="Napisz odpowiedź..."></textarea><div class="sx-ticket-actions"><button type="button" data-send-customer="${esc(x.id)}">WYŚLIJ →</button><button type="button" data-close-ticket="${esc(x.id)}">ZAMKNIJ ZGŁOSZENIE</button></div></div>`:`<div class="sx-ticket-actions"><button type="button" data-reopen-ticket="${esc(x.id)}">OTWÓRZ PONOWNIE</button></div>`}</div>`).join(''):'<div class="sx-report-history-empty">Nie masz jeszcze żadnych zgłoszeń.</div>';
     }catch{box.innerHTML='<div class="sx-report-history-empty">Nie udało się pobrać historii.</div>'}
   }
 
@@ -3189,16 +3115,18 @@ body.sx-system-dialog-lock{overflow:hidden!important}
  function render(){
   const own=requests.filter(x=>x.orderId===order.id);
   content.innerHTML=`<div class="sx-return-label">ZAMÓWIENIE #${esc(order.orderNo)}</div>
-  <label class="sx-return-label">RODZAJ</label><select id="sxReturnType"><option value="return">Zwrot</option><option value="complaint">Reklamacja</option></select>
-  <label class="sx-return-label">PRODUKTY</label><div>${(order.items||[]).map((x,n)=>`<label class="sx-return-item"><input type="checkbox" data-ri="${n}" checked><span><b>${esc(x.name)}</b><br>${esc(x.colorLabel||x.color)} / ${esc(x.size)} × ${Number(x.qty||1)}</span></label>`).join('')}</div>
-  <label class="sx-return-label">POWÓD</label><select id="sxReturnReason"><option value="">Wybierz...</option><option>Nie pasuje rozmiar</option><option>Produkt nie spełnia oczekiwań</option><option>Uszkodzony produkt</option><option>Wada produktu</option><option>Otrzymano niewłaściwy produkt</option><option>Inny powód</option></select>
-  <label class="sx-return-label">DODATKOWE INFORMACJE</label><textarea id="sxReturnDetails" maxlength="1500" placeholder="Opisz zgłoszenie..."></textarea>
+  <div class="sx-return-label" style="margin-top:10px">PRODUKT CYFROWY / E-BOOK</div>
+  <label class="sx-return-label">RODZAJ</label><select id="sxReturnType"><option value="complaint">Reklamacja produktu cyfrowego</option><option value="return">Zwrot / odstąpienie — prośba o weryfikację</option></select>
+  <label class="sx-return-label">PRODUKT</label><div>${(order.items||[]).map((x,n)=>`<label class="sx-return-item"><input type="checkbox" data-ri="${n}" checked><span><b>${esc(x.name)}</b><br>Produkt cyfrowy · PDF × ${Number(x.qty||1)}</span></label>`).join('')}</div>
+  <label class="sx-return-label">POWÓD</label><select id="sxReturnReason"><option value="">Wybierz...</option><option>Problem z pobraniem lub dostępem do pliku</option><option>Plik jest uszkodzony lub nie otwiera się</option><option>Treść cyfrowa jest niezgodna z opisem oferty</option><option>Otrzymałem niewłaściwy produkt cyfrowy</option><option>Problem techniczny z produktem</option><option>Inny powód</option></select>
+  <label class="sx-return-label">DODATKOWE INFORMACJE</label><textarea id="sxReturnDetails" maxlength="1500" placeholder="Opisz problem lub prośbę..."></textarea>
   <button class="sx-return-submit" id="sxReturnSubmit">WYŚLIJ ZGŁOSZENIE →</button><div class="sx-return-msg" id="sxReturnMsg"></div>
   ${own.length?`<div class="sx-return-history"><div class="sx-return-label">TWOJE ZGŁOSZENIA</div>${own.map(x=>`<div class="sx-return-ticket"><b>${esc(x.returnNo)} · ${x.type==='complaint'?'REKLAMACJA':'ZWROT'} · ${status(x.status)}</b><div>${esc(x.reason)}</div>${x.adminReply?`<div style="margin-top:8px"><b>STARXV:</b> ${esc(x.adminReply)}</div>`:''}<small>${new Date(x.updatedAt||x.createdAt).toLocaleString('pl-PL')}</small></div>`).join('')}</div>`:''}`;
   document.getElementById('sxReturnSubmit').onclick=submit;
  }
  async function submit(){
-  const b=document.getElementById('sxReturnSubmit'),msg=document.getElementById('sxReturnMsg'),picked=[...content.querySelectorAll('[data-ri]:checked')].map(c=>{const x=order.items[Number(c.dataset.ri)];return {id:x.id,color:x.color,size:x.size,qty:x.qty}});
+  const b=document.getElementById('sxReturnSubmit'),msg=document.getElementById('sxReturnMsg'),picked=[...content.querySelectorAll('[data-ri]:checked')].map(c=>{const x=order.items[Number(c.dataset.ri)];return {id:x.id,qty:x.qty}});
+  if(!picked.length){msg.textContent='Wybierz produkt, którego dotyczy zgłoszenie.';return}
   b.disabled=true;msg.textContent='Wysyłanie...';
   try{const r=await fetch('/api/orders/'+encodeURIComponent(order.id)+'/return-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:document.getElementById('sxReturnType').value,reason:document.getElementById('sxReturnReason').value,details:document.getElementById('sxReturnDetails').value,items:picked})}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Nie udało się wysłać zgłoszenia.');msg.textContent=`Zgłoszenie ${d.request.returnNo} zostało wysłane.`;await loadReturns();render()}catch(e){msg.textContent=e.message}finally{b.disabled=false}
  }
@@ -3416,17 +3344,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   loadGoogleConfig();
 });
 </script>
-<div aria-hidden="true" class="sx-suggested-modal" id="sxSuggestedDeliveryModal">
-<div aria-labelledby="sxSuggestedDeliveryTitle" aria-modal="true" class="sx-suggested-card" role="dialog">
-<div class="sx-suggested-head"><div><small>STARXV / KOSZYK</small><b id="sxSuggestedDeliveryTitle">Jak działa dostawa sugerowana?</b></div><button aria-label="Zamknij" class="sx-suggested-close" id="sxSuggestedDeliveryClose" type="button">×</button></div>
-<div class="sx-suggested-body">
-<p><strong>Dostawa sugerowana</strong> to orientacyjny koszt dostawy pokazany jeszcze przed finalizacją zamówienia.</p>
-<p>STARXV pokazuje orientacyjny koszt <strong>dostawy na adres</strong> jeszcze przed finalizacją zamówienia.</p>
-<div class="sx-suggested-example"><strong>Informacja:</strong> finalny koszt dostawy zostanie potwierdzony podczas składania zamówienia.</div>
-<p>To <strong>nie jest jeszcze ostatecznie naliczona opłata</strong>. Finalny koszt dostawy zobaczysz i zatwierdzisz podczas składania zamówienia.</p>
-</div>
-</div>
-</div>
 <script id="starxv-view-persistence-v2">
 (()=>{
   'use strict';
