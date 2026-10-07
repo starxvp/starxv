@@ -3,7 +3,7 @@
 require('dotenv').config();
 const { Resend } = require('resend');
 
-const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');const nodemailer=require('nodemailer');
+const express=require('express');const fs=require('fs');const path=require('path');const crypto=require('crypto');
 const app=express(),PORT=Number(process.env.PORT||3000);
 const LEGAL_VERSION='2026-10-01';
 const DIGITAL_CONSENT_TEXT='Żądam rozpoczęcia dostarczania zakupionej treści cyfrowej przed upływem 14-dniowego terminu do odstąpienia od umowy i przyjmuję do wiadomości, że po rozpoczęciu dostarczania treści cyfrowej utracę prawo odstąpienia od umowy w zakresie przewidzianym prawem.';
