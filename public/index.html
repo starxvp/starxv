@@ -1394,8 +1394,74 @@ body.sx-delete-account-lock{overflow:hidden!important}
 .sx-payment-expiry b{display:block;margin-bottom:5px;color:#d6b16f;font-size:8px;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
 .sx-payment-expiry strong{display:inline-block;margin-top:5px;color:#f0e7d8;font:950 14px/1.2 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:.04em}
 </style>
+<style id="starxv-native-dialog-replacement-style">
+.sx-system-dialog{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,0,0,.80);backdrop-filter:blur(13px)}
+.sx-system-dialog.open{display:flex}
+.sx-system-dialog-card{position:relative;width:min(500px,100%);padding:29px;border:1px solid rgba(255,255,255,.14);border-radius:21px;background:#0a0a0a;color:#fff;box-shadow:0 34px 120px rgba(0,0,0,.68)}
+.sx-system-dialog-kicker{color:#777;font:950 8px/1 Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase}
+.sx-system-dialog-title{margin:11px 0 0;color:#f3f3f3;font:950 25px/1.04 Arial,sans-serif;letter-spacing:-.035em}
+.sx-system-dialog-message{margin:12px 0 0;color:#949494;font:650 11px/1.7 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere}
+.sx-system-dialog-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:23px}
+.sx-system-dialog-actions.single{grid-template-columns:1fr}
+.sx-system-dialog-btn{min-height:44px;border:1px solid #303030;border-radius:11px;background:#131313;color:#fff;cursor:pointer;font:950 9px/1 Arial,sans-serif;letter-spacing:.08em;transition:.16s}
+.sx-system-dialog-btn:hover{background:#1c1c1c;border-color:#4a4a4a}
+.sx-system-dialog-btn.primary{background:#f2f2f2;color:#060606;border-color:#f2f2f2}
+.sx-system-dialog-btn.primary:hover{background:#fff;border-color:#fff}
+.sx-system-dialog-btn.danger{background:#1a0b0d;color:#ffb5bd;border-color:#6b2831}
+.sx-system-dialog-btn.danger:hover{background:#2a1014;border-color:#91404b}
+body.sx-system-dialog-lock{overflow:hidden!important}
+@media(max-width:520px){.sx-system-dialog{padding:14px}.sx-system-dialog-card{padding:24px 19px;border-radius:18px}.sx-system-dialog-actions{grid-template-columns:1fr}.sx-system-dialog-title{font-size:22px}}
+</style>
 </head>
 <body>
+<script id="starxv-native-dialog-replacement-script">
+(()=>{
+  let active=null,lastFocus=null;
+  function ensure(){
+    let modal=document.getElementById('sxSystemDialog');
+    if(modal)return modal;
+    modal=document.createElement('div');
+    modal.id='sxSystemDialog';
+    modal.className='sx-system-dialog';
+    modal.setAttribute('aria-hidden','true');
+    modal.innerHTML=`<div class="sx-system-dialog-card" role="dialog" aria-modal="true" aria-labelledby="sxSystemDialogTitle" aria-describedby="sxSystemDialogMessage"><div class="sx-system-dialog-kicker" id="sxSystemDialogKicker">STARXV / KOMUNIKAT</div><h3 class="sx-system-dialog-title" id="sxSystemDialogTitle">Informacja</h3><div class="sx-system-dialog-message" id="sxSystemDialogMessage"></div><div class="sx-system-dialog-actions" id="sxSystemDialogActions"><button class="sx-system-dialog-btn" id="sxSystemDialogCancel" type="button">ANULUJ</button><button class="sx-system-dialog-btn primary" id="sxSystemDialogConfirm" type="button">OK</button></div></div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal&&active?.allowBackdrop!==false)finish(false)});
+    document.addEventListener('keydown',e=>{
+      if(!modal.classList.contains('open'))return;
+      if(e.key==='Escape'&&active?.allowEscape!==false){e.preventDefault();finish(false)}
+      if(e.key==='Enter'&&document.activeElement?.tagName!=='TEXTAREA'){e.preventDefault();finish(true)}
+    });
+    modal.querySelector('#sxSystemDialogCancel').onclick=()=>finish(false);
+    modal.querySelector('#sxSystemDialogConfirm').onclick=()=>finish(true);
+    return modal;
+  }
+  function finish(value){
+    if(!active)return;
+    const {resolve,mode}=active;active=null;
+    const modal=ensure();modal.classList.remove('open');modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('sx-system-dialog-lock');
+    try{lastFocus?.focus?.()}catch{}lastFocus=null;
+    resolve(mode==='alert'?true:Boolean(value));
+  }
+  function openDialog(message,opts={},mode='alert'){
+    if(active)finish(false);
+    const modal=ensure(),actions=modal.querySelector('#sxSystemDialogActions'),cancel=modal.querySelector('#sxSystemDialogCancel'),confirm=modal.querySelector('#sxSystemDialogConfirm');
+    lastFocus=document.activeElement;
+    modal.querySelector('#sxSystemDialogKicker').textContent=String(opts.kicker||'STARXV / KOMUNIKAT');
+    modal.querySelector('#sxSystemDialogTitle').textContent=String(opts.title||(mode==='confirm'?'Potwierdź działanie':'Informacja'));
+    modal.querySelector('#sxSystemDialogMessage').textContent=String(message??'');
+    cancel.textContent=String(opts.cancelText||'ANULUJ');
+    confirm.textContent=String(opts.confirmText||(mode==='confirm'?'POTWIERDŹ':'OK'));
+    confirm.className='sx-system-dialog-btn '+(opts.danger?'danger':'primary');
+    cancel.hidden=mode==='alert';actions.classList.toggle('single',mode==='alert');
+    modal.classList.add('open');modal.setAttribute('aria-hidden','false');document.body.classList.add('sx-system-dialog-lock');
+    return new Promise(resolve=>{active={resolve,mode,allowBackdrop:opts.allowBackdrop,allowEscape:opts.allowEscape};setTimeout(()=>confirm.focus(),30)});
+  }
+  window.sxAlert=(message,opts={})=>openDialog(message,opts,'alert');
+  window.sxConfirm=(message,opts={})=>openDialog(message,{danger:true,...opts},'confirm');
+})();
+</script>
 <div aria-hidden="true" id="starxvIntro"><span class="intro-shape shape-a"></span><span class="intro-shape shape-b"></span><span class="intro-shape shape-c"></span><img alt="STARXV" class="starxv-intro-logo" src="/assets/starxv-logo.png"/><div aria-hidden="true" class="intro-loader"><div class="intro-loader-fill"></div></div></div>
 <div class="sx-world-gate" id="sxWorldGate" aria-hidden="true">
   <div class="sx-world-brand">STARXV<span>™</span></div>
@@ -2112,7 +2178,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     if(!addresses.length){list.innerHTML='<div class="stage1-saved-empty">Nie masz jeszcze zapisanych adresów. Kliknij „Dodaj nowy” i uzupełnij formularz.</div>';return}
     list.innerHTML=addresses.map(a=>`<div class="stage1-saved-card ${a.id===stage1EditingAddressId?'selected':''}" data-id="${a.id}"><div class="stage1-saved-main"><b>${a.firstName||''} ${a.lastName||''}${a.id===def?' · DOMYŚLNY':''}</b><span>${addressText(a)}<br>${a.email||''}${a.phone?' • '+a.phone:''}</span></div><button class="stage1-delete-address" type="button" aria-label="Usuń adres" title="Usuń adres">×</button></div>`).join('');
     list.querySelectorAll('.stage1-saved-main').forEach(el=>el.onclick=()=>{const card=el.closest('.stage1-saved-card');fillAddressForm(addresses.find(a=>a.id===card.dataset.id))});
-    list.querySelectorAll('.stage1-delete-address').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const id=btn.closest('.stage1-saved-card').dataset.id;if(confirm('Usunąć ten zapisany adres?'))deleteSavedAddress(id)});
+    list.querySelectorAll('.stage1-delete-address').forEach(btn=>btn.onclick=async e=>{e.stopPropagation();const id=btn.closest('.stage1-saved-card').dataset.id;if(await sxConfirm('Zapisany adres zostanie usunięty z Twojego konta.',{title:'Usunąć adres?',confirmText:'USUŃ'}))deleteSavedAddress(id)});
   };
 
   const showStatus=(type,title,text,ms=4200)=>{statusBox.className=`payment-status ${type} show`;statusTitle.textContent=title;statusText.textContent=text;clearTimeout(showStatus.t);showStatus.t=setTimeout(()=>statusBox.classList.remove('show'),ms)};
@@ -2426,7 +2492,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     title.textContent=existing?'Edytuj opinię':'Napisz opinię';const digital=(order.orderType||'physical')==='digital';const kicker=m.querySelector('#sxOrderReviewKicker');if(kicker)kicker.textContent=digital?'STARXV DIGITAL · OPINIA PO ZAKUPIE':'STARXV · OPINIA PO DOSTAWIE';prod.innerHTML=digital?`<b>${safe(item.name||'STARXV DIGITAL')}</b><br>Produkt cyfrowy · PDF<br>Zamówienie #${safe(order.orderNo||String(order.id||'').slice(-8))}`:`<b>${safe(item.name||'STARXV PRODUCT')}</b><br>Kolor: ${safe(item.colorLabel||(COLOR_META[item.color]||{}).label||item.color||'—')} · Rozmiar: ${safe(item.size||'—')}<br>Zamówienie #${safe(order.orderNo||String(order.id||'').slice(-8))}`;rating.value=String(existing?.rating||5);text.value=existing?.text||'';status.textContent='';del.hidden=!existing;
     const paint=n=>stars.forEach(b=>b.classList.toggle('on',Number(b.dataset.rating)<=n));paint(Number(rating.value));stars.forEach(b=>b.onclick=()=>{rating.value=b.dataset.rating;paint(Number(b.dataset.rating))});
     form.onsubmit=async e=>{e.preventDefault();const reviewText=text.value.trim();if(reviewText.length<3){status.textContent='Opinia musi mieć co najmniej 3 znaki.';return}const saveBtn=form.querySelector('.sx-order-review-save');saveBtn.disabled=true;status.textContent='Zapisywanie…';try{const r=await fetch('/api/reviews/'+encodeURIComponent(item.id),{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId:order.id,color:item.color,size:item.size,rating:Number(rating.value)||5,text:reviewText})}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się zapisać opinii.');await fetchOrders();render();m.classList.remove('open');m.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('starxv:reviews-changed',{detail:{productId:item.id}}))}catch(err){status.textContent=err.message||'Nie udało się zapisać opinii.'}finally{saveBtn.disabled=false}};
-    del.onclick=async()=>{if(!existing||!confirm('Usunąć tę opinię?'))return;del.disabled=true;status.textContent='Usuwanie…';try{const r=await fetch('/api/reviews/by-id/'+encodeURIComponent(existing.id),{method:'DELETE',credentials:'include'}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się usunąć opinii.');await fetchOrders();render();m.classList.remove('open');m.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('starxv:reviews-changed',{detail:{productId:item.id}}))}catch(err){status.textContent=err.message||'Nie udało się usunąć opinii.'}finally{del.disabled=false}};
+    del.onclick=async()=>{if(!existing||!await sxConfirm('Twoja opinia zostanie trwale usunięta.',{title:'Usunąć opinię?',confirmText:'USUŃ'}))return;del.disabled=true;status.textContent='Usuwanie…';try{const r=await fetch('/api/reviews/by-id/'+encodeURIComponent(existing.id),{method:'DELETE',credentials:'include'}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Nie udało się usunąć opinii.');await fetchOrders();render();m.classList.remove('open');m.setAttribute('aria-hidden','true');window.dispatchEvent(new CustomEvent('starxv:reviews-changed',{detail:{productId:item.id}}))}catch(err){status.textContent=err.message||'Nie udało się usunąć opinii.'}finally{del.disabled=false}};
     m.classList.add('open');m.setAttribute('aria-hidden','false');setTimeout(()=>text.focus(),50);
   }
   async function fetchOrders(){
@@ -2545,7 +2611,7 @@ const renderCart=()=>{hydrateCartDiscounts();
     const order=orders.find(o=>String(o.id)===String(id));
     if(!order)return;
     const no=order.orderNo||String(order.id||'').slice(-8);
-    if(!confirm(`Anulować zamówienie #${no}?`))return;
+    if(!await sxConfirm(`Zamówienie #${no} zostanie anulowane.`,{title:'Anulować zamówienie?',confirmText:'ANULUJ ZAMÓWIENIE'}))return;
     const oldText=btn.textContent;btn.disabled=true;btn.textContent='ANULOWANIE…';
     try{
       const res=await fetch('/api/orders/'+encodeURIComponent(id)+'/cancel',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:'{}'});
@@ -2553,7 +2619,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       if(!res.ok)throw new Error(data.error||'Nie udało się anulować zamówienia.');
       const i=orders.findIndex(o=>String(o.id)===String(id));if(i>=0)orders[i]=data.order||{...orders[i],paymentStatus:'cancelled'};
       render();
-    }catch(err){alert(err.message||'Nie udało się anulować zamówienia.');btn.disabled=false;btn.textContent=oldText}
+    }catch(err){sxAlert(err.message||'Nie udało się anulować zamówienia.');btn.disabled=false;btn.textContent=oldText}
   });
   window.addEventListener('popstate',()=>{if(location.hash!=='#orders'&&modal.classList.contains('open')){modal.classList.remove('open');modal.setAttribute('aria-hidden','true');document.body.style.overflow=''}});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
@@ -3000,7 +3066,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         renderState();
         closeCropper(true);
       }catch(e){
-        alert(e.message||'Nie udało się zmienić zdjęcia profilowego.');
+        sxAlert(e.message||'Nie udało się zmienić zdjęcia profilowego.');
       }finally{
         saveBtn.disabled=false;saveBtn.textContent='ZAPISZ';
       }
@@ -3023,7 +3089,7 @@ const renderCart=()=>{hydrateCartDiscounts();
       modal.classList.add('open');modal.setAttribute('aria-hidden','false');
       document.body.style.overflow='hidden';
     };
-    img.onerror=()=>{alert('Nie udało się odczytać tego zdjęcia.');avatarInput.value=''};
+    img.onerror=()=>{sxAlert('Nie udało się odczytać tego zdjęcia.');avatarInput.value=''};
     img.src=sxAvatarObjectUrl;
   }
 
@@ -3033,8 +3099,8 @@ const renderCart=()=>{hydrateCartDiscounts();
     avatarInput.addEventListener('change',()=>{
       const file=avatarInput.files?.[0];
       if(!file)return;
-      if(!file.type.startsWith('image/')){alert('Wybierz plik graficzny.');avatarInput.value='';return}
-      if(file.size>4*1024*1024){alert('Zdjęcie jest za duże. Maksymalnie 4 MB.');avatarInput.value='';return}
+      if(!file.type.startsWith('image/')){sxAlert('Wybierz plik graficzny.');avatarInput.value='';return}
+      if(file.size>4*1024*1024){sxAlert('Zdjęcie jest za duże. Maksymalnie 4 MB.');avatarInput.value='';return}
       sxAvatarOpenCropper(avatarInput,file);
     });
   });
@@ -4045,7 +4111,7 @@ const renderCart=()=>{hydrateCartDiscounts();
 
   function install(){
     document.querySelectorAll('.sx-account-settings-open').forEach(btn=>{
-      if(btn.dataset.sxEditDataBound==='1')return;btn.dataset.sxEditDataBound='1';btn.addEventListener('click',()=>open().catch(e=>alert(e.message)));
+      if(btn.dataset.sxEditDataBound==='1')return;btn.dataset.sxEditDataBound='1';btn.addEventListener('click',()=>open().catch(e=>sxAlert(e.message)));
     });
   }
   window.STARXV_INSTALL_ACCOUNT_SECURITY=install;
@@ -4143,7 +4209,7 @@ const renderCart=()=>{hydrateCartDiscounts();
         const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Nie udało się wysłać wiadomości.');
         status.textContent='Wiadomość została wysłana ✓';status.className='sx-report-status ok';await loadHistory();
       }else if(b.dataset.closeTicket){
-        if(!confirm('Zamknąć to zgłoszenie?'))return;
+        if(!await sxConfirm('Zgłoszenie zostanie oznaczone jako zamknięte. Możesz je później otworzyć ponownie.',{title:'Zamknąć zgłoszenie?',confirmText:'ZAMKNIJ'}))return;
         const r=await fetch('/api/support/reports/'+encodeURIComponent(b.dataset.closeTicket)+'/close',{method:'POST'});
         const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Nie udało się zamknąć zgłoszenia.');await loadHistory();
       }else if(b.dataset.reopenTicket){
