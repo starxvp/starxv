@@ -231,7 +231,7 @@ document.addEventListener('input',e=>{
 <div id="app" class="wrap hidden">
  <div class="top"><div><div class="brand">STARXV</div><div class="sub">panel administratora</div></div><div class="row"><span id="who" class="meta"></span><button id="refresh" class="btn">Odśwież</button><button id="logout" class="btn">Wyloguj</button></div></div>
  <div id="msg" class="msg"></div>
- <div class="grid"><div class="card stat"><span class="sub">Zamówienia</span><b id="sOrders">—</b></div><div class="card stat"><span class="sub">Oczekujące</span><b id="sPending">—</b></div><div class="card stat"><span class="sub">Przychód opłaconych</span><b id="sRevenue">—</b></div><div class="card stat"><span class="sub">Produkty Digital</span><b id="sStock">—</b></div></div>
+ <div class="grid"><div class="card stat"><span class="sub">Zamówienia</span><b id="sOrders">—</b></div><div class="card stat"><span class="sub">Oczekujące na płatność</span><b id="sPending">—</b></div><div class="card stat"><span class="sub">Przychód opłaconych</span><b id="sRevenue">—</b></div><div class="card stat"><span class="sub">Produkty Digital</span><b id="sStock">—</b></div></div>
  <nav class="admin-tabs" id="adminTabs" aria-label="Sekcje panelu administratora">
    <button class="admin-tab active" type="button" data-admin-tab="orders">ZAMÓWIENIA</button>
    <button class="admin-tab" type="button" data-admin-tab="products">PRODUKTY</button>
@@ -563,7 +563,7 @@ function renderOrders(orders){
      <div class="row">
        <label>Status płatności
          <select data-pay>
-           <option value="pending" ${o.paymentStatus==='pending'?'selected':''}>Oczekuje</option>
+           <option value="pending" ${o.paymentStatus==='pending'?'selected':''}>Oczekuje na płatność</option>
            <option value="paid" ${o.paymentStatus==='paid'?'selected':''}>Opłacone</option>
            <option value="cancelled" ${o.paymentStatus==='cancelled'?'selected':''}>Anulowane</option>
          </select>
@@ -645,7 +645,7 @@ $('#sxOrderDeleteConfirm').onclick=e=>{if(e.target===e.currentTarget)sxCloseOrde
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sxOrderDeleteConfirm')?.classList.contains('open'))sxCloseOrderDeleteConfirm(false)});
 
 async function saveOrder(e){const box=e.currentTarget.closest('[data-order]');try{e.currentTarget.disabled=true;await api('/api/admin/orders/'+encodeURIComponent(box.dataset.order),{method:'PUT',body:JSON.stringify({paymentStatus:box.querySelector('[data-pay]').value})});$('#msg').textContent='Zamówienie zaktualizowane.';await load()}catch(err){alert(err.message)}finally{e.currentTarget.disabled=false}}
-async function adminPasswordLogin(){try{$('#loginMsg').textContent='Logowanie…';$('#loginBtn').disabled=true;await api('/api/auth/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});await boot()}catch(e){$('#loginMsg').textContent=e.message||'Nie udało się zalogować.'}finally{$('#loginBtn').disabled=false}}
+async function adminPasswordLogin(){try{$('#loginMsg').textContent='Logowanie…';$('#loginBtn').disabled=true;await api('/api/admin/login',{method:'POST',body:JSON.stringify({email:$('#email').value,password:$('#password').value})});await boot()}catch(e){$('#loginMsg').textContent=e.message||'Nie udało się zalogować.'}finally{$('#loginBtn').disabled=false}}
 $('#loginBtn').onclick=adminPasswordLogin;
 $('#password').addEventListener('keydown',e=>{if(e.key==='Enter')adminPasswordLogin()});
 $('#email').addEventListener('keydown',e=>{if(e.key==='Enter')$('#password').focus()});
@@ -669,7 +669,7 @@ $('#email').addEventListener('keydown',e=>{if(e.key==='Enter')$('#password').foc
              if(resp?.error||!resp?.access_token){set(true,'KONTYNUUJ Z GOOGLE');return}
              try{
                set(false,'LOGOWANIE…');
-               const lr=await fetch('/api/auth/google',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({accessToken:resp.access_token})});
+               const lr=await fetch('/api/admin/google',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({accessToken:resp.access_token})});
                const data=await lr.json().catch(()=>({}));
                if(!lr.ok)throw new Error(data.error||'Nie udało się zalogować przez Google.');
                await boot();
@@ -686,7 +686,7 @@ $('#email').addEventListener('keydown',e=>{if(e.key==='Enter')$('#password').foc
  btn?.addEventListener('click',()=>{if(googleClient){set(false,'OTWIERANIE GOOGLE…');googleClient.requestAccessToken({prompt:'select_account'});setTimeout(()=>{if(btn.disabled)set(true,'KONTYNUUJ Z GOOGLE')},12000)}});
  init();
 })();
-$('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/auth/logout',{method:'POST'})}catch{}showLogin()};boot();
+$('#refresh').onclick=load;$('#logout').onclick=async()=>{try{await api('/api/admin/logout',{method:'POST'})}catch{}showLogin()};boot();
 </script>
 
 

@@ -297,6 +297,7 @@ function cleanupExpiredSessions(){
   catch(e){console.error('Session cleanup error:',e)}
 }
 setInterval(cleanupExpiredSessions,60*60*1000).unref?.();
+setInterval(()=>{try{const db=load();expirePendingOrders(db)}catch(e){console.error('Order expiry cleanup error:',e)}},60*1000).unref?.();
 
 async function closePersistence(){
   try{
@@ -406,8 +407,32 @@ function codeHash(email,code){return crypto.createHash('sha256').update(email+'|
 function cookie(req,name){const m=String(req.headers.cookie||'').split(';').map(x=>x.trim().split('='));const p=m.find(x=>x[0]===name);return p?decodeURIComponent(p.slice(1).join('=')):''}
 function sessionKey(token){return crypto.createHash('sha256').update(String(token||'')).digest('hex')}
 function deleteSessionToken(token){if(!token)return;sqliteDeleteSession.run(sessionKey(token));sqliteDeleteSession.run(token)}
-function setSession(res,userId){const token=crypto.randomBytes(32).toString('hex'),now=Date.now(),expires=now+1000*60*60*24*14;sqliteInsertSession.run(sessionKey(token),userId,expires,now);res.setHeader('Cache-Control','no-store');res.setHeader('Set-Cookie',`starxv_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=1209600${process.env.NODE_ENV==='production'?'; Secure':''}`)}
-function auth(req,res,next){const t=cookie(req,'starxv_session');if(!t)return res.status(401).json({error:'Musisz się zalogować.'});const key=sessionKey(t);let s=sqliteGetSession.get(key);if(!s){const legacy=sqliteGetSession.get(t);if(legacy){sqliteDeleteSession.run(t);sqliteInsertSession.run(key,legacy.userId,legacy.expires,Date.now());s=sqliteGetSession.get(key)}}if(!s||s.expires<Date.now()){deleteSessionToken(t);return res.status(401).json({error:'Musisz się zalogować.'})}const db=load(),u=db.users.find(x=>x.id===s.userId);if(!u){deleteSessionToken(t);return res.status(401).json({error:'Sesja wygasła.'})}res.setHeader('Cache-Control','no-store');req.user=u;req.db=db;req.sessionToken=t;req.sessionKey=key;next()}
+function setNamedSession(res,userId,cookieName){
+  const token=crypto.randomBytes(32).toString('hex'),now=Date.now(),expires=now+1000*60*60*24*14;
+  sqliteInsertSession.run(sessionKey(token),userId,expires,now);
+  res.setHeader('Cache-Control','no-store');
+  res.setHeader('Set-Cookie',`${cookieName}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=1209600${process.env.NODE_ENV==='production'?'; Secure':''}`);
+}
+function setSession(res,userId){return setNamedSession(res,userId,'starxv_session')}
+function setAdminSession(res,userId){return setNamedSession(res,userId,'starxv_admin_session')}
+function authWithCookie(req,res,next,cookieName){
+  const t=cookie(req,cookieName);
+  if(!t)return res.status(401).json({error:'Musisz się zalogować.'});
+  const key=sessionKey(t);
+  let s=sqliteGetSession.get(key);
+  if(!s){
+    const legacy=sqliteGetSession.get(t);
+    if(legacy){sqliteDeleteSession.run(t);sqliteInsertSession.run(key,legacy.userId,legacy.expires,Date.now());s=sqliteGetSession.get(key)}
+  }
+  if(!s||s.expires<Date.now()){deleteSessionToken(t);return res.status(401).json({error:'Musisz się zalogować.'})}
+  const db=load(),u=db.users.find(x=>x.id===s.userId);
+  if(!u){deleteSessionToken(t);return res.status(401).json({error:'Sesja wygasła.'})}
+  res.setHeader('Cache-Control','no-store');
+  req.user=u;req.db=db;req.sessionToken=t;req.sessionKey=key;
+  next();
+}
+function auth(req,res,next){return authWithCookie(req,res,next,'starxv_session')}
+function adminAuth(req,res,next){return authWithCookie(req,res,next,'starxv_admin_session')}
 function validEmail(v){return v.length<=320&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)}
 function validPassword(v){return v.length>=8&&v.length<=256}
 function cleanName(v){return String(v||'').trim().replace(/\s+/g,' ').slice(0,80)}
@@ -1220,6 +1245,7 @@ function ensureOrderTimeline(order){
     if(order.paymentStatus==='paid')orderEvent(order,'paid','Płatność potwierdzona','Zamówienie zostało opłacone.',order.updatedAt||order.createdAt||Date.now());
     if(order.paymentStatus==='cancelled')orderEvent(order,'cancelled','Zamówienie anulowane','Zamówienie nie będzie dalej realizowane.',order.cancelledAt||order.updatedAt||Date.now());
     if(order.paymentStatus==='failed')orderEvent(order,'payment_failed','Płatność nieudana','Płatność nie została potwierdzona.',order.updatedAt||Date.now());
+    if(order.paymentStatus==='expired')orderEvent(order,'expired','Zamówienie wygasło','Płatność nie została potwierdzona w ciągu 24 godzin.',order.expiredAt||order.updatedAt||Date.now());
     if(order.paymentStatus==='paid'&&Number(order.shippingStage||0)>0){
       const names=['Nowe','W przygotowaniu','Nadane','W drodze','Dostarczone'];
       const stage=Math.max(0,Math.min(4,Number(order.shippingStage||0)));
@@ -1228,7 +1254,28 @@ function ensureOrderTimeline(order){
   }
   return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
 }
-function orderForUser(o,db){let items=Array.isArray(o.items)?o.items.map(x=>({...x})):[];if((o.orderType||'physical')==='digital'&&db){const current=db.digitalProducts?.[String(o.digitalProductId||items[0]?.id||'')];if(current){items=items.map((x,i)=>i===0?{...x,name:current.name||x.name,image:String(current.image||x.image||'')}:x)}}return {id:o.id,orderNo:o.orderNo,orderType:o.orderType||'physical',createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),digitalProductId:String(o.digitalProductId||''),digitalAccess:o.orderType==='digital'&&o.paymentStatus==='paid',trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
+const ORDER_PAYMENT_TTL_MS=24*60*60*1000;
+function orderPaymentExpiresAt(order){return Number(order?.paymentExpiresAt||0)||Number(order?.createdAt||0)+ORDER_PAYMENT_TTL_MS}
+function expirePendingOrders(db,userId=''){
+  ensureStore(db);
+  const now=Date.now(),uid=String(userId||'');let changed=false;
+  for(const order of (db.orders||[])){
+    if(uid&&String(order.userId)!==uid)continue;
+    if(!['pending','failed'].includes(String(order.paymentStatus||'')))continue;
+    const expiresAt=orderPaymentExpiresAt(order);
+    if(!expiresAt||expiresAt>now)continue;
+    releaseStockReservation(db,order);
+    order.paymentExpiresAt=expiresAt;
+    order.paymentStatus='expired';
+    order.expiredAt=now;
+    order.updatedAt=now;
+    orderEvent(order,'expired','Zamówienie wygasło','Płatność nie została potwierdzona w ciągu 24 godzin. Zamówienie zostało automatycznie wygaszone.',now);
+    changed=true;
+  }
+  if(changed)save(db);
+  return changed;
+}
+function orderForUser(o,db){let items=Array.isArray(o.items)?o.items.map(x=>({...x})):[];if((o.orderType||'physical')==='digital'&&db){const current=db.digitalProducts?.[String(o.digitalProductId||items[0]?.id||'')];if(current){items=items.map((x,i)=>i===0?{...x,name:current.name||x.name,image:String(current.image||x.image||'')}:x)}}return {id:o.id,orderNo:o.orderNo,orderType:o.orderType||'physical',createdAt:o.createdAt,updatedAt:o.updatedAt||o.createdAt,paymentExpiresAt:orderPaymentExpiresAt(o),items,address:o.address,delivery:o.delivery,paymentPreference:o.paymentPreference||'',paymentStatus:o.paymentStatus||'pending',shippingStage:Number(o.shippingStage||0),subtotal:Number(o.subtotal||0),discount:Number(o.promo?.discount||0),shippingCost:Number(o.shippingCost||0),total:Number(o.total||0),digitalProductId:String(o.digitalProductId||''),digitalAccess:o.orderType==='digital'&&o.paymentStatus==='paid',trackingNumber:String(o.trackingNumber||''),carrier:String(o.carrier||''),carrierStatus:String(o.carrierStatus||''),trackingUpdatedAt:Number(o.trackingUpdatedAt||0),timeline:ensureOrderTimeline(o)}}
 function decrementStockForOrder(db,order){if(order.stockCommitted)return;for(const x of order.items){const slot=db.catalog?.[x.id]?.colors?.[x.color]?.sizes;if(!slot||Number(slot[x.size])<Number(x.qty))throw new Error('Stan magazynowy zmienił się przed potwierdzeniem płatności.');slot[x.size]-=Number(x.qty)}order.stockCommitted=true;order.stockCommittedAt=Date.now()}
 function reserveStockForOrder(db,order){
   if(order.stockCommitted||order.stockReserved)return;
@@ -1300,7 +1347,7 @@ app.delete('/api/reviews/:productId',auth,(req,res)=>{
   const before=req.db.reviews.length;req.db.reviews=req.db.reviews.filter(r=>!(r.productId===productId&&r.userId===req.user.id&&(!orderId||String(r.orderId||'')===orderId)&&(!color||String(r.color||'')===color)&&(!size||String(r.size||'').toUpperCase()===size)));
   if(req.db.reviews.length===before)return res.status(404).json({error:'Nie masz opinii dla tego produktu.'});save(req.db);res.json({ok:true});
 });
-app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id).map(o=>({...orderForUser(o,req.db),reviews:orderReviewsForUser(req.db,o)})).sort((a,b)=>b.createdAt-a.createdAt)})});
+app.get('/api/orders',auth,(req,res)=>{ensureStore(req.db);expirePendingOrders(req.db,req.user.id);res.json({ok:true,orders:req.db.orders.filter(o=>o.userId===req.user.id&&o.paymentStatus!=='expired').map(o=>({...orderForUser(o,req.db),reviews:orderReviewsForUser(req.db,o)})).sort((a,b)=>b.createdAt-a.createdAt)})});
 
 
 function ensurePromoCodes(db){
@@ -1372,6 +1419,8 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   ensureStore(req.db);
   const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);
   if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
+  expirePendingOrders(req.db,req.user.id);
+  if(order.paymentStatus==='expired')return res.status(410).json({error:'To zamówienie wygasło po 24 godzinach bez potwierdzenia płatności.'});
   if(order.paymentStatus==='cancelled')return res.json({ok:true,order:orderForUser(order)});
   if(order.paymentStatus==='paid')return res.status(409).json({error:'Opłaconego zamówienia nie można anulować automatycznie. Skontaktuj się z obsługą STARXV.'});
   releaseStockReservation(req.db,order);
@@ -1382,7 +1431,7 @@ app.post('/api/orders/:id/cancel',auth,(req,res)=>{
   save(req.db);sendOrderUpdateEmail(req.db,order,'cancelled',{dedupeKey:'cancelled'});
   res.json({ok:true,order:orderForUser(order)});
 });
-app.post('/api/orders/prepare',auth,async(req,res)=>{try{if(!PHYSICAL_SALES_ENABLED)return res.status(503).json({error:'Sprzedaż produktów fizycznych nie jest jeszcze aktywna.'});ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal,req.user.id);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
+app.post('/api/orders/prepare',auth,async(req,res)=>{try{if(!PHYSICAL_SALES_ENABLED)return res.status(503).json({error:'Sprzedaż produktów fizycznych nie jest jeszcze aktywna.'});ensureStore(req.db);const items=normalizeOrderItems(req.db,req.body?.items);const address=safeOrderAddress(req.body?.address);if(!address.street||!address.postal||!address.city)throw new Error('Uzupełnij adres dostawy.');const subtotal=items.reduce((s,x)=>s+x.price*x.qty,0);const promoCode=String(req.body?.promo?.code||'').trim().toUpperCase();let discount=0,promoRecord=null;if(promoCode){const check=validatePromo(req.db,promoCode,subtotal,req.user.id);if(!check.ok)throw new Error(check.error);discount=check.discount;promoRecord=check.promo}const delivery=await normalizeAndValidateDelivery(req.body?.delivery,address);const discountedSubtotal=Math.max(0,Math.round((subtotal-discount)*100)/100);const shippingCost=shippingCostFor(delivery,discountedSubtotal);const total=Math.max(0,Math.round((discountedSubtotal+shippingCost)*100)/100);const now=Date.now(),order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),userId:req.user.id,createdAt:now,updatedAt:now,items,address,delivery,paymentPreference:String(req.body?.paymentPreference||''),promo:promoCode?{code:promoCode,discount,type:promoRecord?.type||null,value:promoRecord?.value||0}:null,subtotal:Math.round(subtotal*100)/100,shippingCost,total,paymentStatus:'pending',paymentExpiresAt:now+ORDER_PAYMENT_TTL_MS,shippingStage:0,stockCommitted:false,timeline:[]};orderEvent(order,'created','Zamówienie utworzone',`Oczekujemy na potwierdzenie płatności. Dostawa: ${shippingCost.toFixed(2)} PLN.`,order.createdAt);req.db.orders.push(order);save(req.db);sendOrderUpdateEmail(req.db,order,'created',{dedupeKey:'created'});res.json({ok:true,order:orderForUser(order),shipping:shippingPublicConfig()})}catch(e){res.status(e.status&&e.status>=400&&e.status<600?e.status:400).json({error:e.message||'Nie udało się przygotować zamówienia.'})}});
 // This function is intentionally server-only. A future payment webhook should call it only after the payment provider confirms payment.
 function markOrderPaid(db,order){
   if(order.paymentStatus==='paid')return;
@@ -1565,7 +1614,7 @@ app.post('/api/digital/orders/prepare',auth,rateLimit('digital-prepare',20,10*60
     const finalTotal=money2(Math.max(0,productPrice-codeDiscount));
     if(finalTotal<=0)return res.status(400).json({error:'Końcowa kwota zamówienia musi być większa od 0 PLN.'});
     const now=Date.now();
-    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:productPrice,basePrice:money2(product.price),discountPercent:Number(product.discountPercent||0),image:String(product.image||'/assets/placeholder.png')}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:promoCode?{code:promoCode,discount:codeDiscount,type:promoRecord?.type||null,value:promoRecord?.value||0,productId:promoRecord?.productId||null}:null,subtotal:productPrice,shippingCost:0,total:finalTotal,paymentStatus:'pending',shippingStage:0,stockCommitted:true,legalVersion:LEGAL_VERSION,termsAcceptedAt:now,privacyAcknowledgedAt:req.body?.privacyAcknowledged===true?now:null,digitalConsentAt:now,digitalConsentText:DIGITAL_CONSENT_TEXT,timeline:[]};
+    const order={id:crypto.randomUUID(),orderNo:String(now).slice(-8),orderType:'digital',digitalProductId:product.id,userId:req.user.id,createdAt:now,updatedAt:now,items:[{id:product.id,name:product.name,fit:'STARXV DIGITAL',color:'digital',colorLabel:'Produkt cyfrowy',size:'PDF',qty:1,price:productPrice,basePrice:money2(product.price),discountPercent:Number(product.discountPercent||0),image:String(product.image||'/assets/placeholder.png')}],address:{email:cleanEmail(req.user.email),firstName:req.user.firstName,lastName:req.user.lastName},delivery:{type:'digital'},paymentPreference:'simpay',promo:promoCode?{code:promoCode,discount:codeDiscount,type:promoRecord?.type||null,value:promoRecord?.value||0,productId:promoRecord?.productId||null}:null,subtotal:productPrice,shippingCost:0,total:finalTotal,paymentStatus:'pending',paymentExpiresAt:now+ORDER_PAYMENT_TTL_MS,shippingStage:0,stockCommitted:true,legalVersion:LEGAL_VERSION,termsAcceptedAt:now,privacyAcknowledgedAt:req.body?.privacyAcknowledged===true?now:null,digitalConsentAt:now,digitalConsentText:DIGITAL_CONSENT_TEXT,timeline:[]};
     orderEvent(order,'created','Zamówienie cyfrowe utworzone','Po potwierdzeniu płatności e-book będzie dostępny natychmiast.',now);
     req.db.orders.push(order);save(req.db);
     res.json({ok:true,order:orderForUser(order)});
@@ -1640,12 +1689,14 @@ app.post('/api/create-checkout-session',auth,async(req,res)=>{
   try{
     if(!simpayConfigured())return res.status(503).json({error:'SimPay nie jest jeszcze skonfigurowany na serwerze.'});
     ensureStore(req.db);
+    expirePendingOrders(req.db,req.user.id);
     const orderId=String(req.body?.orderId||'');
     const order=req.db.orders.find(o=>o.id===orderId&&o.userId===req.user.id);
     if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});
     if(order.orderType!=='digital'&&!PHYSICAL_SALES_ENABLED)return res.status(409).json({error:'Sprzedaż produktów fizycznych nie jest jeszcze aktywna.'});
     if(order.paymentStatus==='paid')return res.status(409).json({error:'To zamówienie jest już opłacone.'});
     if(order.paymentStatus==='cancelled')return res.status(409).json({error:'To zamówienie zostało anulowane.'});
+    if(order.paymentStatus==='expired')return res.status(410).json({error:'To zamówienie wygasło po 24 godzinach bez potwierdzenia płatności. Utwórz nowe zamówienie.'});
     const amount=Math.round(Number(order.total)*100)/100;
     if(!Number.isFinite(amount)||amount<=0)return res.status(400).json({error:'Nieprawidłowa kwota zamówienia.'});
     if(order.paymentStatus==='failed')order.paymentStatus='pending';
@@ -1730,7 +1781,7 @@ app.post('/api/simpay/ipn',async(req,res)=>{
 });
 
 
-app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);if(!order)return res.status(404).json({error:'Nie znaleziono zamówienia.'});res.json({ok:true,order:orderForUser(order),confirmed:order.paymentStatus==='paid'})});
+app.get('/api/orders/:id/payment-status',auth,(req,res)=>{ensureStore(req.db);expirePendingOrders(req.db,req.user.id);const order=req.db.orders.find(o=>o.id===req.params.id&&o.userId===req.user.id);if(!order||order.paymentStatus==='expired')return res.status(404).json({error:'Nie znaleziono aktywnego zamówienia.'});res.json({ok:true,order:orderForUser(order,req.db),confirmed:order.paymentStatus==='paid'})});
 
 
 // --- STARXV marketing/news campaigns -----------------------------------------
@@ -1822,13 +1873,56 @@ function adminEmails(){
   return String(process.env.ADMIN_EMAILS||'').split(',').map(cleanEmail).filter(Boolean);
 }
 function adminOnly(req,res,next){
-  auth(req,res,()=>{
+  adminAuth(req,res,()=>{
     const allowed=adminEmails();
     if(!allowed.length)return res.status(503).json({error:'Panel administratora nie jest skonfigurowany. Dodaj ADMIN_EMAILS do pliku .env.'});
     if(!allowed.includes(cleanEmail(req.user.email)))return res.status(403).json({error:'To konto nie ma dostępu do panelu administratora.'});
     next();
   });
 }
+function clearAdminCookie(res){res.setHeader('Set-Cookie',`starxv_admin_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${process.env.NODE_ENV==='production'?'; Secure':''}`)}
+app.post('/api/admin/login',rateLimit('admin-login',10,15*60*1000),(req,res)=>{
+  const email=cleanEmail(req.body?.email),password=String(req.body?.password||'');
+  const allowed=adminEmails();
+  if(!allowed.length)return res.status(503).json({error:'Panel administratora nie jest skonfigurowany.'});
+  if(!allowed.includes(email))return res.status(403).json({error:'To konto nie ma dostępu do panelu administratora.'});
+  const db=load(),u=db.users.find(x=>cleanEmail(x.email)===email);
+  if(!u||!authMethods(u).includes('email')||!checkPassword(password,u.passwordHash))return res.status(401).json({error:'Nieprawidłowy e-mail lub hasło.'});
+  setAdminSession(res,u.id);
+  res.json({ok:true,user:publicUser(u)});
+});
+app.post('/api/admin/google',rateLimit('admin-google',10,15*60*1000),async(req,res)=>{
+  try{
+    const clientId=googleClientId();
+    if(!clientId)return res.status(503).json({error:'Logowanie Google nie jest skonfigurowane.'});
+    const accessToken=String(req.body?.accessToken||'').trim();
+    const info=await googleTokenInfo(accessToken);
+    const audience=String(info.audience||info.issued_to||info.aud||info.azp||'');
+    if(audience!==clientId||Number(info.expires_in||0)<=0)return res.status(401).json({error:'Nieprawidłowe lub wygasłe potwierdzenie Google.'});
+    const profile=await googleUserInfo(accessToken);
+    const email=cleanEmail(profile.email),verified=profile.email_verified===true||String(profile.email_verified)==='true';
+    if(!verified||!validEmail(email))return res.status(401).json({error:'Google nie potwierdził adresu e-mail.'});
+    const allowed=adminEmails();
+    if(!allowed.includes(email))return res.status(403).json({error:'To konto nie ma dostępu do panelu administratora.'});
+    const db=load(),u=db.users.find(x=>cleanEmail(x.email)===email);
+    if(!u||!authMethods(u).includes('google'))return res.status(401).json({error:'To konto STARXV nie jest skonfigurowane do logowania przez Google.'});
+    const storedSub=String(u.googleSub||''),incomingSub=String(profile.sub||'');
+    if(storedSub&&incomingSub&&storedSub!==incomingSub)return res.status(401).json({error:'To konto Google nie pasuje do konta STARXV.'});
+    if(!storedSub)u.googleSub=incomingSub;
+    save(db);
+    setAdminSession(res,u.id);
+    res.json({ok:true,user:publicUser(u)});
+  }catch(e){
+    console.error('Admin Google login error:',e);
+    res.status(401).json({error:e?.message||'Nie udało się zalogować do panelu przez Google.'});
+  }
+});
+app.post('/api/admin/logout',(req,res)=>{
+  const t=cookie(req,'starxv_admin_session');
+  if(t)deleteSessionToken(t);
+  clearAdminCookie(res);
+  res.json({ok:true});
+});
 
 
 function adminTitleUserRow(u){
@@ -2174,7 +2268,8 @@ app.delete('/api/admin/reviews/:id',adminOnly,(req,res)=>{ensureStore(req.db);co
 
 app.get('/api/admin/dashboard',adminOnly,(req,res)=>{
   ensureStore(req.db);
-  const orders=req.db.orders.map(o=>adminOrder(req.db,o)).sort((a,b)=>b.createdAt-a.createdAt);
+  expirePendingOrders(req.db);
+  const orders=req.db.orders.filter(o=>o.paymentStatus!=='expired').map(o=>adminOrder(req.db,o)).sort((a,b)=>b.createdAt-a.createdAt);
   const variants=[];
   for(const [productId,p] of Object.entries(req.db.catalog))for(const [color,c] of Object.entries(p.colors||{}))for(const [size,stock] of Object.entries(c.sizes||{}))variants.push({productId,productName:p.name,color,colorLabel:c.label,size,stock:Number(stock||0)});
   const paid=orders.filter(o=>o.paymentStatus==='paid');
@@ -2282,7 +2377,7 @@ app.put('/api/admin/digital-products/:id',adminOnly,(req,res)=>{try{
   }
   req.db.digitalProducts[id]=data;save(req.db);res.json({ok:true,product:publicDigitalProduct(data,req.db)})
 }catch(e){res.status(400).json({error:e.message||'Nie udało się zapisać produktu cyfrowego.'})}});
-app.delete('/api/admin/digital-products/:id',adminOnly,(req,res)=>{ensureStore(req.db);const id=String(req.params.id||'');if(!req.db.digitalProducts[id])return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const blocking=(req.db.orders||[]).some(o=>o.orderType==='digital'&&o.digitalProductId===id&&o.paymentStatus==='pending');if(blocking)return res.status(409).json({error:'Nie można usunąć produktu z oczekującym zamówieniem.'});delete req.db.digitalProducts[id];save(req.db);res.json({ok:true})});
+app.delete('/api/admin/digital-products/:id',adminOnly,(req,res)=>{ensureStore(req.db);expirePendingOrders(req.db);const id=String(req.params.id||'');if(!req.db.digitalProducts[id])return res.status(404).json({error:'Nie znaleziono produktu cyfrowego.'});const blocking=(req.db.orders||[]).some(o=>o.orderType==='digital'&&o.digitalProductId===id&&o.paymentStatus==='pending');if(blocking)return res.status(409).json({error:'Nie można usunąć produktu z oczekującym zamówieniem.'});delete req.db.digitalProducts[id];save(req.db);res.json({ok:true})});
 
 app.post('/api/admin/products',adminOnly,(req,res)=>{
   try{
