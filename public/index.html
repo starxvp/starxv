@@ -1737,7 +1737,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
       const x=(o.items||[])[0]||{},img=String(x.image||'/assets/placeholder.png'),productId=o.digitalProductId||x.id||'zero-to-first-sale',paid=o.paymentStatus==='paid',canCancel=['pending','failed'].includes(o.paymentStatus);
       const state=paid?'OPŁACONO':o.paymentStatus==='failed'?'PŁATNOŚĆ NIEUDANA':o.paymentStatus==='cancelled'?'ANULOWANO':'OCZEKUJE NA PŁATNOŚĆ';
       const access=paid
-        ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button><button class="order-review-btn order-return-btn" type="button" data-return-order="${safe(encodeURIComponent(JSON.stringify(o)))}">ZWROT / REKLAMACJA</button></div>`
+        ? `<div class="digital-access-box"><div class="digital-access-kicker">STARXV DIGITAL / TWOJA BIBLIOTEKA</div><div class="digital-access-title">E-book jest gotowy do pobrania.</div><div class="digital-access-note">Plik jest przypisany do Twojego konta STARXV. Możesz wrócić tutaj i pobrać go ponownie.</div><a class="digital-download-btn" href="/api/digital/download/${encodeURIComponent(productId)}">POBIERZ E-BOOK ↓</a><button class="order-review-btn ${reviewLookup(o,x)?'done':''}" type="button" data-review-order="${safe(o.id)}" data-review-product="${safe(x.id||productId)}" data-review-color="${safe(x.color||'digital')}" data-review-size="${safe(x.size||'PDF')}">${reviewLookup(o,x)?'EDYTUJ OPINIĘ':'NAPISZ OPINIĘ'}</button><button class="order-review-btn order-return-btn" type="button" data-return-order="${safe(o.id)}" data-return-order-no="${safe(o.orderNo||String(o.id||'').slice(-8))}">ZWROT / REKLAMACJA</button></div>`
         : `<div class="digital-payment-wait">${o.paymentStatus==='pending'?'Dostęp do pliku pojawi się automatycznie po potwierdzeniu płatności.':'Plik nie jest dostępny, ponieważ płatność nie została potwierdzona.'}${paymentExpiryHtml(o)}<br><button class="order-pay-btn" type="button" data-pay-order="${safe(o.id)}">ZAPŁAĆ →</button><div class="order-payment-error" data-pay-error="${safe(o.id)}"></div></div>`;
       return `<article class="order-card digital-order"><div class="order-head"><div><div class="order-no">ZAMÓWIENIE #${safe(o.orderNo||String(o.id||'').slice(-8))}</div><div class="order-date">${new Date(o.createdAt||Date.now()).toLocaleString('pl-PL')}</div></div><div class="order-status ${statusClass(o.paymentStatus)}">${state}</div></div><div class="order-main-grid"><div class="order-items"><div class="order-item"><img class="order-thumb" src="${safe(img)}" alt=""><div><div class="order-item-name">${safe(x.name||'STARXV DIGITAL')}</div><div class="digital-order-meta">STARXV DIGITAL • PDF • PRODUKT CYFROWY</div></div><div class="order-item-price">${money(Number(x.price||o.total||0)*Number(x.qty||1))}</div></div></div><aside class="order-side"><div class="order-total"><span>RAZEM</span><strong>${money(o.total)}</strong></div><div style="margin-top:5px;color:#777;font-size:8px;text-align:right">Dostawa cyfrowa: 0 PLN</div>${access}</aside></div>${canCancel?`<div class="order-actions"><button class="order-cancel-btn" type="button" data-cancel-order="${safe(o.id)}">ANULUJ ZAMÓWIENIE</button></div>`:''}</article>`;
     }).join('');
@@ -3020,6 +3020,22 @@ body.sx-system-dialog-lock{overflow:hidden!important}
   #sxReturnModal{padding:12px!important}
   #sxReturnModal>.sx-return-box{max-height:calc(100vh - 24px)!important}
 }
+
+#sxReturnContent{padding-top:2px}
+.sx-return-info-kicker{color:#7a7a7a;font-size:8px;font-weight:950;letter-spacing:.17em;text-transform:uppercase}
+.sx-return-info h3{margin:10px 0 10px;color:#fff;font-size:23px;line-height:1.05;letter-spacing:-.03em}
+.sx-return-info p{margin:0;color:#969696;font-size:10px;line-height:1.7}
+.sx-return-info-order{margin-top:17px;padding:12px 13px;border:1px solid rgba(255,255,255,.10);border-radius:10px;background:#0c0c0c;color:#777;font-size:8px;font-weight:850;letter-spacing:.08em}
+.sx-return-info-order b{color:#fff}
+.sx-return-info-note{margin-top:12px!important;color:#686868!important;font-size:9px!important}
+.sx-return-info-actions{display:grid;grid-template-columns:1.45fr .55fr;gap:9px;margin-top:20px}
+.sx-return-info-actions button{min-height:44px;border-radius:10px;cursor:pointer;font:950 9px/1 Arial,sans-serif;letter-spacing:.07em}
+.sx-return-go{border:1px solid #f1eee7;background:#f1eee7;color:#090909}
+.sx-return-go:hover{background:#fff;border-color:#fff}
+.sx-return-cancel{border:1px solid #323232;background:#111;color:#a5a5a5}
+.sx-return-cancel:hover{background:#161616;color:#fff;border-color:#474747}
+@media(max-width:600px){.sx-return-info-actions{grid-template-columns:1fr}}
+
 </style>
 
 <!-- STARXV: ZGŁOŚ PROBLEM -->
@@ -3160,90 +3176,53 @@ body.sx-system-dialog-lock{overflow:hidden!important}
   });
 })();
 </script>
-
-<script id="starxv-open-support-from-returns">
-(()=>{
-  const params=new URLSearchParams(location.search);
-  if(params.get('support')!=='returns')return;
-
-  async function start(){
-    let logged=false;
-    try{
-      const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store'});
-      logged=r.ok;
-    }catch{}
-
-    if(!logged){
-      const account=document.getElementById('openAccount');
-      if(account)account.click();
-      return;
-    }
-
-    let tries=0;
-    const openSupport=()=>{
-      const btn=document.getElementById('sxReportProblemBtn');
-      if(btn){
-        btn.click();
-        setTimeout(()=>{
-          const type=document.getElementById('sxReportProblemType');
-          const text=document.getElementById('sxReportProblemText');
-          if(type){type.value='Inne';type.dispatchEvent(new Event('change',{bubbles:true}))}
-          if(text&&!text.value)text.placeholder='Opisz sprawę dotyczącą zwrotu lub reklamacji...';
-        },120);
-        return;
-      }
-      if(++tries<30)setTimeout(openSupport,150);
-    };
-    openSupport();
-  }
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(start,180));
-  else setTimeout(start,180);
-})();
-</script>
-
 <div aria-hidden="true" id="sxReturnModal"><div class="sx-return-box"><div class="sx-return-top"><h2>ZWROT / REKLAMACJA</h2><button class="sx-return-close" type="button">×</button></div><div id="sxReturnContent"></div></div></div>
 <script id="sx-returns-script">
 (()=>{
- const modal=document.getElementById('sxReturnModal'),content=document.getElementById('sxReturnContent');let order=null,requests=[];
- const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const status=s=>({new:'NOWE',review:'W WERYFIKACJI',accepted:'ZAAKCEPTOWANE',rejected:'ODRZUCONE',completed:'ZAKOŃCZONE'}[s]||'NOWE');
- async function loadReturns(){try{const r=await fetch('/api/returns',{cache:'no-store'}),d=await r.json();requests=d.returns||[]}catch{requests=[]}}
- async function open(o){
-  order=o;
-  if(modal.parentElement!==document.body)document.body.appendChild(modal);
-  await loadReturns();
-  render();
-  modal.classList.add('open');
-  modal.setAttribute('aria-hidden','false');
-  document.body.style.overflow='hidden';
-}
- function render(){
-  const own=requests.filter(x=>x.orderId===order.id);
-  content.innerHTML=`<div class="sx-return-label">ZAMÓWIENIE #${esc(order.orderNo)}</div>
-  <div class="sx-return-label" style="margin-top:10px">PRODUKT CYFROWY / E-BOOK</div>
-  <label class="sx-return-label">RODZAJ</label><select id="sxReturnType"><option value="complaint">Reklamacja produktu cyfrowego</option><option value="return">Zwrot / odstąpienie — prośba o weryfikację</option></select>
-  <label class="sx-return-label">PRODUKT</label><div>${(order.items||[]).map((x,n)=>`<label class="sx-return-item"><input type="checkbox" data-ri="${n}" checked><span><b>${esc(x.name)}</b><br>Produkt cyfrowy · PDF × ${Number(x.qty||1)}</span></label>`).join('')}</div>
-  <label class="sx-return-label">POWÓD</label><select id="sxReturnReason"><option value="">Wybierz...</option><option>Problem z pobraniem lub dostępem do pliku</option><option>Plik jest uszkodzony lub nie otwiera się</option><option>Treść cyfrowa jest niezgodna z opisem oferty</option><option>Otrzymałem niewłaściwy produkt cyfrowy</option><option>Problem techniczny z produktem</option><option>Inny powód</option></select>
-  <label class="sx-return-label">DODATKOWE INFORMACJE</label><textarea id="sxReturnDetails" maxlength="1500" placeholder="Opisz problem lub prośbę..."></textarea>
-  <button class="sx-return-submit" id="sxReturnSubmit">WYŚLIJ ZGŁOSZENIE →</button><div class="sx-return-msg" id="sxReturnMsg"></div>
-  ${own.length?`<div class="sx-return-history"><div class="sx-return-label">TWOJE ZGŁOSZENIA</div>${own.map(x=>`<div class="sx-return-ticket"><b>${esc(x.returnNo)} · ${x.type==='complaint'?'REKLAMACJA':'ZWROT'} · ${status(x.status)}</b><div>${esc(x.reason)}</div>${x.adminReply?`<div style="margin-top:8px"><b>STARXV:</b> ${esc(x.adminReply)}</div>`:''}<small>${new Date(x.updatedAt||x.createdAt).toLocaleString('pl-PL')}</small></div>`).join('')}</div>`:''}`;
-  document.getElementById('sxReturnSubmit').onclick=submit;
+ const modal=document.getElementById('sxReturnModal'),content=document.getElementById('sxReturnContent');
+ if(!modal||!content)return;
+
+ function close(){
+   modal.classList.remove('open');
+   modal.setAttribute('aria-hidden','true');
+   document.body.style.overflow='';
  }
- async function submit(){
-  const b=document.getElementById('sxReturnSubmit'),msg=document.getElementById('sxReturnMsg'),picked=[...content.querySelectorAll('[data-ri]:checked')].map(c=>{const x=order.items[Number(c.dataset.ri)];return {id:x.id,qty:x.qty}});
-  if(!picked.length){msg.textContent='Wybierz produkt, którego dotyczy zgłoszenie.';return}
-  b.disabled=true;msg.textContent='Wysyłanie...';
-  try{const r=await fetch('/api/orders/'+encodeURIComponent(order.id)+'/return-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:document.getElementById('sxReturnType').value,reason:document.getElementById('sxReturnReason').value,details:document.getElementById('sxReturnDetails').value,items:picked})}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Nie udało się wysłać zgłoszenia.');msg.textContent=`Zgłoszenie ${d.request.returnNo} zostało wysłane.`;await loadReturns();render()}catch(e){msg.textContent=e.message}finally{b.disabled=false}
+
+ function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+ function open(orderId,orderNo){
+   if(modal.parentElement!==document.body)document.body.appendChild(modal);
+   const id=String(orderId||'').trim();
+   const no=String(orderNo||'').trim();
+   content.innerHTML=`
+     <div class="sx-return-info">
+       <div class="sx-return-info-kicker">STARXV / FORMALNOŚCI</div>
+       <h3>ZWROT LUB REKLAMACJA</h3>
+       <p>Zwroty i reklamacje produktów cyfrowych obsługujemy w jednej, osobnej sekcji STARXV. Znajdziesz tam zasady, informacje o odstąpieniu od umowy oraz formularz zgłoszenia.</p>
+       ${no?`<div class="sx-return-info-order">WYBRANE ZAMÓWIENIE <b>#${esc(no)}</b></div>`:''}
+       <p class="sx-return-info-note">Po przejściu Zamówienie zostanie wybrane automatycznie. Samo przejście do sekcji nie wysyła zgłoszenia.</p>
+       <div class="sx-return-info-actions">
+         <button type="button" class="sx-return-go">PRZEJDŹ DO ZWROTÓW / REKLAMACJI →</button>
+         <button type="button" class="sx-return-cancel">ANULUJ</button>
+       </div>
+     </div>`;
+   content.querySelector('.sx-return-go')?.addEventListener('click',()=>{
+     location.href='/returns.html'+(id?'?order='+encodeURIComponent(id):'');
+   });
+   content.querySelector('.sx-return-cancel')?.addEventListener('click',close);
+   modal.classList.add('open');
+   modal.setAttribute('aria-hidden','false');
+   document.body.style.overflow='hidden';
  }
- modal.querySelector('.sx-return-close').onclick=()=>{
-  modal.classList.remove('open');
-  modal.setAttribute('aria-hidden','true');
-  document.body.style.overflow='';
-};
- modal.onclick=e=>{if(e.target===modal)modal.querySelector('.sx-return-close').click()};
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))modal.querySelector('.sx-return-close').click()});
- document.addEventListener('click',e=>{const b=e.target.closest('[data-return-order]');if(!b)return;try{open(JSON.parse(decodeURIComponent(b.dataset.returnOrder)))}catch{}});
+
+ modal.querySelector('.sx-return-close')?.addEventListener('click',close);
+ modal.addEventListener('click',e=>{if(e.target===modal)close()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('open'))close()});
+ document.addEventListener('click',e=>{
+   const b=e.target.closest?.('[data-return-order]');
+   if(!b)return;
+   open(b.dataset.returnOrder,b.dataset.returnOrderNo);
+ });
 })();
 </script>
 <script id="starxv-contact-mail-picker">
@@ -4160,6 +4139,32 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
     }catch(e){list.innerHTML=`<div class="sx-faq-state">${esc(e.message||'Nie udało się pobrać FAQ.')}</div>`}
   }
   window.STARXV_OPEN_FAQ=openFaq;
+})();
+</script>
+
+
+<script id="starxv-return-login-flow">
+(()=>{
+  const p=new URLSearchParams(location.search);
+  if(p.get('returnFlow')!=='1')return;
+  const order=p.get('returnOrder')||'';
+  const target='/returns.html'+(order?'?order='+encodeURIComponent(order):'');
+
+  async function run(){
+    try{
+      const r=await fetch('/api/auth/me',{credentials:'include',cache:'no-store'});
+      if(r.ok){location.replace(target);return}
+    }catch{}
+    let tries=0;
+    const openLogin=()=>{
+      const b=document.getElementById('openAccount');
+      if(b){b.click();return}
+      if(++tries<30)setTimeout(openLogin,120);
+    };
+    openLogin();
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(run,120));
+  else setTimeout(run,120);
 })();
 </script>
 
