@@ -42,8 +42,6 @@ footer{border-top:1px solid #1b1b1b;padding:28px 24px;text-align:center;color:#6
 .submit-btn:disabled{opacity:.45;cursor:not-allowed}.form-status{font-size:10px;color:#888}.form-status.ok{color:#9ac7a1}.form-status.err{color:#e08e8e}
 .history{margin-top:22px;border-top:1px solid #202020;padding-top:20px}.history-title{font-size:9px;font-weight:950;letter-spacing:.13em;color:#777;margin-bottom:10px}
 .ticket{padding:14px 0;border-top:1px solid #1d1d1d}.ticket:first-of-type{border-top:0}.ticket b{font-size:10px;color:#eee}.ticket p{margin:5px 0 0;font-size:10px;color:#898989}.ticket small{display:block;margin-top:7px;color:#5f5f5f;font-size:8px}.ticket .reply{margin-top:9px;padding:10px;border-left:2px solid #555;background:#090909;color:#aaa;font-size:9px;line-height:1.55}
-.template-details{margin-top:14px;border:1px solid #262626;background:#080808}.template-details summary{cursor:pointer;padding:14px 16px;color:#ddd;font-size:10px;font-weight:900;letter-spacing:.07em}
-.template{white-space:pre-line;border-top:1px dashed #353535;padding:18px;color:#bcbcbc;font-size:12px;line-height:1.75}
 @media(max-width:760px){.top{padding:14px 16px}main{padding:48px 18px 72px}.grid,.return-form{grid-template-columns:1fr}.field.full,.order-preview,.form-actions{grid-column:auto}.mode-head,.returns-center-head{display:block}.mode-head p,.returns-center-head p{margin-top:12px}.returns-center{padding:18px}}
 </style>
 </head>
@@ -52,40 +50,24 @@ footer{border-top:1px solid #1b1b1b;padding:28px 24px;text-align:center;color:#6
 <main>
 <div class="kicker">STARXV / POMOC / ZWROTY I REKLAMACJE</div>
 <h1>ZWROTY I<br>REKLAMACJE.</h1>
-<p class="lead">STARXV sprzedaje e-booki i inne treści cyfrowe. Poniżej możesz wysłać zgłoszenie dotyczące konkretnego zakupu oraz sprawdzić zasady odstąpienia od umowy i reklamacji produktów cyfrowych.</p>
-<div class="notice">Zgłoszenia dotyczące zakupów najlepiej wysyłać przez formularz STARXV poniżej — numer Zamówienia zostanie przypisany automatycznie. Kontakt dodatkowy: <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>.</div>
+<p class="lead">W jednym miejscu możesz zgłosić zwrot, odstąpienie od umowy albo reklamację dotyczącą produktu cyfrowego STARXV. Formularz automatycznie przypisze zgłoszenie do wybranego Zamówienia.</p>
 
 <div class="returns-center" id="returnsCenter">
  <div class="returns-center-head">
   <div><div class="returns-center-kicker">STARXV / CENTRUM ZGŁOSZEŃ</div><h2>Zgłoś zwrot lub reklamację</h2></div>
-  <p>Wybierz opłacone Zamówienie Digital, określ rodzaj sprawy i opisz problem. Jeśli wszedłeś tutaj z „Moje zamówienia”, właściwe Zamówienie zostanie wybrane automatycznie.</p>
+  <p>Wybierz opłacone Zamówienie Digital, rodzaj sprawy i krótko opisz sytuację. Jeśli przechodzisz z „Moje zamówienia”, Zamówienie wybierze się automatycznie.</p>
  </div>
  <div id="returnsApp"><div class="auth-state">Sprawdzanie konta STARXV…</div></div>
 </div>
 
 <div id="digital" class="mode">
 <div class="mode-head"><div><div class="eyebrow">STARXV / DIGITAL</div><h2>E-booki i treści cyfrowe</h2></div><p>Pliki cyfrowe są przypisywane do Konta STARXV po prawidłowym potwierdzeniu płatności.</p></div>
-<section><span class="badge digital">DOSTĘP CYFROWY</span><h3>Dostęp po potwierdzeniu płatności</h3><p>Po potwierdzeniu płatności zakupiony e-book pojawia się na Koncie STARXV i może zostać pobrany z historii Zamówień. Jeżeli pieniądze zostały pobrane, ale dostęp nie pojawił się po rozsądnym czasie, nie wykonuj kolejnej płatności za to samo Zamówienie — sprawdź status i skontaktuj się z nami.</p></section>
+<section><span class="badge digital">JAK TO DZIAŁA</span><h3>Jedno zgłoszenie, jeden system</h3><p>Zwroty, odstąpienia i reklamacje wysyłasz przez formularz STARXV powyżej. Zgłoszenie zostanie zapisane na Twoim Koncie i będzie widoczne w historii wraz ze statusem oraz odpowiedzią STARXV.</p></section>
+<section><span class="badge digital">DOSTĘP CYFROWY</span><h3>Dostęp po potwierdzeniu płatności</h3><p>Po potwierdzeniu płatności zakupiony e-book pojawia się na Koncie STARXV i może zostać pobrany z historii Zamówień. Jeśli płatność została pobrana, ale dostęp się nie pojawił, nie płać ponownie — wyślij reklamację przez formularz powyżej.</p></section>
 <section><span class="badge digital">ODSTĄPIENIE OD UMOWY</span><h3>Treść cyfrowa ma szczególne zasady</h3><p>Co do zasady Konsument zawierający umowę na odległość ma 14 dni na odstąpienie od umowy. W przypadku odpłatnej treści cyfrowej niedostarczanej na nośniku materialnym prawo to może zostać utracone po rozpoczęciu dostarczania, ale tylko wtedy, gdy spełniono wszystkie wymagane prawem warunki.</p><div class="grid"><div class="card"><b>Wyraźna uprzednia zgoda</b><p>Przed zakupem z natychmiastowym dostępem Konsument wyraźnie żąda rozpoczęcia dostarczania treści przed upływem terminu do odstąpienia.</p></div><div class="card"><b>Informacja o skutku</b><p>Konsument jest informowany o utracie prawa do odstąpienia po rozpoczęciu dostarczania i przyjmuje tę informację do wiadomości.</p></div><div class="card"><b>Potwierdzenie na trwałym nośniku</b><p>Po potwierdzeniu płatności STARXV wysyła e-mail zawierający potwierdzenie zawarcia umowy oraz zapis złożonego oświadczenia.</p></div><div class="card"><b>Brak automatyzmu</b><p>Jeżeli wymagane warunki nie zostały spełnione, samo udostępnienie pliku nie wyłącza automatycznie prawa odstąpienia.</p></div></div></section>
-<section><span class="badge digital">WZÓR ODSTĄPIENIA</span><h3>Opcjonalny wzór oświadczenia</h3><p>Najwygodniej skorzystać z formularza STARXV powyżej. Jeżeli wolisz złożyć oświadczenie e-mailem i prawo do odstąpienia nadal Ci przysługuje, możesz użyć poniższego wzoru.</p><details class="template-details"><summary>POKAŻ WZÓR ODSTĄPIENIA</summary><div class="template">Do: STARXV — kontakt@starxv.pl
-
-Ja, [imię i nazwisko], informuję o odstąpieniu od umowy dotyczącej następującej treści cyfrowej:
-[nazwa e-booka]
-
-Numer Zamówienia:
-[numer]
-
-Data zawarcia umowy:
-[data]
-
-Adres e-mail Konta STARXV:
-[e-mail]
-
-Data złożenia oświadczenia:
-[data]</div></details><div class="note important">Jeżeli dostarczanie treści cyfrowej zostało już rozpoczęte po spełnieniu wymaganych prawem warunków dotyczących uprzedniej zgody, informacji o utracie prawa i potwierdzenia na trwałym nośniku, prawo do odstąpienia może już nie przysługiwać.</div></section>
-<section><span class="badge digital">REKLAMACJA</span><h3>Treść cyfrową możesz reklamować</h3><p>Utrata prawa do zwykłego odstąpienia nie oznacza utraty praw związanych z niezgodnością treści cyfrowej z umową. Jeżeli e-book nie został dostarczony, plik jest uszkodzony, nie można go pobrać albo produkt nie odpowiada opisowi, możesz wysłać reklamację przez formularz STARXV powyżej.</p><p>W zgłoszeniu opisz problem i — jeżeli to pomocne — urządzenie lub przeglądarkę, na której występuje problem. Odpowiedź na reklamację Konsumenta jest udzielana w terminie wynikającym z przepisów, co do zasady 14 dni.</p></section>
+<section><span class="badge digital">REKLAMACJA</span><h3>Treść cyfrową możesz reklamować</h3><p>Jeżeli e-book nie został dostarczony, plik jest uszkodzony, nie można go pobrać albo produkt nie odpowiada opisowi, wybierz w formularzu „Reklamacja produktu cyfrowego” i opisz problem. Odpowiedź na reklamację Konsumenta jest udzielana w terminie wynikającym z przepisów, co do zasady 14 dni.</p></section>
 </div>
-<div class="legal">Informacje aktualne dla premiery STARXV Digital — 1.10.2026 r.</div>
+<div class="legal">Jeśli formularz z przyczyn technicznych nie działa, możesz skontaktować się z nami pod adresem <a class="contact" href="mailto:kontakt@starxv.pl">kontakt@starxv.pl</a>.<br>Informacje aktualne dla premiery STARXV Digital — 1.10.2026 r.</div>
 </main>
 <footer>© 2026 STARXV — ALL RIGHTS RESERVED</footer>
 <script>
@@ -131,11 +113,11 @@ Data złożenia oświadczenia:
      <div class="field full"><label for="centralReturnOrder">ZAMÓWIENIE</label><select id="centralReturnOrder">${paid.map(o=>`<option value="${esc(o.id)}" ${String(o.id)===initial?'selected':''}>${esc(orderLabel(o))}</option>`).join('')}</select></div>
      <div class="order-preview" id="centralReturnPreview"></div>
      <div class="field"><label for="centralReturnType">RODZAJ SPRAWY</label><select id="centralReturnType"><option value="complaint">Reklamacja produktu cyfrowego</option><option value="return">Zwrot / odstąpienie — prośba o weryfikację</option></select></div>
-     <div class="field"><label for="centralReturnReason">POWÓD</label><select id="centralReturnReason"><option value="">Wybierz...</option><option>Problem z pobraniem lub dostępem do pliku</option><option>Plik jest uszkodzony lub nie otwiera się</option><option>Treść cyfrowa jest niezgodna z opisem oferty</option><option>Otrzymałem niewłaściwy produkt cyfrowy</option><option>Problem techniczny z produktem</option><option>Inny powód</option></select></div>
+     <div class="field"><label for="centralReturnReason">POWÓD</label><select id="centralReturnReason"></select></div>
      <div class="field full"><label for="centralReturnDetails">DODATKOWE INFORMACJE</label><textarea id="centralReturnDetails" maxlength="1500" placeholder="Opisz problem lub prośbę..."></textarea></div>
      <div class="form-actions"><button class="submit-btn" id="centralReturnSubmit" type="submit">WYŚLIJ ZGŁOSZENIE →</button><div class="form-status" id="centralReturnStatus"></div></div>
     </form>${renderHistory()}`;
-   const select=document.getElementById('centralReturnOrder'),preview=document.getElementById('centralReturnPreview'),form=document.getElementById('centralReturnForm'),status=document.getElementById('centralReturnStatus'),submit=document.getElementById('centralReturnSubmit');
+   const select=document.getElementById('centralReturnOrder'),preview=document.getElementById('centralReturnPreview'),form=document.getElementById('centralReturnForm'),status=document.getElementById('centralReturnStatus'),submit=document.getElementById('centralReturnSubmit'),type=document.getElementById('centralReturnType'),reasonSelect=document.getElementById('centralReturnReason');
 
    function updatePreview(){
      const o=paid.find(x=>String(x.id)===String(select.value));
@@ -144,6 +126,16 @@ Data złożenia oświadczenia:
      preview.innerHTML=`<b>ZAMÓWIENIE #${esc(o.orderNo||String(o.id).slice(-8))}</b><span>${items.map(x=>`${esc(x.name||'Produkt Digital')} · PDF × ${Number(x.qty||1)}`).join('<br>')}</span>`;
    }
    select.addEventListener('change',updatePreview);updatePreview();
+
+   function updateReasons(){
+     const complaint=['Problem z pobraniem lub dostępem do pliku','Plik jest uszkodzony lub nie otwiera się','Treść cyfrowa jest niezgodna z opisem oferty','Otrzymałem niewłaściwy produkt cyfrowy','Problem techniczny z produktem','Inny powód'];
+     const returns=['Chcę złożyć oświadczenie o odstąpieniu od umowy','Chcę poprosić o weryfikację możliwości zwrotu','Zakup został dokonany omyłkowo','Inny powód'];
+     const list=type.value==='return'?returns:complaint;
+     reasonSelect.innerHTML='<option value="">Wybierz...</option>'+list.map(x=>`<option>${esc(x)}</option>`).join('');
+   }
+   type.addEventListener('change',updateReasons);
+   updateReasons();
+
 
    form.addEventListener('submit',async e=>{
      e.preventDefault();
@@ -154,7 +146,7 @@ Data złożenia oświadczenia:
      const items=(order.items||[]).map(x=>({id:x.id,qty:x.qty}));
      submit.disabled=true;status.textContent='Wysyłanie…';status.className='form-status';
      try{
-       const d=await json('/api/orders/'+encodeURIComponent(order.id)+'/return-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:document.getElementById('centralReturnType').value,reason,details:document.getElementById('centralReturnDetails').value.trim(),items})});
+       const d=await json('/api/orders/'+encodeURIComponent(order.id)+'/return-request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:type.value,reason,details:document.getElementById('centralReturnDetails').value.trim(),items})});
        const rr=await json('/api/returns');requests=rr.returns||[];
        render();
        document.getElementById('returnsCenter')?.scrollIntoView({behavior:'smooth',block:'start'});
