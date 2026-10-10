@@ -914,6 +914,35 @@ body.sx-digital-lightbox-lock{overflow:hidden!important}
 </style>
 
 
+
+<style id="starxv-auth-top-message-style">
+.sx-auth-top-message{
+  display:none;
+  margin:0 0 16px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  background:#0b0b0b;
+  color:#b8b8b8;
+  font-size:10px;
+  font-weight:750;
+  line-height:1.55;
+}
+.sx-auth-top-message:not(:empty){display:block}
+.sx-auth-top-message.error{
+  display:block;
+  border-color:rgba(224,110,110,.32);
+  background:rgba(120,24,24,.10);
+  color:#e7a0a0;
+}
+.sx-auth-top-message.success{
+  display:block;
+  border-color:rgba(118,190,140,.28);
+  background:rgba(36,108,58,.10);
+  color:#a9d6b5;
+}
+</style>
+
 <style id="starxv-profile-child-layer-fix">
 #sxDeployModal,
 #sxReportProblemOverlay,
@@ -1501,6 +1530,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
 <div class="auth-tabs"><button class="auth-tab active" data-auth-tab="login">ZALOGUJ SIĘ</button><button class="auth-tab" data-auth-tab="register">UTWÓRZ KONTO</button></div>
 <div class="auth-view active" data-auth-view="login">
 <h3>Witaj ponownie.</h3><p class="auth-lead">Wybierz sposób logowania do STARXV.</p>
+<div class="auth-message sx-auth-top-message" id="loginMessage"></div>
 <div class="sx-auth-choice">
 <button class="sx-auth-provider sx-google-auth" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.39a4.61 4.61 0 0 1-2 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.38Z" fill="#4285F4"></path><path d="M12 22c2.7 0 4.96-.89 6.62-2.39l-3.23-2.51c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.06v2.59A10 10 0 0 0 12 22Z" fill="#34A853"></path><path d="M6.39 13.93A6.02 6.02 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.48H3.06A10 10 0 0 0 2 12c0 1.61.39 3.13 1.06 4.52l3.33-2.59Z" fill="#FBBC05"></path><path d="M12 5.94c1.47 0 2.78.5 3.81 1.49l2.86-2.86A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.48l3.33 2.59C7.18 7.7 9.39 5.94 12 5.94Z" fill="#EA4335"></path></svg><span>KONTYNUUJ Z GOOGLE</span></button>
 <button class="sx-auth-provider email sx-email-auth-toggle" type="button"><svg aria-hidden="true" fill="none" viewbox="0 0 24 24"><path d="M3.5 6.5h17v11h-17z" stroke="currentColor" stroke-width="1.7"></path><path d="m4.2 7.2 7.8 6 7.8-6" stroke="currentColor" stroke-width="1.7"></path></svg><span>KONTYNUUJ PRZEZ E-MAIL</span></button>
@@ -1509,11 +1539,12 @@ body.sx-system-dialog-lock{overflow:hidden!important}
 <div class="sx-auth-email-panel">
 <div class="sx-auth-divider"><span>e-mail i hasło</span></div>
 <div class="auth-grid"><div class="auth-field full"><label>E-mail</label><input autocomplete="email" id="loginEmail" placeholder="twoj@email.pl" type="email"/></div><div class="auth-field full"><label>Hasło</label><input autocomplete="current-password" id="loginPassword" placeholder="••••••••" type="password"/></div></div>
-<button class="auth-submit" id="loginSubmit">ZALOGUJ SIĘ →</button><button class="sx-forgot-open" type="button">NIE PAMIĘTASZ HASŁA?</button><div class="auth-message" id="loginMessage"></div>
+<button class="auth-submit" id="loginSubmit">ZALOGUJ SIĘ →</button><button class="sx-forgot-open" type="button">NIE PAMIĘTASZ HASŁA?</button>
 </div>
 </div>
 <div class="auth-view" data-auth-view="register">
 <h3>Utwórz konto.</h3><p class="auth-lead">Wybierz sposób utworzenia konta STARXV.</p>
+<div class="auth-message sx-auth-top-message" id="registerMessage"></div>
 <div class="sx-auth-choice">
 <button class="sx-auth-provider sx-google-auth" type="button"><svg aria-hidden="true" viewbox="0 0 24 24"><path d="M21.6 12.23c0-.71-.06-1.4-.18-2.07H12v3.92h5.39a4.61 4.61 0 0 1-2 3.02v2.51h3.23c1.89-1.74 2.98-4.3 2.98-7.38Z" fill="#4285F4"></path><path d="M12 22c2.7 0 4.96-.89 6.62-2.39l-3.23-2.51c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.06v2.59A10 10 0 0 0 12 22Z" fill="#34A853"></path><path d="M6.39 13.93A6.02 6.02 0 0 1 6.08 12c0-.67.12-1.32.31-1.93V7.48H3.06A10 10 0 0 0 2 12c0 1.61.39 3.13 1.06 4.52l3.33-2.59Z" fill="#FBBC05"></path><path d="M12 5.94c1.47 0 2.78.5 3.81 1.49l2.86-2.86A9.63 9.63 0 0 0 12 2a10 10 0 0 0-8.94 5.48l3.33 2.59C7.18 7.7 9.39 5.94 12 5.94Z" fill="#EA4335"></path></svg><span>KONTYNUUJ Z GOOGLE</span></button>
 <button class="sx-auth-provider email sx-email-auth-toggle" type="button"><svg aria-hidden="true" fill="none" viewbox="0 0 24 24"><path d="M3.5 6.5h17v11h-17z" stroke="currentColor" stroke-width="1.7"></path><path d="m4.2 7.2 7.8 6 7.8-6" stroke="currentColor" stroke-width="1.7"></path></svg><span>KONTYNUUJ PRZEZ E-MAIL</span></button>
@@ -1522,7 +1553,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
 <div class="sx-auth-email-panel">
 <div class="sx-auth-divider"><span>rejestracja e-mail</span></div>
 <div class="auth-grid"><div class="auth-field full"><label>E-mail</label><input autocomplete="email" id="registerEmail" type="email"/></div><div class="auth-field"><label>Hasło</label><input autocomplete="new-password" id="registerPassword" placeholder="minimum 8 znaków" type="password"/></div><div class="auth-field"><label>Powtórz hasło</label><input autocomplete="new-password" id="registerPassword2" type="password"/></div></div>
-<button class="auth-submit" id="registerSubmit">WYŚLIJ KOD →</button><div class="auth-message" id="registerMessage"></div>
+<button class="auth-submit" id="registerSubmit">WYŚLIJ KOD →</button>
 </div>
 </div>
 <div class="auth-view" data-auth-view="verify">
@@ -1843,11 +1874,16 @@ body.sx-system-dialog-lock{overflow:hidden!important}
   async function refreshUser(){
     try{const d=await api('/auth/me');currentUser=d.user||null}catch(e){currentUser=null}
     renderState();
-    if(currentUser?.profileSetupRequired&&sessionStorage.getItem('starxv-open-profile-setup')==='1'){
-      sessionStorage.removeItem('starxv-open-profile-setup');
-      modal.setAttribute('aria-hidden','false');
-      document.body.style.overflow='hidden';
-      requestAnimationFrame(()=>modal.classList.add('open'));
+    if(currentUser?.profileSetupRequired){
+      $('setupFirstName').value=currentUser.firstName||'';
+      $('setupLastName').value=currentUser.lastName||'';
+      if(sessionStorage.getItem('starxv-open-profile-setup')==='1'){
+        sessionStorage.removeItem('starxv-open-profile-setup');
+        switchTab('profile-setup');
+        modal.setAttribute('aria-hidden','false');
+        document.body.style.overflow='hidden';
+        requestAnimationFrame(()=>modal.classList.add('open'));
+      }
     }
   }
   window.STARXV_REFRESH_AUTH_USER=refreshUser;
@@ -3392,7 +3428,14 @@ document.addEventListener('DOMContentLoaded',()=>{
                   return;
                 }
 
-                if(result.user?.profileSetupRequired)sessionStorage.setItem('starxv-open-profile-setup','1');
+                if(result.user?.profileSetupRequired){
+                  sessionStorage.setItem('starxv-open-profile-setup','1');
+                  if(typeof window.STARXV_REFRESH_AUTH_USER==='function'){
+                    await window.STARXV_REFRESH_AUTH_USER();
+                    setGoogleButtons(true,'KONTYNUUJ Z GOOGLE');
+                    return;
+                  }
+                }
                 location.reload();
               }catch(e){
                 setGoogleButtons(true,'KONTYNUUJ Z GOOGLE');
