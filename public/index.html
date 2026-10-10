@@ -1568,7 +1568,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
   <div class="auth-grid">
     <div class="auth-field"><label>Imię</label><input autocomplete="given-name" id="setupFirstName"/></div>
     <div class="auth-field"><label>Nazwisko</label><input autocomplete="family-name" id="setupLastName"/></div>
-    <div class="auth-field full"><label>Data urodzenia</label><input autocomplete="bday" id="setupBirthDate" type="date"/></div>
+    <div class="auth-field full"><label>Data urodzenia</label><input autocomplete="bday" class="sx-birthdate-input" id="setupBirthDate" type="date"/></div>
     
   </div>
   <button class="auth-submit" id="setupSubmit">ZAPISZ DANE →</button>
@@ -1936,6 +1936,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
   async function saveSetup(){
     const firstName=$('setupFirstName').value.trim(),lastName=$('setupLastName').value.trim(),birthDate=$('setupBirthDate').value;
     if(!firstName||!lastName||!birthDate){setMsg('setupMessage','Uzupełnij imię, nazwisko i datę urodzenia.','error');return}
+    if(!window.STARXV_CHECK_BIRTHDATE?.($('setupBirthDate'))){setMsg('setupMessage','Wpisz prawidłową datę urodzenia.','error');return}
     const buttons=[$('setupSubmit'),$('setupSkipPhone')].filter(Boolean);
     buttons.forEach(btn=>btn.disabled=true);
     try{
@@ -2909,7 +2910,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
         <div class="sx-editdata-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg></div>
         <div class="sx-editdata-copy"><small>DATA URODZENIA</small><b id="sxDataBirthDate">—</b></div>
         <button class="sx-editdata-pencil" data-edit-toggle="birthDate" type="button" aria-label="Zmień datę urodzenia">✎</button>
-        <div class="sx-editdata-editor"><div class="sx-editdata-editor-grid"><input id="sxEditBirthDate" type="date" autocomplete="bday"><button class="sx-editdata-save" data-profile-save="birthDate" type="button">ZAPISZ</button></div><div class="sx-editdata-message" data-profile-msg="birthDate"></div></div>
+        <div class="sx-editdata-editor"><div class="sx-editdata-editor-grid"><input id="sxEditBirthDate" class="sx-birthdate-input" type="date" autocomplete="bday"><button class="sx-editdata-save" data-profile-save="birthDate" type="button">ZAPISZ</button></div><div class="sx-editdata-message" data-profile-msg="birthDate"></div></div>
       </div>
 
       
@@ -2962,6 +2963,7 @@ body.sx-system-dialog-lock{overflow:hidden!important}
     const field=btn.dataset.profileSave;
     const input=field==='firstName'?$('sxEditFirstName'):field==='lastName'?$('sxEditLastName'):$('sxEditBirthDate');
     const msgEl=modal.querySelector(`[data-profile-msg="${field}"]`);
+    if(field==='birthDate'&&!window.STARXV_CHECK_BIRTHDATE?.(input)){message(msgEl,'Wpisz prawidłową datę urodzenia.','error');return}
     btn.disabled=true;
     try{
       const d=await api('/account/profile',{[field]:input.value});
@@ -4208,6 +4210,50 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sxContactOverlay.h
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(run,120));
   else setTimeout(run,120);
+})();
+</script>
+
+
+<script id="starxv-birthdate-guard">
+(()=>{
+  const pad=n=>String(n).padStart(2,'0');
+  const toYmd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+  const today=new Date();
+  const maxDate=new Date(today.getFullYear()-13,today.getMonth(),today.getDate());
+  const minDate=new Date(today.getFullYear()-120,today.getMonth(),today.getDate());
+  const min=toYmd(minDate),max=toYmd(maxDate);
+
+  function check(input){
+    if(!input?.value){
+      input?.setCustomValidity('');
+      return true;
+    }
+    const year=String(input.value).split('-')[0]||'';
+    const okYear=/^\d{4}$/.test(year);
+    const inRange=okYear&&input.value>=min&&input.value<=max;
+    input.setCustomValidity(inRange?'':'Wpisz prawidłową datę urodzenia.');
+    if(!inRange){
+      input.value='';
+      return false;
+    }
+    return true;
+  }
+
+  function apply(){
+    document.querySelectorAll('.sx-birthdate-input').forEach(input=>{
+      input.min=min;
+      input.max=max;
+      input.setAttribute('inputmode','numeric');
+      input.addEventListener('change',()=>check(input));
+      input.addEventListener('blur',()=>check(input));
+    });
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply);
+  else apply();
+
+  window.STARXV_CHECK_BIRTHDATE=check;
 })();
 </script>
 
