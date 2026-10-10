@@ -1172,7 +1172,7 @@ function ensureOrderTimeline(order){
   }
   return order.timeline.slice().sort((a,b)=>Number(a.at||0)-Number(b.at||0));
 }
-const ORDER_PAYMENT_TTL_MS=2*60*1000; // TEMP TEST: 2 minuty zamiast 24h
+const ORDER_PAYMENT_TTL_MS=24*60*60*1000;
 function orderPaymentExpiresAt(order){return Number(order?.paymentExpiresAt||0)||Number(order?.createdAt||0)+ORDER_PAYMENT_TTL_MS}
 function expirePendingOrders(db,userId=''){
   ensureStore(db);
